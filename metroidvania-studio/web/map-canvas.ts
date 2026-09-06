@@ -1112,7 +1112,7 @@ export class MapCanvas {
         }
       }
       if (!this.cameraPreview) {
-        ctx.strokeStyle = room.id === s.roomId ? '#e8e8e8' : '#4b4b4b'; ctx.lineWidth = room.id === s.roomId ? 2 : 1;
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = room.id === s.roomId ? 2 : 1;
         ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
         if (this.showNames && !(room.id === s.roomId && this.canResizeRoom(room))) { ctx.font = '11px system-ui'; ctx.fillStyle = room.id === s.roomId ? '#f0f0f0' : '#929292'; ctx.fillText((room.locked ? '▣ ' : '') + room.name, rect.x + 5, rect.y - 8); }
       }
@@ -1141,10 +1141,10 @@ export class MapCanvas {
       const area = this.selectionRect(g); this.outline({ ...area, x: area.x + g.room.x, y: area.y + g.room.y }, '#72bde5', true);
     }
     if (!this.cameraPreview && g?.kind === 'room-create') this.outline(box(g.start, g.last), '#72bde5', true);
-    if (!this.cameraPreview && g?.kind === 'room-resize') this.outline(this.resizedRoom(g), '#72bde5', true);
+    if (!this.cameraPreview && g?.kind === 'room-resize') this.outline(this.resizedRoom(g), '#ffffff', true);
     if (!this.cameraPreview && g?.kind === 'room-move') {
       const delta = resolveRoomMove(g.room, { x: Math.round(g.last.x - g.start.x), y: Math.round(g.last.y - g.start.y) }, this.state.document.rooms);
-      this.outline({ ...g.room, x: g.room.x + delta.x, y: g.room.y + delta.y }, '#72bde5', true);
+      this.outline({ ...g.room, x: g.room.x + delta.x, y: g.room.y + delta.y }, '#ffffff', true);
     }
     if (!this.cameraPreview && room && tileLayer(s.layer) && s.tool !== 0 && s.tool !== 2) {
       const size = this.brushSize;
