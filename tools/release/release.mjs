@@ -81,7 +81,7 @@ export function packRelease(state) {
     '--self-contained', 'false', '-p:UseAppHost=false', '-p:UseSharedCompilation=false', '-p:DebugType=None',
     '--output', path.join(bundle, 'metroidvania-studio/launcher')]);
   for (const relative of bundleInputs) copy(relative, bundle);
-  run(node, ['integrations/build-packages.mjs', '--output', path.join(bundle, 'engine')]);
+  run(node, ['integrations/build-packages.mjs', '--output', path.join(bundle, 'engine-packages')]);
   if (existsSync(path.join(root, 'LICENSE'))) copy('LICENSE', bundle);
   if (existsSync(path.join(root, 'NOTICE'))) copy('NOTICE', bundle);
   const manifest = packageFiles(bundle).sort().map(file => ({ path: file.replaceAll('\\', '/'),

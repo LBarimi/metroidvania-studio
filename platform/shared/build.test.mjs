@@ -67,7 +67,7 @@ test('successful build publishes complete immutable output and then latest point
   assert.equal(readFileSync(path.join(first, 'metroidvania-studio/server/MetroidvaniaStudio.Server.dll'), 'utf8'), 'Server');
   assert.equal(readFileSync(path.join(first, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll'), 'utf8'), 'Launcher');
   assert.ok(existsSync(path.join(first, 'platform/shared/launch.sh')));
-  assert.ok(existsSync(path.join(first, 'engine/unity/metroidvania-studio.unitypackage')));
+  assert.ok(existsSync(path.join(first, 'engine-packages/unity/metroidvania-studio.unitypackage')));
   const second = buildStudio(options(checkout, runner));
   assert.notEqual(second, first);
   assert.ok(existsSync(path.join(first, 'metroidvania-studio/dist/index.html')));

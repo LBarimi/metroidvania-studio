@@ -28,7 +28,7 @@ Thumbs.db
 **/.local/
 
 /builds/
-/engine/unity/builds/
+/engine-packages/unity/builds/
 
 # Distributable engine packages are tracked in Git.
 

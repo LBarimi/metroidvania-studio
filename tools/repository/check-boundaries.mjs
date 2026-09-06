@@ -44,7 +44,7 @@ export function inspectBoundaries(files) {
           if (item.includes('$(') || item.includes('%(')) continue;
           const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(name), item.replaceAll('\\', '/')));
           if (absoluteAsset.test(item) || resolved === '..' || resolved.startsWith('../')) report('external-source-link');
-          if (engineRoot.test(resolved) || !integration && (resolved.startsWith('engine/') || resolved.startsWith('integrations/'))) report('engine-source-link');
+          if (engineRoot.test(resolved) || !integration && (resolved.startsWith('engine-packages/') || resolved.startsWith('integrations/'))) report('engine-source-link');
         }
       }
     }

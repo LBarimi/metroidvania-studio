@@ -9,7 +9,7 @@ $node = Find-StudioRuntime -Name node.exe -VersionArgument --version -VersionPat
 & $node (Join-Path $adapter 'build-package.mjs')
 if ($LASTEXITCODE -ne 0) { throw 'Package build failed.' }
 $version = (Get-Content -LiteralPath (Join-Path $studio 'version.json') -Raw | ConvertFrom-Json).version
-$package = Join-Path $studio 'engine/unity/metroidvania-studio.unitypackage'
+$package = Join-Path $studio 'engine-packages/unity/metroidvania-studio.unitypackage'
 $project = Join-Path $adapter ('.local/validation/' + [Guid]::NewGuid().ToString('N'))
 foreach ($relative in @('Assets/Editor', 'Assets/ValidationFixtures', 'Packages', 'ProjectSettings')) { New-Item -ItemType Directory -Path (Join-Path $project $relative) -Force | Out-Null }
 Copy-Item -LiteralPath (Join-Path $studio 'samples/catalog.json') -Destination (Join-Path $project 'Assets/ValidationFixtures/catalog.json')

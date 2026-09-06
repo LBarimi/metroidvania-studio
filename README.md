@@ -4,7 +4,7 @@
 
 A web-based 2D world editor for metroidvania games. Create connected rooms, paint tilemaps, and design minimaps with JSON export for cross-engine workflows.
 
-The browser UI and local server run independently. Workspaces contain maps, resource definitions and textures; the Unity adapter in `engine/unity` imports exported JSON and follows a local studio session. Other consumers can implement the same JSON contract.
+The browser UI and local server run independently. Workspaces contain maps, resource definitions and textures; the Unity adapter in `engine-packages/unity` imports exported JSON and follows a local studio session. Other consumers can implement the same JSON contract.
 
 ## Platform launchers
 
@@ -88,11 +88,11 @@ Project-owned examples are in `samples/`. They provide default resources without
 
 ## Camera settings and engine packages
 
-The ready-to-import Unity package is included at [`engine/unity/metroidvania-studio.unitypackage`](engine/unity/metroidvania-studio.unitypackage). See the [installation and JSON import guide](integrations/unity/README.md).
+The ready-to-import Unity package is included at [`engine-packages/unity/metroidvania-studio.unitypackage`](engine-packages/unity/metroidvania-studio.unitypackage). See the [installation and JSON import guide](integrations/unity/README.md).
 
 Use **Edit > Camera settings** to configure PPU (default 16) and reference resolution (default 320×180). Settings belong to the current map, support Undo/Redo, and survive save, import and per-room JSON export. Source tiles remain 16×16; PPU changes world-unit conversion, while resolution changes the visible game area.
 
-The Unity adapter targets 6000.3.9f1. Platform builds also create `engine/unity/metroidvania-studio.unitypackage`. Import it into Unity, open **Tools > MetroidvaniaStudio**, connect to the running local studio and load a room. See `integrations/unity/README.md` for installation, live refresh, offline imports and runtime APIs. Engine assemblies are never referenced by the web studio or server.
+The Unity adapter targets 6000.3.9f1. Platform builds also create `engine-packages/unity/metroidvania-studio.unitypackage`. Import it into Unity, open **Tools > MetroidvaniaStudio**, connect to the running local studio and load a room. See `integrations/unity/README.md` for installation, live refresh, offline imports and runtime APIs. Engine assemblies are never referenced by the web studio or server.
 
 ## Development
 
@@ -154,21 +154,21 @@ Windows web entry points live under `platform/win/web/`; other Windows applicati
 
 Project-owned directories use lowercase kebab-case, including `metroidvania-studio/`, `samples/`, `tools/`, and `builds/`. Unity-reserved `Assets` and `Editor` folders retain their required spelling. Filenames, public types, JSON resource identifiers and existing workspace data paths remain compatible. Generated SDK caches follow their tool conventions. Test screenshots and diagnostics are private under `.local/logs/`; they are not needed to run the studio.
 
-The Unity installer has one stable filename: `engine/unity/metroidvania-studio.unitypackage`. Platform builds regenerate it and include the same file in their output. Version numbers remain in release metadata and tags.
+The Unity installer has one stable filename: `engine-packages/unity/metroidvania-studio.unitypackage`. Platform builds regenerate it and include the same file in their output. Version numbers remain in release metadata and tags.
 
-Engine installers are published under `engine/<engine>/`. Adapter source, build scripts, documentation and validation live under `integrations/<engine>/`; `engine/unity/` contains only `metroidvania-studio.unitypackage`.
+Engine installers are published under `engine-packages/<engine>/`. Adapter source, build scripts, documentation and validation live under `integrations/<engine>/`; `engine-packages/unity/` contains only `metroidvania-studio.unitypackage`.
 
 
 ## Engine packages
 
-Distributable installers live under `engine`: Unity `.unitypackage`, Godot addon ZIP, Unreal Engine 5 plugin ZIP and SDL3 C++ source ZIP. Each folder contains one package. The studio remains independent of all engine installations.
+Distributable installers live under `engine-packages`: Unity `.unitypackage`, Godot addon ZIP, Unreal Engine 5 plugin ZIP and SDL3 C++ source ZIP. Each folder contains one package. The studio remains independent of all engine installations.
 
 | Package | Setup | Import instructions |
 | --- | --- | --- |
-| `engine/unity/metroidvania-studio.unitypackage` | Open in Unity | [Unity guide](integrations/unity/README.md) |
-| `engine/godot/metroidvania-studio.zip` | Extract, run `install.bat`, select `project.godot` | [Godot guide](integrations/godot/README.md) |
-| `engine/ue/metroidvania-studio.zip` | Extract, run `install.bat`, select `.uproject`; engine-specific C++ build required | [Unreal guide](integrations/ue/README.md) |
-| `engine/sdl/metroidvania-studio.zip` | Extract, `build.bat`, then `run.bat` | [SDL guide](integrations/sdl/README.md) |
+| `engine-packages/unity/metroidvania-studio.unitypackage` | Open in Unity | [Unity guide](integrations/unity/README.md) |
+| `engine-packages/godot/metroidvania-studio.zip` | Extract, run `install.bat`, select `project.godot` | [Godot guide](integrations/godot/README.md) |
+| `engine-packages/ue/metroidvania-studio.zip` | Extract, run `install.bat`, select `.uproject`; engine-specific C++ build required | [Unreal guide](integrations/ue/README.md) |
+| `engine-packages/sdl/metroidvania-studio.zip` | Extract, `build.bat`, then `run.bat` | [SDL guide](integrations/sdl/README.md) |
 
 Godot and Unreal imports embed textures with the room. SDL supplies collision geometry for a consuming application's physics system. These initial adapters load local JSON; they do not provide live synchronization or execute object/game behavior. Unreal Engine 4 is not yet supported.
 

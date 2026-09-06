@@ -2,7 +2,7 @@
 
 C++17 source library and room preview for SDL 3.4 or later. This is a library integration, so there is no engine plugin manager to install into.
 
-1. Extract `engine/sdl/metroidvania-studio.zip`.
+1. Extract `engine-packages/sdl/metroidvania-studio.zip`.
 2. Install CMake 3.24+ and a C++17 compiler. On Windows run `build.bat`; it also detects the CMake bundled with a C++ installation of Visual Studio. On Linux/macOS run `sh build.sh`.
 3. Double-click `run.bat` (or run `sh run.sh`) to preview the bundled sample. On Windows `run.bat` builds automatically on first use. Arrow keys move the camera; R reloads the same room; Escape closes it.
 

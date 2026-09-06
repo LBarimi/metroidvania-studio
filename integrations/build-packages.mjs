@@ -67,7 +67,7 @@ export function packageEntries(engine) {
   entries.set('package-manifest.json',Buffer.from(JSON.stringify({formatVersion:1,packageVersion:version,mapFormatVersion:2,engine,files:[...entries].sort(([a],[b])=>a<b?-1:1).map(([name,bytes])=>({path:name,sha256:createHash('sha256').update(bytes).digest('hex')}))},null,2)+'\n'));
   return entries;
 }
-export function buildPackages(output=path.join(root,'engine'),check=false) {
+export function buildPackages(output=path.join(root,'engine-packages'),check=false) {
   for(const engine of ['godot','ue','sdl']) {
     const bytes=zip(packageEntries(engine)),filename=path.join(output,engine,'metroidvania-studio.zip');
     if(check) {if(!existsSync(filename)||!readFileSync(filename).equals(bytes))throw new Error('Stale engine package: '+engine);}
@@ -77,7 +77,7 @@ export function buildPackages(output=path.join(root,'engine'),check=false) {
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   const args=process.argv.slice(2),check=args.includes('--check');
-  const output=args.includes('--output')?path.resolve(args[args.indexOf('--output')+1]):path.join(root,'engine');
+  const output=args.includes('--output')?path.resolve(args[args.indexOf('--output')+1]):path.join(root,'engine-packages');
   if(args.some(a=>a.startsWith('--')&&!['--output','--check'].includes(a)))throw new Error('Usage: build-packages.mjs [--check] [--output <engine-folder>]');
   if(!check)execFileSync(process.execPath,[path.join(root,'integrations/unity/build-package.mjs'),path.join(output,'unity/metroidvania-studio.unitypackage')],{cwd:root,stdio:'inherit',windowsHide:true});
   buildPackages(output,check);

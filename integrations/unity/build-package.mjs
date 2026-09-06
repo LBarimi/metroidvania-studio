@@ -41,7 +41,7 @@ export function buildPackage(destination) {
     } else entries.push(tarFile(`${guid}/asset`, readFileSync(asset)));
   }
   visit(source); entries.push(Buffer.alloc(1024));
-  const output = destination ? path.resolve(destination) : path.join(root, 'engine/unity/metroidvania-studio.unitypackage');
+  const output = destination ? path.resolve(destination) : path.join(root, 'engine-packages/unity/metroidvania-studio.unitypackage');
   mkdirSync(path.dirname(output), { recursive: true }); writeFileSync(output, gzipSync(Buffer.concat(entries), { level: 9 }));
   console.log(`Unity package: ${output} (${guids.size} assets)`); return output;
 }

@@ -2,7 +2,7 @@
 
 Initial target: Unreal Engine 5. Windows validation uses the installed 5.8.2 toolchain. Unreal Engine 4 support is not included. Other UE5 minor versions require their own compile and import verification.
 
-1. Extract `engine/ue/metroidvania-studio.zip` into a temporary folder.
+1. Extract `engine-packages/ue/metroidvania-studio.zip` into a temporary folder.
 2. Close the target editor. Double-click `install.bat`, select the `.uproject`, and wait for compilation. `UNREAL_ENGINE_PATH` must point to the matching engine installation; alternatively pass `-EngineRoot` to `Install-Integration.ps1`. The C++ toolchain required by that engine must be installed.
 3. Open the project and place a **MetroidvaniaStudioRoom** actor in the level. In Details > MetroidvaniaStudio > Import, select **Map File**, **Catalog File**, **Resource Directory**, and optionally enter a stable **Room Id**. Empty ID selects the first room. Click **Import Room**.
 4. Save the level. Imported JSON and PNG bytes are stored in the actor; runtime reconstruction does not need the original files. **Rebuild Room** reconstructs the embedded data. **Clear Room** removes it. To import newer JSON, select the source files again and click **Import Room**.

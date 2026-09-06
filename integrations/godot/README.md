@@ -2,7 +2,7 @@
 
 Godot 4 addon. Tested with Godot 4.7.2 on Windows using headless import and scene round-trip validation.
 
-1. Extract `engine/godot/metroidvania-studio.zip` into a temporary folder.
+1. Extract `engine-packages/godot/metroidvania-studio.zip` into a temporary folder.
 2. Close the target editor, double-click `install.bat`, and select `project.godot`. This copies and enables only this addon, preserving other plugins and making a backup.
 3. Open the project. In the MetroidvaniaStudio dock select the exported map JSON, `catalog.json`, resource directory and room, then press **Import / Reload room**.
 
