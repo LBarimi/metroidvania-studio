@@ -10,3 +10,7 @@
 *.bat text eol=crlf
 *.png binary
 .githooks/* text eol=lf
+
+# POSIX entry points must keep their shebang and line endings intact.
+*.sh text eol=lf
+*.command text eol=lf

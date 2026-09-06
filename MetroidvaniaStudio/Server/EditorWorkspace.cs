@@ -225,7 +225,7 @@ public sealed class EditorWorkspace
         bool nextDirty = Session.FilePath == null || documentJson != Session.SavedJson;
         bool dirtyChanged = nextDirty != dirty;
         dirty = nextDirty;
-        bool fileChanged = !string.Equals(autoExportSavedPath, Session.FilePath, StringComparison.OrdinalIgnoreCase);
+        bool fileChanged = !string.Equals(autoExportSavedPath, Session.FilePath, ProjectFiles.PathComparison);
         if (contentChanged || fileChanged || Session.LastChangeKind == MapEditChangeKind.Reset)
         {
             autoExportSavedPath = Session.FilePath;
@@ -593,7 +593,7 @@ public sealed class EditorWorkspace
         diskContentProbe = null;
         if (completed.Version != diskContentProbeVersion
             || completed.ConflictRevision != conflictRevision
-            || !string.Equals(completed.Path, path, StringComparison.OrdinalIgnoreCase)
+            || !string.Equals(completed.Path, path, ProjectFiles.PathComparison)
             || !ProjectFiles.SameMetadata(completed.Expected, current))
         {
             nextDiskContentProbeAt = 0;
@@ -1069,7 +1069,7 @@ public sealed class EditorWorkspace
     private void Save(JsonElement command)
     {
         string path = Files.Map(S(command, "path", Session.FilePath == null ? "Untitled.map.json" : Files.Relative(Session.FilePath)));
-        bool same = string.Equals(path, Session.FilePath, StringComparison.OrdinalIgnoreCase);
+        bool same = string.Equals(path, Session.FilePath, ProjectFiles.PathComparison);
         // Saving is the destructive conflict boundary, so always hash the current
         // bytes. The metadata-gated hash cache is intentionally limited to polling:
         // another process can preserve a file's length and timestamp while changing

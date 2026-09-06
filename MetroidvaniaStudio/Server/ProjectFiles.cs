@@ -9,6 +9,11 @@ namespace MetroidvaniaStudio.Server;
 public sealed class ProjectFiles
 {
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
+    // Unix volumes can distinguish case-only names, including optional macOS volumes.
+    // Keep Windows identities compatible while never merging distinct Unix paths.
+    internal static StringComparison PathComparison => OperatingSystem.IsWindows()
+        ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+    private static string NormalizeSeparators(string value) => value.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
     private const FileShare CooperativeReadShare = FileShare.ReadWrite | FileShare.Delete;
     private const int ErrorUnableToRemoveReplaced = 1175;
     private const int RecoveryEnvelopeVersion = 1;
@@ -134,7 +139,7 @@ public sealed class ProjectFiles
     }
     public string Relative(string absolute) => Path.GetRelativePath(MapsPath, absolute).Replace('\\', '/');
     public string[] List() => Directory.EnumerateFiles(MapsPath, "*.json", new EnumerationOptions
-        { RecurseSubdirectories = true, AttributesToSkip = FileAttributes.ReparsePoint })
+        { RecurseSubdirectories = true, AttributesToSkip = FileAttributes.ReparsePoint, MatchCasing = MatchCasing.CaseInsensitive })
         .Select(Relative).Where(path => !path.StartsWith(".Recovery/", StringComparison.OrdinalIgnoreCase)
             && !path.StartsWith("AutoExport/", StringComparison.OrdinalIgnoreCase)).Order(StringComparer.OrdinalIgnoreCase).ToArray();
 
@@ -452,7 +457,7 @@ public sealed class ProjectFiles
         if (savedPath != null)
         {
             string normalized = Relative(Map(savedPath));
-            if (!string.Equals(normalized, savedPath.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(normalized, savedPath.Replace('\\', '/'), PathComparison))
                 throw new ArgumentException("Recovery target path is not canonical.", nameof(savedPath));
             ValidateSha256(savedDocumentHash!);
         }
@@ -614,11 +619,14 @@ public sealed class ProjectFiles
 
     private static string ResolveWithin(string ownerRoot, string basePath, string relative)
     {
-        if (string.IsNullOrWhiteSpace(relative) || Path.IsPathRooted(relative) || relative.Contains(':'))
+        if (string.IsNullOrWhiteSpace(relative))
             throw new ArgumentException("Use a relative path inside the selected workspace.");
-        var root = Path.GetFullPath(Path.Combine(ownerRoot, basePath));
+        relative = NormalizeSeparators(relative);
+        if (Path.IsPathRooted(relative) || relative.Contains(':'))
+            throw new ArgumentException("Use a relative path inside the selected workspace.");
+        var root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(Path.Combine(ownerRoot, NormalizeSeparators(basePath))));
         var path = Path.GetFullPath(Path.Combine(root, relative));
-        if (!path.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        if (!path.StartsWith(Path.EndsInDirectorySeparator(root) ? root : root + Path.DirectorySeparatorChar, PathComparison))
             throw new ArgumentException("The requested path leaves its permitted workspace folder.");
         // Do not follow junctions or symlinks through otherwise valid lexical paths.
         for (var part = path; part != null && part.Length >= ownerRoot.Length; part = Path.GetDirectoryName(part))

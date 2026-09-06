@@ -1,24 +1,21 @@
+[CmdletBinding(PositionalBinding=$false)]
 param(
     [ValidateRange(1024, 65535)][int]$Port = 18765,
     [Alias('ProjectPath')][string]$Project = '',
-    [switch]$NoBrowser
+    [switch]$NoBrowser,
+    [switch]$Restart,
+    [switch]$Foreground,
+    [string]$BuildDirectory = '',
+    [switch]$CheckOnly,
+    [Parameter(ValueFromRemainingArguments=$true)][string[]]$RemainingArguments
 )
 $ErrorActionPreference = 'Stop'
-$studioRoot = Split-Path $PSScriptRoot -Parent
-$publishedDll = Join-Path $PSScriptRoot 'Server/MetroidvaniaStudio.Server.dll'
-if (Test-Path -LiteralPath $publishedDll -PathType Leaf) {
-    $buildDirectory = $studioRoot
-} else {
-    $buildsRoot = Join-Path $studioRoot 'Builds'
-    $latest = Join-Path $buildsRoot 'latest.json'
-    if (!(Test-Path -LiteralPath $latest -PathType Leaf)) {
-        Write-Output 'No local build yet. Building once before the first launch...'
-        & (Join-Path $PSScriptRoot 'Build-MetroidvaniaStudio.ps1')
-    }
-    $build = Get-Content -LiteralPath $latest -Raw | ConvertFrom-Json
-    if ($build.formatVersion -ne 1 -or $build.folder -notmatch '^\d+\.\d+\.\d+-\d{8}-\d{6}-[a-f0-9]{8}$') {
-        throw 'Invalid local build index. Run Build-MetroidvaniaStudio.bat again.'
-    }
-    $buildDirectory = Join-Path $buildsRoot $build.folder
-}
-& (Join-Path $PSScriptRoot 'Start-MetroidvaniaStudio.ps1') -BuildDirectory $buildDirectory -Port $Port -Project $Project -OpenBrowser:(!$NoBrowser)
+. (Join-Path $PSScriptRoot 'Runtime-Tools.ps1')
+$options = Merge-StudioOptions -Options @{ Port=$Port; Project=$Project; NoBrowser=[bool]$NoBrowser; Restart=[bool]$Restart; Foreground=[bool]$Foreground; BuildDirectory=$BuildDirectory; CheckOnly=[bool]$CheckOnly } -Arguments $RemainingArguments -Allowed @('Port','Project','NoBrowser','Restart','Foreground','BuildDirectory','CheckOnly')
+$arguments = @('--port', [string]$options.Port)
+if ($options.Project) { $arguments += @('--project', [IO.Path]::GetFullPath($options.Project)) }
+if ($options.NoBrowser) { $arguments += '--no-browser' }
+if ($options.Restart) { $arguments += '--restart' }
+if ($options.Foreground) { $arguments += '--foreground' }
+if ($options.BuildDirectory) { $arguments += @('--build-directory', [IO.Path]::GetFullPath($options.BuildDirectory)) }
+Invoke-StudioLauncher -Action $(if ($options.CheckOnly) { 'check' } else { 'run' }) -Arguments $arguments

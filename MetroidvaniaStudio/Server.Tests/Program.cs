@@ -65,6 +65,7 @@ var tests = new (string name, Action run)[]
     ("catalog collection and aggregate work are bounded", () => Fixture(CatalogComplexityLimits)),
     ("stale server instance rejects matching revision mutation", () => Fixture(StaleInstance)),
     ("storage rejects traversal, rooted paths and device aliases", Paths),
+    ("portable paths preserve separators, extension discovery and distinct map identities", () => Fixture(PortablePaths)),
     ("restart recovers last committed document", () => Fixture(Recovery)),
     ("save intent prevents stale recovery after target publication", StaleRecoveryAfterSave),
     ("new dirty recovery supersedes a clean saved target", () => Fixture(DirtyRecoveryAfterSave)),
@@ -238,8 +239,10 @@ static void AutoExportIdentity(EditorWorkspace w)
     Check(AutoDirectory(w) == workspaceDirectory && AutoFiles(w).Select(Path.GetFileName).SequenceEqual(new[] { "new-room.json" })
         && Directory.GetFiles(namedDirectory, "*.json").Length == 1,
         "New replaces only the unsaved workspace exports; saved map identity remains isolated.");
-    Check(AutoRoomExporter.MapKey("Folder/Map.json") == AutoRoomExporter.MapKey("folder\\map.JSON"),
-        "The saved identity is stable across Windows path casing and separators.");
+    Check((AutoRoomExporter.MapKey("Folder/Map.json") == AutoRoomExporter.MapKey("folder\\map.JSON")) == OperatingSystem.IsWindows(),
+        "Windows export identity keeps its legacy casing; Unix names remain distinct.");
+    Check(AutoRoomExporter.MapKey("Folder/Map.json") == AutoRoomExporter.MapKey("Folder\\Map.json"),
+        "Portable separators identify the same map on every platform.");
 }
 static void AutoExportConflict(EditorWorkspace w)
 {
@@ -1020,6 +1023,37 @@ static void Paths() => Fixture(w =>
     Check(ProjectFiles.SameContent(first, touched) && touched.LastWriteUtcTicks != first.LastWriteUtcTicks,
         "A metadata-only touch must refresh its stamp without inventing a content conflict.");
 });
+static void PortablePaths(EditorWorkspace w)
+{
+    Check(w.Files.Map(@"nested\upper.JSON") == Path.Combine(w.Files.MapsPath, "nested", "upper.JSON"),
+        "Backslash input must become directory separators rather than literal Unix filename characters.");
+    string rootedShare = new string((char)92, 2) + string.Join((char)92, "host", "share", "map.json");
+    foreach (string path in new[] { @"..\outside.json", @"\rooted.json", rootedShare })
+        Throws<ArgumentException>(() => w.Files.Map(path));
+    Send(w, "save", ("path", @"nested\upper.JSON"));
+    Check(w.Files.List().Contains("nested/upper.JSON"),
+        "Files accepted by Save must remain discoverable even with an uppercase extension.");
+    Check(w.Files.Relative(w.Session.FilePath!) == "nested/upper.JSON", "Saved paths use portable separators.");
+
+    if (OperatingSystem.IsWindows()) return;
+    Throws<ArgumentException>(() => w.Files.Map("../maps/outside.json"));
+    Check(AutoRoomExporter.MapKey("map.json") != AutoRoomExporter.MapKey("Map.json")
+        && AutoRoomExporter.MapKey("\u00e9.json") != AutoRoomExporter.MapKey("e\u0301.json"),
+        "Unix export namespaces must not merge case-distinct or Unicode-distinct filenames.");
+
+    // macOS supports both case-sensitive and case-insensitive volumes. Verify
+    // independent Save As baselines only when this actual volume permits them.
+    Send(w, "save", ("path", "case.map.json")); w.FlushAutoExports();
+    string firstExports = AutoDirectory(w);
+    if (File.Exists(w.Files.Map("CASE.map.json"))) return;
+    string original = File.ReadAllText(w.Files.Map("case.map.json"));
+    Send(w, "roomProperties", ("id", w.Canvas.Room.id), ("name", "second-map"));
+    Send(w, "save", ("path", "CASE.map.json")); w.FlushAutoExports();
+    Check(File.ReadAllText(w.Files.Map("case.map.json")) == original && AutoDirectory(w) != firstExports,
+        "Case-distinct Save As must preserve the first source and keep separate automatic exports.");
+    Check(w.Files.List().Contains("case.map.json") && w.Files.List().Contains("CASE.map.json"),
+        "Both case-distinct saved maps must remain discoverable.");
+}
 static void StartPropertyFixture(EditorWorkspace w, bool lockedNeighbor = false)
 {
     var target = new MapRoom { id = "target", name = "before", width = 10, height = 10 };
@@ -1337,36 +1371,37 @@ static void Recovery(EditorWorkspace w)
 }
 static void StaleRecoveryAfterSave()
 {
-    FileStream? recoveryLease = null;
-    try
+    byte[]? saveIntent = null;
+    FixtureWithPublishHook(destination =>
     {
-        FixtureWithPublishHook(destination =>
-        {
-            string recovery = Path.Combine(Path.GetDirectoryName(destination)!, ".Recovery", "Workspace.map.json");
-            recoveryLease = new FileStream(recovery, FileMode.Open, FileAccess.Read, FileShare.Read);
-        }, w =>
-        {
-            Send(w, "documentProperties", ("name", "older dirty A"));
-            w.FlushRecovery();
-            Send(w, "documentProperties", ("name", "latest saved B"));
-            Send(w, "save", ("path", "latest.map.json"));
-            w.FlushRecovery();
-            recoveryLease!.Dispose(); recoveryLease = null;
+        if (Path.GetFileName(destination) != "latest.map.json") return;
+        string recovery = Path.Combine(Path.GetDirectoryName(destination)!, ".Recovery", "Workspace.map.json");
+        saveIntent = File.ReadAllBytes(recovery);
+    }, w =>
+    {
+        Send(w, "documentProperties", ("name", "older dirty A"));
+        w.FlushRecovery();
+        Send(w, "documentProperties", ("name", "latest saved B"));
+        Send(w, "save", ("path", "latest.map.json"));
+        w.FlushRecovery();
+        Check(saveIntent != null, "The save intent must already exist at the target publication boundary.");
+        // Restore the exact pre-publication bytes to simulate a crash before
+        // recovery cleanup. Open-file deletion rules differ between platforms.
+        Directory.CreateDirectory(Path.GetDirectoryName(w.Files.RecoveryPath)!);
+        File.WriteAllBytes(w.Files.RecoveryPath, saveIntent!);
 
-            ProjectFiles.RecoveryMap marker = w.Files.LoadRecovery();
-            Check(!marker.IsDirty && marker.Document.name == "latest saved B" && marker.SavedPath == "latest.map.json",
-                "The pre-publication marker must replace the older dirty recovery with the exact document being saved.");
-            var restarted = new EditorWorkspace(new ProjectFiles(w.Files.ProjectPath));
-            try
-            {
-                Check(restarted.Session.Document.name == "latest saved B" && !restarted.Session.IsDirty
-                    && restarted.Session.FilePath == w.Files.Map("latest.map.json"),
-                    "A crash-window clean marker must validate and open B instead of the older A snapshot.");
-            }
-            finally { restarted.StopAutoExports(); restarted.Canvas.Dispose(); }
-        });
-    }
-    finally { recoveryLease?.Dispose(); }
+        ProjectFiles.RecoveryMap marker = w.Files.LoadRecovery();
+        Check(!marker.IsDirty && marker.Document.name == "latest saved B" && marker.SavedPath == "latest.map.json",
+            "The pre-publication marker must replace the older dirty recovery with the exact document being saved.");
+        var restarted = new EditorWorkspace(new ProjectFiles(w.Files.ProjectPath));
+        try
+        {
+            Check(restarted.Session.Document.name == "latest saved B" && !restarted.Session.IsDirty
+                && restarted.Session.FilePath == w.Files.Map("latest.map.json"),
+                "A crash-window clean marker must validate and open B instead of the older A snapshot.");
+        }
+        finally { restarted.StopAutoExports(); restarted.Canvas.Dispose(); }
+    });
 }
 static void DirtyRecoveryAfterSave(EditorWorkspace w)
 {

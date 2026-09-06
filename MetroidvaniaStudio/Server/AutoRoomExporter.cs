@@ -144,8 +144,15 @@ public sealed class AutoRoomExporter : IDisposable
         }
     }
 
-    public static string MapKey(string? savedRelativePath) => savedRelativePath == null ? "Workspace"
-        : "Map-" + Hash(savedRelativePath.Replace('\\', '/').Normalize(NormalizationForm.FormC).ToUpperInvariant())[..20];
+    public static string MapKey(string? savedRelativePath)
+    {
+        if (savedRelativePath == null) return "Workspace";
+        string identity = savedRelativePath.Replace('\\', '/');
+        // Preserve existing Windows export paths. Case and Unicode spelling may
+        // identify separate files on Unix, so folding there would mix their exports.
+        if (OperatingSystem.IsWindows()) identity = identity.Normalize(NormalizationForm.FormC).ToUpperInvariant();
+        return "Map-" + Hash(identity)[..20];
+    }
 
     private ExportResult? Export(Snapshot snapshot)
     {

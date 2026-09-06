@@ -20,6 +20,12 @@ builder.WebHost.ConfigureKestrel(options =>
 builder.Logging.ClearProviders(); builder.Logging.AddSimpleConsole(options => options.SingleLine = true);
 builder.Logging.SetMinimumLevel(LogLevel.Warning);
 var files = new ProjectFiles(project, studioRoot: studioRoot);
+string sessionDirectory = Path.Combine(project, ".studio"), sessionFile = Path.Combine(sessionDirectory, "server.lock");
+foreach (string candidate in new[] { sessionDirectory, sessionFile })
+    if (File.Exists(candidate) || Directory.Exists(candidate))
+        if ((File.GetAttributes(candidate) & FileAttributes.ReparsePoint) != 0) throw new IOException("Workspace session files cannot be symbolic links.");
+Directory.CreateDirectory(sessionDirectory);
+using var workspaceLock = new FileStream(sessionFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
 var workspace = new EditorWorkspace(files);
 string webRoot = Path.GetFullPath(builder.Configuration["web-root"] ?? Path.Combine(studioRoot, "MetroidvaniaStudio/dist"));
 var app = builder.Build();
@@ -59,7 +65,7 @@ app.Use(async (context, next) =>
         await context.Response.WriteAsJsonAsync(new { error = error.Message });
     }
 });
-app.MapGet("/api/health", () => Results.Json(new { instanceId = workspace.InstanceId, projectPath = files.ProjectPath, workspacePath = files.ProjectPath }));
+app.MapGet("/api/health", () => Results.Json(new { instanceId = workspace.InstanceId, projectPath = files.ProjectPath, workspacePath = files.ProjectPath, launchToken = builder.Configuration["launch-token"], processId = Environment.ProcessId, runtimePath = typeof(EditorWorkspace).Assembly.Location }));
 app.MapPost("/api/shutdown", async (HttpContext context) =>
 {
     if (context.Request.Headers["X-Metroidvania-Studio-Instance"].ToString() != workspace.InstanceId)

@@ -2,6 +2,9 @@
 
 ## 0.1.0
 
+- Add Windows, Linux and macOS build/run entry points with a shared runtime launcher, verified background sessions and safe save-before-restart.
+- Prevent concurrent workspace writers and preserve case-sensitive file identities on Unix.
+
 - Per-map PPU and reference-resolution settings with compatible JSON metadata.
 - Optional Unity package with resource import, room loading, camera setup and local refresh.
 

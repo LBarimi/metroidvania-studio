@@ -4,7 +4,33 @@ A web-based 2D world editor for metroidvania games. Create connected rooms, pain
 
 The browser UI and local server run independently. Workspaces contain maps, resource definitions and textures; the Unity adapter in `engine/unity` imports exported JSON and follows a local studio session. Other consumers can implement the same JSON contract.
 
-## Run on Windows
+## Platform launchers
+
+The root `platform` folder contains native launch entry points:
+
+| Platform | Build | Run | Stop |
+| --- | --- | --- | --- |
+| Windows | `platform/win/build.bat` | `platform/win/run.bat` | `platform/win/stop.bat` |
+| Linux | `platform/linux/build.sh` | `platform/linux/run.sh` | `platform/linux/stop.sh` |
+| macOS | `platform/mac/build.command` | `platform/mac/run.command` | `platform/mac/stop.command` |
+
+Windows batch files and macOS command files can be opened from the file manager. Linux scripts can be run from a terminal. Run starts the local server in the background and opens the browser. `--no-browser` suppresses browser launch on Linux/macOS; Windows accepts `-NoBrowser`.
+
+Build requires **Node.js 24+**, **.NET SDK 10**, and Git in a source checkout. After a successful build, Run requires only **ASP.NET Core Runtime 10**; Node.js and an SDK are not needed to run a complete build. Each platform uses its native runtime executable. Engine installations are not required. macOS requires a supported .NET 10 operating system version and the appropriate Intel or Apple Silicon runtime.
+
+```sh
+bash platform/linux/build.sh
+bash platform/linux/run.sh --project ../Workspace --port 18765
+bash platform/linux/stop.sh --project ../Workspace --port 18765
+```
+
+The matching macOS files use the same options. Paths with spaces must be quoted. Run resolves paths from its script location while relative workspace arguments are relative to the caller's working directory. Builds stay in `Builds/`; authored data stays in the selected workspace. The existing root Windows batch files continue to work.
+
+Start/stop operations are serialized per launcher port. A startup token, process identity and server instance prevent accidental adoption or shutdown of another application. Only one server can write to a workspace at a time. Restart saves recovery and room exports before stopping; failed saves leave the server running. Missing or incomplete new builds never stop an existing working server.
+
+The platform validation workflow runs build, storage and launcher integration checks on Windows, Linux and macOS. It does not publish releases. The existing manual release workflow remains main-only and currently produces the Windows ZIP; local platform builds are separate from release publication.
+
+## Windows shortcuts
 
 For a source checkout, install Node.js 24 or later and .NET SDK 10. Use the batch files in the repository root:
 
@@ -13,7 +39,7 @@ For a source checkout, install Node.js 24 or later and .NET SDK 10. Use the batc
 
 Running an existing build only requires ASP.NET Core Runtime 10. Reopening the same build reuses its server. After building a newer version, Run saves and stops the previous session before starting the new version. Maps remain in `.local/workspace`, separate from generated builds. Failed builds leave the previous build available. `Builds/` is excluded from Git; these local builds do not create releases or tags.
 
-Pass `-NoBrowser` to Run for background checks, and `-Project` / `-Port` for a custom workspace. To apply source changes, run Build again. The existing `MetroidvaniaStudio/Start-MetroidvaniaStudio.bat` remains available for building and starting directly from source.
+Pass `-NoBrowser` to the Windows Run script for background checks, and `-Project` / `-Port` for a custom workspace. To apply source changes, run Build again. The existing `MetroidvaniaStudio/Start-MetroidvaniaStudio.bat` remains available for building and starting directly from source.
 
 For a prebuilt Windows release, extract the complete archive, install ASP.NET Core Runtime 10, then double-click `Run-MetroidvaniaStudio.bat` (or the included Start batch file). A prebuilt release does not require Node.js or an SDK. Release archives are framework-dependent and do not bundle a runtime.
 
@@ -86,7 +112,7 @@ node Tools/Release/release.mjs --dry-run
 node Tools/Release/release.mjs --pack
 ```
 
-The **Manual release** workflow runs only when dispatched for `main`. Its publish input defaults to false. Enabling publication runs validation and packaging, then creates `v<version>` at the selected main revision and uploads the archive. Versions below 1.0.0 are marked as prereleases. Feature pushes do not deploy or create tags. The archive includes the local server, web UI, localisation, sample resources and launch scripts; generated workspace data is excluded.
+The **Manual release** workflow runs only when dispatched for `main`. Its publish input defaults to false. Enabling publication runs validation and packaging, then creates `v<version>` at the selected main revision and uploads the archive. Versions below 1.0.0 are marked as prereleases. Feature pushes do not deploy or create tags. The archive includes the local server, common launcher, web UI, localisation, sample resources and platform launch scripts; generated workspace data is excluded.
 
 License selection is pending.
 
@@ -100,3 +126,11 @@ License selection is pending.
 소스를 수정했다면 Build를 실행한 뒤 Run을 실행하세요. 같은 빌드는 실행 중인 서버를 재사용하고, 새 빌드는 기존 세션을 저장한 뒤 전환합니다. 빌드 실패 시 이전 빌드는 유지됩니다. 빌드 결과는 Git에서 제외되며 로컬 빌드로 배포나 태그가 생성되지는 않습니다. 백그라운드 점검은 Run에 `-NoBrowser`를 전달하세요.
 
 기본 저장 위치는 스튜디오 폴더의 `.local/workspace`입니다. 다른 작업 폴더를 쓰려면 `-Project`, 포트를 바꾸려면 `-Port`를 지정하세요. 종료 스크립트는 저장을 마친 뒤 해당 서버만 종료합니다. 배포 압축 파일을 사용할 때는 ASP.NET Core Runtime 10만 필요하며, 업데이트 전에 작업 폴더를 보존하세요.
+
+## 플랫폼별 실행 안내
+
+루트 `platform` 폴더에서 운영체제에 맞는 폴더를 사용하세요. `win`은 `.bat`, `mac`은 `.command`, `linux`는 `.sh` 파일입니다. Build는 빌드만 수행하고, Run은 마지막 빌드를 실행한 뒤 웹브라우저를 엽니다. Stop은 저장을 마친 뒤 서버를 종료합니다. 맥과 리눅스에는 PowerShell 설치가 필요 없습니다.
+
+빌드할 때는 Node.js 24 이상, .NET SDK 10, Git이 필요합니다. 빌드가 완료된 뒤 실행할 때는 ASP.NET Core Runtime 10만 있으면 됩니다. 처음 실행하며 빌드까지 해야 하는 경우에는 빌드 도구가 필요합니다. 기존 루트의 Windows 배치파일도 계속 사용할 수 있습니다.
+
+리눅스·맥은 `--project`, `--port`, `--no-browser`, `--restart` 옵션을 사용합니다. Windows PowerShell 진입점은 기존 `-Project`, `-Port`, `-NoBrowser`, `-Restart` 옵션을 유지합니다. 같은 작업 폴더를 두 서버에서 동시에 편집하는 것은 차단합니다. 저장 실패 시 서버를 강제 종료하지 않습니다.

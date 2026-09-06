@@ -381,6 +381,9 @@ namespace MetroidvaniaStudio
                 try
                 {
                     if (Directory.Exists(path)) Directory.Delete(path, true);
+                    // A successful Windows delete can leave the empty directory
+                    // present. Reuse the bounded retry before reporting success.
+                    if (Directory.Exists(path)) throw new IOException("The temporary export folder is still present after cleanup.");
                     return null;
                 }
                 catch (Exception error) when ((error is IOException || error is UnauthorizedAccessException)
