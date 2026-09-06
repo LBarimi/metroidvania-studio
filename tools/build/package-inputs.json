@@ -25,5 +25,8 @@
   "platform/win/web/build.bat",
   "platform/win/web/run.bat",
   "platform/win/web/stop.bat",
-  "metroidvania-studio/web/studio-icon.svg"
+  "metroidvania-studio/web/studio-icon.svg",
+  "integrations/godot/README.md",
+  "integrations/ue/README.md",
+  "integrations/sdl/README.md"
 ]

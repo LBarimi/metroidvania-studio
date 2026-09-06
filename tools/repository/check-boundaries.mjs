@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const engineAsset = /\.(?:asmdef|asmref|meta|unity|prefab|asset|mat|anim|controller|inputactions|uasset|umap|uproject|uplugin|tscn|tres|gd)$/i;
 const engineRoot = /^(?:Assets|Packages|ProjectSettings|Library|Temp|UserSettings)(?:\/|$)/i;
 const sourceFile = /\.(?:cs|csproj|props|targets|ts|js|mjs|cjs|cpp|h|hpp|ps1|py)$/i;
-const engineCode = /\b(?:using|namespace)\s+(?:static\s+)?(?:\w+\s*=\s*)?(?:UnityEngine|UnityEditor|Godot)\b|\b(?:UnityEngine|UnityEditor|Godot)\.[A-Za-z_]|:\s*(?:[M]onoBehaviour|[S]criptableObject)\b|#\s*include\s*[<"](?:CoreMinimal\.h|Engine\/|GameFramework\/|UObject\/)/;
+const engineCode = /\b(?:using|namespace)\s+(?:static\s+)?(?:\w+\s*=\s*)?(?:UnityEngine|UnityEditor|Godot)\b|\b(?:UnityEngine|UnityEditor|Godot)\.[A-Za-z_]|:\s*(?:[M]onoBehaviour|[S]criptableObject)\b|#\s*include\s*[<"](?:CoreMinimal\.h|Engine\/|GameFramework\/|UObject\/|SDL3\/)/;
 const engineReference = /<(?:Reference|PackageReference)\b[^>]*\bInclude\s*=\s*["'](?:Unity|Godot)[^"']*["']/i;
 const windowsPath = /(?:^|[^A-Za-z0-9])([A-Za-z]:[\\/][^\s"'<>`]+)/;
 const homePath = /\/(?:Users|home|mnt|media|Volumes)\/[^/\\\s"'<>]+\//;
@@ -27,7 +27,7 @@ export function inspectBoundaries(files) {
     const name = file.name.replaceAll('\\', '/');
     const text = decode(file.bytes);
     const report = (rule, location = 'content') => issues.push({ path: file.name, location, rule });
-    const integration = name.startsWith('integrations/unity/');
+    const integration = /^integrations\/(?:unity|godot|ue|sdl)\//.test(name);
     if (name !== 'commit message') {
       const directories = name.split('/').slice(0, -1);
       if (directories.some(part => !/^\.?[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part)

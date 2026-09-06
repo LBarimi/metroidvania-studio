@@ -63,7 +63,7 @@ export function packRelease(state) {
   assert.equal(process.platform, 'win32', 'The current release archive targets Windows.');
   const node = process.execPath, dotnet = process.env.METROIDVANIA_STUDIO_DOTNET || 'dotnet';
   run(node, ['tools/repository/check-text.mjs']);
-  run(node, ['--test', 'tools/repository/check-text.test.mjs', 'tools/repository/check-boundaries.test.mjs', 'tools/release/release.test.mjs', 'platform/shared/build.test.mjs']);
+  run(node, ['--test', 'tools/repository/check-text.test.mjs', 'tools/repository/check-boundaries.test.mjs', 'tools/release/release.test.mjs', 'platform/shared/build.test.mjs', 'integrations/packages.test.mjs', 'integrations/sdl/tests/boundary.test.mjs']);
   run(node, ['metroidvania-studio/build-web.mjs', '--check-contracts']);
   for (const suite of ['Core.Tests', 'Server.Tests']) {
     run(dotnet, ['run', '--project', `metroidvania-studio/${suite.toLowerCase().replace('.', '-')}/MetroidvaniaStudio.${suite}.csproj`, '--configuration', 'Release', '-p:UseSharedCompilation=false']);
@@ -81,7 +81,7 @@ export function packRelease(state) {
     '--self-contained', 'false', '-p:UseAppHost=false', '-p:UseSharedCompilation=false', '-p:DebugType=None',
     '--output', path.join(bundle, 'metroidvania-studio/launcher')]);
   for (const relative of bundleInputs) copy(relative, bundle);
-  run(node, ['integrations/unity/build-package.mjs', path.join(bundle, `engine/unity/metroidvania-studio.unitypackage`)]);
+  run(node, ['integrations/build-packages.mjs', '--output', path.join(bundle, 'engine')]);
   if (existsSync(path.join(root, 'LICENSE'))) copy('LICENSE', bundle);
   if (existsSync(path.join(root, 'NOTICE'))) copy('NOTICE', bundle);
   const manifest = packageFiles(bundle).sort().map(file => ({ path: file.replaceAll('\\', '/'),

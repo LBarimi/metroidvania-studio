@@ -157,3 +157,19 @@ Project-owned directories use lowercase kebab-case, including `metroidvania-stud
 The Unity installer has one stable filename: `engine/unity/metroidvania-studio.unitypackage`. Platform builds regenerate it and include the same file in their output. Version numbers remain in release metadata and tags.
 
 Engine installers are published under `engine/<engine>/`. Adapter source, build scripts, documentation and validation live under `integrations/<engine>/`; `engine/unity/` contains only `metroidvania-studio.unitypackage`.
+
+
+## Engine packages
+
+Distributable installers live under `engine`: Unity `.unitypackage`, Godot addon ZIP, Unreal Engine 5 plugin ZIP and SDL3 C++ source ZIP. Each folder contains one package. The studio remains independent of all engine installations.
+
+| Package | Setup | Import instructions |
+| --- | --- | --- |
+| `engine/unity/metroidvania-studio.unitypackage` | Open in Unity | [Unity guide](integrations/unity/README.md) |
+| `engine/godot/metroidvania-studio.zip` | Extract, run `install.bat`, select `project.godot` | [Godot guide](integrations/godot/README.md) |
+| `engine/ue/metroidvania-studio.zip` | Extract, run `install.bat`, select `.uproject`; engine-specific C++ build required | [Unreal guide](integrations/ue/README.md) |
+| `engine/sdl/metroidvania-studio.zip` | Extract, `build.bat`, then `run.bat` | [SDL guide](integrations/sdl/README.md) |
+
+Godot and Unreal imports embed textures with the room. SDL supplies collision geometry for a consuming application's physics system. These initial adapters load local JSON; they do not provide live synchronization or execute object/game behavior. Unreal Engine 4 is not yet supported.
+
+Regenerate all archives with `node integrations/build-packages.mjs`; verify them with `node integrations/build-packages.mjs --check`. Archive generation requires no engine SDK. Standard studio builds and release bundles include all four packages. Engine-native validation instructions are in `integrations/VALIDATION.md`.

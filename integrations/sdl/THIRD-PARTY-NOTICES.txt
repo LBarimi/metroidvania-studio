@@ -1,0 +1,4 @@
+The source package does not embed SDL source or binaries. When SDL is downloaded
+by CMake, its source distribution and license remain in the build dependency
+directory. Preserve the applicable SDL notices with redistributed binaries.
+The portable JSON reader and room loader have no third-party dependencies.

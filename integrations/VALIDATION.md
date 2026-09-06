@@ -1,0 +1,14 @@
+# Engine integration validation
+
+All validation uses temporary directories or `.local/engines`. Do not open an interactive editor to run these checks.
+
+1. Run `node tools/repository/check-text.mjs`, then `node --test integrations/packages.test.mjs integrations/sdl/tests/boundary.test.mjs tools/repository/check-boundaries.test.mjs platform/shared/build.test.mjs tools/release/release.test.mjs`.
+2. Run `node integrations/build-packages.mjs`, followed by `node integrations/build-packages.mjs --check`. The archives are reproducible and include per-file SHA-256 manifests. No engine installation is used during archive generation.
+3. Configure `integrations/shared/native` with CMake, build `studio-native-tests`, then pass `samples/maps/Sample.map.json`, `samples/catalog.json` and `integrations/shared/tests/fixtures/Coverage.json` to the test executable. This verifies the parser, camera overrides, shapes, groups, triggers and resource path validation.
+4. Extract the Godot archive into a temporary project with `project.godot`. Copy `integrations/godot/tests/smoke.gd` to that project and run Godot with `--headless --path <temporary-project> --script smoke.gd`. Also run the installer with `-ProjectFile <temporary-project-file>` and open that project with `--headless --editor --quit` to verify plugin registration. Repeated installation must preserve unrelated plugins and create a backup.
+5. Build the Unreal plugin using the installed engine's `RunUAT BuildPlugin -Plugin=<descriptor> -Package=<temporary-output> -TargetPlatforms=Win64`. Install into a disposable host project. Run `UnrealEditor-Cmd <host-project> -unattended -nullrhi -nosound -ExecCmds="Automation RunTests MetroidvaniaStudio.Import.Room" -TestExit="Automation Test Queue Empty" -ReportExportPath=<temporary-report>`. Inspect the automation report, not just the process exit code.
+6. Extract the SDL archive and configure/build it with CMake. Run the preview with its sample map, catalog, resource directory and `--smoke`. This uses a memory surface, not a desktop window. Configure again with `STUDIO_FETCH_SDL=OFF` and an installed SDL package when validating offline builds.
+
+The coverage fixture exercises a negative room position, all five tile shapes, a hidden group, foreground/background, a rotated and mirrored object, a trigger and custom camera properties. Public samples contain no private workspace data.
+
+Current native validation targets are Windows, Godot 4.7.2, Unreal Engine 5.8.2 and SDL 3.4.16. UE4, other UE5 minor versions and Linux/macOS native builds are not certified by Windows-only checks. A consuming game's final package and physics behavior still need its own project tests.

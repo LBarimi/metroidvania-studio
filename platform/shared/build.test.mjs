@@ -45,8 +45,10 @@ function buildRunner(checkout, failure = '') {
       return '';
     }
     if (args[0].endsWith('build-web.mjs')) { put(path.join(args[1], 'index.html'), '<!doctype html>'); return ''; }
-    if (args[0].endsWith('build-package.mjs')) {
-      put(path.join(checkout, 'engine/unity/metroidvania-studio.unitypackage'), 'fixture package');
+    if (args[0].endsWith('build-packages.mjs')) {
+      const output = args[args.indexOf('--output') + 1];
+      for (const engine of ['unity', 'godot', 'ue', 'sdl'])
+        if (failure !== 'missing-' + engine) put(path.join(output, engine, engine === 'unity' ? 'metroidvania-studio.unitypackage' : 'metroidvania-studio.zip'), 'fixture package');
       return '';
     }
     throw new Error('Unexpected build command: ' + command);
@@ -73,14 +75,14 @@ test('successful build publishes complete immutable output and then latest point
   assert.equal(calls.filter(call => call.args[0] === 'publish').length, 4);
   assert.equal(existsSync(path.join(checkout, '.local/build-v2.lock')), false);
 });
-for (const failure of ['Launcher', 'missing-Launcher']) test(failure + ' failure preserves previous successful build and environment', () => {
+for (const failure of ['Launcher', 'missing-Launcher', 'missing-godot', 'missing-ue', 'missing-sdl']) test(failure + ' failure preserves previous successful build and environment', () => {
   const checkout = fixture();
   const good = buildStudio(options(checkout, buildRunner(checkout).runner));
   const latest = path.join(checkout, 'builds/latest.json'), bytes = readFileSync(latest);
   const previous = process.env.METROIDVANIA_STUDIO_DOTNET;
   process.env.METROIDVANIA_STUDIO_DOTNET = 'preserved-tool-selection';
   try {
-    assert.throws(() => buildStudio(options(checkout, buildRunner(checkout, failure).runner)), /failure|Incomplete build/);
+    assert.throws(() => buildStudio(options(checkout, buildRunner(checkout, failure).runner)), /failure|Incomplete build|Incomplete engine package/);
     assert.deepEqual(readFileSync(latest), bytes);
     assert.ok(existsSync(path.join(good, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll')));
     assert.equal(process.env.METROIDVANIA_STUDIO_DOTNET, 'preserved-tool-selection');

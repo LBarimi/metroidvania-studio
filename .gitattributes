@@ -15,3 +15,9 @@
 # POSIX entry points must keep their shebang and line endings intact.
 *.sh text eol=lf
 *.command text eol=lf
+
+*.zip binary
+*.gd text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.uid text eol=lf

@@ -1,0 +1,113 @@
+{
+  "formatVersion": 2,
+  "tileSize": 16,
+  "name": "Adapter coverage",
+  "properties": [
+    {
+      "key": "metroidvaniaStudio.camera.ppu",
+      "value": "32"
+    },
+    {
+      "key": "metroidvaniaStudio.camera.width",
+      "value": "640"
+    },
+    {
+      "key": "metroidvaniaStudio.camera.height",
+      "value": "360"
+    }
+  ],
+  "layerGroups": [
+    {
+      "id": "hidden",
+      "layer": 0,
+      "visible": false,
+      "parentId": ""
+    }
+  ],
+  "rooms": [
+    {
+      "id": "coverage",
+      "name": "Coverage room",
+      "x": -7,
+      "y": 3,
+      "width": 6,
+      "height": 4,
+      "foreground": [
+        {
+          "x": 0,
+          "y": 0,
+          "shape": 0,
+          "material": "terrain"
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "shape": 1,
+          "material": "terrain"
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "shape": 2,
+          "material": "terrain"
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "shape": 3,
+          "material": "terrain"
+        },
+        {
+          "x": 4,
+          "y": 0,
+          "shape": 4,
+          "material": "terrain"
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "shape": 0,
+          "material": "terrain",
+          "groupId": "hidden"
+        }
+      ],
+      "background": [
+        {
+          "x": 5,
+          "y": 0,
+          "shape": 0,
+          "material": "terrain"
+        }
+      ],
+      "objects": [
+        {
+          "id": "marker",
+          "definition": "object",
+          "layer": 2,
+          "x": 2,
+          "y": 2,
+          "width": 2,
+          "height": 1,
+          "rotation": 90,
+          "scaleX": -2,
+          "scaleY": 1,
+          "properties": [
+            {
+              "key": "custom",
+              "value": "preserved"
+            }
+          ]
+        },
+        {
+          "id": "zone",
+          "definition": "zone",
+          "layer": 3,
+          "x": 4,
+          "y": 2,
+          "width": 1,
+          "height": 1
+        }
+      ]
+    }
+  ]
+}

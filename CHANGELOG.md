@@ -2,6 +2,8 @@
 
 ## 0.1.0
 
+- Add Godot, Unreal Engine 5 and SDL3 integration packages, local installers, portable JSON loading and native validation.
+
 - Move Windows web build, run and stop scripts into `platform/win/web/`.
 
 - Exclude local workflow and hook configuration from tracked source.

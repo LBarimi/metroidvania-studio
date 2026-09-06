@@ -99,10 +99,11 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
         filter: candidate => { if (!inside(realpathSync(studioRoot), realpathSync(candidate))) throw new Error('Build input links outside the checkout.'); return true; } });
     }
     for (const notice of ['LICENSE', 'NOTICE']) if (existsSync(path.join(studioRoot, notice))) copyFileSync(path.join(studioRoot, notice), path.join(output, notice));
-    runner(process.execPath, [path.join(studioRoot, 'integrations/unity/build-package.mjs')], { cwd: studioRoot });
-    const packageName = `metroidvania-studio.unitypackage`;
-    mkdirSync(path.join(output, 'engine/unity'), { recursive: true });
-    copyFileSync(path.join(studioRoot, 'engine/unity', packageName), path.join(output, 'engine/unity', packageName));
+    runner(process.execPath, [path.join(studioRoot, 'integrations/build-packages.mjs'), '--output', path.join(output, 'engine')], { cwd: studioRoot });
+    for (const engine of ['unity', 'godot', 'ue', 'sdl']) {
+      const packageName = engine === 'unity' ? 'metroidvania-studio.unitypackage' : 'metroidvania-studio.zip';
+      if (!existsSync(path.join(output, 'engine', engine, packageName))) throw new Error(`Incomplete engine package: ${engine}`);
+    }
     for (const needed of ['metroidvania-studio/dist/index.html', 'metroidvania-studio/server/MetroidvaniaStudio.Server.dll',
       'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll']) if (!existsSync(path.join(output, needed))) throw new Error(`Incomplete build: ${needed}`);
     // Cache is private, ignored state. Only absolute discovered executables are persisted.
