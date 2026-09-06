@@ -4,9 +4,9 @@ Target: Unity **6000.3.9f1**. The web studio and its server remain independent o
 
 ## Install and connect
 
-1. Run the platform build script (`platform/win/build.bat` on Windows). The package is written to `engine/unity/metroidvania-studio.unitypackage` and included in the standalone build folder. `Build-UnityPackage.bat` invokes the same build.
+1. Run the platform build script (`platform/win/web/build.bat` on Windows). The package is written to `engine/unity/metroidvania-studio.unitypackage` and included in the standalone build folder. `Build-UnityPackage.bat` invokes the same build.
 2. With your Unity project open, double-click the package and select **Import**. It installs under `Assets/MetroidvaniaStudioIntegration` with stable GUIDs.
-3. Start the web studio with the platform run script (`platform/win/run.bat` on Windows).
+3. Start the web studio with the platform run script (`platform/win/web/run.bat` on Windows).
 4. In Unity, open **Tools > MetroidvaniaStudio**, connect to the displayed loopback address, select a room and press **Load / Reload room**.
 5. Enable **Follow web edits** to refresh the loaded room while this window is open. Polling runs every two seconds, pauses in Play Mode and skips unchanged server revisions. Changes in another room do not rebuild the loaded room. Disconnecting does not delete imported data.
 

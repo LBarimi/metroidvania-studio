@@ -22,8 +22,8 @@
   "platform/mac/build.command",
   "platform/mac/run.command",
   "platform/mac/stop.command",
-  "platform/win/build.bat",
-  "platform/win/run.bat",
-  "platform/win/stop.bat",
+  "platform/win/web/build.bat",
+  "platform/win/web/run.bat",
+  "platform/win/web/stop.bat",
   "metroidvania-studio/web/studio-icon.svg"
 ]

@@ -2,6 +2,8 @@
 
 ## 0.1.0
 
+- Move Windows web build, run and stop scripts into `platform/win/web/`.
+
 - Exclude local workflow and hook configuration from tracked source.
 
 - Standardize source and build directories on lowercase kebab-case, keep diagnostics private, and provide one stable Unity installer filename.
