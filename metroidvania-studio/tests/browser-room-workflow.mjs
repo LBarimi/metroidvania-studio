@@ -133,6 +133,31 @@ try {
   await page.keyboard.press('Control+z'); await until(s => JSON.stringify(s.document) === original);
   checks.push('all eight room handles resize in Brush mode; edge cells remain paintable and neighbors propagate');
 
+  const inset = JSON.parse(original);
+  inset.rooms[0].foreground = [cell(2, 2), cell(4, 4)];
+  inset.rooms[0].background = [cell(6, 6)];
+  await command('import', { document: inset, discard: true }); await selectA();
+  const beforeShrink = JSON.stringify((await state()).document);
+  for (const [x, y] of [[-1,-1], [0,-1], [1,-1], [-1,0], [1,0], [-1,1], [0,1], [1,1]]) {
+    const handle = await point((x + 1) * 5, (y + 1) * 4); handle.x += x * 9; handle.y -= y * 9;
+    requests.length = 0;
+    await page.mouse.move(handle.x, handle.y); await page.mouse.down();
+    await page.mouse.move(handle.x - x * 32 * 8, handle.y + y * 32 * 8, { steps: 8 }); await page.mouse.up();
+    const expected = { x: x < 0 ? 2 : 0, y: y < 0 ? 2 : 0,
+      width: x < 0 ? 8 : x > 0 ? 7 : 10, height: y < 0 ? 6 : y > 0 ? 7 : 8 };
+    const resized = await until(s => Object.entries(expected).every(([key, value]) => s.document.rooms[0][key] === value));
+    const sent = requests.find(r => r.action === 'roomResize');
+    assert.ok(sent, 'A handle drag must reach the resize command.');
+    for (const [key, value] of Object.entries(expected)) assert.equal(sent[key], value, 'Preview and submitted edges must already stop at terrain.');
+    const room = resized.document.rooms[0];
+    for (const layer of ['foreground', 'background']) assert.deepEqual(room[layer].map(c => ({ ...c, x: c.x + room.x, y: c.y + room.y })), inset.rooms[0][layer]);
+    assert.equal(resized.document.rooms[1].x, x > 0 ? 7 : 10, 'Neighbors follow the actual clamped edge.');
+    await page.keyboard.press('Control+z'); await until(s => JSON.stringify(s.document) === beforeShrink);
+  }
+  checks.push('all eight shrink handles stop tightly on foreground/background tiles, preserve world contents and undo with neighbors');
+  await command('import', { document: JSON.parse(original), discard: true }); await selectA();
+
+
   await selectA(); await page.mouse.move(0, 0); await paint();
   await page.screenshot({ path: path.join(repository, '.local/logs/RoomWorkflow-Edit.png') });
   const neighboringTile = await pixel(await point(11.5, 4.5));

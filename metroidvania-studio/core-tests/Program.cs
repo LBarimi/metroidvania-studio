@@ -21,6 +21,8 @@ var tests = new (string name, Action run)[]
     ("map files require UTF-8 and allow its BOM", MapFileEncoding),
     ("all-layer clear preserves protected groups and other rooms", Clear),
     ("room resize propagates gap and local data", Resize),
+    ("room shrink clamps all eight handles to both terrain layers", ShrinkToTerrain),
+    ("room shrink preserves crop, empty and local-coordinate behavior", ShrinkOptions),
     ("room clipboard, transforms and collision-only joins", RoomWorkflow),
     ("locked neighbor blocks resize atomically", LockedResize),
     ("node selection transforms and node-only deletion", Nodes),
@@ -355,6 +357,71 @@ static void Resize()
     Check(s.Document.rooms[1].x == 19 && s.Document.rooms[2].x == 34, "Resize preserves all external gaps.");
     Check(s.Document.rooms[1].foreground[0].x == 2 && s.Document.rooms[1].objects[0].nodes[0] == new Vector2(4, 5), "Moved room keeps local contents.");
     s.Undo(); Check(Json(s.Document) == Json(doc) && !s.CanUndo, "Whole layout one undo");
+}
+static void ShrinkToTerrain()
+{
+    foreach (int hx in new[] { -1, 0, 1 }) foreach (int hy in new[] { -1, 0, 1 })
+    {
+        if (hx == 0 && hy == 0) continue;
+        var target = Room("target", 20, -30);
+        target.foreground.Add(new MapCell { x = 2, y = 3, shape = TileShape.TopRight });
+        target.background.Add(new MapCell { x = 6, y = 7 });
+        target.objects.Add(new MapObject { id = "marker", x = 4, y = 5, nodes = new List<Vector2> { new(6, 6) } });
+        var doc = Doc(target, Room("left", 5, -30), Room("right", 35, -30), Room("bottom", 20, -45), Room("top", 20, -15));
+        var session = new MapEditSession(doc); using var edit = new MapRoomEditing(session);
+        int left = hx < 0 ? 29 : 20, right = hx > 0 ? 21 : 30;
+        int bottom = hy < 0 ? -21 : -30, top = hy > 0 ? -29 : -20;
+        edit.Resize("target", new RectInt(left, bottom, right - left, top - bottom));
+        var result = session.Document.rooms[0];
+        int expectedLeft = hx < 0 ? 22 : 20, expectedRight = hx > 0 ? 27 : 30;
+        int expectedBottom = hy < 0 ? -27 : -30, expectedTop = hy > 0 ? -22 : -20;
+        Check(result.x == expectedLeft && result.y == expectedBottom
+            && result.width == expectedRight - expectedLeft && result.height == expectedTop - expectedBottom,
+            "Dragged edges must stop exactly on terrain; fixed edges must not move.");
+        var foreground = result.foreground.Single(); var background = result.background.Single();
+        Check(result.x + foreground.x == 22 && result.y + foreground.y == -27 && foreground.shape == TileShape.TopRight
+            && result.x + background.x == 26 && result.y + background.y == -23,
+            "Foreground, background and slope tiles must retain their world positions and shapes.");
+        Check(result.x + result.objects[0].x == 24 && result.y + result.objects[0].y == -25
+            && result.x + result.objects[0].nodes[0].x == 26 && result.y + result.objects[0].nodes[0].y == -24,
+            "Object bodies and nodes must retain their world positions.");
+        Check(session.Document.rooms[1].x == 5 + expectedLeft - 20
+            && session.Document.rooms[2].x == 35 + expectedRight - 30
+            && session.Document.rooms[3].y == -45 + expectedBottom + 30
+            && session.Document.rooms[4].y == -15 + expectedTop + 20,
+            "Detached neighbors must follow the clamped edge delta and preserve their gaps.");
+        string after = Json(session.Document);
+        session.Undo(); Check(Json(session.Document) == Json(doc) && !session.CanUndo, "Clamped resize and all neighbors must undo together.");
+        session.Redo(); Check(Json(session.Document) == after, "Redo must restore the exact clamped layout.");
+    }
+}
+static void ShrinkOptions()
+{
+    var target = Room("target");
+    target.foreground.Add(new MapCell { x = 2, y = 3 });
+    target.background.Add(new MapCell { x = 6, y = 7 });
+    var doc = Doc(target, Room("neighbor", 15));
+    var session = new MapEditSession(doc); using var edit = new MapRoomEditing(session);
+    edit.ResizeKeepingLocalContents("target", new RectInt(-10, -20, 1, 1));
+    var result = session.Document.rooms[0];
+    Check(result.x == -10 && result.y == -20 && result.width == 7 && result.height == 8
+        && result.foreground.Single().x == 2 && result.background.Single().y == 7,
+        "Inspector position and size must clamp dimensions while preserving local terrain.");
+    Check(session.Document.rooms[1].x == 2, "Inspector neighbor gap must use final clamped bounds.");
+    session.Undo(); Check(Json(session.Document) == Json(doc), "Inspector clamp must undo atomically.");
+    edit.Resize("target", new RectInt(0, 0, 1, 1), true);
+    result = session.Document.rooms[0];
+    Check(result.width == 1 && result.height == 1 && result.foreground.Count == 0 && result.background.Count == 0,
+        "Explicit crop must still remove terrain instead of clamping.");
+    session.Undo(); Check(Json(session.Document) == Json(doc), "Crop must remain undoable.");
+    var empty = new MapEditSession(Doc(Room("empty"))); using var emptyEdit = new MapRoomEditing(empty);
+    emptyEdit.Resize("empty", new RectInt(9, 9, 1, 1));
+    Check(empty.Document.rooms[0].width == 1 && empty.Document.rooms[0].x == 9, "Empty rooms may shrink to one tile.");
+    var full = Room("full"); full.foreground.Add(new MapCell { x = 9, y = 9 });
+    var fullSession = new MapEditSession(Doc(full)); using var fullEdit = new MapRoomEditing(fullSession);
+    fullEdit.Resize("full", new RectInt(0, 0, 1, 1));
+    Check(Json(fullSession.Document) == Json(Doc(full)) && !fullSession.CanUndo,
+        "A room already tight to its terrain must not change or create an undo entry.");
 }
 static void LockedResize()
 {

@@ -36,7 +36,7 @@ interface ObjectGesture {
   rebaseAfterPending: boolean;
   overflow: boolean;
 }
-interface Gesture { kind: 'selection' | 'pan' | 'paint' | 'room-create' | 'room-move' | 'room-resize' | 'object-move' | 'node-move'; pointer: number; start: Point; last: Point; screen: Point; center: Point; room: Room; area?: Rect; handle?: Point; node?: { id: string; index: number }; tile?: TileGesture; rawTileTime?: number; object?: ObjectGesture; expectation: CommandExpectation; tail: Promise<unknown>; failed: boolean }
+interface Gesture { kind: 'selection' | 'pan' | 'paint' | 'room-create' | 'room-move' | 'room-resize' | 'object-move' | 'node-move'; pointer: number; start: Point; last: Point; screen: Point; center: Point; room: Room; area?: Rect; handle?: Point; terrainBounds?: Rect | null; node?: { id: string; index: number }; tile?: TileGesture; rawTileTime?: number; object?: ObjectGesture; expectation: CommandExpectation; tail: Promise<unknown>; failed: boolean }
 interface ViewSnapshot { center: Point; pixelScale: number; overview: boolean }
 interface LayerIndex {
   rows: Map<number, Map<number, Cell>>;
@@ -495,6 +495,7 @@ export class MapCanvas {
     if (previewPan) g.kind = 'pan';
     else if (e.button === 0 && handle) {
       g.kind = 'room-resize'; g.room = current!; g.handle = handle; this.roomSelectionId = current!.id;
+      g.terrainBounds = this.roomTerrainBounds(current!);
     } else if (e.button === 0 && current && this.canResizeRoom(current) && this.roomMoveHandle(screen, current)) {
       g.kind = 'room-move'; g.room = current; this.roomSelectionId = current.id;
     } else if (e.button === 0 && hit && hit.id !== selection.roomId) {
@@ -996,11 +997,25 @@ export class MapCanvas {
     }
     return null;
   }
+  private roomTerrainBounds(room: Room): Rect | null {
+    // Cache once at pointer-down; dense rooms must not be rescanned for every preview frame.
+    let left = Infinity, bottom = Infinity, right = -Infinity, top = -Infinity;
+    for (const cells of [room.foreground, room.background]) for (const cell of cells) {
+      left = Math.min(left, cell.x); bottom = Math.min(bottom, cell.y);
+      right = Math.max(right, cell.x + 1); top = Math.max(top, cell.y + 1);
+    }
+    return Number.isFinite(left) ? { x: room.x + left, y: room.y + bottom, width: right - left, height: top - bottom } : null;
+  }
   private resizedRoom(g: Gesture): Rect {
     const dx = Math.round(g.last.x - g.start.x), dy = Math.round(g.last.y - g.start.y), r = g.room, h = g.handle!;
     let left = r.x, right = r.x + r.width, bottom = r.y, top = r.y + r.height;
     if (h.x < 0) left = Math.min(right - 1, left + dx); if (h.x > 0) right = Math.max(left + 1, right + dx);
     if (h.y < 0) bottom = Math.min(top - 1, bottom + dy); if (h.y > 0) top = Math.max(bottom + 1, top + dy);
+    if (!this.crop && g.terrainBounds) {
+      const terrain = g.terrainBounds;
+      left = Math.min(left, terrain.x); bottom = Math.min(bottom, terrain.y);
+      right = Math.max(right, terrain.x + terrain.width); top = Math.max(top, terrain.y + terrain.height);
+    }
     return { x: left, y: bottom, width: right - left, height: top - bottom };
   }
   requestDraw(): void { if (this.active && !this.raf) this.raf = requestAnimationFrame(() => { this.raf = 0; this.draw(); }); }

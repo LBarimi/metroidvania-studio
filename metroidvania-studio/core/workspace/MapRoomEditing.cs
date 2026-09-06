@@ -198,7 +198,8 @@ namespace MetroidvaniaStudio
         /// <summary>
         /// Changes room bounds while keeping its contents at their previous world positions.
         /// Rooms beyond changed edges and collision chains move with the full edge delta,
-        /// preserving their gaps and local contents. Crop removes only target-room terrain.
+        /// preserving their gaps and local contents. Without crop, edges stop at terrain.
+        /// Crop removes only target-room terrain.
         /// </summary>
         public void Resize(string id, RectInt worldBounds, bool crop = false)
             => Resize(id, worldBounds, crop, true);
@@ -219,6 +220,7 @@ namespace MetroidvaniaStudio
             MapRoom room = RequireRoom(id);
             RequireUnlocked(room);
             ValidateBounds(room.x, room.y, room.width, room.height);
+            if (!crop) worldBounds = ClampToTerrain(room, worldBounds, preserveWorldContentPosition);
             MapRoomResizePlan layout = MapRoomResizeLayout.Plan(session.Document.rooms, id, worldBounds);
             long offsetX = preserveWorldContentPosition ? (long)room.x - worldBounds.x : 0;
             long offsetY = preserveWorldContentPosition ? (long)room.y - worldBounds.y : 0;
@@ -365,6 +367,26 @@ namespace MetroidvaniaStudio
         private static bool Overlaps(MapRoom room, RectInt area) =>
             (long)room.x < (long)area.x + area.width && (long)room.x + room.width > area.x
             && (long)room.y < (long)area.y + area.height && (long)room.y + room.height > area.y;
+
+        private static RectInt ClampToTerrain(MapRoom room, RectInt bounds, bool preserveWorldContentPosition)
+        {
+            long left = bounds.x, bottom = bounds.y;
+            long right = left + bounds.width, top = bottom + bounds.height;
+            long originX = preserveWorldContentPosition ? room.x : bounds.x;
+            long originY = preserveWorldContentPosition ? room.y : bounds.y;
+            // Include every terrain group, even if its layer is hidden or locked.
+            // Resolve these edges before planning neighbors, so only the final delta propagates.
+            foreach (List<MapCell> cells in new[] { room.foreground, room.background })
+                foreach (MapCell cell in cells)
+                {
+                    long x = originX + cell.x, y = originY + cell.y;
+                    left = Math.Min(left, x); bottom = Math.Min(bottom, y);
+                    right = Math.Max(right, x + 1); top = Math.Max(top, y + 1);
+                }
+            int width = checked((int)(right - left)), height = checked((int)(top - bottom));
+            ValidateBounds(left, bottom, width, height);
+            return new RectInt((int)left, (int)bottom, width, height);
+        }
 
         private static List<MapCell> RebaseCells(List<MapCell> cells, long offsetX, long offsetY, RectInt bounds, bool crop)
         {
