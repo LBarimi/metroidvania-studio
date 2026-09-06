@@ -18,7 +18,7 @@ export class MiniMap {
   scale = 5;
   showNames = false;
   showGrid = false;
-  outlineWidth = 6;
+  outlineWidth = 12;
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private width = 1;
@@ -109,7 +109,7 @@ export class MiniMap {
   private screen(p: Point): Point { return { x: Math.round(this.width / 2 + (p.x - this.center.x) * this.scale), y: Math.round(this.height / 2 - (p.y - this.center.y) * this.scale) }; }
   private rect(room: Room): Rect { const a = this.screen({ x: room.x, y: room.y + room.height }), b = this.screen({ x: room.x + room.width, y: room.y }); return { x: a.x, y: a.y, width: b.x - a.x, height: b.y - a.y }; }
   private span(connection: Connection): Span { const a = this.screen(connection.vertical ? { x: connection.coordinate, y: connection.start } : { x: connection.start, y: connection.coordinate }), b = this.screen(connection.vertical ? { x: connection.coordinate, y: connection.end } : { x: connection.end, y: connection.coordinate }); return { vertical: connection.vertical, coordinate: connection.vertical ? a.x : a.y, start: connection.vertical ? b.y : a.x, end: connection.vertical ? a.y : b.x, connection }; }
-  private stub(span: Span): number { return Math.min(10, Math.max(1, Math.floor((span.end - span.start - 1) / 2))); }
+  private stub(span: Span): number { return Math.min(20, Math.max(1, Math.floor((span.end - span.start - 1) / 2))); }
   private thickness(rect: Rect, spans: Span[]): number { let t = Math.max(1, Math.min(this.outlineWidth, Math.floor((Math.min(rect.width, rect.height) - 1) / 2))); for (const s of spans) if (s.end - s.start >= 3) t = Math.min(t, this.stub(s)); return t; }
   requestDraw(): void { if (this.active && !this.raf) this.raf = requestAnimationFrame(() => { this.raf = 0; this.draw(); }); }
   private draw(): void {

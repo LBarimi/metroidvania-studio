@@ -279,7 +279,7 @@ function updateView(): void {
   if (!miniMode && !map.cameraPreview) toolbar.append(check(locale.t('grid'), map.showGrid, checked => { map.showGrid = checked; map.requestDraw(); })[0]);
   if (miniMode || !map.cameraPreview) toolbar.append(check(locale.t('names'), miniMode ? mini.showNames : map.showNames, checked => { if (miniMode) { mini.showNames = checked; mini.requestDraw(); } else { map.showNames = checked; map.requestDraw(); } })[0]);
 
-  if (miniMode) { const width = select(Array.from({ length: 10 }, (_, i) => [String(i + 1), locale.t('outline') + ' ' + (i + 1)] as [string, string]), String(mini.outlineWidth)); width.style.width = '100px'; width.addEventListener('change', () => { mini.outlineWidth = Number(width.value); mini.requestDraw(); }); toolbar.append(width); }
+  if (miniMode) { const width = select(Array.from({ length: 20 }, (_, i) => [String(i + 1), locale.t('outline') + ' ' + (i + 1)] as [string, string]), String(mini.outlineWidth)); width.style.width = '100px'; width.addEventListener('change', () => { mini.outlineWidth = Number(width.value); mini.requestDraw(); }); toolbar.append(width); }
   const undo = el<HTMLButtonElement>('undo'), redo = el<HTMLButtonElement>('redo'); undo.disabled = viewOnly || !state?.canUndo; redo.disabled = viewOnly || !state?.canRedo;
   map.requestDraw(); mini.requestDraw(); drawStatus();
 }
