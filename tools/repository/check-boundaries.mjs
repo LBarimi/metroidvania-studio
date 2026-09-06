@@ -1,3 +1,4 @@
+import { contentText } from './content-text.mjs';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,20 +13,11 @@ const homePath = /\/(?:Users|home|mnt|media|Volumes)\/[^/\\\s"'<>]+\//;
 const uncPath = /(?:^|[^\\])\\\\[A-Za-z0-9_.-]+\\[A-Za-z0-9_.-]+/;
 const absoluteAsset = /^(?:[A-Za-z]:|\/|\\)/;
 
-function decode(bytes) {
-  if (bytes[0] === 0xff && bytes[1] === 0xfe) return bytes.subarray(2).toString('utf16le');
-  if (bytes[0] === 0xfe && bytes[1] === 0xff) {
-    const value = Buffer.from(bytes.subarray(2));
-    for (let i = 0; i + 1 < value.length; i += 2) [value[i], value[i + 1]] = [value[i + 1], value[i]];
-    return value.toString('utf16le');
-  }
-  return bytes.toString('utf8');
-}
 export function inspectBoundaries(files) {
   const issues = [];
   for (const file of files) {
     const name = file.name.replaceAll('\\', '/');
-    const text = decode(file.bytes);
+    const text = contentText(file.bytes);
     const report = (rule, location = 'content') => issues.push({ path: file.name, location, rule });
     const integration = /^integrations\/(?:unity|godot|ue|sdl)\//.test(name);
     if (name !== 'commit message') {

@@ -1,3 +1,5 @@
+import { contentText } from './content-text.mjs';
+export { contentText } from './content-text.mjs';
 import { createHash } from 'node:crypto';
 import { inspectBoundaries } from './check-boundaries.mjs';
 import { execFileSync } from 'node:child_process';
@@ -53,17 +55,6 @@ export function createMatcher(rules) {
 
 export function loadMatcher() {
   return createMatcher(JSON.parse(readFileSync(path.join(root, 'tools/repository/restricted-text-fingerprints.json'), 'utf8')));
-}
-
-export function contentText(bytes) {
-  if (bytes[0] === 0xff && bytes[1] === 0xfe) return bytes.subarray(2).toString('utf16le');
-  if (bytes[0] === 0xfe && bytes[1] === 0xff) {
-    const copy = Buffer.from(bytes.subarray(2));
-    for (let i = 0; i + 1 < copy.length; i += 2) [copy[i], copy[i + 1]] = [copy[i + 1], copy[i]];
-    return copy.toString('utf16le');
-  }
-  // This checks literal byte strings, not text compressed into images/PDFs.
-  return bytes.toString('utf8');
 }
 
 export function stagedFiles(cwd = root) {
