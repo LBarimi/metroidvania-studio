@@ -53,21 +53,21 @@ export function acquireBuildLock(localRoot) {
   throw new Error('Could not acquire the build lock.');
 }
 export function checkedInputs(studioRoot) {
-  const inputs = JSON.parse(readFileSync(path.join(studioRoot, 'Tools/Build/package-inputs.json'), 'utf8'));
+  const inputs = JSON.parse(readFileSync(path.join(studioRoot, 'tools/build/package-inputs.json'), 'utf8'));
   if (!Array.isArray(inputs) || !inputs.length) throw new Error('Build inputs must be a nonempty array.');
   return inputs.map(relative => {
     if (typeof relative !== 'string' || !relative || path.isAbsolute(relative) || /^[A-Za-z]:/.test(relative) || relative.includes('\\')) throw new Error('Invalid build input.');
     const source = path.resolve(studioRoot, relative);
     if (!inside(studioRoot, source) || relative.split('/').some(part => part === '..' || part === '.' || !part)) throw new Error('Build inputs must remain inside the studio checkout.');
-    if (relative !== 'MetroidvaniaStudio/dist' && (!existsSync(source) || !inside(realpathSync(studioRoot), realpathSync(source)))) throw new Error(`Missing or external build input: ${relative}`);
+    if (relative !== 'metroidvania-studio/dist' && (!existsSync(source) || !inside(realpathSync(studioRoot), realpathSync(source)))) throw new Error(`Missing or external build input: ${relative}`);
     return relative;
   });
 }
 export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.METROIDVANIA_STUDIO_DOTNET || 'dotnet', runner = runCommand, checkOnly = false } = {}) {
   studioRoot = path.resolve(studioRoot);
   if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Node.js 24 or later is required for building.');
-  const serverProject = path.join(studioRoot, 'MetroidvaniaStudio/Server/MetroidvaniaStudio.Server.csproj');
-  const launcherProject = path.join(studioRoot, 'MetroidvaniaStudio/Launcher/MetroidvaniaStudio.Launcher.csproj');
+  const serverProject = path.join(studioRoot, 'metroidvania-studio/server/MetroidvaniaStudio.Server.csproj');
+  const launcherProject = path.join(studioRoot, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.csproj');
   if (!existsSync(serverProject) || !existsSync(launcherProject)) throw new Error('Building requires a source checkout. Use the run script for a prebuilt application.');
   const sdk = runner(dotnet, ['--list-sdks'], { cwd: studioRoot, capture: true });
   if (!/^10\./m.test(sdk || '')) throw new Error('.NET SDK 10 is required for building.');
@@ -82,29 +82,29 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
     const inputs = checkedInputs(studioRoot);
     const stamp = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
     const folder = `${version}-${stamp}-${randomBytes(4).toString('hex')}`;
-    const buildsRoot = path.join(studioRoot, 'Builds'), output = path.join(buildsRoot, folder);
+    const buildsRoot = path.join(studioRoot, 'builds'), output = path.join(buildsRoot, folder);
     mkdirSync(buildsRoot, { recursive: true }); mkdirSync(output);
     console.log('Building the web editor...');
-    runner(process.execPath, [path.join(studioRoot, 'MetroidvaniaStudio/build-web.mjs'), path.join(output, 'MetroidvaniaStudio/dist')], { cwd: studioRoot });
+    runner(process.execPath, [path.join(studioRoot, 'metroidvania-studio/build-web.mjs'), path.join(output, 'metroidvania-studio/dist')], { cwd: studioRoot });
     for (const [name, project] of [['Server', serverProject], ['Launcher', launcherProject]]) {
       console.log(`Building ${name.toLowerCase()}...`);
       runner(dotnet, ['publish', project, '--configuration', 'Release', '--self-contained', 'false', '-p:UseAppHost=false',
-        '-p:UseSharedCompilation=false', '-p:DebugType=None', '--output', path.join(output, `MetroidvaniaStudio/${name}`), '--nologo'], { cwd: studioRoot });
+        '-p:UseSharedCompilation=false', '-p:DebugType=None', '--output', path.join(output, `metroidvania-studio/${name.toLowerCase()}`), '--nologo'], { cwd: studioRoot });
     }
     for (const relative of inputs) {
-      if (relative === 'MetroidvaniaStudio/dist') continue;
+      if (relative === 'metroidvania-studio/dist') continue;
       const destination = path.join(output, relative);
       mkdirSync(path.dirname(destination), { recursive: true });
       cpSync(path.join(studioRoot, relative), destination, { recursive: true, dereference: true,
         filter: candidate => { if (!inside(realpathSync(studioRoot), realpathSync(candidate))) throw new Error('Build input links outside the checkout.'); return true; } });
     }
     for (const notice of ['LICENSE', 'NOTICE']) if (existsSync(path.join(studioRoot, notice))) copyFileSync(path.join(studioRoot, notice), path.join(output, notice));
-    runner(process.execPath, [path.join(studioRoot, 'engine/unity/build-package.mjs')], { cwd: studioRoot });
-    const packageName = `MetroidvaniaStudio-Unity-${version}.unitypackage`;
+    runner(process.execPath, [path.join(studioRoot, 'integrations/unity/build-package.mjs')], { cwd: studioRoot });
+    const packageName = `metroidvania-studio.unitypackage`;
     mkdirSync(path.join(output, 'engine/unity'), { recursive: true });
-    copyFileSync(path.join(studioRoot, 'engine/unity/Builds', packageName), path.join(output, 'engine/unity', packageName));
-    for (const needed of ['MetroidvaniaStudio/dist/index.html', 'MetroidvaniaStudio/Server/MetroidvaniaStudio.Server.dll',
-      'MetroidvaniaStudio/Launcher/MetroidvaniaStudio.Launcher.dll']) if (!existsSync(path.join(output, needed))) throw new Error(`Incomplete build: ${needed}`);
+    copyFileSync(path.join(studioRoot, 'engine/unity', packageName), path.join(output, 'engine/unity', packageName));
+    for (const needed of ['metroidvania-studio/dist/index.html', 'metroidvania-studio/server/MetroidvaniaStudio.Server.dll',
+      'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll']) if (!existsSync(path.join(output, needed))) throw new Error(`Incomplete build: ${needed}`);
     // Cache is private, ignored state. Only absolute discovered executables are persisted.
     let dotnetPath = path.isAbsolute(dotnet) ? dotnet : '';
     if (!dotnetPath) {

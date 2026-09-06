@@ -1,4 +1,4 @@
-<img src="MetroidvaniaStudio/Web/studio-icon.svg" width="72" height="72" alt="MetroidvaniaStudio symbol">
+<img src="metroidvania-studio/web/studio-icon.svg" width="72" height="72" alt="MetroidvaniaStudio symbol">
 
 # MetroidvaniaStudio
 
@@ -26,7 +26,7 @@ bash platform/linux/run.sh --project ../Workspace --port 18765
 bash platform/linux/stop.sh --project ../Workspace --port 18765
 ```
 
-The matching macOS files use the same options. Paths with spaces must be quoted. Run resolves paths from its script location while relative workspace arguments are relative to the caller's working directory. Builds stay in `Builds/`; authored data stays in the selected workspace.
+The matching macOS files use the same options. Paths with spaces must be quoted. Run resolves paths from its script location while relative workspace arguments are relative to the caller's working directory. Builds stay in `builds/`; authored data stays in the selected workspace.
 
 Start/stop operations are serialized per launcher port. A startup token, process identity and server instance prevent accidental adoption or shutdown of another application. Only one server can write to a workspace at a time. Restart saves recovery and room exports before stopping; failed saves leave the server running. Missing or incomplete new builds never stop an existing working server.
 
@@ -36,10 +36,10 @@ The platform validation workflow runs build, storage and launcher integration ch
 
 For a source checkout, install Node.js 24 or later and .NET SDK 10. Use the batch files in `platform/win`:
 
-- **platform/win/build.bat** builds the web editor and server into `Builds/<version>-<build-id>/` without opening a browser. Each successful build updates `Builds/latest.json`.
+- **platform/win/build.bat** builds the web editor and server into `builds/<version>-<build-id>/` without opening a browser. Each successful build updates `builds/latest.json`.
 - **platform/win/run.bat** opens the last successful build in your browser without recompiling. If no local build exists, it builds once before the first launch.
 
-Running an existing build only requires ASP.NET Core Runtime 10. Reopening the same build reuses its server. After building a newer version, Run saves and stops the previous session before starting the new version. Maps remain in `.local/workspace`, separate from generated builds. Failed builds leave the previous build available. `Builds/` is excluded from Git; these local builds do not create releases or tags.
+Running an existing build only requires ASP.NET Core Runtime 10. Reopening the same build reuses its server. After building a newer version, Run saves and stops the previous session before starting the new version. Maps remain in `.local/workspace`, separate from generated builds. Failed builds leave the previous build available. `builds/` is excluded from Git; these local builds do not create releases or tags.
 
 Pass `-NoBrowser` to the Windows Run script for background checks, and `-Project` / `-Port` for a custom workspace. To apply source changes, run Build again.
 
@@ -75,7 +75,7 @@ Pass the same `-Project` and `-Port` when restarting or stopping a custom worksp
 - `.studio/catalog.json`: optional resource catalogue for this workspace.
 - `Textures/`: workspace texture files referenced by the catalogue.
 
-Project-owned examples are in `Samples/`. They provide default resources without importing another project's data. Workspace paths are independent of the application source tree. JSON keeps room positions, layers, tile materials, objects and metadata; rendering and game behavior belong to the consuming application.
+Project-owned examples are in `samples/`. They provide default resources without importing another project's data. Workspace paths are independent of the application source tree. JSON keeps room positions, layers, tile materials, objects and metadata; rendering and game behavior belong to the consuming application.
 
 ## Editing workflow
 
@@ -90,41 +90,40 @@ Project-owned examples are in `Samples/`. They provide default resources without
 
 Use **Edit > Camera settings** to configure PPU (default 16) and reference resolution (default 320×180). Settings belong to the current map, support Undo/Redo, and survive save, import and per-room JSON export. Source tiles remain 16×16; PPU changes world-unit conversion, while resolution changes the visible game area.
 
-The Unity adapter targets 6000.3.9f1. Platform builds also create `engine/unity/Builds/MetroidvaniaStudio-Unity-<version>.unitypackage`. Import it into Unity, open **Tools > MetroidvaniaStudio**, connect to the running local studio and load a room. See `engine/unity/README.md` for installation, live refresh, offline imports and runtime APIs. Engine assemblies are never referenced by the web studio or server.
+The Unity adapter targets 6000.3.9f1. Platform builds also create `engine/unity/metroidvania-studio.unitypackage`. Import it into Unity, open **Tools > MetroidvaniaStudio**, connect to the running local studio and load a room. See `integrations/unity/README.md` for installation, live refresh, offline imports and runtime APIs. Engine assemblies are never referenced by the web studio or server.
 
 ## Development
 
 ```powershell
-git config core.hooksPath .githooks
-node Tools/Repository/check-text.mjs
-node MetroidvaniaStudio/build-web.mjs --check-contracts
-node MetroidvaniaStudio/build-web.mjs
-dotnet run --project MetroidvaniaStudio/Core.Tests/MetroidvaniaStudio.Core.Tests.csproj
-dotnet run --project MetroidvaniaStudio/Server.Tests/MetroidvaniaStudio.Server.Tests.csproj
-node --test Tools/Repository/check-text.test.mjs Tools/Repository/check-boundaries.test.mjs Tools/Release/release.test.mjs
+node tools/repository/check-text.mjs
+node metroidvania-studio/build-web.mjs --check-contracts
+node metroidvania-studio/build-web.mjs
+dotnet run --project metroidvania-studio/core-tests/MetroidvaniaStudio.Core.Tests.csproj
+dotnet run --project metroidvania-studio/server-tests/MetroidvaniaStudio.Server.Tests.csproj
+node --test tools/repository/check-text.test.mjs tools/repository/check-boundaries.test.mjs tools/release/release.test.mjs
 ```
 
 Browser interaction tests use disposable workspaces and a headless browser. Install Playwright separately and pass its module path if it is not available in local module resolution:
 
 ```powershell
-.\MetroidvaniaStudio\Tests\Run-Browser-Interaction.ps1 -PlaywrightModule ..\BrowserTools\node_modules\playwright
+.\metroidvania-studio/tests\Run-Browser-Interaction.ps1 -PlaywrightModule ..\browser-tools\node_modules\playwright
 ```
 
 All test fixtures, local logs and generated builds stay outside tracked source. Core and server builds use .NET 10 with no additional NuGet packages; web output uses local modules. Developer tool paths can be provided through `METROIDVANIA_STUDIO_NODE`, `METROIDVANIA_STUDIO_DOTNET`, or `DOTNET_ROOT`. Successful local builds remember the selected executables in `.local/toolchain.json` so desktop launches can find them without changing the system PATH. This file is excluded from Git, is not packaged, and each executable is checked again before use.
 
 ## Version and release
 
-`version.json` is the authoritative application version, initially `0.1.0`. The JSON document format remains version 2; its schema and conventions are in `MetroidvaniaStudio/Contracts/`. Update it and the matching entry in `CHANGELOG.md` before a release. Commit reviewed changes to `main` first; release preparation rejects feature branches, pending files, stale main revisions and existing version tags.
+`version.json` is the authoritative application version, initially `0.1.0`. The JSON document format remains version 2; its schema and conventions are in `metroidvania-studio/contracts/`. Update it and the matching entry in `CHANGELOG.md` before a release. Commit reviewed changes to `main` first; release preparation rejects feature branches, pending files, stale main revisions and existing version tags.
 
 ```powershell
 # Read-only release policy check; main is required.
-node Tools/Release/release.mjs --dry-run
+node tools/release/release.mjs --dry-run
 
 # Validate and create a local Windows archive; creates no tag and uploads nothing.
-node Tools/Release/release.mjs --pack
+node tools/release/release.mjs --pack
 ```
 
-The **Manual release** workflow runs only when dispatched for `main`. Its publish input defaults to false. Enabling publication runs validation and packaging, then creates `v<version>` at the selected main revision and uploads the archive. Versions below 1.0.0 are marked as prereleases. Feature pushes do not deploy or create tags. The archive includes the local server, common launcher, web UI, localisation, sample resources and platform launch scripts; generated workspace data is excluded.
+Automation configuration is local and excluded from Git. Releases must still come from `main` with a matching version tag. Local packaging creates no tag and publishes nothing. The archive includes the local server, launcher, web UI, localization, sample resources, platform scripts and engine installer; private workspace data is excluded.
 
 License selection is pending.
 
@@ -132,7 +131,7 @@ License selection is pending.
 
 소스에서 처음 빌드할 때는 Node.js 24 이상과 .NET SDK 10이 필요합니다. `platform/win` 폴더의 배치파일을 사용하세요.
 
-- `platform/win/build.bat`: 웹 화면과 서버를 `Builds/<버전>-<빌드 ID>/`에 빌드합니다. 브라우저는 열지 않습니다.
+- `platform/win/build.bat`: 웹 화면과 서버를 `builds/<버전>-<빌드 ID>/`에 빌드합니다. 브라우저는 열지 않습니다.
 - `platform/win/run.bat`: 마지막으로 성공한 빌드를 바로 실행하고 브라우저를 엽니다. 빌드가 없으면 최초 한 번 자동 빌드합니다.
 
 소스를 수정했다면 Build를 실행한 뒤 Run을 실행하세요. 같은 빌드는 실행 중인 서버를 재사용하고, 새 빌드는 기존 세션을 저장한 뒤 전환합니다. 빌드 실패 시 이전 빌드는 유지됩니다. 빌드 결과는 Git에서 제외되며 로컬 빌드로 배포나 태그가 생성되지는 않습니다. 백그라운드 점검은 Run에 `-NoBrowser`를 전달하세요.
@@ -146,3 +145,11 @@ License selection is pending.
 빌드할 때는 Node.js 24 이상, .NET SDK 10, Git이 필요합니다. 빌드가 완료된 뒤 실행할 때는 ASP.NET Core Runtime 10만 있으면 됩니다. 처음 실행하며 빌드까지 해야 하는 경우에는 빌드 도구가 필요합니다.
 
 리눅스·맥은 `--project`, `--port`, `--no-browser`, `--restart` 옵션을 사용합니다. Windows PowerShell 진입점은 기존 `-Project`, `-Port`, `-NoBrowser`, `-Restart` 옵션을 유지합니다. 같은 작업 폴더를 두 서버에서 동시에 편집하는 것은 차단합니다. 저장 실패 시 서버를 강제 종료하지 않습니다.
+
+## Directory naming
+
+Project-owned directories use lowercase kebab-case, including `metroidvania-studio/`, `samples/`, `tools/`, and `builds/`. Unity-reserved `Assets` and `Editor` folders retain their required spelling. Filenames, public types, JSON resource identifiers and existing workspace data paths remain compatible. Generated SDK caches follow their tool conventions. Test screenshots and diagnostics are private under `.local/logs/`; they are not needed to run the studio.
+
+The Unity installer has one stable filename: `engine/unity/metroidvania-studio.unitypackage`. Platform builds regenerate it and include the same file in their output. Version numbers remain in release metadata and tags.
+
+Engine installers are published under `engine/<engine>/`. Adapter source, build scripts, documentation and validation live under `integrations/<engine>/`; `engine/unity/` contains only `metroidvania-studio.unitypackage`.

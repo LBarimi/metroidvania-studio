@@ -3,11 +3,11 @@
 **/obj/
 **/node_modules/
 **/.test-output/
-MetroidvaniaStudio/dist/
-MetroidvaniaStudio/.local/
+metroidvania-studio/dist/
+metroidvania-studio/.local/
 .local/
 artifacts/
-TestResults/
+test-results/
 *.log
 *.pdb
 *.tmp
@@ -20,12 +20,18 @@ Thumbs.db
 **/.studio/
 **/Library/
 **/Temp/
-**/Logs/
+**/logs/
 **/UserSettings/
 
 **/dist/
 
 **/.local/
 
-/Builds/
-/engine/unity/Builds/
+/builds/
+/engine/unity/builds/
+
+/engine/unity/metroidvania-studio.unitypackage
+
+# Local automation configuration is not published
+/.github/
+/.githooks/

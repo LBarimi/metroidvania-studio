@@ -2,6 +2,11 @@
 
 ## 0.1.0
 
+- Exclude local workflow and hook configuration from tracked source.
+
+- Standardize source and build directories on lowercase kebab-case, keep diagnostics private, and provide one stable Unity installer filename.
+- Open uniform doorways between the four icon rooms and use a white outline.
+
 - Add a pixel-grid room symbol, File/Edit/Help menus and build information.
 - Add multi-file room import and selected/all/changed room JSON saving.
 - Fix whole-room clipboard, reflection, rotation and deletion; allow collision-only room joins from every tile drawing tool.

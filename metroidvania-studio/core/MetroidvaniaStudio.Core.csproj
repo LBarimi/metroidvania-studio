@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <AssemblyName>MetroidvaniaStudio.Core</AssemblyName>
+    <RootNamespace>MetroidvaniaStudio</RootNamespace>
+    <NuGetAudit>false</NuGetAudit>
+    <RestoreIgnoreFailedSources>true</RestoreIgnoreFailedSources>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../localization/MetroidvaniaStudioLocale.csv" LogicalName="MetroidvaniaStudioLocale.csv" />
+  </ItemGroup>
+</Project>

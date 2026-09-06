@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
-  <title>MetroidvaniaStudio</title>
-  <desc>Four equal rectangular rooms arranged around an open square center.</desc>
-  <path fill="#223c50" fill-rule="evenodd" stroke="#e4f3ff" stroke-width="4" stroke-linejoin="miter" d="M8 8h48v48H8zM24 24v16h16V24z"/>
-  <path fill="none" stroke="#e4f3ff" stroke-width="4" d="M8 24h16M40 8v16M40 40h16M24 40v16"/>
-</svg>

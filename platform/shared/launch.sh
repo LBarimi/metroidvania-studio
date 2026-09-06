@@ -56,16 +56,16 @@ while [ "$remaining" -gt 0 ]; do
     fi
     set -- "$@" "$argument"
 done
-launcher="$studio_root/MetroidvaniaStudio/Launcher/MetroidvaniaStudio.Launcher.dll"
+launcher="$studio_root/metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll"
 published=false
 if [ -f "$launcher" ]; then published=true; else
-    launcher="$studio_root/MetroidvaniaStudio/Launcher/bin/Release/net10.0/MetroidvaniaStudio.Launcher.dll"
+    launcher="$studio_root/metroidvania-studio/launcher/bin/Release/net10.0/MetroidvaniaStudio.Launcher.dll"
 fi
 if [ "$action" = check ] && [ ! -f "$launcher" ]; then
     node=$(find_node)
     exec "$node" "$shared_dir/build.mjs" --studio-root "$studio_root" --dotnet "$dotnet" --check
 fi
-if [ "$action" = run ] && [ "$published" = false ] && { [ ! -f "$launcher" ] || { [ ! -f "$studio_root/Builds/latest.json" ] && [ "$explicit_build" = false ]; }; }; then
+if [ "$action" = run ] && [ "$published" = false ] && { [ ! -f "$launcher" ] || { [ ! -f "$studio_root/builds/latest.json" ] && [ "$explicit_build" = false ]; }; }; then
     printf '%s\n' 'Building once before the first launch...'
     node=$(find_node)
     "$node" "$shared_dir/build.mjs" --studio-root "$studio_root" --dotnet "$dotnet"
