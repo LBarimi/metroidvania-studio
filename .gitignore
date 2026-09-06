@@ -35,3 +35,6 @@ Thumbs.db
 # Local automation configuration is not published
 /.github/
 /.githooks/
+
+# Local contributor instructions are not published
+AGENTS.md
