@@ -26,3 +26,5 @@ Thumbs.db
 **/dist/
 
 **/.local/
+
+/Builds/

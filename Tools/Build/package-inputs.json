@@ -1,0 +1,16 @@
+[
+  "MetroidvaniaStudio/dist",
+  "MetroidvaniaStudio/Start-MetroidvaniaStudio.ps1",
+  "MetroidvaniaStudio/Start-MetroidvaniaStudio.bat",
+  "MetroidvaniaStudio/Stop-MetroidvaniaStudio.ps1",
+  "MetroidvaniaStudio/Runtime-Tools.ps1",
+  "Run-MetroidvaniaStudio.bat",
+  "MetroidvaniaStudio/Run-MetroidvaniaStudio.ps1",
+  "MetroidvaniaStudio/Localization",
+  "MetroidvaniaStudio/Contracts/map-format-v2.schema.json",
+  "MetroidvaniaStudio/Contracts/FORMAT.md",
+  "Samples",
+  "README.md",
+  "CHANGELOG.md",
+  "version.json"
+]

@@ -8,9 +8,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 
-export const bundleInputs = ['MetroidvaniaStudio/dist', 'MetroidvaniaStudio/Start-MetroidvaniaStudio.ps1', 'MetroidvaniaStudio/Start-MetroidvaniaStudio.bat',
-    'MetroidvaniaStudio/Stop-MetroidvaniaStudio.ps1', 'MetroidvaniaStudio/Localization',
-    'MetroidvaniaStudio/Contracts/map-format-v2.schema.json', 'MetroidvaniaStudio/Contracts/FORMAT.md', 'Samples', 'README.md', 'CHANGELOG.md', 'version.json'];
+export const bundleInputs = JSON.parse(readFileSync(path.join(root, 'Tools/Build/package-inputs.json'), 'utf8'));
 
 export function validateReleaseState(state) {
   assert.equal(state.branch, 'main', 'Releases are allowed only from main.');

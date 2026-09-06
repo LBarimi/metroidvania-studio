@@ -6,9 +6,16 @@ The browser UI and local server run independently. Workspaces contain maps, reso
 
 ## Run on Windows
 
-For a source checkout, install Node.js 24 or later and .NET SDK 10, then double-click `MetroidvaniaStudio/Start-MetroidvaniaStudio.bat`. The server runs in the background and the studio opens in your browser. Launching again reuses the active workspace.
+For a source checkout, install Node.js 24 or later and .NET SDK 10. Use the batch files in the repository root:
 
-For a prebuilt Windows release, extract the complete archive, install ASP.NET Core Runtime 10, then double-click the same batch file. A prebuilt release does not require Node.js or an SDK. Release archives are framework-dependent and do not bundle a runtime.
+- **Build-MetroidvaniaStudio.bat** builds the web editor and server into `Builds/<version>-<build-id>/` without opening a browser. Each successful build updates `Builds/latest.json`.
+- **Run-MetroidvaniaStudio.bat** opens the last successful build in your browser without recompiling. If no local build exists, it builds once before the first launch.
+
+Running an existing build only requires ASP.NET Core Runtime 10. Reopening the same build reuses its server. After building a newer version, Run saves and stops the previous session before starting the new version. Maps remain in `.local/workspace`, separate from generated builds. Failed builds leave the previous build available. `Builds/` is excluded from Git; these local builds do not create releases or tags.
+
+Pass `-NoBrowser` to Run for background checks, and `-Project` / `-Port` for a custom workspace. To apply source changes, run Build again. The existing `MetroidvaniaStudio/Start-MetroidvaniaStudio.bat` remains available for building and starting directly from source.
+
+For a prebuilt Windows release, extract the complete archive, install ASP.NET Core Runtime 10, then double-click `Run-MetroidvaniaStudio.bat` (or the included Start batch file). A prebuilt release does not require Node.js or an SDK. Release archives are framework-dependent and do not bundle a runtime.
 
 The default workspace is `.local/workspace` under the studio folder. Keep this folder when updating an extracted release, or choose a separate workspace:
 
@@ -59,7 +66,7 @@ Browser interaction tests use disposable workspaces and a headless browser. Inst
 .\MetroidvaniaStudio\Tests\Run-Browser-Interaction.ps1 -PlaywrightModule ..\BrowserTools\node_modules\playwright
 ```
 
-All test fixtures, local logs and generated builds stay outside tracked source. Core and server builds use .NET 10 with no additional NuGet packages; web output uses local modules. Developer tool paths can be provided through `METROIDVANIA_STUDIO_NODE`, `METROIDVANIA_STUDIO_DOTNET`, or `DOTNET_ROOT`.
+All test fixtures, local logs and generated builds stay outside tracked source. Core and server builds use .NET 10 with no additional NuGet packages; web output uses local modules. Developer tool paths can be provided through `METROIDVANIA_STUDIO_NODE`, `METROIDVANIA_STUDIO_DOTNET`, or `DOTNET_ROOT`. Successful local builds remember the selected executables in `.local/toolchain.json` so desktop launches can find them without changing the system PATH. This file is excluded from Git, is not packaged, and each executable is checked again before use.
 
 ## Version and release
 
@@ -79,6 +86,11 @@ License selection is pending.
 
 ## 한국어 실행 안내
 
-소스에서 실행하려면 Node.js 24 이상과 .NET SDK 10을 설치한 뒤 `MetroidvaniaStudio/Start-MetroidvaniaStudio.bat`을 더블클릭하세요. 백그라운드 서버가 실행되고 브라우저에 스튜디오가 열립니다. 이미 실행 중이면 현재 작업을 그대로 이어갑니다.
+소스에서 처음 빌드할 때는 Node.js 24 이상과 .NET SDK 10이 필요합니다. 저장소 최상위 폴더의 배치파일을 사용하세요.
+
+- `Build-MetroidvaniaStudio.bat`: 웹 화면과 서버를 `Builds/<버전>-<빌드 ID>/`에 빌드합니다. 브라우저는 열지 않습니다.
+- `Run-MetroidvaniaStudio.bat`: 마지막으로 성공한 빌드를 바로 실행하고 브라우저를 엽니다. 빌드가 없으면 최초 한 번 자동 빌드합니다.
+
+소스를 수정했다면 Build를 실행한 뒤 Run을 실행하세요. 같은 빌드는 실행 중인 서버를 재사용하고, 새 빌드는 기존 세션을 저장한 뒤 전환합니다. 빌드 실패 시 이전 빌드는 유지됩니다. 빌드 결과는 Git에서 제외되며 로컬 빌드로 배포나 태그가 생성되지는 않습니다. 백그라운드 점검은 Run에 `-NoBrowser`를 전달하세요.
 
 기본 저장 위치는 스튜디오 폴더의 `.local/workspace`입니다. 다른 작업 폴더를 쓰려면 `-Project`, 포트를 바꾸려면 `-Port`를 지정하세요. 종료 스크립트는 저장을 마친 뒤 해당 서버만 종료합니다. 배포 압축 파일을 사용할 때는 ASP.NET Core Runtime 10만 필요하며, 업데이트 전에 작업 폴더를 보존하세요.

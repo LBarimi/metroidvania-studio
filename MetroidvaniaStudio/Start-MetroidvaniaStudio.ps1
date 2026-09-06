@@ -4,7 +4,8 @@ param(
     [switch]$Foreground,
     [switch]$Restart,
     [switch]$CheckOnly,
-    [switch]$OpenBrowser
+    [switch]$OpenBrowser,
+    [string]$BuildDirectory = ''
 )
 $ErrorActionPreference = 'Stop'
 $editorRoot = $PSScriptRoot
@@ -17,21 +18,13 @@ $localRoot = Join-Path $editorRoot '.local'
 $sessionPath = Join-Path $localRoot "server-$Port.json"
 $editorUrl = "http://127.0.0.1:$Port/"
 $healthUrl = $editorUrl + 'api/health'
-$publishedDll = Join-Path $editorRoot 'Server/MetroidvaniaStudio.Server.dll'
+$runtimeRoot = if ([string]::IsNullOrWhiteSpace($BuildDirectory)) { $studioRoot } else { [IO.Path]::GetFullPath($BuildDirectory) }
+$publishedDll = Join-Path $runtimeRoot 'MetroidvaniaStudio/Server/MetroidvaniaStudio.Server.dll'
+if ($BuildDirectory -and !(Test-Path -LiteralPath $publishedDll -PathType Leaf)) { throw 'The selected build is incomplete. Run Build-MetroidvaniaStudio.bat.' }
 $isPublished = Test-Path -LiteralPath $publishedDll -PathType Leaf
 
-function Find-StudioRuntime {
-    param([string]$Name, [string[]]$Locations, [string]$VersionArgument, [string]$VersionPattern, [string]$Requirement)
-    $candidates = @((Get-Command $Name -CommandType Application -All -ErrorAction SilentlyContinue).Source) + $Locations
-    foreach ($candidate in ($candidates | Select-Object -Unique)) {
-        if ([string]::IsNullOrWhiteSpace($candidate) -or !(Test-Path -LiteralPath $candidate -PathType Leaf)) { continue }
-        try {
-            $versionOutput = (& $candidate $VersionArgument 2>&1 | Out-String)
-            if ($LASTEXITCODE -eq 0 -and $versionOutput -match $VersionPattern) { return $candidate }
-        } catch { continue }
-    }
-    throw "$Requirement Install it in a standard location or add it to PATH."
-}
+. (Join-Path $PSScriptRoot "Runtime-Tools.ps1")
+
 function Assert-Workspace {
     param($Health)
     if (!$Health.instanceId -or !$Health.projectPath -or
@@ -68,9 +61,15 @@ if (!$CheckOnly) {
     catch { if ($_.Exception.Response) { throw "Port $Port is serving a different application." } }
     if ($null -ne $active) {
         Assert-Workspace $active
+        if ($BuildDirectory -and !$Restart) {
+            $current = if (Test-Path -LiteralPath $sessionPath) { Get-Content -LiteralPath $sessionPath -Raw | ConvertFrom-Json } else { $null }
+            # A new build replaces the running session only after its pending edits are saved.
+            $Restart = !$current -or ![string]::Equals($current.dllPath, $publishedDll, [StringComparison]::OrdinalIgnoreCase)
+        }
         if (!$Restart) {
             Write-Output "MetroidvaniaStudio is already running: $editorUrl"
-            Write-Output 'Use -Restart to rebuild and restart after saving the current session.'
+            if ($BuildDirectory) { Write-Output 'Run Build-MetroidvaniaStudio.bat to apply source changes, then Run again.' }
+            else { Write-Output 'Use -Restart to rebuild and restart after saving the current session.' }
             if ($OpenBrowser) { Start-Process -FilePath $editorUrl }
             return
         }
@@ -109,9 +108,9 @@ if (!$isPublished) {
     if ($LASTEXITCODE -ne 0) { throw 'Server build failed.' }
 }
 New-Item -ItemType Directory -Path $projectRoot -Force | Out-Null
-if ($Foreground) { & $dotnetPath $dll --studio-root $studioRoot --project $projectRoot --port $Port; exit $LASTEXITCODE }
-$arguments = @(('"' + $dll + '"'), '--studio-root', ('"' + $studioRoot + '"'), '--project', ('"' + $projectRoot + '"'), '--port', $Port)
-$process = Start-Process -FilePath $dotnetPath -ArgumentList $arguments -WorkingDirectory $studioRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $localRoot "server-$Port.log") -RedirectStandardError (Join-Path $localRoot "server-$Port-error.log")
+if ($Foreground) { & $dotnetPath $dll --studio-root $runtimeRoot --project $projectRoot --port $Port; exit $LASTEXITCODE }
+$arguments = @(('"' + $dll + '"'), '--studio-root', ('"' + $runtimeRoot + '"'), '--project', ('"' + $projectRoot + '"'), '--port', $Port)
+$process = Start-Process -FilePath $dotnetPath -ArgumentList $arguments -WorkingDirectory $runtimeRoot -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $localRoot "server-$Port.log") -RedirectStandardError (Join-Path $localRoot "server-$Port-error.log")
 Complete-StudioStartup -ServerProcess $process -Dll $dll
 Write-Output "MetroidvaniaStudio: $editorUrl"
 Write-Output "MiniMap: ${editorUrl}?view=minimap"
