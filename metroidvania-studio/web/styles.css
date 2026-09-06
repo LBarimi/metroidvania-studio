@@ -120,6 +120,14 @@ input[type="checkbox"] {
 }
 
 input[type="color"] { height: 25px; padding: 2px; }
+.room-color-field { display: grid; gap: 3px; }
+.room-color-inputs { display: flex; align-items: center; gap: 6px; }
+.room-color-inputs input[type="text"] { flex: 1; font-variant-numeric: tabular-nums; }
+.room-color-inputs input[type="color"] { flex: 0 0 30px; width: 30px; cursor: pointer; }
+.room-color-inputs input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.room-color-inputs input[type="color"]::-webkit-color-swatch { border: 0; }
+.room-color-inputs input[type="color"]::-moz-color-swatch { border: 0; }
+
 input[type="number"] { font-variant-numeric: tabular-nums; }
 
 textarea {

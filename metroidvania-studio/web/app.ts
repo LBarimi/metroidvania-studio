@@ -402,11 +402,26 @@ function roomInspector(inspector: HTMLElement, expectation: CommandExpectation):
   const fields = text('div', '', 'fields'), inputs = new Map<string, HTMLInputElement>(); for (const key of ['x', 'y', 'width', 'height'] as const) { const [label, input] = labelInput(key === 'x' || key === 'y' ? key.toUpperCase() : locale.t(key), room[key], 'number'); input.step = '1'; inputs.set(key, input); fields.append(label); } content.append(fields);
   const [visibleLabel, visible] = check(locale.t('visible'), room.visible), [lockedLabel, locked] = check(locale.t('locked'), room.locked); content.append(row(visibleLabel, lockedLabel));
   content.append(check(locale.t('crop'), map.crop, value => map.crop = value)[0]);
-  const [colorLabel, color] = labelInput(locale.t('theme'), roomColor(room)); color.placeholder = '#C72B36'; content.append(colorLabel);
+  const [colorLabel, color] = labelInput(locale.t('theme'), roomColor(room));
+  color.id = 'room-color-hex'; color.placeholder = '#C72B36'; color.setAttribute('aria-label', locale.t('theme') + ' HEX');
+  colorLabel.htmlFor = color.id; color.remove();
+  const picker = document.createElement('input'); picker.type = 'color'; picker.id = 'room-color-picker';
+  picker.value = color.value.slice(0, 7); picker.title = locale.t('theme'); picker.setAttribute('aria-label', locale.t('theme'));
+  color.addEventListener('input', () => {
+    const hex = color.value.trim(); if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(hex)) picker.value = hex.slice(0, 7);
+  });
+  const pickColor = () => {
+    // The native RGB picker must preserve any alpha already entered in the HEX field.
+    const hex = color.value.trim(), alpha = /^#[0-9a-f]{8}$/i.test(hex) ? hex.slice(7) : '';
+    color.value = picker.value.toUpperCase() + alpha;
+  };
+  picker.addEventListener('input', pickColor); picker.addEventListener('change', pickColor);
+  const colorField = text('div', '', 'room-color-field'), colorInputs = text('div', '', 'room-color-inputs');
+  colorInputs.append(color, picker); colorField.append(colorLabel, colorInputs); content.append(colorField);
   const area = document.createElement('textarea'); area.value = JSON.stringify(propObject(room.properties), null, 2); const details = document.createElement('details'); details.append(text('summary', locale.t('properties')), area); content.append(details);
   content.append(button(locale.t('apply'), async () => {
     const values = numberValues(inputs), { x, y, width, height } = values;
-    const props = properties(JSON.parse(area.value)); if (color.value !== roomColor(room)) { const found = props.find(p => p.key === 'mapMaker.minimapColor'); if (found) found.value = color.value; else props.push({ key: 'mapMaker.minimapColor', value: color.value }); }
+    const props = properties(JSON.parse(area.value)), colorValue = color.value.trim(); if (colorValue !== roomColor(room)) { const found = props.find(p => p.key === 'mapMaker.minimapColor'); if (found) found.value = colorValue; else props.push({ key: 'mapMaker.minimapColor', value: colorValue }); }
     await run('roomProperties', { id: room.id, x, y, width, height, crop: map.crop, name: name.value, visible: visible.checked, locked: locked.checked, properties: props }, expectation); renderInspector(true);
   }, 'accent'));
   content.append(button(locale.t('deleteRoom'), () => confirmRun(locale.t('confirmClear'), 'roomDelete', { id: room.id }, expectation), 'danger')); inspector.append(content);
