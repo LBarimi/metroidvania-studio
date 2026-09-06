@@ -56,6 +56,8 @@ var tests = new (string name, Action run)[]
     ("room property move and resize plans final bounds atomically", () => Fixture(RoomPropertyMoveResize)),
     ("room property resize failure preserves metadata and bounds", () => Fixture(RoomPropertyLockedFailure)),
     ("room selection and movement validation are atomic", () => Fixture(RoomTargetAtomicity)),
+    ("room command routing and selection-only revisions", () => Fixture(RoomCommands)),
+    ("room import and selective JSON exports preserve identities and source", () => Fixture(RoomFiles)),
     ("camera settings persist, export and undo atomically", () => Fixture(CameraSettings)),
     ("camera profiles reject invalid catalog values atomically", () => Fixture(CameraValidation)),
     ("disk and catalog health notices survive ordinary commands", () => Fixture(PersistentHealthNotices)),
@@ -1788,4 +1790,46 @@ static void CameraSettings(EditorWorkspace w)
     Send(w, "redo"); Check(w.State().camera.ppu == 32, "Redo restores profile.");
     Send(w, "save", ("path", "camera.map.json"));
     Check(MapCameraSettings.Resolve(MapDocumentStore.Deserialize(File.ReadAllText(w.Session.FilePath!))).referenceHeight == 224, "Saved JSON includes reference resolution.");
+}
+
+static void RoomCommands(EditorWorkspace w)
+{
+    Send(w, "options", ("tool", 3), ("layer", 0));
+    string initial = Snapshot(w); string id = w.Canvas.ActiveRoomId;
+    Send(w, "roomCopy"); Send(w, "roomPaste", ("x", -100), ("y", -50));
+    Check(w.Session.Document.rooms.Count == 2 && w.Canvas.ActiveRoomId != id, "Room paste activates a new room from Brush mode.");
+    Send(w, "roomFlip", ("horizontal", true)); Send(w, "roomFlip", ("horizontal", false)); Send(w, "roomRotate");
+    Send(w, "roomDeleteSelected"); Check(w.Session.Document.rooms.Count == 1, "Room deletion is independent of the tile layer.");
+    Send(w, "undo"); Check(w.Session.Document.rooms.Count == 2, "Room delete undo.");
+    Send(w, "selectRoom", ("id", id)); long revision = w.DocumentRevision;
+    Send(w, "selectArea", ("x", 0), ("y", 0), ("width", 3), ("height", 2));
+    Check(w.Canvas.Selection?.width == 3 && w.DocumentRevision == revision, "Selecting an area does not clone, mutate or republish the document.");
+}
+
+static void RoomFiles(EditorWorkspace w)
+{
+    string source = Snapshot(w); string firstId = w.Canvas.ActiveRoomId;
+    var extra = MapDocumentStore.Deserialize(source); extra.rooms[0].id = "imported-room"; extra.rooms[0].name = "Imported"; extra.rooms[0].x = -100;
+    foreach (var item in extra.rooms[0].objects) item.id = Guid.NewGuid().ToString("N");
+    Send(w, "importRooms", ("documents", new[] { JsonSerializer.Deserialize<JsonElement>(MapDocumentStore.Serialize(extra)) }));
+    Check(w.Session.Document.rooms.Count == 2 && w.Canvas.ActiveRoomId == "imported-room", "Import appends exported rooms without discarding current rooms.");
+    string imported = Snapshot(w);
+    Throws<WorkspaceConflict>(() => Send(w, "importRooms", ("documents", new[] { JsonSerializer.Deserialize<JsonElement>(MapDocumentStore.Serialize(extra)) })));
+    Check(Snapshot(w) == imported, "Existing room IDs need an explicit replacement.");
+    Send(w, "exportRooms", ("directory", "Selected"), ("scope", "selected"));
+    Check(Directory.GetFiles(Path.Combine(w.Files.MapsPath, "Selected"), "*.json").Length == 1, "Selected export writes only selected rooms.");
+    Send(w, "exportRooms", ("directory", "AllRooms"), ("scope", "all"));
+    string[] files = Directory.GetFiles(Path.Combine(w.Files.MapsPath, "AllRooms"), "*.json");
+    var times = files.ToDictionary(f => f, File.GetLastWriteTimeUtc);
+    Send(w, "exportRooms", ("directory", "AllRooms"), ("scope", "changed"));
+    Check(files.All(f => File.GetLastWriteTimeUtc(f) == times[f]) && Snapshot(w) == imported, "Unchanged exports do not rewrite files or alter the map.");
+    Send(w, "roomProperties", ("id", "imported-room"), ("y", 12));
+    Send(w, "exportRooms", ("directory", "AllRooms"), ("scope", "changed"), ("overwrite", true));
+    foreach (string file in files)
+    {
+        var room = MapDocumentStore.Deserialize(File.ReadAllText(file)).rooms[0];
+        if (room.id == firstId) Check(File.GetLastWriteTimeUtc(file) == times[file], "Unchanged room file remains untouched.");
+        else Check(room.y == 12, "Changed room exports current data.");
+    }
+    Send(w, "undo"); Send(w, "undo"); Check(Snapshot(w) == source, "Multi-room import is one Undo, independent of exporting.");
 }

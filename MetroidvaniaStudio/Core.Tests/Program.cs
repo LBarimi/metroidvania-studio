@@ -21,6 +21,7 @@ var tests = new (string name, Action run)[]
     ("map files require UTF-8 and allow its BOM", MapFileEncoding),
     ("all-layer clear preserves protected groups and other rooms", Clear),
     ("room resize propagates gap and local data", Resize),
+    ("room clipboard, transforms and collision-only joins", RoomWorkflow),
     ("locked neighbor blocks resize atomically", LockedResize),
     ("node selection transforms and node-only deletion", Nodes),
     ("clipboard deep copy and slope transform", Clipboard),
@@ -672,6 +673,8 @@ static void RoomExportAggregateLimit() => InFiles(dir =>
     string before = Json(document);
     InvalidOperationException error = Throws<InvalidOperationException>(() => MapRoomJsonExporter.Plan(document));
     Check(error.Message.Contains("32", StringComparison.Ordinal), "Aggregate rejection must explain the bounded output size.");
+    Check(MapRoomJsonExporter.Plan(document, new[] { "room-0" }).Count == 1,
+        "Selected-room export must budget and serialize only selected rooms, even when all-room output is too large.");
     string output = Path.Combine(dir, "aggregate-export");
     Throws<InvalidOperationException>(() => MapRoomJsonExporter.Export(document, output));
     Check(!Directory.Exists(output) && Json(document) == before,
@@ -701,6 +704,13 @@ static void Locale()
     MetroidvaniaStudioLocale.Column = "EN"; string en = MetroidvaniaStudioLocale.Text("roomJson.empty_map");
     MetroidvaniaStudioLocale.Column = "KR"; string kr = MetroidvaniaStudioLocale.Text("roomJson.empty_map");
     Check(en != kr && !en.StartsWith('[') && !kr.StartsWith('['), "Shared CSV available in both languages");
+    foreach (string column in new[] { "JA", "ZH_CN", "ZH_TW", "RU" })
+    {
+        MetroidvaniaStudioLocale.Column = column;
+        Check(MetroidvaniaStudioLocale.Text("roomJson.empty_map") != en, "Every supported language has exporter text.");
+        Check(MetroidvaniaStudioLocale.Format("external.exportedRooms", 3).Contains('3'), "Translated placeholders format correctly.");
+    }
+    MetroidvaniaStudioLocale.Column = "KR";
 }
 static void LocaleEnums()
 {
@@ -748,6 +758,38 @@ static void JsonTileAllocations()
     Check(allocated < json.Length * 2L + 32768,
         $"Tile serialization must allocate primarily its result string, not boxed coordinates for every field ({allocated} bytes for {json.Length} characters).");
 }
+
+static void RoomWorkflow()
+{
+    var a = Room("A", 0, 0, 8, 6); var b = Room("B", 12, 0, 5, 6);
+    a.foreground.Add(new MapCell { x = 1, y = 2, shape = TileShape.TopRight, material = "terrain" });
+    a.background.Add(new MapCell { x = 5, y = 4, shape = TileShape.BottomLeft });
+    a.objects.Add(new MapObject { id = "object-a", x = 2, y = 3, width = 2, height = 1, nodes = new() { new Vector2(1, 2), new Vector2(4, 5) } });
+    var session = new MapEditSession(Doc(a, b)); using var edit = new MapRoomEditing(session);
+    string before = Json(session.Document);
+    edit.CopySelected(); edit.Paste(new Vector2Int(-20, 10));
+    var copy = session.Document.rooms.Last();
+    Check(copy.id != "A" && copy.objects[0].id != "object-a" && copy.x == -20 && copy.y == 10, "Paste has fresh identities and a world anchor.");
+    Check(copy.foreground[0].x == 1 && copy.objects[0].nodes[1].y == 5, "Every layer and node must be copied.");
+    session.Undo(); Check(Json(session.Document) == before, "Whole-room paste is one undo.");
+    session.Redo(); Check(session.Document.rooms.Count == 3, "Paste redo."); session.Undo(); edit.Select("A");
+    edit.FlipSelected(true); Check(session.Document.rooms[0].foreground[0].x == 6 && session.Document.rooms[0].objects[0].nodes[0].x == 7, "Horizontal tile/node reflection.");
+    edit.FlipSelected(true); Check(Json(session.Document) == before, "Two horizontal flips restore all data.");
+    edit.FlipSelected(false); edit.FlipSelected(false); Check(Json(session.Document) == before, "Two vertical flips restore all data.");
+    for (int i = 0; i < 4; i++) edit.RotateSelected(true);
+    var rotated = session.Document.rooms[0]; rotated.objects[0].rotation += 360;
+    Check(Json(session.Document) == before, "Four quarter turns restore layout, slope cells, objects and nodes.");
+    edit.CutSelected(); Check(session.Document.rooms.Count == 1, "Cut removes the selected room."); session.Undo();
+    Check(Json(session.Document) == before, "Cut undo restores the room.");
+    edit.Select("A"); session.Document.rooms[0].locked = true; string locked = Json(session.Document);
+    Throws<InvalidOperationException>(() => edit.RotateSelected(true)); Check(Json(session.Document) == locked, "Locked transforms are atomic.");
+    Check(MapRoomCollision.Resolve(a, new Vector2Int(3, 0), new[] { a, b }) == new Vector2Int(3, 0), "A one-tile gap remains a one-tile gap.");
+    Check(MapRoomCollision.Resolve(a, new Vector2Int(5, 0), new[] { a, b }) == new Vector2Int(4, 0), "Overlap resolves to a flush edge.");
+    var c = Room("C", 16, 0, 5, 6);
+    var delta = MapRoomCollision.Resolve(a, new Vector2Int(14, 0), new[] { a, b, c });
+    Check(delta.y != 0 || delta.x >= 21 || delta.x <= 4, "Resolve the entire collision cluster, not just the first neighbor.");
+}
+
 
 abstract class JsonFieldProbeBase { public int inherited = 3; }
 sealed class JsonFieldProbe : JsonFieldProbeBase

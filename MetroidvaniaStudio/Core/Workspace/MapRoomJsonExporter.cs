@@ -43,7 +43,7 @@ namespace MetroidvaniaStudio
             public long WrittenLength, OriginalLength;
         }
 
-        public static IReadOnlyList<Entry> Plan(MapDocument source)
+        public static IReadOnlyList<Entry> Plan(MapDocument source, IEnumerable<string> roomIds = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             try { source.Validate(); }
@@ -53,7 +53,8 @@ namespace MetroidvaniaStudio
 
             var snapshot = source.Clone();
             List<MapRoom> rooms = snapshot.rooms;
-            CheckSharedMetadataBudget(snapshot, rooms.Count);
+            var selected = roomIds == null ? null : new HashSet<string>(roomIds, StringComparer.Ordinal);
+            CheckSharedMetadataBudget(snapshot, selected == null ? rooms.Count : rooms.FindAll(room => selected.Contains(room.id)).Count);
             var entries = new List<Entry>(rooms.Count);
             var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             long aggregateBytes = 0;
@@ -61,6 +62,7 @@ namespace MetroidvaniaStudio
             {
                 string stem = SafeStem(room.name);
                 string fileName = UniqueName(stem, names);
+                if (selected != null && !selected.Contains(room.id)) continue;
                 snapshot.rooms = new List<MapRoom> { room };
                 string json = MapDocumentStore.Serialize(snapshot, true);
                 int byteCount;

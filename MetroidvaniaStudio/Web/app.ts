@@ -1,5 +1,6 @@
 import { EditorApi, EditorApiError, localJson } from './api.js';
-import { Locale } from './locale.js';
+import { Locale, LANGUAGES } from './locale.js';
+import type { Language } from './locale.js';
 import { syncLabels } from './sync-status.js';
 import { MapCanvas } from './map-canvas.js';
 import { MiniMap, roomColor } from './minimap.js';
@@ -10,6 +11,7 @@ const api = new EditorApi(), locale = new Locale();
 const standalone = new URLSearchParams(location.search).get('view') === 'minimap';
 let miniMode = standalone, inspectorHidden = localStorage.getItem('mapstudio.inspectorHidden') === 'true';
 let lastNotice = '';
+let clipboardScope: 'room' | 'content' = 'content';
 let inspectorSelectionKey = '';
 let inspectorSelectionIds: string[] = [], inspectorSelectionVersion = 0, inspectorObjectVersion = 0;
 let inspectorObjectSource: MapObject[] | null = null;
@@ -19,7 +21,7 @@ let pendingStatusPoint: Point | null = null;
 const app = document.getElementById('app')!;
 app.className = 'app' + (standalone ? ' standalone-app' : '');
 // This template contains only application-owned markup. Project text is always assigned with textContent/value.
-app.innerHTML = `<header class="topbar"><div class="brand"><span class="brand-mark">▦</span><span class="brand-text">MetroidvaniaStudio</span></div><div class="top-actions" id="file-actions"></div><div class="spacer"></div><div class="project-name" id="project-name"></div><span class="connection" id="connection"></span><select class="language" id="language" aria-label="Language"><option value="KR">한국어</option><option value="EN">English</option></select></header><nav class="tabbar" id="tabs"></nav><main class="workspace" id="workspace"><aside class="sidebar"><section class="section"><div class="section-title"><span data-label="rooms"></span><span class="count" id="room-count"></span><button id="add-room" class="icon">+</button></div><input id="room-search" class="room-search"><div class="room-list" id="room-list"></div></section><section class="section"><div class="section-title" data-label="tools"></div><div class="tool-grid" id="tools"></div></section><section class="section"><div class="section-title" data-label="layers"></div><div id="layers"></div><select id="group-select"></select><div class="row" id="group-actions"></div></section><section class="section"><div class="section-title" data-label="palette"></div><div id="brush-options"></div><input id="palette-search" class="room-search"><div class="palette-list" id="palette"></div></section></aside><section class="content"><div class="view-toolbar" id="view-toolbar"></div><div class="canvas-wrap"><canvas class="map-canvas" id="map-canvas"></canvas><canvas class="mini-canvas" id="mini-canvas" hidden></canvas><div class="canvas-help" id="canvas-help"></div></div></section><aside class="inspector" id="inspector"></aside></main><footer class="statusbar"><span class="status-state" id="status-state"></span><span class="sync-status" id="status-export" aria-live="polite"></span><span id="status-coordinates"></span><span id="status-layer"></span><div class="spacer"></div><span id="status-camera"></span><span id="status-revision"></span></footer><div class="error-banner" id="toast" hidden role="status"></div>`;
+app.innerHTML = `<header class="topbar"><div class="brand"><img class="brand-mark" src="studio-icon.svg" alt=""><span class="brand-text">MetroidvaniaStudio</span></div><div class="top-actions" id="file-actions"></div><div class="spacer"></div><div class="project-name" id="project-name"></div><span class="connection" id="connection"></span><select class="language" id="language" aria-label="Language"><option value="KR">한국어</option><option value="EN">English</option></select></header><nav class="tabbar" id="tabs"></nav><main class="workspace" id="workspace"><aside class="sidebar"><section class="section"><div class="section-title"><span data-label="rooms"></span><span class="count" id="room-count"></span><button id="add-room" class="icon">+</button></div><input id="room-search" class="room-search"><div class="room-list" id="room-list"></div></section><section class="section"><div class="section-title" data-label="tools"></div><div class="tool-grid" id="tools"></div></section><section class="section"><div class="section-title" data-label="layers"></div><div id="layers"></div><select id="group-select"></select><div class="row" id="group-actions"></div></section><section class="section"><div class="section-title" data-label="palette"></div><div id="brush-options"></div><input id="palette-search" class="room-search"><div class="palette-list" id="palette"></div></section></aside><section class="content"><div class="view-toolbar" id="view-toolbar"></div><div class="canvas-wrap"><canvas class="map-canvas" id="map-canvas"></canvas><canvas class="mini-canvas" id="mini-canvas" hidden></canvas><div class="canvas-help" id="canvas-help"></div></div></section><aside class="inspector" id="inspector"></aside></main><footer class="statusbar"><span class="status-state" id="status-state"></span><span class="sync-status" id="status-export" aria-live="polite"></span><span id="status-coordinates"></span><span id="status-layer"></span><div class="spacer"></div><span id="status-camera"></span><span id="status-revision"></span></footer><div class="error-banner" id="toast" hidden role="status"></div>`;
 function el<T extends HTMLElement = HTMLElement>(id: string): T { return document.getElementById(id) as T; }
 function text(tag: string, value: string, className = ''): HTMLElement { const node = document.createElement(tag); node.textContent = value; node.className = className; return node; }
 function button(label: string, action: () => void | Promise<unknown>, className = ''): HTMLButtonElement { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.className = className; b.addEventListener('click', () => { Promise.resolve().then(action).catch(error => toast(error)); }); return b; }
@@ -55,7 +57,7 @@ function materialName(value: Material): string {
   return translated === key ? value.name : translated;
 }
 
-function toast(error: unknown, success = false): void { const t = el('toast'); t.textContent = error instanceof Error ? error.message : String(error); t.classList.toggle('success', success); t.hidden = false; clearTimeout(toastTimer); toastTimer = window.setTimeout(() => t.hidden = true, success ? 3500 : 9000); }
+function toast(error: unknown, success = false): void { const t = el('toast'); const message = error instanceof Error ? error.message : String(error); const [key, ...args] = message.slice(1).split(':'); t.textContent = message.startsWith('@') ? locale.t(key).replace(/\{(\d+)\}/g, (_, index) => args[Number(index)] || '') : message; t.classList.toggle('success', success); t.hidden = false; clearTimeout(toastTimer); toastTimer = window.setTimeout(() => t.hidden = true, success ? 3500 : 9000); }
 const map = new MapCanvas(el('map-canvas'), api.command, point => drawStatus(point), () => { inspectorHidden = false; updateView(); renderInspector(true); }, key => toast(locale.t(key)), () => api.pending > 0, () => api.refresh(false), size => {
   const brush = el('brush-options').querySelector<HTMLInputElement>('input[type="number"]');
   if (brush) brush.value = String(size);
@@ -64,7 +66,15 @@ const mini = new MiniMap(el('mini-canvas'), id => { void run('selectRoom', { id 
 function expectedAt(value: State): CommandExpectation { return { instanceId: value.instanceId, revision: value.revision }; }
 async function run(action: string, values: CommandValues = {}, expectation?: CommandExpectation): Promise<State> { await map.settled(); return api.command(action, values, expectation); }
 async function settleFileSnapshot(): Promise<void> { await map.settled(); await api.settled(); }
-async function option(values: CommandValues): Promise<void> { map.cancel(); await run('options', values); }
+async function option(values: CommandValues): Promise<void> {
+  map.cancel(); await run('options', () => {
+    const next = { ...(typeof values === 'function' ? values() : values) } as Record<string, unknown>;
+    if (typeof next.layer === 'number' && next.tool === undefined) {
+      const current = state?.selection.tool ?? 3;
+      next.tool = tileLayer(next.layer) ? current === 1 ? 3 : current : current === 0 || current === 2 ? current : next.layer === 6 ? 2 : 1;
+    } return next;
+  });
+}
 function showModal(title: string, content: (body: HTMLElement) => void, apply?: () => Promise<unknown>, action = 'apply'): HTMLDialogElement {
   const dialog = document.createElement('dialog'); const heading = text('div', title, 'dialog-title'), body = text('div', '', 'dialog-body'), footer = text('div', '', 'dialog-footer'), error = text('div', '', 'modal-error');
   heading.append(button('×', () => dialog.close(), 'icon ghost')); content(body); body.append(error); footer.append(button(locale.t(apply ? 'cancel' : 'close'), () => dialog.close()));
@@ -89,21 +99,21 @@ async function runFileAction(action: 'save' | 'exportRooms', values: Record<stri
   }
   return true;
 }
-async function fileDialog(action: string): Promise<void> {
+async function fileDialog(action: string, scope = 'all'): Promise<void> {
   await settleFileSnapshot();
   const snapshot = state, expectation = snapshot ? expectedAt(snapshot) : undefined;
   if (['open', 'new'].includes(action) && snapshot?.dirty && !await confirmAction(locale.t('confirmDiscard'))) return;
   let input: HTMLInputElement;
   const initial = action === 'new' ? '' : action === 'exportRooms' ? 'Exports' : snapshot?.file || 'NewMap.map.json';
-  const dialog = showModal(locale.t(action === 'exportRooms' ? 'export' : action), body => {
-    const [label, field] = labelInput(locale.t(action === 'new' ? 'name' : action === 'exportRooms' ? 'exportDirectory' : 'filePath'), initial); input = field; body.append(label);
+  const dialog = showModal(locale.t(action === 'exportRooms' ? scope === 'selected' ? 'exportSelected' : scope === 'changed' ? 'exportChanged' : 'exportAll' : action), body => {
+    const [label, field] = labelInput(locale.t(action === 'new' ? 'name' : action === 'exportRooms' ? 'exportDirectory' : 'filePath'), initial); input = field; body.append(label); if (action === 'exportRooms') body.append(text('p', locale.t('exportHelp')));
     if (action !== 'new' && action !== 'exportRooms') body.append(text('p', (state?.workspace?.mapsPath || 'Maps') + '/', 'mono subtle'));
     if (action === 'open') { const list = text('div', locale.t('loading'), 'file-list'); body.append(list); void localJson<string[]>('/api/files').then(files => { list.replaceChildren(); if (!files.length) list.append(text('p', locale.t('emptyFiles'))); for (const path of files) list.append(button(path, () => { input.value = path; })); }).catch(error => { list.textContent = error instanceof Error ? error.message : String(error); }); }
   }, async () => {
     const value = input.value.trim(); if (!value) throw new Error(locale.t('required')); map.cancel();
     const commandAction = action === 'saveAs' ? 'save' : action;
     const values = action === 'new' ? { name: value, discard: true }
-      : action === 'exportRooms' ? { directory: value } : { path: value, discard: action === 'open' };
+      : action === 'exportRooms' ? { directory: value, scope } : { path: value, discard: action === 'open' };
     if ((commandAction === 'save' || commandAction === 'exportRooms')
       && !await runFileAction(commandAction, values, expectation, value)) return false;
     if (commandAction !== 'save' && commandAction !== 'exportRooms') await run(commandAction, values, expectation);
@@ -139,6 +149,63 @@ function importDocument(): void {
   }, { once: true });
   input.click();
 }
+function importRooms(): void {
+  const picker = document.createElement('input'); picker.type = 'file'; picker.accept = '.json,application/json'; picker.multiple = true;
+  picker.id = 'room-json-import'; picker.hidden = true; document.body.append(picker);
+  picker.addEventListener('cancel', () => picker.remove(), { once: true });
+  picker.addEventListener('change', () => { void (async () => {
+    try {
+      const files = [...(picker.files || [])]; if (!files.length) return;
+      if (files.reduce((sum, file) => sum + file.size, 0) > 32 * 1024 * 1024) throw new Error(locale.t('importTooLarge'));
+      const documents = await Promise.all(files.map(async file => JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer()))));
+      await settleFileSnapshot(); if (!state) return;
+      const existing = new Set(state.document.rooms.map(room => room.id));
+      const overwrite = documents.some(document => Array.isArray(document?.rooms) && document.rooms.some((room: Room) => existing.has(room.id)));
+      if (overwrite && !await confirmAction(locale.t('confirmRoomReplace'))) return;
+      await run('importRooms', { documents, overwrite }, expectedAt(state)); map.selectRoomTarget(state?.selection.roomId || null); map.frameRoom();
+    } catch (error) { toast(error); } finally { picker.remove(); }
+  })(); }, { once: true }); picker.click();
+}
+async function aboutDialog(): Promise<void> {
+  let info: { version?: string; revision?: string; builtAt?: string } = {};
+  try { info = await localJson('/build-info.json'); } catch { /* Source previews can omit build metadata. */ }
+  showModal(locale.t('about'), body => {
+    const icon = document.createElement('img'); icon.src = 'studio-icon.svg'; icon.alt = ''; icon.width = icon.height = 80;
+    const head = text('div', '', 'about-heading'); head.append(icon, text('strong', 'MetroidvaniaStudio')); body.append(head, text('p', locale.t('aboutDescription')));
+    body.append(text('div', `${locale.t('buildVersion')}: ${info.version || locale.t('unavailable')}`, 'build-version'));
+    if (info.revision) body.append(text('div', `${locale.t('revision')}: ${info.revision}`));
+    if (info.builtAt) body.append(text('div', `${locale.t('buildDate')}: ${new Date(info.builtAt).toLocaleString(locale.htmlLanguage)}`));
+  });
+}
+function menu(id: string, caption: string, items: (HTMLButtonElement | null)[]): HTMLElement {
+  const root = text('div', '', 'menu'); root.id = id;
+  const panel = text('div', '', 'menu-popup'); panel.setAttribute('role', 'menu'); panel.hidden = true;
+  const trigger = button(caption, () => toggle()); trigger.setAttribute('aria-haspopup', 'menu'); trigger.setAttribute('aria-expanded', 'false');
+  trigger.id = id + '-button'; panel.setAttribute('aria-labelledby', trigger.id);
+  function toggle() {
+    const open = panel.hidden; closeMenus(); panel.hidden = !open; trigger.setAttribute('aria-expanded', String(open));
+    if (open) panel.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+  }
+  for (const item of items) {
+    if (!item) { const divider = document.createElement('hr'); divider.setAttribute('role', 'separator'); panel.append(divider); continue; }
+    item.setAttribute('role', 'menuitem'); item.addEventListener('click', closeMenus); panel.append(item);
+  }
+  root.append(trigger, panel);
+  root.addEventListener('keydown', event => {
+    if (!['Escape', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault(); event.stopPropagation();
+    if (event.key === 'Escape') { closeMenus(); trigger.focus(); return; }
+    if (panel.hidden) { toggle(); return; }
+    const buttons = [...panel.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')], index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (index + (event.key === 'ArrowUp' ? -1 : 1) + buttons.length) % buttons.length;
+    buttons[next]?.focus();
+  }); return root;
+}
+function closeMenus(): void {
+  for (const node of document.querySelectorAll<HTMLElement>('.menu-popup')) node.hidden = true;
+  for (const node of document.querySelectorAll('.menu > button')) node.setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('pointerdown', event => { if (!(event.target as HTMLElement).closest('.menu')) closeMenus(); });
 async function cameraSettingsDialog(): Promise<void> {
   await settleFileSnapshot();
   if (!state) return;
@@ -175,15 +242,24 @@ function drawChrome(): void {
     app.querySelector<HTMLElement>('.brand-text')!.textContent = brand;
     document.title = standalone ? `${brand} · ${locale.t('minimap')}` : brand;
   }
-  document.documentElement.lang = locale.language === 'KR' ? 'ko' : 'en'; el<HTMLSelectElement>('language').value = locale.language;
+  document.documentElement.lang = locale.htmlLanguage; el<HTMLSelectElement>('language').replaceChildren(...LANGUAGES.map(([key, label]) => new Option(label, key))); el<HTMLSelectElement>('language').value = locale.language; el('language').setAttribute('aria-label', locale.t('language'));
   for (const node of document.querySelectorAll<HTMLElement>('[data-label]')) node.textContent = locale.t(node.dataset.label!);
   el<HTMLInputElement>('room-search').placeholder = locale.t('search'); el<HTMLInputElement>('palette-search').placeholder = locale.t('search'); el<HTMLButtonElement>('add-room').title = locale.t('addRoom');
-  const actions = el('file-actions'); actions.replaceChildren(button(locale.t('new'), () => fileDialog('new')), button(locale.t('open'), () => fileDialog('open')), button(locale.t('import'), importDocument, 'optional'), button(locale.t('save'), save, 'accent'), button(locale.t('saveAs'), () => fileDialog('saveAs'), 'optional'), button(locale.t('export'), () => fileDialog('exportRooms'), 'optional'));
-  const undo = button('↶', () => run('undo'), 'icon'), redo = button('↷', () => run('redo'), 'icon'); undo.title = locale.t('undo') + ' · Ctrl+Z'; redo.title = locale.t('redo') + ' · Ctrl+Y'; undo.id = 'undo'; redo.id = 'redo'; actions.append(text('span', '', 'divider'), undo, redo);
+  const actions = el('file-actions'); actions.replaceChildren();
+  const undo = button(locale.t('undo') + '   Ctrl+Z', () => run('undo')), redo = button(locale.t('redo') + '   Ctrl+Y', () => run('redo')); undo.title = locale.t('undo') + ' · Ctrl+Z'; redo.title = locale.t('redo') + ' · Ctrl+Y'; undo.id = 'undo'; redo.id = 'redo';
   const cameraSettings = button(locale.t('cameraSettings'), cameraSettingsDialog, 'ghost'); cameraSettings.id = 'camera-settings-action';
   const metadata = button('⚙ ' + locale.t('metadata'), metadataDialog, 'ghost'); metadata.id = 'metadata-action';
   const inspectorToggle = button('☷ ' + locale.t('inspector'), () => { inspectorHidden = !inspectorHidden; localStorage.setItem('mapstudio.inspectorHidden', String(inspectorHidden)); updateView(); }, 'ghost'); inspectorToggle.id = 'inspector-toggle';
-  const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('span', locale.t('workspaceHint'), 'hint'), text('div', '', 'spacer'), cameraSettings, metadata, inspectorToggle);
+  actions.prepend(menu('file-menu', locale.t('file') + ' (F)', [
+    button(locale.t('new'), () => fileDialog('new')), button(locale.t('addRoom'), roomAddDialog),
+    button(locale.t('open'), () => fileDialog('open')), button(locale.t('import'), importDocument), button(locale.t('importRooms'), importRooms), null,
+    button(locale.t('save') + '   Ctrl+S', save), button(locale.t('saveAs'), () => fileDialog('saveAs')), null,
+    button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
+    button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
+    button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed'))]));
+  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null, cameraSettings, metadata]),
+    menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('shortcut'), () => showModal(locale.t('shortcut'), body => { for (const key of ['help', 'roomHelp', 'selectionHelp', 'placementHelp', 'objectHelp']) body.append(text('p', locale.t(key))); })), button(locale.t('about'), aboutDialog)]));
+  const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
   updateView(); drawPanels(true); renderInspector(true);
 }
 function updateView(): void {
@@ -202,7 +278,7 @@ function updateView(): void {
   toolbar.append(text('div', '', 'spacer'));
   if (!miniMode && !map.cameraPreview) toolbar.append(check(locale.t('grid'), map.showGrid, checked => { map.showGrid = checked; map.requestDraw(); })[0]);
   if (miniMode || !map.cameraPreview) toolbar.append(check(locale.t('names'), miniMode ? mini.showNames : map.showNames, checked => { if (miniMode) { mini.showNames = checked; mini.requestDraw(); } else { map.showNames = checked; map.requestDraw(); } })[0]);
-  if (!miniMode && !map.cameraPreview) toolbar.append(check(locale.t('snap'), map.snapRooms, checked => map.snapRooms = checked)[0]);
+
   if (miniMode) { const width = select(Array.from({ length: 10 }, (_, i) => [String(i + 1), locale.t('outline') + ' ' + (i + 1)] as [string, string]), String(mini.outlineWidth)); width.style.width = '100px'; width.addEventListener('change', () => { mini.outlineWidth = Number(width.value); mini.requestDraw(); }); toolbar.append(width); }
   const undo = el<HTMLButtonElement>('undo'), redo = el<HTMLButtonElement>('redo'); undo.disabled = viewOnly || !state?.canUndo; redo.disabled = viewOnly || !state?.canRedo;
   map.requestDraw(); mini.requestDraw(); drawStatus();
@@ -221,6 +297,7 @@ function queuePanels(): void {
   if (!state || uiRaf) return;
   uiRaf = requestAnimationFrame(() => { uiRaf = 0; drawPanels(); });
 }
+function toolAvailable(tool: number, layer: number): boolean { return tileLayer(layer) ? tool !== 1 : layer === 6 ? [0, 2].includes(tool) : [0, 1, 2].includes(tool); }
 function drawPanels(force = false): void {
   if (!state) return;
   const key = panelKey(state); if (!force && key === lastPanelKey) { drawStatus(); renderInspector(); return; } lastPanelKey = key;
@@ -235,7 +312,7 @@ function drawPanels(force = false): void {
   for (const room of state.document.rooms.filter(r => r.name.toLocaleLowerCase().includes(roomSearch.toLocaleLowerCase()))) { const b = button('', async () => { await run('selectRoom', { id: room.id }); map.selectRoomTarget(room.id); map.frameRoom(); }, 'room-row'); b.classList.toggle('active', room.id === s.roomId); b.classList.toggle('hidden', !room.visible); const swatch = text('span', '', 'swatch'); swatch.style.background = roomColor(room); b.append(swatch, text('span', (room.locked ? '▣ ' : '') + room.name, 'room-label'), text('span', `${room.width}×${room.height}`, 'room-size')); b.title = `${room.name} · ${room.x}, ${room.y}`; rooms.append(b); }
   if (!rooms.childElementCount) rooms.append(text('div', locale.t('noRooms'), 'empty'));
   const tools = el('tools'); tools.replaceChildren(); const icons = ['▱', '+', '⬚', '▰', '□', '▨', '╱', '○', '⬭'];
-  TOOLS.forEach((name, index) => { const b = button('', () => option({ tool: index }), 'tool-button'); b.append(text('span', icons[index], 'symbol'), text('span', locale.enum('MetroidvaniaStudioTool', name, index))); b.classList.toggle('active', s.tool === index); tools.append(b); });
+  TOOLS.forEach((name, index) => { if (!toolAvailable(index, s.layer)) return; const b = button('', () => option({ tool: index }), 'tool-button'); b.append(text('span', icons[index], 'symbol'), text('span', index === 2 ? locale.t(tileLayer(s.layer) ? 'tileSelection' : 'objectSelection') : locale.enum('MetroidvaniaStudioTool', name, index))); b.classList.toggle('active', s.tool === index); b.dataset.tool = String(index); b.title = locale.t(index === 2 ? 'selectionHelp' : index === 1 ? 'placementHelp' : index === 0 ? 'roomHelp' : 'help'); tools.append(b); });
   const layers = el('layers'); layers.replaceChildren(); LAYERS.forEach((name, index) => { const div = text('div', '', 'layer-row'), b = button(locale.enum('MapLayer', name, index), () => option({ layer: index, groupId: '', ...(!tileLayer(index) && index !== 6 ? { objectDefinition: state!.catalog.objects.find(o => o.layer === index || [4, 5].includes(o.layer) && [4, 5].includes(index))?.id || '' } : {}) }), 'layer-select'); b.classList.toggle('active', index === s.layer); div.append(b); if (index !== 6) { const visible = button(s.hiddenLayers.includes(index) ? '○' : '●', () => option(() => { const hidden = state!.selection.hiddenLayers; return { hiddenLayers: hidden.includes(index) ? hidden.filter(layer => layer !== index) : [...hidden, index] }; }), 'icon ghost'); visible.title = locale.t('visible'); const locked = button(s.lockedLayers.includes(index) ? '▣' : '▫', () => option(() => { const locked = state!.selection.lockedLayers; return { lockedLayers: locked.includes(index) ? locked.filter(layer => layer !== index) : [...locked, index] }; }), 'icon ghost'); locked.title = locale.t('locked'); div.append(visible, locked); } layers.append(div); });
   const groupSelect = el<HTMLSelectElement>('group-select'); const group = select([['', locale.t('ungrouped')], ...state.document.layerGroups.filter(g => g.layer === s.layer).map(g => [g.id, (g.locked ? '▣ ' : '') + (!g.visible ? '○ ' : '') + g.name] as [string, string])], s.groupId); groupSelect.replaceChildren(...group.children); groupSelect.value = s.groupId;
   const groupActions = el('group-actions'); groupActions.replaceChildren(button('+ ' + locale.t('group'), addGroup)); const selectedGroup = state.document.layerGroups.find(g => g.id === s.groupId); if (selectedGroup) for (const key of ['visible', 'locked'] as const) groupActions.append(button(locale.t(key), () => run('documentProperties', () => ({ layerGroups: state!.document.layerGroups.map(group => group.id === selectedGroup.id ? { ...group, [key]: !group[key] } : group) })), selectedGroup[key] ? 'active' : ''));
@@ -277,6 +354,20 @@ function updateInspectorSelection(ids: string[]): boolean {
   if (ids.length === inspectorSelectionIds.length && ids.every((id, index) => id === inspectorSelectionIds[index])) return false;
   inspectorSelectionIds = ids.slice(); inspectorSelectionVersion++; return true;
 }
+async function editSelection(action: string, values: object = {}, inspector = false): Promise<void> {
+  await map.settled(); if (!state) return;
+  const room = activeRoom(state), selection = state.selection;
+  const roomTarget = selection.tool === 0 || !!map.roomDeleteTarget
+    || inspector && !selection.area && !selection.objects.length;
+  const scope = action === 'paste' ? clipboardScope : roomTarget ? 'room' : 'content';
+  if (action === 'copy' || action === 'cut') clipboardScope = scope;
+  const actions: Record<string, string> = { copy: 'roomCopy', cut: 'roomCut', paste: 'roomPaste', flip: 'roomFlip', rotate: 'roomRotate', delete: 'roomDeleteSelected' };
+  const point = scope === 'room' ? map.hover : { x: map.hover.x - (room?.x || 0), y: map.hover.y - (room?.y || 0) };
+  const next = await run(scope === 'room' ? actions[action] : action,
+    { ...values, ...(action === 'paste' ? { x: Math.floor(point.x), y: Math.floor(point.y) } : {}) }, expectedAt(state));
+  if (scope === 'room') map.selectRoomTarget(action === 'delete' || action === 'cut' ? null : next.selection.roomId);
+  renderInspector(true);
+}
 function renderInspector(force = false): void {
   if (!state) return; const inspector = el('inspector');
   if (updateInspectorSelection(state.selection.objects)) force = true;
@@ -295,8 +386,12 @@ function renderInspector(force = false): void {
   const expectation = expectedAt(state); if (selected.length) objectInspector(inspector, selected, expectation); else roomInspector(inspector, expectation);
   // These buttons do not submit inspector field values. Use the click-time revision so
   // an unrelated compact tile edit cannot leave otherwise valid actions stale.
-  const currentExpectation = () => expectedAt(state!);
-  const actions = section(locale.t('edit')); actions.append(row(button(locale.t('copy'), () => run('copy', {}, currentExpectation())), button(locale.t('paste'), () => run('paste', { x: map.hover.x - room.x, y: map.hover.y - room.y }, currentExpectation()))), row(button(locale.t('flipH'), () => run('flip', { horizontal: true }, currentExpectation())), button(locale.t('flipV'), () => run('flip', { horizontal: false }, currentExpectation()))), row(button('↻ ' + locale.t('rotation'), () => run('rotate', { clockwise: true }, currentExpectation())), button(locale.t('delete'), async () => { await run('delete', {}, currentExpectation()); }, 'danger')));
+  if (state.selection.area) { const area = state.selection.area; const summary = section(locale.t('selectionSummary')); summary.id = 'selection-summary'; summary.append(text('div', `${area.width} × ${area.height} · ${locale.enum('MapLayer', LAYERS[state.selection.layer], state.selection.layer)}`), text('p', locale.t('selectionHelp'))); inspector.append(summary); }
+  const actions = section(locale.t(!state.selection.area && !selected.length ? 'roomActions' : 'selectionActions')); actions.dataset.scope = !state.selection.area && !selected.length ? 'room' : 'content';
+  actions.append(row(button(locale.t('copy'), () => editSelection('copy', {}, true)), button(locale.t('paste'), () => editSelection('paste', {}, true))),
+    row(button(locale.t('flipH'), () => editSelection('flip', { horizontal: true }, true)), button(locale.t('flipV'), () => editSelection('flip', { horizontal: false }, true))),
+    row(button('↻ ' + locale.t('rotation'), () => editSelection('rotate', { clockwise: true }, true)), button(locale.t('delete'), () => editSelection('delete', {}, true), 'danger')));
+
   // Clearing is room-wide and the inspector intentionally does not rerender for every
   // tile/object edit. Capture the revision when the user opens the confirmation dialog,
   // rather than retaining the revision from the last inspector render.
@@ -325,7 +420,7 @@ function objectInspector(inspector: HTMLElement, selected: MapObject[], expectat
   const keys = new Set([...(def?.properties || []).map(p => p.key), ...object.properties.map(p => p.key)]);
   for (const key of keys) {
     if (!selected.every(o => definitionKey(o.definition) === definitionKey(object.definition) || o.properties.some(p => p.key === key))) continue;
-    const field = def?.properties.find(p => p.key === key), label = document.createElement('label'); label.append(text('span', field?.label || key));
+    const field = def?.properties.find(p => p.key === key), label = document.createElement('label'); label.append(text('span', field && def?.name === def?.id && ['label', 'name', 'player', 'tint'].includes(key) ? locale.t('builtin.field.' + key) : field?.label || key));
     const mixed = selected.some(o => propObject(o.properties)[key] !== values[key]); let input: HTMLInputElement | HTMLSelectElement;
     if (field?.choices?.length) input = select(field.choices.map(value => [value, value]), values[key] ?? field.defaultValue ?? '');
     else { input = document.createElement('input'); input.value = values[key] ?? field?.defaultValue ?? ''; if (mixed) { input.value = ''; input.placeholder = locale.t('mixed'); } }
@@ -333,7 +428,7 @@ function objectInspector(inspector: HTMLElement, selected: MapObject[], expectat
   }
   content.append(button(locale.t('applyProperties'), async () => { const values = Object.fromEntries([...fieldInputs].filter(([, input]) => selected.length === 1 || input.dataset.modified === 'true').map(([key, input]) => [key, input.value])); await run('objectProperties', { values }, expectation); renderInspector(true); }, 'accent')); inspector.append(content);
   if (selected.length === 1) {
-    const nodes = section(locale.t('nodes')); object.nodes.forEach((node, index) => { const x = document.createElement('input'), y = document.createElement('input'); x.type = y.type = 'number'; x.step = y.step = '.0625'; x.value = String(node.x); y.value = String(node.y); x.setAttribute('aria-label', `Node ${index + 1} X`); y.setAttribute('aria-label', `Node ${index + 1} Y`); const div = text('div', '', 'node-row'); div.append(button(String(index + 1), () => run('nodeSelect', { id: object.id, index, additive: false }, expectation), state!.selection.nodes?.some(n => n.id === object.id && n.index === index) ? 'active' : ''), x, y, button('✓', async () => { const next = { x: numberValue(x), y: numberValue(y) }; const selectedState = await run('nodeSelect', { id: object.id, index, additive: false }, expectation); await run('nodeMove', next, expectedAt(selectedState)); })); nodes.append(div); });
+    const nodes = section(locale.t('nodes')); object.nodes.forEach((node, index) => { const x = document.createElement('input'), y = document.createElement('input'); x.type = y.type = 'number'; x.step = y.step = '.0625'; x.value = String(node.x); y.value = String(node.y); x.setAttribute('aria-label', `${locale.t('nodes')} ${index + 1} X`); y.setAttribute('aria-label', `${locale.t('nodes')} ${index + 1} Y`); const div = text('div', '', 'node-row'); div.append(button(String(index + 1), () => run('nodeSelect', { id: object.id, index, additive: false }, expectation), state!.selection.nodes?.some(n => n.id === object.id && n.index === index) ? 'active' : ''), x, y, button('✓', async () => { const next = { x: numberValue(x), y: numberValue(y) }; const selectedState = await run('nodeSelect', { id: object.id, index, additive: false }, expectation); await run('nodeMove', next, expectedAt(selectedState)); })); nodes.append(div); });
     const room = activeRoom(state)!; nodes.append(button('+ ' + locale.t('addNode'), () => run('nodeAdd', { x: map.hover.x - room.x, y: map.hover.y - room.y }, expectation)), button(locale.t('deleteNode'), () => run('nodeDelete', {}, expectation), 'danger')); inspector.append(nodes);
   }
 }
@@ -371,7 +466,7 @@ function renderStatus(point: Point): void {
   if (state) { if (revision.dataset.instanceId !== state.instanceId) revision.dataset.instanceId = state.instanceId; }
   else if (revision.dataset.instanceId !== undefined) delete revision.dataset.instanceId;
   const zoom = el('view-toolbar').querySelector('.zoom-readout'); if (zoom && zoom.textContent !== `×${scale}`) zoom.textContent = `×${scale}`;
-  statusText('canvas-help', locale.t(miniMode ? 'minimapHelp' : map.cameraPreview ? 'cameraHelp' : state?.selection.tool === 0 ? 'roomHelp' : !tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'objectHelp' : 'help'));
+  statusText('canvas-help', locale.t(miniMode ? 'minimapHelp' : map.cameraPreview ? 'cameraHelp' : state?.selection.tool === 0 ? 'roomHelp' : tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'selectionHelp' : state?.selection.tool === 1 ? 'placementHelp' : !tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'objectHelp' : 'help'));
 }
 function stateChanged(): void {
   state = api.state; if (!state) return;
@@ -383,7 +478,7 @@ function stateChanged(): void {
 }
 api.addEventListener('state', stateChanged); api.addEventListener('busy', () => drawStatus()); api.addEventListener('error', event => toast((event as CustomEvent).detail));
 api.addEventListener('connection', () => drawStatus()); api.addEventListener('offline', () => drawStatus());
-locale.addEventListener('change', () => { languageVersion++; drawChrome(); }); el('language').addEventListener('change', () => locale.set(el<HTMLSelectElement>('language').value as 'KR' | 'EN'));
+locale.addEventListener('change', () => { languageVersion++; drawChrome(); }); el('language').addEventListener('change', () => locale.set(el<HTMLSelectElement>('language').value as Language));
 el('add-room').addEventListener('click', roomAddDialog); el('room-search').addEventListener('input', () => { roomSearch = el<HTMLInputElement>('room-search').value; drawPanels(); }); el('palette-search').addEventListener('input', () => { paletteSearch = el<HTMLInputElement>('palette-search').value; drawPalette(); }); el('group-select').addEventListener('change', () => { void option({ groupId: el<HTMLSelectElement>('group-select').value }).catch(() => undefined); });
 el('inspector').addEventListener('focusout', () => { window.setTimeout(() => renderInspector(), 0); });
 const toolKeys = ['r', 'p', 'v', 'b', 'u', 'g', 'l', 'c', 'e'];
@@ -391,7 +486,9 @@ function authoringShortcut(key: string, mod: boolean): boolean {
   return mod && ['z', 'y', 'c', 'x', 'v', 'a'].includes(key) || key === 'delete' || key === 'backspace' || !mod && toolKeys.includes(key);
 }
 document.addEventListener('keydown', event => {
-  if (document.querySelector('dialog[open]')) return;
+  if (event.defaultPrevented || document.querySelector('dialog[open]')) return;
+  if (event.altKey && !event.ctrlKey && ['f', 'e', 'h'].includes(event.key.toLowerCase())) { event.preventDefault(); el<HTMLButtonElement>(event.key.toLowerCase() === 'f' ? 'file-menu-button' : event.key.toLowerCase() === 'e' ? 'edit-menu-button' : 'help-menu-button').click(); return; }
+  if (document.querySelector('.menu-popup:not([hidden])')) return;
   const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || (event.target as HTMLElement)?.isContentEditable;
   if (typing && !(event.key.toLowerCase() === 's' && (event.ctrlKey || event.metaKey))) return;
   const key = event.key.toLowerCase(), mod = event.ctrlKey || event.metaKey;
@@ -401,20 +498,21 @@ document.addEventListener('keydown', event => {
   if (mod && key === 's') action = () => event.shiftKey ? fileDialog('saveAs') : save();
   else if (mod && key === 'z') action = () => run(event.shiftKey ? 'redo' : 'undo');
   else if (mod && key === 'y') action = () => run('redo');
-  else if (mod && ['c', 'x', 'v', 'a'].includes(key)) action = () => { map.selectRoomTarget(null); const room = activeRoom(state); return run(({ c: 'copy', x: 'cut', v: 'paste', a: 'selectAll' } as Record<string, string>)[key], key === 'v' && room ? { x: Math.floor(map.hover.x - room.x), y: Math.floor(map.hover.y - room.y) } : {}); };
+  else if (mod && key === 'a') action = () => { map.selectRoomTarget(null); return run('selectAll'); };
+  else if (mod && ['c', 'x', 'v'].includes(key)) action = () => editSelection(({ c: 'copy', x: 'cut', v: 'paste' } as Record<string, string>)[key]);
   else if (key === 'delete' || key === 'backspace') action = async () => {
     if (event.repeat) return;
     await map.settled();
     const id = map.roomDeleteTarget;
     const expectation = state ? expectedAt(state) : undefined;
-    if (id) { await run('roomDelete', { id }, expectation); map.selectRoomTarget(null); }
+    if (id || state?.selection.tool === 0) { await run('roomDeleteSelected', {}, expectation); map.selectRoomTarget(null); }
     else await run('delete', {}, expectation);
   };
   else if (key === 'escape') action = () => { if (!miniMode && map.cameraPreview) { map.gameView(false); updateView(); } else if (miniMode) mini.cancelInteraction(); else { map.selectRoomTarget(null); map.cancel(); void run('cancel').catch(() => undefined); } };
   else if (!mod && key === 'f') action = () => miniMode ? mini.frameRoom() : map.frameRoom();
   else if (!mod && key === 'b') action = () => option({ tool: 3,
     ...(!tileLayer(state?.selection.layer ?? 0) ? { layer: 0, groupId: '' } : {}) });
-  else if (!mod && toolKeys.includes(key)) action = () => option({ tool: toolKeys.indexOf(key) });
+  else if (!mod && toolKeys.includes(key) && toolAvailable(toolKeys.indexOf(key), state?.selection.layer ?? 0)) action = () => option({ tool: toolKeys.indexOf(key) });
   if (action) { event.preventDefault(); Promise.resolve().then(action).catch(error => toast(error)); }
 });
 window.addEventListener('beforeunload', event => {

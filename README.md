@@ -1,3 +1,5 @@
+<img src="MetroidvaniaStudio/Web/studio-icon.svg" width="72" height="72" alt="MetroidvaniaStudio symbol">
+
 # MetroidvaniaStudio
 
 A web-based 2D world editor for metroidvania games. Create connected rooms, paint tilemaps, and design minimaps with JSON export for cross-engine workflows.
@@ -75,9 +77,18 @@ Pass the same `-Project` and `-Port` when restarting or stopping a custom worksp
 
 Project-owned examples are in `Samples/`. They provide default resources without importing another project's data. Workspace paths are independent of the application source tree. JSON keeps room positions, layers, tile materials, objects and metadata; rendering and game behavior belong to the consuming application.
 
+## Editing workflow
+
+- **File (Alt+F)** creates or opens maps, adds rooms, imports room JSON files, and saves selected, all or changed rooms. Room import keeps the current map and can replace matching room IDs after confirmation. Changed-room export compares the destination files and leaves matching JSON untouched. **Ctrl+S** saves the complete authoring map.
+- **Edit (Alt+E)** contains Undo/Redo, camera settings and map settings. **Help (Alt+H)** contains shortcuts and About, including the application symbol and build version.
+- Drag the active room's title strip to move it while drawing. Room edges join only when the proposed destination overlaps another room; existing gaps stay as drawn. Outside handles resize rooms with any tile drawing tool.
+- **Select tile area (V)** previews the selection while dragging. Drag inside to move it, or hold Shift to start a new selection. Copy, paste, reflect, rotate and delete act on selected contents; with a room selected, the inspector actions affect the whole room. Every modifying action supports Undo.
+- Tile layers show tile drawing tools. Object layers show placement and object selection. Choose an object in the palette, then click or drag to place it.
+- The language picker supports Korean, English, Japanese, Simplified Chinese, Traditional Chinese (Taiwan) and Russian. It follows the browser language initially and remembers explicit choices.
+
 ## Camera settings and engine packages
 
-Use **Camera settings** in the web toolbar to configure PPU (default 16) and reference resolution (default 320×180). Settings belong to the current map, support Undo/Redo, and survive save, import and per-room JSON export. Source tiles remain 16×16; PPU changes world-unit conversion, while resolution changes the visible game area.
+Use **Edit > Camera settings** to configure PPU (default 16) and reference resolution (default 320×180). Settings belong to the current map, support Undo/Redo, and survive save, import and per-room JSON export. Source tiles remain 16×16; PPU changes world-unit conversion, while resolution changes the visible game area.
 
 The Unity adapter targets 6000.3.9f1. Platform builds also create `engine/unity/Builds/MetroidvaniaStudio-Unity-<version>.unitypackage`. Import it into Unity, open **Tools > MetroidvaniaStudio**, connect to the running local studio and load a room. See `engine/unity/README.md` for installation, live refresh, offline imports and runtime APIs. Engine assemblies are never referenced by the web studio or server.
 

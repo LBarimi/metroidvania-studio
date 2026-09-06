@@ -74,6 +74,8 @@ try {
     if (-not $SyncOnly -and -not $PerformanceOnly) {
         & node (Join-Path $PSScriptRoot 'browser-room-workflow.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Room workflow validation failed.' }
+        & node (Join-Path $PSScriptRoot 'browser-studio-workflow.mjs')
+        if ($LASTEXITCODE -ne 0) { throw 'Studio workflow checks failed.' }
     }
     if (-not $RoomOnly -and -not $PerformanceOnly) {
         & node (Join-Path $PSScriptRoot 'browser-sync-status.mjs')

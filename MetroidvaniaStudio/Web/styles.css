@@ -240,7 +240,7 @@ hr {
 
 .dirty-dot { margin-right: 5px; color: var(--warn); }
 .divider { width: 1px; height: 18px; margin: 0 3px; background: var(--line); }
-.language { width: 64px; }
+.language { width: 144px; min-width: 144px; flex: 0 0 144px; }
 
 .connection {
   display: flex;
@@ -750,3 +750,21 @@ dialog::backdrop { background: #050505b8; }
 .workspace.minimap-mode,
 .workspace.standalone,
 .workspace.camera-preview { grid-template-columns: minmax(0, 1fr); }
+
+/* Compact menus preserve workspace space and remain available at narrow widths. */
+.menu { position: relative; }
+.menu-popup { position: absolute; top: calc(100% + 5px); left: 0; z-index: 100; min-width: 230px; max-width: min(360px, 90vw); padding: 5px; background: #222; border: 1px solid #484848; box-shadow: 0 8px 28px #0009; }
+.menu-popup[hidden] { display: none; }
+.top-actions .menu-popup button { display: block; width: 100%; padding: 7px 10px; text-align: left; white-space: nowrap; font-size: 12px; }
+.menu-popup hr { margin: 5px; }
+.brand-mark { width: 25px; height: 25px; border: 0; flex-shrink: 0; }
+.about-heading { display: flex; align-items: center; gap: 18px; padding: 8px 0 16px; }
+.about-heading strong { font-size: 20px; }
+.build-version { margin-top: 16px; color: #b5dbf0; }
+.standalone-app .top-actions { display: flex; }
+.standalone-app #file-menu, .standalone-app #settings-menu, .standalone-app #undo, .standalone-app #redo, .standalone-app .divider { display: none; }
+@media (max-width: 820px) { .brand { min-width: 25px; } .brand-text { display: none; } .topbar .connection { display: none; } }
+
+.inspector .row button { white-space: normal; overflow-wrap: anywhere; min-width: 0; height: auto; }
+
+.standalone-app #edit-menu { display: none; }

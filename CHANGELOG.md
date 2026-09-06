@@ -2,6 +2,12 @@
 
 ## 0.1.0
 
+- Add a pixel-grid room symbol, File/Edit/Help menus and build information.
+- Add multi-file room import and selected/all/changed room JSON saving.
+- Fix whole-room clipboard, reflection, rotation and deletion; allow collision-only room joins from every tile drawing tool.
+- Preview tile selections immediately without rerendering terrain on every pointer move; show contextual tools and clearer selection guidance.
+- Add Japanese, Simplified Chinese, Traditional Chinese (Taiwan) and Russian alongside Korean and English.
+
 - Add Windows, Linux and macOS build/run entry points with a shared runtime launcher, verified background sessions and safe save-before-restart.
 - Prevent concurrent workspace writers and preserve case-sensitive file identities on Unix.
 

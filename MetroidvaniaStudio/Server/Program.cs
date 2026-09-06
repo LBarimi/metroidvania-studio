@@ -128,7 +128,7 @@ app.MapGet("/{**path}", (string? path) =>
     path = string.IsNullOrWhiteSpace(path) ? "index.html" : path;
     if (path.Contains('/') || path.Contains('\\') || path.Contains("..") || path.Contains(':')) return Results.NotFound();
     string file = Path.Combine(webRoot, path);
-    string? type = Path.GetExtension(file) switch { ".html" => "text/html; charset=utf-8", ".js" => "text/javascript; charset=utf-8", ".css" => "text/css; charset=utf-8", _ => null };
+    string? type = Path.GetExtension(file) switch { ".html" => "text/html; charset=utf-8", ".js" => "text/javascript; charset=utf-8", ".css" => "text/css; charset=utf-8", ".svg" => "image/svg+xml", ".json" when path == "build-info.json" => "application/json; charset=utf-8", _ => null };
     return type != null && File.Exists(file) ? Results.File(file, type) : Results.NotFound();
 });
 using var timer = new Timer(_ =>

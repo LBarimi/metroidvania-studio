@@ -179,7 +179,7 @@ try {
   const malformedMapRelative = '__browser_validation__/malformed.map.json';
   await writeFile(path.join(root, 'Maps', malformedMapRelative), '{', 'utf8');
   const beforeMalformedOpen = await state(); commandActions.length = 0; commandRequests.length = 0;
-  await page.locator('#file-actions button').nth(1).click();
+  await page.locator('#file-menu-button').click(); await page.locator('#file-menu .menu-popup button').nth(2).click();
   await page.locator('dialog .file-list').getByRole('button', { name: malformedMapRelative, exact: true }).click();
   await page.locator('dialog .accent').click();
   await page.locator('dialog .modal-error').filter({ hasText: /.+/ }).waitFor();
@@ -191,7 +191,7 @@ try {
   await page.locator('dialog .dialog-title button').click();
 
   commandActions.length = 0; commandRequests.length = 0;
-  await page.locator('#metadata-action').click();
+  await page.locator('#edit-menu-button').click(); await page.locator('#metadata-action').click();
   await page.locator('dialog textarea').fill('{'); await page.locator('dialog .accent').click();
   await page.locator('dialog .modal-error').filter({ hasText: /.+/ }).waitFor();
   assert.equal(commandRequests.length, 0, 'Malformed metadata JSON must be rejected before sending a command.');
@@ -642,7 +642,7 @@ try {
   assert.deepEqual(commandActions, ['options'], 'A stroke during a delayed writer must not enqueue tileGesture.');
   await page.locator('#toast:not([hidden])').waitFor();
   assert.ok((await page.locator('#toast').innerText()).length > 0, 'A blocked stroke must explain that the editor is busy.');
-  await page.locator('#file-actions button.accent').click();
+  await page.locator('#map-canvas').focus(); await page.keyboard.press('Control+s');
   await page.waitForTimeout(80);
   assert.deepEqual(commandActions, ['options'], 'Save must wait for an earlier options writer before capturing its revision.');
   releaseOptions();
@@ -673,7 +673,7 @@ try {
   checks.push('pending writer blocks stale input and compact commit refreshes the room theme');
   await page.keyboard.press('Control+z'); current = await eventually(s => s.document.rooms[0].foreground.filter(cell => cell.y === 10).length === 0, 'Post-writer stroke Undo failed.'); await clientAt(current.revision);
 
-  await page.locator('#tools .tool-button').nth(4).click();
+  await page.locator('#tools [data-tool="4"]').click();
   current = await eventually(s => s.selection.tool === 4, 'Rectangle tool did not activate.'); await clientAt(current.revision);
   commandActions.length = 0; commandRequests.length = 0;
   const rectangleBefore = current.document.rooms[0].foreground.length;
@@ -684,7 +684,7 @@ try {
   assert.equal(rectangleRequest.compactDocument, false, 'A non-live shape needs the authoritative document response.');
   await page.keyboard.press('Control+z'); current = await eventually(s => s.document.rooms[0].foreground.length === rectangleBefore, 'Rectangle gesture Undo failed.'); await clientAt(current.revision);
 
-  await page.locator('#tools .tool-button').nth(5).click();
+  await page.locator('#tools [data-tool="5"]').click();
   current = await eventually(s => s.selection.tool === 5, 'Bucket tool did not activate.'); await clientAt(current.revision);
   commandActions.length = 0; commandRequests.length = 0;
   const bucketBefore = current.revision;
@@ -711,7 +711,7 @@ try {
   await drag(center, { x: center.x + 70, y: center.y + 50 });
   current = await eventually(s => s.document.rooms[0].objects.length === 1, 'Trigger was not placed.'); await clientAt(current.revision);
   assert.equal(current.document.rooms[0].objects[0].layer, 3);
-  await page.locator('#tools .tool-button').nth(2).click();
+  await page.locator('#tools [data-tool="2"]').click();
   current = await eventually(s => s.selection.tool === 2, 'Object selection tool did not activate.'); await clientAt(current.revision);
   await page.mouse.click(center.x + 20, center.y + 20);
   current = await eventually(s => s.selection.objects.length === 1, 'Placed trigger was not selected.'); await clientAt(current.revision);
@@ -755,9 +755,9 @@ try {
   checks.push('embedded and separate MiniMap are read-only');
   await miniPage.close();
   await page.locator('#language').selectOption('EN');
-  const editorTab = page.getByRole('button', { name: 'MetroidvaniaStudio', exact: true });
+  const editorTab = page.getByRole('button', { name: 'Map editor', exact: true });
   await editorTab.waitFor(); await editorTab.click(); await page.locator('#map-canvas').waitFor({ state: 'visible' }); checks.push('KR/EN switch');
-  const beforeSaveAsOption = await state(), saveAsTool = beforeSaveAsOption.selection.tool === 0 ? 1 : 0;
+  const beforeSaveAsOption = await state(), saveAsTool = beforeSaveAsOption.selection.tool === 0 ? 2 : 0;
   let releaseSaveAsOption, markSaveAsOption;
   const saveAsOptionGate = new Promise(resolve => { releaseSaveAsOption = resolve; });
   const saveAsOptionIntercepted = new Promise(resolve => { markSaveAsOption = resolve; });
@@ -771,9 +771,9 @@ try {
   };
   commandActions.length = 0; commandRequests.length = 0;
   await page.route('**/api/command', delaySaveAsOption);
-  await page.locator('#tools .tool-button').nth(saveAsTool).click();
+  await page.locator(`#tools [data-tool="${saveAsTool}"]`).click();
   await Promise.race([saveAsOptionIntercepted, new Promise((_, reject) => setTimeout(() => reject(new Error('Save As options request was not intercepted.')), 3000))]);
-  await page.getByRole('button', { name: 'Save as', exact: true }).click();
+  await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name: 'Save map as', exact: true }).click();
   await page.waitForTimeout(80);
   assert.equal(await page.locator('dialog').count(), 0, 'Save As must wait for the preceding options writer before opening its snapshot dialog.');
   releaseSaveAsOption();
@@ -800,7 +800,7 @@ try {
   const collisionSentinel = Buffer.from(JSON.stringify(collisionDocument, null, 2), 'utf8');
   await writeFile(collisionPath, collisionSentinel);
   const saveConflictExpectation = await state(); commandRequests.length = 0;
-  await page.getByRole('button', { name: 'Save as', exact: true }).click();
+  await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name: 'Save map as', exact: true }).click();
   await page.locator('dialog input').fill(collisionRelative);
   await page.locator('dialog .accent').click();
   const saveOverwriteDialog = page.locator('dialog').last();
@@ -822,7 +822,7 @@ try {
     'Confirmed Save As overwrite must replace the sentinel map.');
   checks.push('Save As requires explicit overwrite and preserves captured target/revision');
 
-  await page.getByRole('button', { name: 'Export rooms JSON', exact: true }).click();
+  await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name: 'Save all rooms as JSON…', exact: true }).click();
   await page.locator('dialog input').fill('__browser_validation__/Rooms');
   await page.locator('dialog .accent').click();
   await page.locator('dialog').waitFor({ state: 'detached' });
@@ -836,7 +836,7 @@ try {
   const roomSentinel = Buffer.from(JSON.stringify(roomDocument, null, 2), 'utf8');
   await writeFile(roomPath, roomSentinel);
   const exportConflictExpectation = await state(); commandRequests.length = 0;
-  await page.getByRole('button', { name: 'Export rooms JSON', exact: true }).click();
+  await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name: 'Save all rooms as JSON…', exact: true }).click();
   await page.locator('dialog input').fill('__browser_validation__/Rooms');
   await page.locator('dialog .accent').click();
   const exportOverwriteDialog = page.locator('dialog').last();
@@ -859,7 +859,7 @@ try {
     'Confirmed export overwrite must replace the sentinel room JSON.');
   checks.push('room export requires explicit overwrite and preserves captured target/revision');
 
-  await page.getByRole('button', { name: 'MetroidvaniaStudio', exact: true }).click();
+  await page.getByRole('button', { name: 'Map editor', exact: true }).click();
   await page.locator('#map-canvas').waitFor({ state: 'visible' });
   const normalizedLayerOptions = await command('options', { layer: 0, groupId: '', hiddenLayers: [], lockedLayers: [] });
   await clientAt(normalizedLayerOptions.revision);
@@ -894,7 +894,7 @@ try {
     'Rapid group toggles must derive two ordered updates from current state.');
   checks.push('rapid layer and group toggles preserve every click');
 
-  await page.getByRole('button', { name: 'Open', exact: true }).click();
+  await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name: 'Open map', exact: true }).click();
   await page.locator('dialog').getByRole('button', { name: 'Continue', exact: true }).click();
   await page.locator('dialog .file-list').getByRole('button', { name: initial.file, exact: true }).click();
   await page.locator('dialog .accent').click();
@@ -918,9 +918,9 @@ try {
     if (body.action === 'options') { markPending(); await pendingGate; }
     await route.continue();
   };
-  const cleanState = await state(), nextTool = (cleanState.selection.tool + 1) % 9;
+  const cleanState = await state(), nextTool = cleanState.selection.tool === 0 ? 2 : 0;
   await page.route('**/api/command', delayPending);
-  await page.locator('#tools .tool-button').nth(nextTool).evaluate(button => button.click());
+  await page.locator(`#tools [data-tool="${nextTool}"]`).evaluate(button => button.click());
   await Promise.race([pendingIntercepted, new Promise((_, reject) => setTimeout(() => reject(new Error('Pending close-guard request was not intercepted.')), 3000))]);
   assert.equal(await page.evaluate(() => window.dispatchEvent(new Event('beforeunload', { cancelable: true }))), false,
     'An in-flight command must protect a still-clean document from closing silently.');

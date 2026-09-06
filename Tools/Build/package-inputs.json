@@ -24,5 +24,6 @@
   "platform/mac/stop.command",
   "platform/win/build.bat",
   "platform/win/run.bat",
-  "platform/win/stop.bat"
+  "platform/win/stop.bat",
+  "MetroidvaniaStudio/Web/studio-icon.svg"
 ]

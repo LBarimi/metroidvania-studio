@@ -1,207 +1,256 @@
-Key,KR,EN
-builtin.category.Decoration,장식,Decoration
-builtin.category.Gameplay,게임플레이,Gameplay
-builtin.category.Triggers,트리거,Triggers
-builtin.category.decalFolder,장식/{0},Decals/{0}
-builtin.field.label,표시 이름,Label
-builtin.field.name,이름,Name
-builtin.field.player,플레이어,Player
-builtin.field.tint,색조,Tint
-builtin.missing,없음,Missing
-builtin.object.Area,트리거 영역,Area
-builtin.object.Decal,장식,Decal
-builtin.object.Marker,표식,Marker
-builtin.object.Object,오브젝트,Object
-builtin.object.Path,경로,Path
-builtin.object.Spawn,시작 지점,Spawn
-builtin.package.Built-in,기본 제공,Built-in
-builtin.package.Missing,없음,Missing
-builtin.package.Project,프로젝트,Project
-roomJson.alias_device,원본 맵 보호를 위해 장치 경로에서는 방 파일을 덮어쓸 수 없습니다: {0},"To protect the source map, room files cannot be overwritten using a device path: {0}"
+Key,KR,EN,JA,ZH_CN,ZH_TW,RU
+builtin.category.Decoration,장식,Decoration,装飾,装饰,裝飾,Декорации
+builtin.category.Gameplay,게임플레이,Gameplay,ゲームプレイ,玩法,玩法,Игровые элементы
+builtin.category.Triggers,트리거,Triggers,トリガー,触发器,觸發器,Триггеры
+builtin.category.decalFolder,장식/{0},Decals/{0},装飾/{0},装饰/{0},裝飾/{0},Декорации/{0}
+builtin.field.label,표시 이름,Label,表示名,显示名称,顯示名稱,Подпись
+builtin.field.name,이름,Name,名前,名称,名稱,Название
+builtin.field.player,플레이어,Player,プレイヤー,玩家,玩家,Игрок
+builtin.field.tint,색조,Tint,色合い,色调,色調,Оттенок
+builtin.missing,없음,Missing,なし,缺失,缺少,Отсутствует
+builtin.object.Area,트리거 영역,Area,トリガー領域,触发区域,觸發區域,Область триггера
+builtin.object.Decal,장식,Decal,装飾,装饰,裝飾,Декорация
+builtin.object.Marker,표식,Marker,マーカー,标记,標記,Метка
+builtin.object.Object,오브젝트,Object,オブジェクト,对象,物件,Объект
+builtin.object.Path,경로,Path,パス,路径,路徑,Путь
+builtin.object.Spawn,시작 지점,Spawn,開始地点,起始点,起始點,Точка появления
+builtin.package.Built-in,기본 제공,Built-in,標準,内置,內建,Встроенное
+builtin.package.Missing,없음,Missing,なし,缺失,缺少,Отсутствует
+builtin.package.Project,프로젝트,Project,プロジェクト,项目,專案,Проект
+roomJson.alias_device,원본 맵 보호를 위해 장치 경로에서는 방 파일을 덮어쓸 수 없습니다: {0},"To protect the source map, room files cannot be overwritten using a device path: {0}",元のマップを保護するため、デバイスパス経由での上書きはできません: {0},为保护源地图，不能通过设备路径覆盖房间文件：{0},為保護原始地圖，無法透過裝置路徑覆寫房間檔案：{0},Для защиты исходной карты перезапись через путь устройства запрещена: {0}
 roomJson.alias_inspection_failed,"원본 맵을 보호할 수 있는 경로인지 확인하지 못해 덮어쓰기를 중단했습니다: {0}
 {1}","Overwrite was stopped because the path could not be checked to protect the source map: {0}
+{1}","元のマップを保護できるパスか確認できないため、上書きを中止しました: {0}
+{1}","无法确认路径是否能保护源地图，已停止覆盖：{0}
+{1}","無法確認路徑是否能保護原始地圖，已停止覆寫：{0}
+{1}","Перезапись остановлена: не удалось проверить путь для защиты исходной карты: {0}
 {1}"
-roomJson.alias_reparse,원본 맵 보호를 위해 심볼릭 링크나 정션을 거치는 경로에서는 방 파일을 덮어쓸 수 없습니다: {0},"To protect the source map, room files cannot be overwritten through a symbolic link or junction: {0}"
-roomJson.aggregate_too_large,모든 방 JSON의 합계가 32MiB 제한을 초과합니다. 전역 메타데이터를 줄이거나 방을 나누어 내보내세요.,The combined room JSON output exceeds the 32 MiB limit. Reduce global metadata or export fewer rooms at a time.
-roomJson.choose_directory,방 JSON을 내보낼 폴더를 지정하세요.,Choose a folder for the room JSON files.
-roomJson.empty_map,내보낼 방이 없습니다.,There are no rooms to export.
-roomJson.exists,같은 이름의 파일이 이미 있습니다: {0},A file already exists at: {0}
-roomJson.failed,방 내보내기에 실패했습니다. 적용된 파일 변경은 복구했습니다: {0},Room export failed. Published file changes were rolled back: {0}
+roomJson.alias_reparse,원본 맵 보호를 위해 심볼릭 링크나 정션을 거치는 경로에서는 방 파일을 덮어쓸 수 없습니다: {0},"To protect the source map, room files cannot be overwritten through a symbolic link or junction: {0}",元のマップを保護するため、シンボリックリンクやジャンクション経由での上書きはできません: {0},为保护源地图，不能通过符号链接或目录联接覆盖房间文件：{0},為保護原始地圖，無法透過符號連結或目錄接合覆寫房間檔案：{0},Для защиты исходной карты перезапись через символическую ссылку или соединение каталогов запрещена: {0}
+roomJson.aggregate_too_large,모든 방 JSON의 합계가 32MiB 제한을 초과합니다. 전역 메타데이터를 줄이거나 방을 나누어 내보내세요.,The combined room JSON output exceeds the 32 MiB limit. Reduce global metadata or export fewer rooms at a time.,部屋JSONの合計が32 MiBを超えています。共通メタデータを減らすか、書き出す部屋を分けてください。,房间 JSON 总大小超过 32 MiB。请减少全局元数据或分批导出。,房間 JSON 總大小超過 32 MiB。請減少全域中繼資料或分批匯出。,Общий размер JSON комнат превышает 32 МиБ. Сократите общие метаданные или экспортируйте меньше комнат за раз.
+roomJson.choose_directory,방 JSON을 내보낼 폴더를 지정하세요.,Choose a folder for the room JSON files.,部屋JSONの保存先フォルダーを指定してください。,请选择房间 JSON 导出文件夹。,請選擇房間 JSON 匯出資料夾。,Выберите папку для JSON комнат.
+roomJson.empty_map,내보낼 방이 없습니다.,There are no rooms to export.,書き出す部屋がありません。,没有可导出的房间。,沒有可匯出的房間。,Нет комнат для экспорта.
+roomJson.exists,같은 이름의 파일이 이미 있습니다: {0},A file already exists at: {0},ファイルが既にあります: {0},文件已存在：{0},檔案已存在：{0},Файл уже существует: {0}
+roomJson.failed,방 내보내기에 실패했습니다. 적용된 파일 변경은 복구했습니다: {0},Room export failed. Published file changes were rolled back: {0},部屋の書き出しに失敗しました。ファイル変更は元に戻しました: {0},房间导出失败，已回滚文件更改：{0},房間匯出失敗，已復原檔案變更：{0},Экспорт комнат не удался. Изменения файлов отменены: {0}
 roomJson.failed_cleanup,"방 내보내기에 실패했지만 적용된 파일 변경은 복구했습니다: {0}
 임시 폴더를 정리하지 못했습니다: {1}
 {2}","Room export failed, but published file changes were rolled back: {0}
 Could not remove the staging folder: {1}
+{2}","書き出しに失敗しましたが、ファイル変更は元に戻しました: {0}
+一時フォルダーを削除できませんでした: {1}
+{2}","导出失败，但已回滚文件更改：{0}
+无法删除暂存文件夹：{1}
+{2}","匯出失敗，但已復原檔案變更：{0}
+無法刪除暫存資料夾：{1}
+{2}","Экспорт не удался, изменения файлов отменены: {0}
+Не удалось удалить временную папку: {1}
 {2}"
-roomJson.invalid_map,맵 데이터가 올바르지 않아 방을 내보낼 수 없습니다: {0},Cannot export rooms because the map is invalid: {0}
-roomJson.invalid_shared_text,공유 맵 정보에 UTF-8로 저장할 수 없는 문자가 있습니다.,Shared map metadata contains text that cannot be saved as UTF-8.
-roomJson.invalid_text,'{0}' 방에 UTF-8로 저장할 수 없는 문자가 있습니다.,Room '{0}' contains text that cannot be saved as UTF-8.
-roomJson.not_directory,출력 폴더 경로에 파일이 있습니다: {0},The output folder path points to a file: {0}
-roomJson.not_file,출력 파일 경로에 폴더가 있습니다: {0},An output file path points to a folder: {0}
-roomJson.protected_source,현재 원본 맵 파일은 덮어쓸 수 없습니다: {0},The current source map file cannot be overwritten: {0}
+roomJson.invalid_map,맵 데이터가 올바르지 않아 방을 내보낼 수 없습니다: {0},Cannot export rooms because the map is invalid: {0},マップデータが無効なため、部屋を書き出せません: {0},地图数据无效，无法导出房间：{0},地圖資料無效，無法匯出房間：{0},Карта содержит некорректные данные. Экспорт невозможен: {0}
+roomJson.invalid_shared_text,공유 맵 정보에 UTF-8로 저장할 수 없는 문자가 있습니다.,Shared map metadata contains text that cannot be saved as UTF-8.,共通マップ情報にUTF-8で保存できない文字が含まれています。,共享地图信息包含无法保存为 UTF-8 的文本。,共用地圖資訊包含無法儲存為 UTF-8 的文字。,"Общие метаданные карты содержат текст, который нельзя сохранить в UTF-8."
+roomJson.invalid_text,'{0}' 방에 UTF-8로 저장할 수 없는 문자가 있습니다.,Room '{0}' contains text that cannot be saved as UTF-8.,部屋「{0}」にUTF-8で保存できない文字が含まれています。,房间“{0}”包含无法保存为 UTF-8 的文本。,房間「{0}」包含無法儲存為 UTF-8 的文字。,"Комната «{0}» содержит текст, который нельзя сохранить в UTF-8."
+roomJson.not_directory,출력 폴더 경로에 파일이 있습니다: {0},The output folder path points to a file: {0},保存先フォルダーのパスがファイルを指しています: {0},输出文件夹路径指向文件：{0},輸出資料夾路徑指向檔案：{0},Путь папки экспорта указывает на файл: {0}
+roomJson.not_file,출력 파일 경로에 폴더가 있습니다: {0},An output file path points to a folder: {0},保存先ファイルのパスがフォルダーを指しています: {0},输出文件路径指向文件夹：{0},輸出檔案路徑指向資料夾：{0},Путь выходного файла указывает на папку: {0}
+roomJson.protected_source,현재 원본 맵 파일은 덮어쓸 수 없습니다: {0},The current source map file cannot be overwritten: {0},現在の元マップファイルは上書きできません: {0},不能覆盖当前源地图文件：{0},無法覆寫目前的原始地圖檔案：{0},Нельзя перезаписать текущую исходную карту: {0}
 roomJson.restore_failed,"파일 복구 실패: {0}
 {1}","Could not restore file: {0}
+{1}","ファイルを復元できませんでした: {0}
+{1}","无法恢复文件：{0}
+{1}","無法復原檔案：{0}
+{1}","Не удалось восстановить файл: {0}
 {1}"
 roomJson.rollback_failed,"방 내보내기와 일부 파일 복구에 실패했습니다. 복구용 원본은 다음 임시 폴더에 보존했습니다: {0}
 {1}","Room export and some file restorations failed. Recovery originals were retained in this staging folder: {0}
+{1}","書き出しと一部ファイルの復元に失敗しました。復旧用の元ファイルは次の一時フォルダーに残しています: {0}
+{1}","导出及部分文件恢复失败。恢复用原文件保留在此暂存文件夹中：{0}
+{1}","匯出及部分檔案復原失敗。復原用原始檔案保留在此暫存資料夾中：{0}
+{1}","Экспорт и восстановление части файлов не удались. Оригиналы для восстановления оставлены в папке: {0}
 {1}"
 roomJson.saved_cleanup,"방 JSON {0}개 저장은 완료했습니다. 임시 백업 폴더를 정리하지 못했습니다: {1}
 {2}","All {0} room JSON files were saved. Could not remove the temporary backup folder: {1}
+{2}","部屋JSON {0}個を保存しました。一時バックアップフォルダーを削除できませんでした: {1}
+{2}","已保存 {0} 个房间 JSON。无法删除临时备份文件夹：{1}
+{2}","已儲存 {0} 個房間 JSON。無法刪除暫時備份資料夾：{1}
+{2}","Все JSON комнат ({0}) сохранены. Не удалось удалить временную папку резервных копий: {1}
 {2}"
-roomJson.too_large,'{0}' 방 JSON이 32MiB 제한을 초과합니다.,The JSON for room '{0}' exceeds the 32 MiB limit.
-external.brand,MetroidvaniaStudio,MetroidvaniaStudio
-external.file,파일,File
-external.new,새 맵,New map
-external.open,열기,Open
-external.save,저장,Save
-external.saveAs,다른 이름으로,Save as
-external.export,방별 JSON 내보내기,Export rooms JSON
-external.editor,맵 편집,MetroidvaniaStudio
-external.minimap,미니맵,MiniMap
-external.popout,별도 창,Open separate view
-external.inspector,속성,Inspector
-external.rooms,방,Rooms
-external.tools,도구,Tools
-external.palette,팔레트,Palette
-external.layers,레이어,Layers
-external.addRoom,방 추가,Add room
-external.fit,전체 보기,Fit map
-external.frameRoom,방 보기,Frame room
-external.camera,게임 시야,Game view
-external.grid,격자,Grid
-external.names,방 이름,Room names
-external.search,검색…,Search…
-external.name,이름,Name
-external.width,너비,Width
-external.height,높이,Height
-external.visible,보이기,Visible
-external.locked,잠금,Locked
-external.properties,사용자 속성,Custom properties
-external.apply,적용,Apply
-external.cancel,취소,Cancel
-external.close,닫기,Close
-external.undo,실행 취소,Undo
-external.redo,다시 실행,Redo
-external.delete,삭제,Delete
-external.copy,복사,Copy
-external.cut,잘라내기,Cut
-external.paste,붙여넣기,Paste
-external.selectAll,모두 선택,Select all
-external.brush,브러시 크기,Brush size
-external.filled,내부 채우기,Filled
-external.shape,타일 모양,Tile shape
-external.group,그룹,Group
-external.ungrouped,전체 / 그룹 없음,All / ungrouped
-external.addGroup,그룹 추가,Add group
-external.clearLayer,현재 레이어 비우기,Clear current layer
-external.clearObjects,방의 객체 모두 지우기,Clear room objects
-external.crop,크기 변경 시 잘리는 타일 삭제 허용,Allow terrain cropping on resize
-external.connected,연결됨,connected
-external.disconnected,연결 대기,offline
-external.serverOffline,편집 서버와 연결되지 않았습니다. 다시 연결 중…,Editor server is offline. Reconnecting…
-external.loading,프로젝트를 불러오는 중…,Loading project…
-external.noRooms,방을 추가해서 시작하세요,Add a room to begin
-external.noSelection,방 또는 객체를 선택하세요,Select a room or object
-external.noMaterials,등록된 리소스가 없습니다,No resources available
-external.modified,저장되지 않음,Unsaved changes
-external.saved,저장됨,Saved
-external.working,적용 중…,Applying…
-external.ready,준비,Ready
-external.filePath,파일 경로,File path
-external.exportDirectory,내보내기 폴더,Export directory
-external.confirmDiscard,저장되지 않은 변경 사항을 버리고 계속할까요?,Discard unsaved changes and continue?
-external.confirmOverwrite,선택한 위치에 같은 이름의 파일이 이미 있습니다. 덮어쓸까요?,The selected destination already contains files with the same name. Replace them?
-external.confirmClear,이 작업으로 선택한 내용이 삭제됩니다. 계속할까요? 실행 취소할 수 있습니다.,Delete this content? You can undo this operation.
-external.help,왼쪽 드래그: 그리기 · 가운데 드래그: 이동 · 오른쪽: 지우기 · 휠: 픽셀 줌,Left drag: draw · Middle drag: pan · Right: erase · Wheel: pixel zoom
-external.roomHelp,다른 방 클릭: 선택 · 선택 방 드래그: 이동 · 바깥 핸들: 크기 · Del: 방 삭제 · B: 브러시,Click another room: select · Drag active room: move · Outer handles: resize · Del: delete room · B: brush
-external.objectHelp,클릭: 선택 · 드래그: 이동 · Ctrl+오른쪽: 속성 · 노드 클릭: 선택,Click: select · Drag: move · Ctrl+right: properties · Click a node to select
-external.nodes,노드,Nodes
-external.addNode,커서 위치에 노드 추가,Add node at cursor
-external.deleteNode,선택 노드 삭제,Delete selected node
-external.rotation,회전,Rotation
-external.scale,배율,Scale
-external.flipH,좌우 반전,Flip horizontal
-external.flipV,상하 반전,Flip vertical
-external.metadata,맵 설정,Map settings
-external.advanced,고급 JSON,Advanced JSON
-external.jsonHelp,원본 맵 속성·스타일그라운드·그룹을 JSON 형식으로 편집합니다.,"Edit map properties, stylegrounds and layer groups as JSON."
-external.invalidJson,올바른 JSON을 입력하세요.,Enter valid JSON.
-external.bound,경계,Bounds
-external.zoom,픽셀 배율,Pixel scale
-external.sourcePixels,원본 픽셀,Source pixels
-external.emptyFiles,저장된 맵이 없습니다. 경로를 입력하세요.,No saved maps. Enter a path.
-external.changeApplied,변경 사항을 적용했습니다,Changes applied
-external.snap,방 스냅,Room snapping
-external.theme,지역 색,Region color
-external.jsonValues,속성 JSON,Properties JSON
-external.shortcut,단축키,Shortcuts
-external.confirm,확인,Confirm
-external.continue,계속,Continue
-external.required,필수 값을 입력하세요.,Enter the required values.
-external.outline,외곽선,Outline
-external.workspaceHint,16×16 타일 · 자동 타일 연결,16×16 tiles · Automatic tile connections
-external.edit,편집,Edit
-external.deleteRoom,방 삭제,Delete room
-external.objectProperties,객체 속성,Object properties
-external.selected,개 선택됨,selected
-external.applyTransform,위치·크기 적용,Apply transform
-external.applyProperties,속성 적용,Apply properties
-external.mixed,혼합 값 — 입력하면 모두 적용,Mixed — edit to apply to all
-external.cameraSize,시야 크기,View size
-external.minimapHelp,가운데 드래그: 이동 · 휠: 확대 · 클릭: 방 선택,Middle drag: pan · Wheel: zoom · Click: select room
-external.overview,전체 지도 배율,Overview scale
-external.editView,편집 화면,Edit view
-external.visibleArea,표시 영역,Visible area
-external.strokeTooLong,"한 번의 작업은 경로 16,384칸 또는 브러시 적용 65,536칸을 넘을 수 없습니다. 변경을 취소했습니다.","A gesture cannot exceed 16,384 path cells or 65,536 brush-expanded cells. The change was cancelled."
-external.writerBusy,이전 변경 사항을 적용하는 중입니다. 잠시 후 다시 그려 주세요.,The previous change is still being applied. Please draw again in a moment.
-external.brushWheelHelp,Ctrl + 휠: 브러시 크기 조절 (1–16),Ctrl + wheel: brush size (1–16)
-external.sourceModified,맵 수정됨,Map modified
-external.sourceSaved,맵 저장됨,Map saved
-external.sourceSaveHint,원본 맵의 저장 상태입니다. 방 JSON 자동 내보내기와 별개이며 Ctrl+S로 저장합니다.,Authoring map save status. Separate from automatic room JSON export. Save with Ctrl+S.
-external.syncEditing,JSON 편집 중,JSON editing
-external.syncEditingHint,편집이 끝나고 1초 동안 변경이 없으면 방 JSON을 자동 저장합니다.,Room JSON is exported after editing stops for one second.
-external.syncExportQueued,JSON 저장 대기,JSON queued
-external.syncExportQueuedHint,최근 편집을 묶어서 방 JSON을 저장할 예정입니다.,Waiting for the idle interval before exporting the latest room JSON.
-external.syncExporting,JSON 저장 중,JSON exporting
-external.syncExportingHint,방 JSON을 백그라운드에서 저장하고 있습니다.,Room JSON is being published in the background.
-external.syncExportSaved,JSON 저장됨,JSON exported
-external.syncExportSavedHint,최신 방 JSON이 저장되었습니다. 원본 맵 저장은 별도입니다.,The latest room JSON was exported. The authoring map is saved separately.
-external.syncExportError,JSON 저장 오류,JSON export error
-external.syncExportErrorHint,방 JSON을 저장하지 못했습니다. 원인을 해결하면 자동으로 다시 시도합니다.,Room JSON export failed. It will retry automatically after the cause is resolved.
-external.syncServerOffline,서버 연결 끊김,Server disconnected
-external.syncServerOfflineHint,로컬 MetroidvaniaStudio 서버에 연결할 수 없습니다. 저장 및 반영 상태를 확인할 수 없습니다.,Cannot reach the local MetroidvaniaStudio server. Export and application status cannot be confirmed.
-external.studioConnected,로컬 스튜디오 연결됨,Local studio connected
-external.import,JSON 가져오기,Import JSON
-external.importTooLarge,32MiB 이하 JSON만 가져올 수 있습니다.,Import requires JSON of 32 MiB or less.
-external.cameraHelp,현재 방을 설정된 기준 해상도와 픽셀 배율로 미리 봅니다.,Preview the current room at the configured reference resolution and pixel scale.
-enum.MetroidvaniaStudioTool.Brush,브러시,Brush
-enum.MetroidvaniaStudioTool.Bucket,채우기,Bucket
-enum.MetroidvaniaStudioTool.Circle,원,Circle
-enum.MetroidvaniaStudioTool.Ellipse,타원,Ellipse
-enum.MetroidvaniaStudioTool.Line,직선,Line
-enum.MetroidvaniaStudioTool.Placement,배치,Placement
-enum.MetroidvaniaStudioTool.Rectangle,사각형,Rectangle
-enum.MetroidvaniaStudioTool.Rooms,방,Rooms
-enum.MetroidvaniaStudioTool.Selection,선택,Selection
-enum.MapLayer.All,모든 레이어,All layers
-enum.MapLayer.BackgroundDecals,배경 장식,Background decals
-enum.MapLayer.BackgroundTiles,배경 타일,Background tiles
-enum.MapLayer.Entities,오브젝트,Entities
-enum.MapLayer.ForegroundDecals,전경 장식,Foreground decals
-enum.MapLayer.ForegroundTiles,전경 타일,Foreground tiles
-enum.MapLayer.Triggers,트리거,Triggers
-enum.TileShape.BottomLeft,경사 / 왼쪽 아래,Slope / bottom left
-enum.TileShape.BottomRight,경사 \ 오른쪽 아래,Slope \ bottom right
-enum.TileShape.Solid,사각형,Solid
-enum.TileShape.TopLeft,경사 \ 왼쪽 위,Slope \ top left
-enum.TileShape.TopRight,경사 / 오른쪽 위,Slope / top right
-stageThemes.blue,파랑 테마,Blue theme
-stageThemes.darkGray,짙은 회색 테마,Dark gray theme
-stageThemes.green,초록 테마,Green theme
-stageThemes.orange,주황 테마,Orange theme
-stageThemes.yellow,노랑 테마,Yellow theme
-external.cameraSettings,카메라 설정,Camera settings
-external.cameraSettingsHelp,맵마다 저장됩니다. PPU는 월드 단위당 픽셀 수이며 타일 원본은 16×16입니다. 해상도는 게임 시야를 정합니다.,Saved per map. PPU sets pixels per world unit; source tiles remain 16×16. Resolution defines the game view.
-external.resolutionWidth,기준 해상도 가로,Reference width
-external.resolutionHeight,기준 해상도 세로,Reference height
-external.cameraDefaults,기본값 16 PPU · 320×180,Defaults 16 PPU · 320×180
-external.cameraSettingsInvalid,PPU는 1~8192 및 해상도는 1~16384 사이 정수로 입력하세요.,Use integer PPU from 1 to 8192 and resolution from 1 to 16384.
+roomJson.too_large,'{0}' 방 JSON이 32MiB 제한을 초과합니다.,The JSON for room '{0}' exceeds the 32 MiB limit.,部屋「{0}」のJSONが32 MiBを超えています。,房间“{0}”的 JSON 超过 32 MiB。,房間「{0}」的 JSON 超過 32 MiB。,JSON комнаты «{0}» превышает 32 МиБ.
+external.brand,MetroidvaniaStudio,MetroidvaniaStudio,MetroidvaniaStudio,MetroidvaniaStudio,MetroidvaniaStudio,MetroidvaniaStudio
+external.file,파일,File,ファイル,文件,檔案,Файл
+external.new,새 맵,New map,新しいマップ,新建地图,新增地圖,Новая карта
+external.open,맵 열기,Open map,マップを開く,打开地图,開啟地圖,Открыть карту
+external.save,맵 저장,Save map,マップを保存,保存地图,儲存地圖,Сохранить карту
+external.saveAs,맵 다른 이름으로 저장,Save map as,マップを別名で保存,地图另存为,地圖另存新檔,Сохранить карту как
+external.export,방별 JSON 내보내기,Export rooms JSON,部屋のJSONを書き出す,导出房间 JSON,匯出房間 JSON,Экспорт комнат в JSON
+external.editor,맵 편집,Map editor,マップ編集,地图编辑,地圖編輯,Редактор карты
+external.minimap,미니맵,MiniMap,ミニマップ,小地图,小地圖,Мини-карта
+external.popout,별도 창,Open separate view,別ウィンドウで開く,在独立窗口打开,在獨立視窗開啟,Открыть в отдельном окне
+external.inspector,속성,Inspector,プロパティ,属性,屬性,Свойства
+external.rooms,방,Rooms,部屋,房间,房間,Комнаты
+external.tools,도구,Tools,ツール,工具,工具,Инструменты
+external.palette,팔레트,Palette,パレット,调色板,調色盤,Палитра
+external.layers,레이어,Layers,レイヤー,图层,圖層,Слои
+external.addRoom,방 추가,Add room,部屋を追加,添加房间,新增房間,Добавить комнату
+external.fit,전체 보기,Fit map,マップ全体を表示,显示整个地图,顯示整張地圖,Показать всю карту
+external.frameRoom,방 보기,Frame room,部屋を表示,显示当前房间,顯示目前房間,Показать комнату
+external.camera,게임 시야,Game view,ゲーム表示,游戏视野,遊戲視野,Игровой вид
+external.grid,격자,Grid,グリッド,网格,格線,Сетка
+external.names,방 이름,Room names,部屋名,房间名称,房間名稱,Названия комнат
+external.search,검색…,Search…,検索…,搜索…,搜尋…,Поиск…
+external.name,이름,Name,名前,名称,名稱,Название
+external.width,너비,Width,幅,宽度,寬度,Ширина
+external.height,높이,Height,高さ,高度,高度,Высота
+external.visible,보이기,Visible,表示,显示,顯示,Видимость
+external.locked,잠금,Locked,ロック,锁定,鎖定,Блокировка
+external.properties,사용자 속성,Custom properties,カスタムプロパティ,自定义属性,自訂屬性,Пользовательские свойства
+external.apply,적용,Apply,適用,应用,套用,Применить
+external.cancel,취소,Cancel,キャンセル,取消,取消,Отмена
+external.close,닫기,Close,閉じる,关闭,關閉,Закрыть
+external.undo,실행 취소,Undo,元に戻す,撤销,復原,Отменить
+external.redo,다시 실행,Redo,やり直す,重做,重做,Повторить
+external.delete,삭제,Delete,削除,删除,刪除,Удалить
+external.copy,복사,Copy,コピー,复制,複製,Копировать
+external.cut,잘라내기,Cut,切り取り,剪切,剪下,Вырезать
+external.paste,붙여넣기,Paste,貼り付け,粘贴,貼上,Вставить
+external.selectAll,모두 선택,Select all,すべて選択,全选,全選,Выделить всё
+external.brush,브러시 크기,Brush size,ブラシサイズ,笔刷大小,筆刷大小,Размер кисти
+external.filled,내부 채우기,Filled,内側を塗る,填充内部,填滿內部,Заливка
+external.shape,타일 모양,Tile shape,タイル形状,图块形状,圖塊形狀,Форма тайла
+external.group,그룹,Group,グループ,分组,群組,Группа
+external.ungrouped,전체 / 그룹 없음,All / ungrouped,すべて / グループなし,全部 / 未分组,全部 / 未分組,Все / без группы
+external.addGroup,그룹 추가,Add group,グループを追加,添加分组,新增群組,Добавить группу
+external.clearLayer,현재 레이어 비우기,Clear current layer,現在のレイヤーを消去,清空当前图层,清空目前圖層,Очистить текущий слой
+external.clearObjects,방의 객체 모두 지우기,Clear room objects,部屋のオブジェクトを消去,清空房间对象,清空房間物件,Очистить объекты комнаты
+external.crop,크기 변경 시 잘리는 타일 삭제 허용,Allow terrain cropping on resize,縮小時のタイル削除を許可,允许缩小时裁剪图块,允許縮小時裁切圖塊,Разрешить обрезку тайлов при изменении размера
+external.connected,연결됨,connected,接続済み,已连接,已連線,Подключено
+external.disconnected,연결 대기,offline,未接続,离线,離線,Нет подключения
+external.serverOffline,편집 서버와 연결되지 않았습니다. 다시 연결 중…,Editor server is offline. Reconnecting…,編集サーバーに再接続中…,编辑服务器离线。正在重新连接…,編輯伺服器離線。正在重新連線…,Сервер редактора недоступен. Переподключение…
+external.loading,프로젝트를 불러오는 중…,Loading project…,プロジェクトを読み込み中…,正在加载项目…,正在載入專案…,Загрузка проекта…
+external.noRooms,방을 추가해서 시작하세요,Add a room to begin,部屋を追加して開始,添加房间以开始,新增房間以開始,Добавьте комнату для начала
+external.noSelection,방 또는 객체를 선택하세요,Select a room or object,部屋かオブジェクトを選択,请选择房间或对象,請選取房間或物件,Выберите комнату или объект
+external.noMaterials,등록된 리소스가 없습니다,No resources available,リソースがありません,没有可用资源,沒有可用資源,Нет доступных ресурсов
+external.modified,저장되지 않음,Unsaved changes,未保存の変更,有未保存的更改,有未儲存的變更,Есть несохранённые изменения
+external.saved,저장됨,Saved,保存済み,已保存,已儲存,Сохранено
+external.working,적용 중…,Applying…,適用中…,正在应用…,正在套用…,Применение…
+external.ready,준비,Ready,準備完了,就绪,就緒,Готово
+external.filePath,파일 경로,File path,ファイルパス,文件路径,檔案路徑,Путь к файлу
+external.exportDirectory,내보내기 폴더,Export directory,書き出し先フォルダー,导出文件夹,匯出資料夾,Папка экспорта
+external.confirmDiscard,저장되지 않은 변경 사항을 버리고 계속할까요?,Discard unsaved changes and continue?,未保存の変更を破棄して続けますか？,放弃未保存的更改并继续？,捨棄未儲存的變更並繼續？,Отбросить несохранённые изменения и продолжить?
+external.confirmOverwrite,선택한 위치에 같은 이름의 파일이 이미 있습니다. 덮어쓸까요?,The selected destination already contains files with the same name. Replace them?,同名のファイルがあります。上書きしますか？,目标位置已有同名文件。是否覆盖？,目標位置已有同名檔案。是否覆寫？,В выбранной папке уже есть файлы с такими именами. Заменить их?
+external.confirmClear,이 작업으로 선택한 내용이 삭제됩니다. 계속할까요? 실행 취소할 수 있습니다.,Delete this content? You can undo this operation.,削除しますか？この操作は元に戻せます。,删除这些内容？此操作可以撤销。,刪除這些內容？此操作可以復原。,Удалить эти данные? Операцию можно отменить.
+external.help,좌클릭 드래그: 그리기 · 휠클릭 드래그: 화면 이동 · 우클릭: 지우기 · 휠: 줌 · Ctrl+휠: 브러시 크기,Left drag: draw · Middle drag: pan · Right: erase · Wheel: zoom · Ctrl+wheel: brush size,左ドラッグ: 描画 · 中ドラッグ: 移動 · 右: 消去 · ホイール: ズーム · Ctrl+ホイール: ブラシサイズ,左键拖动：绘制 · 中键拖动：平移 · 右键：擦除 · 滚轮：缩放 · Ctrl+滚轮：笔刷大小,左鍵拖曳：繪製 · 中鍵拖曳：平移 · 右鍵：擦除 · 滾輪：縮放 · Ctrl+滾輪：筆刷大小,Левая кнопка: рисование · Средняя: панорама · Правая: ластик · Колесо: масштаб · Ctrl+колесо: кисть
+external.roomHelp,방 이름 막대 드래그: 방 이동 · 외부 핸들: 크기 조절 · 다른 방 클릭: 선택 · Del: 방 삭제,Drag room title strip: move room · Outer handles: resize · Click another room: select · Del: delete room,部屋名の帯をドラッグ: 部屋移動 · 外側ハンドル: サイズ変更 · 別の部屋をクリック: 選択 · Del: 削除,拖动房间名称条：移动房间 · 外侧控制点：调整大小 · 点击其他房间：选中 · Del：删除,拖曳房間名稱列：移動房間 · 外側控制點：調整大小 · 點擊其他房間：選取 · Del：刪除,Полоса названия: перемещение комнаты · Внешние маркеры: размер · Щелчок по другой комнате: выбор · Del: удалить
+external.objectHelp,클릭: 선택 · 드래그: 이동 · Ctrl+오른쪽: 속성 · 노드 클릭: 선택,Click: select · Drag: move · Ctrl+right: properties · Click a node to select,クリック: 選択 · ドラッグ: 移動 · Ctrl+右クリック: プロパティ · ノードをクリック: 選択,点击：选择 · 拖动：移动 · Ctrl+右键：属性 · 点击节点：选择节点,點擊：選取 · 拖曳：移動 · Ctrl+右鍵：屬性 · 點擊節點：選取節點,Щелчок: выбор · Перетаскивание: перемещение · Ctrl+правая: свойства · Щелчок по узлу: выбор узла
+external.nodes,노드,Nodes,ノード,节点,節點,Узлы
+external.addNode,커서 위치에 노드 추가,Add node at cursor,カーソル位置にノード追加,在光标处添加节点,在游標處新增節點,Добавить узел у курсора
+external.deleteNode,선택 노드 삭제,Delete selected node,選択ノードを削除,删除所选节点,刪除所選節點,Удалить выбранный узел
+external.rotation,회전,Rotation,回転,旋转,旋轉,Поворот
+external.scale,배율,Scale,スケール,缩放,縮放,Масштаб
+external.flipH,좌우 반전,Flip horizontal,左右反転,水平翻转,水平翻轉,Отразить по горизонтали
+external.flipV,상하 반전,Flip vertical,上下反転,垂直翻转,垂直翻轉,Отразить по вертикали
+external.metadata,맵 설정,Map settings,マップ設定,地图设置,地圖設定,Настройки карты
+external.advanced,고급 JSON,Advanced JSON,詳細JSON,高级 JSON,進階 JSON,Расширенный JSON
+external.jsonHelp,원본 맵 속성·스타일그라운드·그룹을 JSON 형식으로 편집합니다.,"Edit map properties, stylegrounds and layer groups as JSON.",マップのプロパティ、背景演出、レイヤーグループをJSONで編集します。,以 JSON 编辑地图属性、背景效果和图层分组。,以 JSON 編輯地圖屬性、背景效果及圖層群組。,"Редактируйте свойства карты, фоновые эффекты и группы слоёв в JSON."
+external.invalidJson,올바른 JSON을 입력하세요.,Enter valid JSON.,有効なJSONを入力してください。,请输入有效的 JSON。,請輸入有效的 JSON。,Введите корректный JSON.
+external.bound,경계,Bounds,範囲,边界,邊界,Границы
+external.zoom,픽셀 배율,Pixel scale,ピクセル倍率,像素倍率,像素倍率,Масштаб пикселей
+external.sourcePixels,원본 픽셀,Source pixels,元のピクセル,源像素,原始像素,Исходные пиксели
+external.emptyFiles,저장된 맵이 없습니다. 경로를 입력하세요.,No saved maps. Enter a path.,保存済みマップがありません。パスを入力してください。,没有已保存的地图。请输入路径。,沒有已儲存的地圖。請輸入路徑。,Нет сохранённых карт. Укажите путь.
+external.changeApplied,변경 사항을 적용했습니다,Changes applied,変更を適用しました,更改已应用,變更已套用,Изменения применены
+external.snap,방 스냅,Room snapping,部屋のスナップ,房间吸附,房間吸附,Привязка комнат
+external.theme,지역 색,Region color,エリアの色,区域颜色,區域顏色,Цвет области
+external.jsonValues,속성 JSON,Properties JSON,プロパティJSON,属性 JSON,屬性 JSON,Свойства JSON
+external.shortcut,단축키,Shortcuts,ショートカット,快捷键,快速鍵,Горячие клавиши
+external.confirm,확인,Confirm,確認,确认,確認,Подтвердить
+external.continue,계속,Continue,続ける,继续,繼續,Продолжить
+external.required,필수 값을 입력하세요.,Enter the required values.,必須項目を入力してください。,请填写必填项。,請填寫必填項目。,Заполните обязательные поля.
+external.outline,외곽선,Outline,輪郭線,轮廓线,外框線,Контур
+external.workspaceHint,16×16 타일 · 자동 타일 연결,16×16 tiles · Automatic tile connections,16×16タイル · 自動接続,16×16 图块 · 自动连接,16×16 圖塊 · 自動連接,Тайлы 16×16 · Автоматические соединения
+external.edit,편집,Edit,編集,编辑,編輯,Правка
+external.deleteRoom,방 삭제,Delete room,部屋を削除,删除房间,刪除房間,Удалить комнату
+external.objectProperties,객체 속성,Object properties,オブジェクトのプロパティ,对象属性,物件屬性,Свойства объекта
+external.selected,개 선택됨,selected,個を選択,个已选中,個已選取,выбрано
+external.applyTransform,위치·크기 적용,Apply transform,位置・サイズを適用,应用变换,套用變換,Применить преобразование
+external.applyProperties,속성 적용,Apply properties,プロパティを適用,应用属性,套用屬性,Применить свойства
+external.mixed,혼합 값 — 입력하면 모두 적용,Mixed — edit to apply to all,値が混在 — 入力で一括適用,值不同 — 输入后应用到全部,值不同 — 輸入後套用至全部,Разные значения — ввод применит ко всем
+external.cameraSize,시야 크기,View size,表示サイズ,视野大小,視野大小,Размер обзора
+external.minimapHelp,가운데 드래그: 이동 · 휠: 확대 · 클릭: 방 선택,Middle drag: pan · Wheel: zoom · Click: select room,中ドラッグ: 移動 · ホイール: ズーム · クリック: 部屋選択,中键拖动：平移 · 滚轮：缩放 · 点击：选择房间,中鍵拖曳：平移 · 滾輪：縮放 · 點擊：選取房間,Средняя кнопка: панорама · Колесо: масштаб · Щелчок: выбор комнаты
+external.overview,전체 지도 배율,Overview scale,マップ全体の倍率,全图倍率,全圖倍率,Масштаб обзора
+external.editView,편집 화면,Edit view,編集表示,编辑视图,編輯檢視,Вид редактора
+external.visibleArea,표시 영역,Visible area,表示範囲,可见区域,可見範圍,Видимая область
+external.strokeTooLong,"한 번의 작업은 경로 16,384칸 또는 브러시 적용 65,536칸을 넘을 수 없습니다. 변경을 취소했습니다.","A gesture cannot exceed 16,384 path cells or 65,536 brush-expanded cells. The change was cancelled.","1回の操作は経路16,384マスまたはブラシ展開後65,536マスまでです。変更を取り消しました。","单次操作不能超过 16,384 格路径或 65,536 格笔刷覆盖范围。更改已取消。","單次操作不能超過 16,384 格路徑或 65,536 格筆刷覆蓋範圍。變更已取消。",Один жест ограничен 16 384 клетками пути или 65 536 клетками кисти. Изменения отменены.
+external.writerBusy,이전 변경 사항을 적용하는 중입니다. 잠시 후 다시 그려 주세요.,The previous change is still being applied. Please draw again in a moment.,前の変更を適用中です。少し待ってから描画してください。,正在应用上一次更改，请稍后再绘制。,正在套用上一次變更，請稍後再繪製。,Предыдущее изменение ещё применяется. Подождите немного.
+external.brushWheelHelp,Ctrl + 휠: 브러시 크기 조절 (1–16),Ctrl + wheel: brush size (1–16),Ctrl+ホイール: ブラシサイズ（1–16）,Ctrl+滚轮：笔刷大小（1–16）,Ctrl+滾輪：筆刷大小（1–16）,Ctrl+колесо: размер кисти (1–16)
+external.sourceModified,맵 수정됨,Map modified,マップ変更あり,地图已修改,地圖已修改,Карта изменена
+external.sourceSaved,맵 저장됨,Map saved,マップ保存済み,地图已保存,地圖已儲存,Карта сохранена
+external.sourceSaveHint,원본 맵의 저장 상태입니다. 방 JSON 자동 내보내기와 별개이며 Ctrl+S로 저장합니다.,Authoring map save status. Separate from automatic room JSON export. Save with Ctrl+S.,編集用マップの保存状態です。部屋JSONの自動書き出しとは別です。Ctrl+Sで保存します。,这是编辑用地图的保存状态，与房间 JSON 自动导出分开。按 Ctrl+S 保存。,這是編輯用地圖的儲存狀態，與房間 JSON 自動匯出分開。按 Ctrl+S 儲存。,Состояние сохранения исходной карты. Независимо от автоэкспорта комнат в JSON. Сохранение: Ctrl+S.
+external.syncEditing,JSON 편집 중,JSON editing,JSON編集中,正在编辑 JSON,正在編輯 JSON,Редактирование JSON
+external.syncEditingHint,편집이 끝나고 1초 동안 변경이 없으면 방 JSON을 자동 저장합니다.,Room JSON is exported after editing stops for one second.,編集が終わり、1秒間変更がなければ部屋JSONを自動保存します。,编辑停止 1 秒后自动导出房间 JSON。,編輯停止 1 秒後自動匯出房間 JSON。,JSON комнат экспортируется через секунду после окончания редактирования.
+external.syncExportQueued,JSON 저장 대기,JSON queued,JSON保存待ち,JSON 等待保存,JSON 等待儲存,JSON в очереди
+external.syncExportQueuedHint,최근 편집을 묶어서 방 JSON을 저장할 예정입니다.,Waiting for the idle interval before exporting the latest room JSON.,待機時間の経過後、最新の部屋JSONを書き出します。,等待空闲间隔后导出最新房间 JSON。,等待閒置間隔後匯出最新房間 JSON。,Ожидание паузы перед экспортом актуальных комнат в JSON.
+external.syncExporting,JSON 저장 중,JSON exporting,JSON保存中,正在保存 JSON,正在儲存 JSON,Экспорт JSON
+external.syncExportingHint,방 JSON을 백그라운드에서 저장하고 있습니다.,Room JSON is being published in the background.,部屋JSONをバックグラウンドで保存中です。,正在后台保存房间 JSON。,正在背景儲存房間 JSON。,JSON комнат сохраняется в фоновом режиме.
+external.syncExportSaved,JSON 저장됨,JSON exported,JSON保存済み,JSON 已导出,JSON 已匯出,JSON экспортирован
+external.syncExportSavedHint,최신 방 JSON이 저장되었습니다. 원본 맵 저장은 별도입니다.,The latest room JSON was exported. The authoring map is saved separately.,最新の部屋JSONを保存しました。編集用マップは別途保存します。,最新房间 JSON 已导出。编辑用地图需要单独保存。,最新房間 JSON 已匯出。編輯用地圖需要另外儲存。,Актуальные комнаты экспортированы в JSON. Исходная карта сохраняется отдельно.
+external.syncExportError,JSON 저장 오류,JSON export error,JSON保存エラー,JSON 导出错误,JSON 匯出錯誤,Ошибка экспорта JSON
+external.syncExportErrorHint,방 JSON을 저장하지 못했습니다. 원인을 해결하면 자동으로 다시 시도합니다.,Room JSON export failed. It will retry automatically after the cause is resolved.,部屋JSONの保存に失敗しました。原因が解消されると自動で再試行します。,房间 JSON 保存失败。问题解决后将自动重试。,房間 JSON 儲存失敗。問題解決後將自動重試。,Не удалось сохранить JSON комнат. После устранения причины попытка повторится автоматически.
+external.syncServerOffline,서버 연결 끊김,Server disconnected,サーバー未接続,服务器连接已断开,伺服器連線已中斷,Сервер отключён
+external.syncServerOfflineHint,로컬 MetroidvaniaStudio 서버에 연결할 수 없습니다. 저장 및 반영 상태를 확인할 수 없습니다.,Cannot reach the local MetroidvaniaStudio server. Export and application status cannot be confirmed.,ローカルサーバーに接続できません。保存・反映状態を確認できません。,无法连接本地服务器，无法确认保存和应用状态。,無法連線至本機伺服器，無法確認儲存與套用狀態。,Нет связи с локальным сервером. Нельзя подтвердить сохранение и применение изменений.
+external.studioConnected,로컬 스튜디오 연결됨,Local studio connected,ローカル接続済み,已连接本地工作室,已連線至本機工作室,Локальный сервер подключён
+external.import,맵 JSON 가져오기,Import map JSON,マップJSONを取り込む,导入地图 JSON,匯入地圖 JSON,Импорт карты JSON
+external.importTooLarge,가져올 JSON 전체 크기는 32MiB 이하여야 합니다.,The combined JSON size must not exceed 32 MiB.,JSONの合計サイズは32 MiB以下にしてください。,JSON 总大小不能超过 32 MiB。,JSON 總大小不能超過 32 MiB。,Общий размер JSON не должен превышать 32 МиБ.
+external.cameraHelp,현재 방을 설정된 기준 해상도와 픽셀 배율로 미리 봅니다.,Preview the current room at the configured reference resolution and pixel scale.,現在の部屋を設定した解像度とピクセル倍率で表示します。,按设定分辨率和像素倍率预览当前房间。,依設定的解析度與像素倍率預覽目前房間。,Предпросмотр текущей комнаты с заданным разрешением и масштабом пикселей.
+enum.MetroidvaniaStudioTool.Brush,브러시,Brush,ブラシ,笔刷,筆刷,Кисть
+enum.MetroidvaniaStudioTool.Bucket,채우기,Bucket,塗りつぶし,填充,填滿,Заливка
+enum.MetroidvaniaStudioTool.Circle,원,Circle,円,圆,圓形,Круг
+enum.MetroidvaniaStudioTool.Ellipse,타원,Ellipse,楕円,椭圆,橢圓形,Эллипс
+enum.MetroidvaniaStudioTool.Line,직선,Line,直線,直线,直線,Линия
+enum.MetroidvaniaStudioTool.Placement,오브젝트 배치,Place objects,オブジェクト配置,放置对象,放置物件,Размещение объектов
+enum.MetroidvaniaStudioTool.Rectangle,사각형,Rectangle,長方形,矩形,矩形,Прямоугольник
+enum.MetroidvaniaStudioTool.Rooms,방,Rooms,部屋の編集,房间编辑,房間編輯,Правка комнат
+enum.MetroidvaniaStudioTool.Selection,영역 선택,Select area,領域選択,区域选择,區域選取,Выделение области
+enum.MapLayer.All,모든 레이어,All layers,全レイヤー,所有图层,所有圖層,Все слои
+enum.MapLayer.BackgroundDecals,배경 장식,Background decals,背景装飾,背景装饰,背景裝飾,Задние декорации
+enum.MapLayer.BackgroundTiles,배경 타일,Background tiles,背景タイル,背景图块,背景圖塊,Задние тайлы
+enum.MapLayer.Entities,오브젝트,Entities,オブジェクト,对象,物件,Объекты
+enum.MapLayer.ForegroundDecals,전경 장식,Foreground decals,前景装飾,前景装饰,前景裝飾,Передние декорации
+enum.MapLayer.ForegroundTiles,전경 타일,Foreground tiles,前景タイル,前景图块,前景圖塊,Передние тайлы
+enum.MapLayer.Triggers,트리거,Triggers,トリガー,触发器,觸發器,Триггеры
+enum.TileShape.BottomLeft,경사 / 왼쪽 아래,Slope / bottom left,斜面 / 左下,斜坡 / 左下,斜坡 / 左下,Склон / слева снизу
+enum.TileShape.BottomRight,경사 \ 오른쪽 아래,Slope \ bottom right,斜面 \ 右下,斜坡 \ 右下,斜坡 \ 右下,Склон \ справа снизу
+enum.TileShape.Solid,사각형,Solid,正方形,实心,實心,Сплошной
+enum.TileShape.TopLeft,경사 \ 왼쪽 위,Slope \ top left,斜面 \ 左上,斜坡 \ 左上,斜坡 \ 左上,Склон \ слева сверху
+enum.TileShape.TopRight,경사 / 오른쪽 위,Slope / top right,斜面 / 右上,斜坡 / 右上,斜坡 / 右上,Склон / справа сверху
+stageThemes.blue,파랑 테마,Blue theme,青のテーマ,蓝色主题,藍色主題,Синяя тема
+stageThemes.darkGray,짙은 회색 테마,Dark gray theme,濃いグレーのテーマ,深灰主题,深灰主題,Тёмно-серая тема
+stageThemes.green,초록 테마,Green theme,緑のテーマ,绿色主题,綠色主題,Зелёная тема
+stageThemes.orange,주황 테마,Orange theme,オレンジのテーマ,橙色主题,橙色主題,Оранжевая тема
+stageThemes.yellow,노랑 테마,Yellow theme,黄色のテーマ,黄色主题,黃色主題,Жёлтая тема
+external.cameraSettings,카메라 설정,Camera settings,カメラ設定,相机设置,攝影機設定,Настройки камеры
+external.cameraSettingsHelp,맵마다 저장됩니다. PPU는 월드 단위당 픽셀 수이며 타일 원본은 16×16입니다. 해상도는 게임 시야를 정합니다.,Saved per map. PPU sets pixels per world unit; source tiles remain 16×16. Resolution defines the game view.,設定はマップごとに保存されます。PPUはワールド単位あたりのピクセル数です。元のタイルは16×16のままです。解像度でゲームの表示範囲を設定します。,设置随地图保存。PPU 表示每世界单位的像素数，源图块保持 16×16。分辨率决定游戏视野。,設定隨地圖儲存。PPU 表示每世界單位的像素數，原始圖塊保持 16×16。解析度決定遊戲視野。,Настройки сохраняются в карте. PPU — число пикселей на единицу мира; исходные тайлы остаются 16×16. Разрешение задаёт игровой обзор.
+external.resolutionWidth,기준 해상도 가로,Reference width,基準解像度の幅,基准分辨率宽度,基準解析度寬度,Ширина разрешения
+external.resolutionHeight,기준 해상도 세로,Reference height,基準解像度の高さ,基准分辨率高度,基準解析度高度,Высота разрешения
+external.cameraDefaults,기본값 16 PPU · 320×180,Defaults 16 PPU · 320×180,初期値 16 PPU · 320×180,默认 16 PPU · 320×180,預設 16 PPU · 320×180,По умолчанию: 16 PPU · 320×180
+external.cameraSettingsInvalid,PPU는 1~8192 및 해상도는 1~16384 사이 정수로 입력하세요.,Use integer PPU from 1 to 8192 and resolution from 1 to 16384.,PPUは1～8192、解像度は1～16384の整数を入力してください。,PPU 须为 1–8192 的整数，分辨率须为 1–16384 的整数。,PPU 須為 1–8192 的整數，解析度須為 1–16384 的整數。,PPU: целое число от 1 до 8192; разрешение: от 1 до 16384.
+external.language,언어,Language,言語,语言,語言,Язык
+external.helpMenu,도움말,Help,ヘルプ,帮助,說明,Справка
+external.settings,설정,Settings,設定,设置,設定,Настройки
+external.about,정보,About,このツールについて,关于,關於,О программе
+external.aboutDescription,연결된 방을 만들고 타일맵과 미니맵을 편집하는 웹 기반 2D 월드 제작 도구입니다.,"A web-based 2D world editor for connected rooms, tilemaps and minimaps.",つながる部屋、タイルマップ、ミニマップを作るWebベースの2Dワールド編集ツールです。,用于创建相连房间、图块地图和小地图的网页版 2D 世界编辑工具。,用於建立相連房間、圖塊地圖及小地圖的網頁版 2D 世界編輯工具。,"Веб-редактор двумерных миров со связанными комнатами, тайловыми картами и мини-картами."
+external.buildVersion,빌드 버전,Build version,ビルドバージョン,构建版本,建置版本,Версия сборки
+external.revision,리비전,Revision,リビジョン,修订,修訂,Ревизия
+external.buildDate,빌드 시각,Built at,ビルド日時,构建时间,建置時間,Время сборки
+external.unavailable,확인할 수 없음,Unavailable,取得できません,不可用,無法取得,Недоступно
+external.importRooms,방 JSON 가져오기…,Import room JSON files…,部屋JSONを取り込む…,导入房间 JSON…,匯入房間 JSON…,Импорт JSON комнат…
+external.exportSelected,선택한 방 JSON 저장…,Save selected rooms as JSON…,選択した部屋のJSONを保存…,保存所选房间 JSON…,儲存所選房間 JSON…,Сохранить выбранные комнаты в JSON…
+external.exportAll,모든 방 JSON 저장…,Save all rooms as JSON…,すべての部屋のJSONを保存…,保存所有房间 JSON…,儲存所有房間 JSON…,Сохранить все комнаты в JSON…
+external.exportChanged,변경된 방 JSON 저장…,Save changed rooms as JSON…,変更された部屋のJSONを保存…,保存已更改房间 JSON…,儲存已變更房間 JSON…,Сохранить изменённые комнаты в JSON…
+external.confirmRoomReplace,같은 ID의 방이 이미 있습니다. 가져오는 JSON으로 해당 방을 교체할까요? 실행 취소할 수 있습니다.,Some room IDs already exist. Replace those rooms with the imported JSON? This can be undone.,同じIDの部屋があります。取り込むJSONで置き換えますか？元に戻せます。,部分房间 ID 已存在。用导入的 JSON 替换这些房间？此操作可以撤销。,部分房間 ID 已存在。以匯入的 JSON 取代這些房間？此操作可以復原。,Некоторые ID комнат уже существуют. Заменить эти комнаты импортированными данными? Действие можно отменить.
+external.tileSelection,타일 영역 선택,Select tile area,タイル領域選択,图块区域选择,圖塊區域選取,Выделение тайлов
+external.objectSelection,오브젝트 선택,Select objects,オブジェクト選択,选择对象,選取物件,Выделение объектов
+external.selectionHelp,드래그: 타일 영역 선택 · 선택 안쪽 드래그: 이동 · Shift+드래그: 새 영역 · Ctrl+C/V: 복사/붙여넣기 · Del: 선택 삭제,Drag: select tile area · Drag inside: move selection · Shift+drag: new selection · Ctrl+C/V: copy/paste · Del: delete selection,ドラッグ: タイル領域選択 · 内側ドラッグ: 移動 · Shift+ドラッグ: 新しい選択 · Ctrl+C/V: コピー/貼り付け · Del: 選択削除,拖动：选择图块区域 · 区域内拖动：移动 · Shift+拖动：重新选择 · Ctrl+C/V：复制/粘贴 · Del：删除所选内容,拖曳：選取圖塊區域 · 區域內拖曳：移動 · Shift+拖曳：重新選取 · Ctrl+C/V：複製/貼上 · Del：刪除所選內容,Перетаскивание: выделить тайлы · Внутри: переместить · Shift+перетаскивание: новое выделение · Ctrl+C/V: копировать/вставить · Del: удалить
+external.placementHelp,팔레트에서 오브젝트 선택 후 클릭해 배치 · 영역 오브젝트는 드래그로 크기 지정 · 우클릭: 지우기,"Choose an object in the palette, then click to place · Drag to size area objects · Right click: erase",パレットで選んでクリック: 配置 · 領域オブジェクトはドラッグでサイズ指定 · 右クリック: 消去,从调色板选择对象后点击放置 · 拖动设置区域对象大小 · 右键擦除,從調色盤選取物件後點擊放置 · 拖曳設定區域物件大小 · 右鍵擦除,Выберите объект в палитре и щёлкните для размещения · Перетаскивание: размер области · Правая кнопка: удалить
+external.selectionSummary,선택 영역,Selected area,選択領域,所选区域,所選區域,Выделенная область
+external.roomActions,방 편집,Room actions,部屋の編集,房间操作,房間操作,Действия с комнатой
+external.selectionActions,선택 내용 편집,Selection actions,選択内容の編集,所选内容操作,所選內容操作,Действия с выделением
+external.exportHelp,선택한 폴더에 방 이름별 UTF-8 JSON을 저장합니다. 변경된 방 저장은 기존 파일과 내용이 다른 방만 기록합니다.,Save UTF-8 JSON files by room name. Changed-room saving writes only rooms that differ from files in this folder.,部屋名ごとにUTF-8 JSONを保存します。変更された部屋の保存では、このフォルダーの既存ファイルと内容が異なる部屋だけを書き込みます。,按房间名称保存 UTF-8 JSON。保存已更改房间仅写入与此文件夹中现有文件内容不同的房间。,依房間名稱儲存 UTF-8 JSON。儲存已變更房間僅寫入與此資料夾中現有檔案內容不同的房間。,Комнаты сохраняются в UTF-8 JSON по именам. Сохранение изменённых комнат записывает только отличия от файлов в этой папке.
+external.exportUnchanged,변경된 방이 없습니다. 기존 JSON을 유지했습니다.,No rooms changed. Existing JSON files were kept.,変更された部屋はありません。既存のJSONを保持しました。,没有房间更改，已保留现有 JSON。,沒有房間變更，已保留現有 JSON。,Комнаты не изменились. Существующие JSON сохранены.
+external.exportedRooms,방 JSON {0}개를 저장했습니다.,Saved {0} room JSON files.,部屋JSONを{0}個保存しました。,已保存 {0} 个房间 JSON。,已儲存 {0} 個房間 JSON。,Сохранено файлов JSON комнат: {0}.
+external.cleared,{0}개 삭제 · {1}개 보호됨,Removed {0}; protected {1}.,{0}個削除 · {1}個保護,已删除 {0} 个；已保护 {1} 个。,已刪除 {0} 個；已保護 {1} 個。,Удалено: {0}; защищено: {1}.

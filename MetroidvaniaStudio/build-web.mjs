@@ -24,8 +24,11 @@ for (const name of await readdir(path.join(root, 'Web'))) {
     const source = await readFile(path.join(root, 'Web', name), 'utf8');
     const output = stripTypeScriptTypes(source, { mode: 'strip' });
     await writeFile(path.join(outputRoot, name.replace(/\.ts$/, '.js')), output);
-  } else if (/\.(html|css)$/.test(name)) {
+  } else if (/\.(html|css|svg)$/.test(name)) {
     await copyFile(path.join(root, 'Web', name), path.join(outputRoot, name));
   }
 }
+const version = JSON.parse(await readFile(path.join(root, '../version.json'), 'utf8')).version;
+const revision = spawnSync('git', ['rev-parse', '--short=8', 'HEAD'], { cwd: root, encoding: 'utf8', windowsHide: true });
+await writeFile(path.join(outputRoot, 'build-info.json'), JSON.stringify({ version, revision: revision.status === 0 ? revision.stdout.trim() : '', builtAt: new Date().toISOString() }));
 console.log(`Built ${outputRoot} (local modules, no downloaded dependencies).`);

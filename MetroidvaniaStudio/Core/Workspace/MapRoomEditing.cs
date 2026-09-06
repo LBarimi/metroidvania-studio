@@ -6,7 +6,7 @@ using MetroidvaniaStudio.Primitives;
 namespace MetroidvaniaStudio
 {
     /// <summary>Room selection and transactional room edits, independent of the editor view.</summary>
-    public sealed class MapRoomEditing : IDisposable
+    public sealed partial class MapRoomEditing : IDisposable
     {
         private readonly MapEditSession session;
         public readonly HashSet<string> SelectedIds = new HashSet<string>(StringComparer.Ordinal);

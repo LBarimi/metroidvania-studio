@@ -15,7 +15,7 @@ const browser = await chromium.launch({ channel: 'msedge', headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
 const errors = [], checks = []; page.on('pageerror', error => errors.push(error.message));
 async function settings(ppu, width, height) {
-  await page.locator('#camera-settings-action').click();
+  await page.locator('#edit-menu-button').click(); await page.locator('#camera-settings-action').click();
   await page.locator('#camera-ppu').fill(String(ppu)); await page.locator('#camera-referenceWidth').fill(String(width)); await page.locator('#camera-referenceHeight').fill(String(height));
   await page.locator('dialog .accent').click(); await page.locator('dialog').waitFor({ state: 'detached' });
   await page.waitForFunction(ppu => document.querySelector('#status-camera')?.textContent.includes(`PPU ${ppu}`), ppu);
@@ -42,14 +42,14 @@ try {
   });
   assert.ok(Number.isInteger(frame.scale) && frame.scale >= 1); assert.deepEqual(frame.outside, [11, 11, 11, 255]); assert.notDeepEqual(frame.inside, frame.outside);
   checks.push('reference resolution changes the exact integer-scaled preview frame');
-  await page.locator('#camera-settings-action').click(); await page.locator('#camera-ppu').fill('1.5'); await page.locator('dialog .accent').click();
+  await page.locator('#edit-menu-button').click(); await page.locator('#camera-settings-action').click(); await page.locator('#camera-ppu').fill('1.5'); await page.locator('dialog .accent').click();
   await page.locator('.modal-error').filter({ hasText: 'integer' }).waitFor(); assert.equal((await getState()).camera.ppu, 64); await page.getByRole('button', { name: 'Cancel', exact: true }).click();
   checks.push('invalid fractional settings leave the map unchanged');
   await command('save', { path: initial.file }); await page.reload(); await page.locator('#room-list button').first().waitFor();
-  await page.locator('#camera-settings-action').click(); assert.equal(await page.locator('#camera-ppu').inputValue(), '64'); assert.equal(await page.locator('#camera-referenceWidth').inputValue(), '512');
+  await page.locator('#edit-menu-button').click(); await page.locator('#camera-settings-action').click(); assert.equal(await page.locator('#camera-ppu').inputValue(), '64'); assert.equal(await page.locator('#camera-referenceWidth').inputValue(), '512');
   await page.getByRole('button', { name: 'Defaults 16 PPU · 320×180', exact: true }).click(); assert.equal(await page.locator('#camera-ppu').inputValue(), '16');
   await page.locator('dialog .accent').click(); await page.locator('dialog').waitFor({ state: 'detached' });
-  await page.locator('#language').selectOption('KR'); await page.getByRole('button', { name: '카메라 설정', exact: true }).click(); await page.getByText('기준 해상도 가로', { exact: true }).waitFor();
+  await page.locator('#language').selectOption('KR'); await page.locator('#edit-menu-button').click(); await page.locator('#camera-settings-action').click(); await page.getByText('기준 해상도 가로', { exact: true }).waitFor();
   checks.push('save/reload, defaults and Korean labels work');
   assert.deepEqual(errors, []); console.log(JSON.stringify({ checks, errors }));
 } finally {

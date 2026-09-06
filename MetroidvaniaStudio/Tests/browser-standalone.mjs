@@ -30,7 +30,8 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, loc
 const errors = [], checks = [];
 page.on('pageerror', error => errors.push(error.message));
 async function choose(name, contents) {
-  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Import JSON', exact: true }).click()]);
+  await page.locator('#file-menu-button').click();
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('menuitem', { name: 'Import map JSON', exact: true }).click()]);
   await chooser.setFiles({ name, mimeType: 'application/json', buffer: Buffer.from(contents, 'utf8') });
 }
 try {

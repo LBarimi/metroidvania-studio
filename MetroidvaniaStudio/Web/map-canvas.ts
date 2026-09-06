@@ -1,3 +1,4 @@
+import { resolveRoomMove } from './room-layout.js';
 import { activeRoom, colorCss, tileLayer, MAX_BRUSH_SIZE, roomOpacity } from './types.js';
 import type { State, Room, Cell, MapObject, Point, Rect, SpriteRect, Command, CommandExpectation, CameraProfile, Definition, Color } from './types.js';
 
@@ -35,7 +36,7 @@ interface ObjectGesture {
   rebaseAfterPending: boolean;
   overflow: boolean;
 }
-interface Gesture { kind: 'pan' | 'paint' | 'room-create' | 'room-move' | 'room-resize' | 'object-move' | 'node-move'; pointer: number; start: Point; last: Point; screen: Point; center: Point; room: Room; handle?: Point; node?: { id: string; index: number }; tile?: TileGesture; rawTileTime?: number; object?: ObjectGesture; expectation: CommandExpectation; tail: Promise<unknown>; failed: boolean }
+interface Gesture { kind: 'selection' | 'pan' | 'paint' | 'room-create' | 'room-move' | 'room-resize' | 'object-move' | 'node-move'; pointer: number; start: Point; last: Point; screen: Point; center: Point; room: Room; area?: Rect; handle?: Point; node?: { id: string; index: number }; tile?: TileGesture; rawTileTime?: number; object?: ObjectGesture; expectation: CommandExpectation; tail: Promise<unknown>; failed: boolean }
 interface ViewSnapshot { center: Point; pixelScale: number; overview: boolean }
 interface LayerIndex {
   rows: Map<number, Map<number, Cell>>;
@@ -169,6 +170,7 @@ export class MapCanvas {
   private exactTileChunks = new Map<string, ExactTileChunk>();
   private renderFrame = 0;
   private selectionRenderToken = '';
+  private selectionBackdrop: HTMLCanvasElement | null = null;
   private overlayLod: OverlayLod | null = null;
   private renderOrigin: Point | null = null;
   private selectedObjects = new Set<string>();
@@ -228,7 +230,7 @@ export class MapCanvas {
   get hasPendingWork(): boolean { return this.gesture !== null || this.gestureCommandsPending > 0 || this.brushSizeTask !== null; }
   get brushSize(): number { return this.brushSizeTarget ?? this.state?.selection.brushSize ?? 1; }
   get roomDeleteTarget(): string | null { return this.roomSelectionId === this.state?.selection.roomId ? this.roomSelectionId : null; }
-  selectRoomTarget(id: string | null): void { this.roomSelectionId = id; }
+  selectRoomTarget(id: string | null): void { this.roomSelectionId = id; this.requestDraw(); }
   setActive(active: boolean): void {
     if (this.active === active) return;
     this.active = active;
@@ -256,6 +258,7 @@ export class MapCanvas {
     const redraw = cameraChanged || selectionToken !== this.selectionRenderToken || this.indexedDocument !== state.document
       || this.documentToken !== `${state.instanceId}:${state.documentRevision ?? state.revision}`
       || this.catalogToken !== `${state.instanceId}:${state.catalogRevision ?? state.revision}`;
+    if (redraw) this.selectionBackdrop = null;
     this.selectionRenderToken = selectionToken;
     this.cameraProfileToken = nextCameraToken;
     if (this.gesture && previousInstance && previousInstance !== state.instanceId) this.cancel();
@@ -492,6 +495,8 @@ export class MapCanvas {
     if (previewPan) g.kind = 'pan';
     else if (e.button === 0 && handle) {
       g.kind = 'room-resize'; g.room = current!; g.handle = handle; this.roomSelectionId = current!.id;
+    } else if (e.button === 0 && current && this.canResizeRoom(current) && this.roomMoveHandle(screen, current)) {
+      g.kind = 'room-move'; g.room = current; this.roomSelectionId = current.id;
     } else if (e.button === 0 && hit && hit.id !== selection.roomId) {
       // Activating a different room consumes the entire click/drag. The next
       // pointer-down may paint; the activation itself never places a tile/object.
@@ -506,6 +511,10 @@ export class MapCanvas {
       g.room = target;
       if (target.id !== selection.roomId) this.enqueue(g, 'selectRoom', { id: target.id });
       this.enqueue(g, 'objectClick', this.local(world, target), () => this.onInspect()); this.gestureTail = g.tail; return;
+    } else if (tileLayer(selection.layer) && selection.tool === 2 && e.button === 0 && current) {
+      this.roomSelectionId = null; g.kind = 'selection';
+      const local = this.local(world, current), area = selection.area;
+      if (area && !e.shiftKey && local.x >= area.x && local.y >= area.y && local.x < area.x + area.width && local.y < area.y + area.height) g.area = { ...area };
     } else if (!tileLayer(selection.layer) && selection.tool === 2 && e.button === 0) {
       this.roomSelectionId = null;
       if (!hit && !current) return;
@@ -530,6 +539,11 @@ export class MapCanvas {
       else if (erase || selection.tool === 1) this.beginObjectGesture(g, local, erase, selection);
       else return;
     }
+    if (g.kind === 'selection') {
+      if (this.raf) { cancelAnimationFrame(this.raf); this.raf = 0; } this.draw();
+      const backdrop = document.createElement('canvas'); backdrop.width = this.canvas.width; backdrop.height = this.canvas.height;
+      backdrop.getContext('2d')!.drawImage(this.canvas, 0, 0); this.selectionBackdrop = backdrop;
+    }
     this.gesture = g; this.canvas.setPointerCapture(e.pointerId);
     if (g.tile?.live) this.drawBrushDamage([previousHover, world]); else this.requestDraw();
   }
@@ -547,8 +561,9 @@ export class MapCanvas {
     const damage = [previousHover, this.hover];
     const active = activeRoom(this.state);
     const handle = !this.cameraPreview && !g && active && this.canResizeRoom(active) ? this.roomHandle(screen, active) : null;
+    const moveHandle = !this.cameraPreview && !g && active && this.canResizeRoom(active) && this.roomMoveHandle(screen, active);
     const cursor = handle ? !handle.x ? 'ns-resize' : !handle.y ? 'ew-resize'
-      : handle.x === handle.y ? 'nesw-resize' : 'nwse-resize' : '';
+      : handle.x === handle.y ? 'nesw-resize' : 'nwse-resize' : moveHandle ? 'grab' : g?.kind === 'room-move' ? 'grabbing' : '';
     if (this.canvas.style.cursor !== cursor) this.canvas.style.cursor = cursor;
     if (g && g.pointer === e.pointerId) {
       e.preventDefault(); g.last = this.hover;
@@ -571,7 +586,7 @@ export class MapCanvas {
   }
   private up(e: PointerEvent): void {
     const g = this.gesture; if (!g || g.pointer !== e.pointerId) return;
-    e.preventDefault(); g.last = this.toWorld(this.point(e)); this.gesture = null;
+    e.preventDefault(); g.last = this.toWorld(this.point(e)); this.gesture = null; this.selectionBackdrop = null;
     if (this.canvas.hasPointerCapture(e.pointerId)) this.canvas.releasePointerCapture(e.pointerId);
     const dx = Math.round(g.last.x - g.start.x), dy = Math.round(g.last.y - g.start.y);
     if (g.kind === 'paint' && g.tile) {
@@ -617,8 +632,12 @@ export class MapCanvas {
         this.objectCommitsPending--; this.requestDraw();
       });
     }
+    else if (g.kind === 'selection') {
+      if (g.area) this.enqueue(g, 'moveSelection', { dx, dy });
+      else this.enqueue(g, 'selectArea', this.selectionRect(g));
+    }
     else if (g.kind === 'room-create') this.enqueue(g, 'roomAdd', box(g.start, g.last));
-    else if (g.kind === 'room-move' && (dx || dy)) this.enqueue(g, 'roomMove', { id: g.room.id, dx, dy, snap: this.snapRooms && !e.ctrlKey });
+    else if (g.kind === 'room-move' && (dx || dy)) this.enqueue(g, 'roomMove', { id: g.room.id, dx, dy });
     else if (g.kind === 'room-resize') this.enqueue(g, 'roomResize', { id: g.room.id, ...this.resizedRoom(g), crop: this.crop, snap: this.snapRooms && !e.ctrlKey });
     else if (g.kind === 'object-move') { const step = e.ctrlKey || e.metaKey ? 16 : 1; const x = Math.round((g.last.x - g.start.x) * step) / step, y = Math.round((g.last.y - g.start.y) * step) / step; if (x || y) this.enqueue(g, 'objectMove', { dx: x, dy: y }); }
     else if (g.kind === 'node-move') this.enqueue(g, 'nodeMove', this.local(g.last, g.room));
@@ -626,7 +645,7 @@ export class MapCanvas {
     this.requestDraw();
   }
   cancel(pointerId?: number): void {
-    const g = this.gesture; if (!g || pointerId !== undefined && g.pointer !== pointerId) return; this.gesture = null;
+    const g = this.gesture; if (!g || pointerId !== undefined && g.pointer !== pointerId) return; this.gesture = null; this.selectionBackdrop = null;
     if (this.canvas.hasPointerCapture(g.pointer)) this.canvas.releasePointerCapture(g.pointer);
     if (g.kind === 'paint' && g.tile) {
       this.releaseTileOverlay(g.tile);
@@ -930,6 +949,22 @@ export class MapCanvas {
     }
     return base?.rows.get(y)?.get(x);
   }
+  private selectionRect(g: Gesture): Rect {
+    if (g.area) return { ...g.area,
+      x: Math.max(0, Math.min(g.room.width - g.area.width, g.area.x + Math.round(g.last.x - g.start.x))),
+      y: Math.max(0, Math.min(g.room.height - g.area.height, g.area.y + Math.round(g.last.y - g.start.y))) };
+    const area = box(this.local(g.start, g.room), this.local(g.last, g.room));
+    const x = Math.max(0, Math.min(g.room.width, area.x)), y = Math.max(0, Math.min(g.room.height, area.y));
+    return { x, y, width: Math.max(0, Math.min(g.room.width, area.x + area.width) - x), height: Math.max(0, Math.min(g.room.height, area.y + area.height) - y) };
+  }
+  private roomMoveRect(room: Room): Rect {
+    const r = this.screenRect(room);
+    return { x: r.x, y: r.y - 34, width: Math.max(72, Math.min(r.width, 200)), height: 17 };
+  }
+  private roomMoveHandle(point: Point, room: Room): boolean {
+    const r = this.roomMoveRect(room);
+    return point.x >= r.x && point.x <= r.x + r.width && point.y >= r.y && point.y <= r.y + r.height;
+  }
   private roomHandle(pointer: Point, room: Room): Point | null {
     for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1]) {
       if (!x && !y) continue;
@@ -939,7 +974,7 @@ export class MapCanvas {
   }
   private canResizeRoom(room: Room): boolean {
     return room.visible && !room.locked && (this.state?.selection.tool === 0
-      || this.state?.selection.tool === 3 && tileLayer(this.state.selection.layer));
+      || tileLayer(this.state?.selection.layer ?? -1));
   }
   private roomHandlePoint(room: Room, x: number, y: number): Point {
     const point = this.toScreen({ x: room.x + (x + 1) * room.width / 2, y: room.y + (y + 1) * room.height / 2 });
@@ -993,7 +1028,13 @@ export class MapCanvas {
     const rect = this.canvas.getBoundingClientRect(), previousWidth = this.width, previousHeight = this.height, previousDpr = this.dpr;
     this.width = rect.width; this.height = rect.height; this.dpr = Math.max(1, window.devicePixelRatio || 1);
     const viewportChanged = this.width !== previousWidth || this.height !== previousHeight || this.dpr !== previousDpr;
-    if (viewportChanged) damage = undefined;
+    if (viewportChanged) { damage = undefined; this.selectionBackdrop = null; }
+    if (this.selectionBackdrop && this.gesture?.kind === 'selection') {
+      const ctx = this.ctx; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(this.selectionBackdrop, 0, 0);
+      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      const area = this.selectionRect(this.gesture);
+      this.outline({ ...area, x: area.x + this.gesture.room.x, y: area.y + this.gesture.room.y }, '#72bde5', true); return;
+    }
     if (this.cameraPreview && this.cameraScaleAuto && viewportChanged) this.pixelScale = this.fittedCameraScale();
     if (viewportChanged) this.onHover(this.hover);
     const w = Math.round(rect.width * this.dpr), h = Math.round(rect.height * this.dpr);
@@ -1058,7 +1099,7 @@ export class MapCanvas {
       if (!this.cameraPreview) {
         ctx.strokeStyle = room.id === s.roomId ? '#e8e8e8' : '#4b4b4b'; ctx.lineWidth = room.id === s.roomId ? 2 : 1;
         ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
-        if (this.showNames) { ctx.font = '11px system-ui'; ctx.fillStyle = room.id === s.roomId ? '#f0f0f0' : '#929292'; ctx.fillText((room.locked ? '▣ ' : '') + room.name, rect.x + 5, rect.y - 8); }
+        if (this.showNames && !(room.id === s.roomId && this.canResizeRoom(room))) { ctx.font = '11px system-ui'; ctx.fillStyle = room.id === s.roomId ? '#f0f0f0' : '#929292'; ctx.fillText((room.locked ? '▣ ' : '') + room.name, rect.x + 5, rect.y - 8); }
       }
       ctx.restore();
     }
@@ -1072,14 +1113,24 @@ export class MapCanvas {
       for (let y = Math.max(room.y, Math.ceil(view.y)); y <= Math.min(room.y + room.height, view.y + view.height); y++) { const p = this.toScreen({ x: 0, y }); ctx.moveTo(Math.max(0, r.x), p.y); ctx.lineTo(Math.min(this.width, r.x + r.width), p.y); }
       ctx.strokeStyle = '#ffffff12'; ctx.lineWidth = 1 / this.dpr; ctx.stroke(); ctx.restore();
     }
-    if (!this.cameraPreview && room && s.area) this.outline({ x: room.x + s.area.x, y: room.y + s.area.y, width: s.area.width, height: s.area.height }, '#72bde5', true);
+    if (!this.cameraPreview && room && s.area && this.gesture?.kind !== 'selection') this.outline({ x: room.x + s.area.x, y: room.y + s.area.y, width: s.area.width, height: s.area.height }, '#72bde5', true);
+    if (!this.cameraPreview && room && this.canResizeRoom(room)) {
+      const r = this.roomMoveRect(room); ctx.fillStyle = '#334b5d'; ctx.fillRect(r.x, r.y, r.width, r.height);
+      ctx.fillStyle = '#e4f3fc'; ctx.font = '11px system-ui'; ctx.fillText('⠿ ' + room.name, r.x + 5, r.y + 12, r.width - 10);
+    }
     if (!this.cameraPreview && room && this.canResizeRoom(room)) for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1]) if (x || y) {
       const p = this.roomHandlePoint(room, x, y); ctx.fillStyle = '#6bb5dc'; ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
     }
     const g = this.gesture;
+    if (!this.cameraPreview && g?.kind === 'selection') {
+      const area = this.selectionRect(g); this.outline({ ...area, x: area.x + g.room.x, y: area.y + g.room.y }, '#72bde5', true);
+    }
     if (!this.cameraPreview && g?.kind === 'room-create') this.outline(box(g.start, g.last), '#72bde5', true);
     if (!this.cameraPreview && g?.kind === 'room-resize') this.outline(this.resizedRoom(g), '#72bde5', true);
-    if (!this.cameraPreview && g?.kind === 'room-move') this.outline({ ...g.room, x: g.room.x + Math.round(g.last.x - g.start.x), y: g.room.y + Math.round(g.last.y - g.start.y) }, '#72bde5', true);
+    if (!this.cameraPreview && g?.kind === 'room-move') {
+      const delta = resolveRoomMove(g.room, { x: Math.round(g.last.x - g.start.x), y: Math.round(g.last.y - g.start.y) }, this.state.document.rooms);
+      this.outline({ ...g.room, x: g.room.x + delta.x, y: g.room.y + delta.y }, '#72bde5', true);
+    }
     if (!this.cameraPreview && room && tileLayer(s.layer) && s.tool !== 0 && s.tool !== 2) {
       const size = this.brushSize;
       const preview = g?.kind === 'paint' && [4, 6, 7, 8].includes(s.tool) ? box(g.start, this.hover) : { x: Math.floor(this.hover.x) - Math.floor((size - 1) / 2), y: Math.floor(this.hover.y) - Math.floor((size - 1) / 2), width: size, height: size };

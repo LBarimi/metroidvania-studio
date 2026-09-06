@@ -644,6 +644,8 @@ public sealed class EditorWorkspace
         if (gestureOwner != null && gestureOwner != owner) throw new WorkspaceConflict("Another editor view is finishing a gesture.");
         if (gestureOwner != null && action is not ("drag" or "end" or "cancel" or "tileGesture" or "objectGesture")) Cancel();
         notice = null;
+        if (action is "roomCopy" or "roomCut" or "roomFlip" or "roomRotate" or "roomDeleteSelected" or "roomDuplicate"
+            && Canvas.RoomEditor.SelectedIds.Count == 0 && Canvas.Room != null) Canvas.RoomEditor.Select(Canvas.Room.id);
         switch (action)
         {
             case "options": Options(command); break;
@@ -681,11 +683,19 @@ public sealed class EditorWorkspace
             case "roomMove": MoveRoom(command); break;
             case "roomResize": Canvas.RoomEditor.Resize(S(command, "id"), new RectInt(I(command, "x"), I(command, "y"), I(command, "width"), I(command, "height")), B(command, "crop")); break;
             case "roomDelete": DeleteRoom(command); break;
-            case "roomDuplicate": Canvas.RoomEditor.DuplicateSelected(); break;
+            case "roomDuplicate": SelectRoomResult(Canvas.RoomEditor.DuplicateSelected()); break;
+            case "roomCopy": Canvas.RoomEditor.CopySelected(); break;
+            case "roomCut": Canvas.RoomEditor.CutSelected(); break;
+            case "roomPaste": SelectRoomResult(Canvas.RoomEditor.Paste(Cell(command))); break;
+            case "roomFlip": Canvas.RoomEditor.FlipSelected(B(command, "horizontal", true)); break;
+            case "roomRotate": Canvas.RoomEditor.RotateSelected(B(command, "clockwise", true)); break;
+            case "roomDeleteSelected": Canvas.RoomEditor.DeleteSelected(); break;
+            case "selectArea": Canvas.SelectArea(new RectInt(I(command, "x"), I(command, "y"), I(command, "width"), I(command, "height"))); break;
+            case "moveSelection": Canvas.MoveSelection(new Vector2Int(I(command, "dx"), I(command, "dy"))); break;
             case "roomProperties":
                 ConfigureRoom(command); break;
-            case "clearLayer": var layerResult = Canvas.ClearCurrentLayer(); notice = $"Removed {layerResult.Removed}; protected {layerResult.Protected}."; break;
-            case "clearObjects": var objectsResult = Canvas.ClearRoomObjects(); notice = $"Removed {objectsResult.Removed}; protected {objectsResult.Protected}."; break;
+            case "clearLayer": var layerResult = Canvas.ClearCurrentLayer(); notice = $"@cleared:{layerResult.Removed}:{layerResult.Protected}"; break;
+            case "clearObjects": var objectsResult = Canvas.ClearRoomObjects(); notice = $"@cleared:{objectsResult.Removed}:{objectsResult.Protected}"; break;
             case "objectClick": Canvas.ObjectEditor.Click(Point(command), B(command, "additive")); break;
             case "objectMove": Canvas.ObjectEditor.Move(new Vector2(F(command, "dx"), F(command, "dy"))); break;
             case "objectResize": Canvas.ObjectEditor.Resize(new Vector2(F(command, "dx"), F(command, "dy"))); break;
@@ -721,6 +731,7 @@ public sealed class EditorWorkspace
                 Session.Load(opened.Document, openPath);
                 TrackOpenedFile(opened.Fingerprint);
                 break;
+            case "importRooms": ImportRooms(command); break;
             case "import":
                 if (dirty && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
                 if (!command.TryGetProperty("document", out var importedJson) || importedJson.ValueKind != JsonValueKind.Object)
@@ -738,12 +749,20 @@ public sealed class EditorWorkspace
                 SetDiskHealthNotice(null); break;
             case "exportRooms":
                 string target = Files.ExportDirectory(S(command, "directory", "Exports"));
-                IReadOnlyList<MapRoomJsonExporter.Entry> exportPlan = MapRoomJsonExporter.Plan(Session.Document);
+                string scope = S(command, "scope", "all");
+                if (scope != "selected" && scope != "all" && scope != "changed") throw new ArgumentException("Unknown room export scope.");
+                IEnumerable<string>? selectedIds = scope == "selected" ? Canvas.RoomEditor.SelectedIds.Count > 0
+                    ? Canvas.RoomEditor.SelectedIds : new[] { Canvas.ActiveRoomId } : null;
+                IReadOnlyList<MapRoomJsonExporter.Entry> exportPlan = MapRoomJsonExporter.Plan(Session.Document, selectedIds);
+                // Validate every destination before reading any existing file.
                 foreach (var entry in exportPlan) Files.Map(Path.Combine(S(command, "directory", "Exports"), entry.FileName));
+                if (scope == "changed") exportPlan = exportPlan.Where(e => !ExportMatches(Path.Combine(target, e.FileName), e.Json)).ToArray();
+                foreach (var entry in exportPlan) Files.Map(Path.Combine(S(command, "directory", "Exports"), entry.FileName));
+                if (scope == "changed" && exportPlan.Count == 0) { notice = "@exportUnchanged"; break; }
                 string? exportWarning = null;
                 var exported = MapRoomJsonExporter.ExportPlanned(exportPlan, target, B(command, "overwrite"), Session.FilePath,
                     warning => exportWarning = warning);
-                notice = $"Exported {exported.Length} room JSON files to {Files.MapsLabel}/{Files.Relative(target)}.";
+                notice = $"@exportedRooms:{exported.Length}";
                 if (exportWarning != null) notice += " Cleanup needs attention: " + exportWarning;
                 break;
             default: throw new ArgumentException("Unknown editor command: " + action);
@@ -995,13 +1014,59 @@ public sealed class EditorWorkspace
         Canvas.ObjectEditor.Place(definition, at, size,
             definition.placement == MapPlacementKind.Nodes ? end : null);
     }
+    private static bool ExportMatches(string path, string json)
+    {
+        if (!File.Exists(path)) return false;
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
+        if (new FileInfo(path).Length != bytes.Length) return false;
+        using var stream = File.OpenRead(path);
+        return System.Security.Cryptography.SHA256.HashData(stream).AsSpan().SequenceEqual(System.Security.Cryptography.SHA256.HashData(bytes));
+    }
+    private void ImportRooms(JsonElement command)
+    {
+        if (!command.TryGetProperty("documents", out var documents) || documents.ValueKind != JsonValueKind.Array || documents.GetArrayLength() == 0)
+            throw new ArgumentException("Choose at least one room JSON document.");
+        var candidate = Session.Document.Clone();
+        var incoming = new List<MapRoom>(); var ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var json in documents.EnumerateArray())
+        {
+            var imported = MapDocumentStore.Deserialize(json.GetRawText());
+            foreach (var group in imported.layerGroups)
+            {
+                var existing = candidate.layerGroups.Find(g => g.id == group.id);
+                if (existing == null) candidate.layerGroups.Add(group);
+                else if (MapJson.ToJson(existing) != MapJson.ToJson(group)) throw new WorkspaceConflict("A layer group uses the same ID with different settings.");
+            }
+            foreach (var room in imported.rooms)
+            {
+                if (!ids.Add(room.id)) throw new ArgumentException("The chosen JSON files contain duplicate room IDs.");
+                int index = candidate.rooms.FindIndex(r => r.id == room.id);
+                if (index >= 0)
+                {
+                    if (!B(command, "overwrite")) throw new WorkspaceConflict("A room already exists. Confirm overwrite to replace it.");
+                    if (candidate.rooms[index].locked) throw new InvalidOperationException("Unlock the existing room before importing a replacement.");
+                    candidate.rooms[index] = room;
+                }
+                else candidate.rooms.Add(room);
+                incoming.Add(room);
+            }
+        }
+        candidate.Validate();
+        Session.Execute("Import rooms", d => { d.rooms = candidate.rooms; d.layerGroups = candidate.layerGroups; });
+        SelectRoomResult(incoming.Select(r => r.id).ToArray());
+    }
+    private void SelectRoomResult(string[] ids)
+    {
+        if (ids.Length == 0) return;
+        Canvas.SelectRoom(ids[0]);
+        for (int i = 1; i < ids.Length; i++) Canvas.RoomEditor.Select(ids[i], additive: true);
+    }
     private void MoveRoom(JsonElement command)
     {
         string id = S(command, "id");
         var room = RequireRoom(id);
         var delta = new Vector2Int(I(command, "dx"), I(command, "dy"));
-        if (B(command, "snap", true)) delta = MapRoomSnapping.Move(new[] { Bounds(room) }, delta,
-            Session.Document.rooms.Where(r => r.id != room.id).Select(Bounds).ToArray(), 1).Delta;
+        delta = MapRoomCollision.Resolve(room, delta, Session.Document.rooms);
         if (room.locked) throw new InvalidOperationException("Room '" + room.name + "' is locked. Unlock it before moving it.");
         long x = (long)room.x + delta.x, y = (long)room.y + delta.y;
         if (x < int.MinValue || y < int.MinValue || x + room.width > int.MaxValue || y + room.height > int.MaxValue)
