@@ -1,0 +1,2544 @@
+{
+  "projectPath": "",
+  "camera": {
+    "ppu": 16,
+    "referenceWidth": 320,
+    "referenceHeight": 180,
+    "orthographicSize": 5.625,
+    "x": 0,
+    "y": 0
+  },
+  "materials": [
+    {
+      "id": "terrain",
+      "name": "Green",
+      "color": "#2E9B50",
+      "themeId": "terrain",
+      "sprites": [
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 48,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 64,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 80,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 96,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 112,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/DefaultTerrain.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
+    },
+    {
+      "id": "terrain-blue",
+      "name": "Blue",
+      "color": "#287FC4",
+      "themeId": "terrain-blue",
+      "sprites": [
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 48,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 64,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 80,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 96,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 112,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/TerrainBlue.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
+    },
+    {
+      "id": "terrain-dark-gray",
+      "name": "Dark Gray",
+      "color": "#3B424B",
+      "themeId": "terrain-dark-gray",
+      "sprites": [
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 48,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 64,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 80,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 96,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 112,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/TerrainDarkGray.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
+    },
+    {
+      "id": "terrain-orange",
+      "name": "Orange",
+      "color": "#DB812E",
+      "themeId": "terrain-orange",
+      "sprites": [
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 48,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 64,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 80,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 96,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 112,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/TerrainOrange.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
+    },
+    {
+      "id": "terrain-yellow",
+      "name": "Yellow",
+      "color": "#E5C341",
+      "themeId": "terrain-yellow",
+      "sprites": [
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 48,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 64,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 80,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 96,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 112,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/TerrainYellow.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "Area",
+      "name": "Area",
+      "color": "#D9598C73",
+      "layer": 3,
+      "placement": 1,
+      "minimumNodes": 0,
+      "maximumNodes": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "minimumWidth": 1.0,
+      "minimumHeight": 1.0,
+      "resizable": true,
+      "rotatable": true,
+      "flippable": true,
+      "sprite": null,
+      "properties": [
+        {
+          "key": "event",
+          "label": "Event",
+          "kind": 0,
+          "defaultValue": "",
+          "required": false,
+          "min": -1.7976931348623157e+308,
+          "max": 1.7976931348623157e+308,
+          "choices": []
+        },
+        {
+          "key": "once",
+          "label": "Once",
+          "kind": 3,
+          "defaultValue": "false",
+          "required": false,
+          "min": -1.7976931348623157e+308,
+          "max": 1.7976931348623157e+308,
+          "choices": []
+        }
+      ]
+    },
+    {
+      "id": "Decal",
+      "name": "Decal",
+      "color": "#FFFFFFFF",
+      "layer": 4,
+      "placement": 1,
+      "minimumNodes": 0,
+      "maximumNodes": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "minimumWidth": 1.0,
+      "minimumHeight": 1.0,
+      "resizable": true,
+      "rotatable": true,
+      "flippable": true,
+      "sprite": null,
+      "properties": [
+        {
+          "key": "tint",
+          "label": "Tint",
+          "kind": 4,
+          "defaultValue": "#FFFFFFFF",
+          "required": false,
+          "min": -1.7976931348623157e+308,
+          "max": 1.7976931348623157e+308,
+          "choices": []
+        }
+      ]
+    },
+    {
+      "id": "Marker",
+      "name": "Marker",
+      "color": "#66B2FFFF",
+      "layer": 2,
+      "placement": 0,
+      "minimumNodes": 0,
+      "maximumNodes": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "minimumWidth": 1.0,
+      "minimumHeight": 1.0,
+      "resizable": true,
+      "rotatable": true,
+      "flippable": true,
+      "sprite": null,
+      "properties": [
+        {
+          "key": "label",
+          "label": "Label",
+          "kind": 0,
+          "defaultValue": "",
+          "required": false,
+          "min": -1.7976931348623157e+308,
+          "max": 1.7976931348623157e+308,
+          "choices": []
+        }
+      ]
+    },
+    {
+      "id": "Object",
+      "name": "Object",
+      "color": "#E6BF4CFF",
+      "layer": 2,
+      "placement": 1,
+      "minimumNodes": 0,
+      "maximumNodes": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "minimumWidth": 1.0,
+      "minimumHeight": 1.0,
+      "resizable": true,
+      "rotatable": true,
+      "flippable": true,
+      "sprite": null,
+      "properties": [
+        {
+          "key": "name",
+          "label": "Name",
+          "kind": 0,
+          "defaultValue": "",
+          "required": false,
+          "min": -1.7976931348623157e+308,
+          "max": 1.7976931348623157e+308,
+          "choices": []
+        }
+      ]
+    },
+    {
+      "id": "Path",
+      "name": "Path",
+      "color": "#CC99FFFF",
+      "layer": 2,
+      "placement": 2,
+      "minimumNodes": 2,
+      "maximumNodes": -1,
+      "width": 1.0,
+      "height": 1.0,
+      "minimumWidth": 1.0,
+      "minimumHeight": 1.0,
+      "resizable": true,
+      "rotatable": true,
+      "flippable": true,
+      "sprite": null,
+      "properties": [
+        {
+          "key": "speed",
+          "label": "Speed",
+          "kind": 2,
+          "defaultValue": "4",
+          "required": false,
+          "min": 0.0,
+          "max": 1024.0,
+          "choices": []
+        },
+        {
+          "key": "loop",
+          "label": "Loop",
+          "kind": 3,
+          "defaultValue": "false",
+          "required": false,
+          "min": -1.7976931348623157e+308,
+          "max": 1.7976931348623157e+308,
+          "choices": []
+        }
+      ]
+    },
+    {
+      "id": "Spawn",
+      "name": "Spawn",
+      "color": "#66E699FF",
+      "layer": 2,
+      "placement": 0,
+      "minimumNodes": 0,
+      "maximumNodes": 0,
+      "width": 1.0,
+      "height": 1.0,
+      "minimumWidth": 1.0,
+      "minimumHeight": 1.0,
+      "resizable": true,
+      "rotatable": true,
+      "flippable": true,
+      "sprite": null,
+      "properties": [
+        {
+          "key": "player",
+          "label": "Player",
+          "kind": 0,
+          "defaultValue": "player",
+          "required": false,
+          "min": -1.7976931348623157e+308,
+          "max": 1.7976931348623157e+308,
+          "choices": []
+        }
+      ]
+    }
+  ]
+}

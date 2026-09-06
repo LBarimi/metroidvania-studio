@@ -1,0 +1,201 @@
+Key,KR,EN
+builtin.category.Decoration,장식,Decoration
+builtin.category.Gameplay,게임플레이,Gameplay
+builtin.category.Triggers,트리거,Triggers
+builtin.category.decalFolder,장식/{0},Decals/{0}
+builtin.field.label,표시 이름,Label
+builtin.field.name,이름,Name
+builtin.field.player,플레이어,Player
+builtin.field.tint,색조,Tint
+builtin.missing,없음,Missing
+builtin.object.Area,트리거 영역,Area
+builtin.object.Decal,장식,Decal
+builtin.object.Marker,표식,Marker
+builtin.object.Object,오브젝트,Object
+builtin.object.Path,경로,Path
+builtin.object.Spawn,시작 지점,Spawn
+builtin.package.Built-in,기본 제공,Built-in
+builtin.package.Missing,없음,Missing
+builtin.package.Project,프로젝트,Project
+roomJson.alias_device,원본 맵 보호를 위해 장치 경로에서는 방 파일을 덮어쓸 수 없습니다: {0},"To protect the source map, room files cannot be overwritten using a device path: {0}"
+roomJson.alias_inspection_failed,"원본 맵을 보호할 수 있는 경로인지 확인하지 못해 덮어쓰기를 중단했습니다: {0}
+{1}","Overwrite was stopped because the path could not be checked to protect the source map: {0}
+{1}"
+roomJson.alias_reparse,원본 맵 보호를 위해 심볼릭 링크나 정션을 거치는 경로에서는 방 파일을 덮어쓸 수 없습니다: {0},"To protect the source map, room files cannot be overwritten through a symbolic link or junction: {0}"
+roomJson.aggregate_too_large,모든 방 JSON의 합계가 32MiB 제한을 초과합니다. 전역 메타데이터를 줄이거나 방을 나누어 내보내세요.,The combined room JSON output exceeds the 32 MiB limit. Reduce global metadata or export fewer rooms at a time.
+roomJson.choose_directory,방 JSON을 내보낼 폴더를 지정하세요.,Choose a folder for the room JSON files.
+roomJson.empty_map,내보낼 방이 없습니다.,There are no rooms to export.
+roomJson.exists,같은 이름의 파일이 이미 있습니다: {0},A file already exists at: {0}
+roomJson.failed,방 내보내기에 실패했습니다. 적용된 파일 변경은 복구했습니다: {0},Room export failed. Published file changes were rolled back: {0}
+roomJson.failed_cleanup,"방 내보내기에 실패했지만 적용된 파일 변경은 복구했습니다: {0}
+임시 폴더를 정리하지 못했습니다: {1}
+{2}","Room export failed, but published file changes were rolled back: {0}
+Could not remove the staging folder: {1}
+{2}"
+roomJson.invalid_map,맵 데이터가 올바르지 않아 방을 내보낼 수 없습니다: {0},Cannot export rooms because the map is invalid: {0}
+roomJson.invalid_shared_text,공유 맵 정보에 UTF-8로 저장할 수 없는 문자가 있습니다.,Shared map metadata contains text that cannot be saved as UTF-8.
+roomJson.invalid_text,'{0}' 방에 UTF-8로 저장할 수 없는 문자가 있습니다.,Room '{0}' contains text that cannot be saved as UTF-8.
+roomJson.not_directory,출력 폴더 경로에 파일이 있습니다: {0},The output folder path points to a file: {0}
+roomJson.not_file,출력 파일 경로에 폴더가 있습니다: {0},An output file path points to a folder: {0}
+roomJson.protected_source,현재 원본 맵 파일은 덮어쓸 수 없습니다: {0},The current source map file cannot be overwritten: {0}
+roomJson.restore_failed,"파일 복구 실패: {0}
+{1}","Could not restore file: {0}
+{1}"
+roomJson.rollback_failed,"방 내보내기와 일부 파일 복구에 실패했습니다. 복구용 원본은 다음 임시 폴더에 보존했습니다: {0}
+{1}","Room export and some file restorations failed. Recovery originals were retained in this staging folder: {0}
+{1}"
+roomJson.saved_cleanup,"방 JSON {0}개 저장은 완료했습니다. 임시 백업 폴더를 정리하지 못했습니다: {1}
+{2}","All {0} room JSON files were saved. Could not remove the temporary backup folder: {1}
+{2}"
+roomJson.too_large,'{0}' 방 JSON이 32MiB 제한을 초과합니다.,The JSON for room '{0}' exceeds the 32 MiB limit.
+external.brand,MetroidvaniaStudio,MetroidvaniaStudio
+external.file,파일,File
+external.new,새 맵,New map
+external.open,열기,Open
+external.save,저장,Save
+external.saveAs,다른 이름으로,Save as
+external.export,방별 JSON 내보내기,Export rooms JSON
+external.editor,맵 편집,MetroidvaniaStudio
+external.minimap,미니맵,MiniMap
+external.popout,별도 창,Open separate view
+external.inspector,속성,Inspector
+external.rooms,방,Rooms
+external.tools,도구,Tools
+external.palette,팔레트,Palette
+external.layers,레이어,Layers
+external.addRoom,방 추가,Add room
+external.fit,전체 보기,Fit map
+external.frameRoom,방 보기,Frame room
+external.camera,게임 시야,Game view
+external.grid,격자,Grid
+external.names,방 이름,Room names
+external.search,검색…,Search…
+external.name,이름,Name
+external.width,너비,Width
+external.height,높이,Height
+external.visible,보이기,Visible
+external.locked,잠금,Locked
+external.properties,사용자 속성,Custom properties
+external.apply,적용,Apply
+external.cancel,취소,Cancel
+external.close,닫기,Close
+external.undo,실행 취소,Undo
+external.redo,다시 실행,Redo
+external.delete,삭제,Delete
+external.copy,복사,Copy
+external.cut,잘라내기,Cut
+external.paste,붙여넣기,Paste
+external.selectAll,모두 선택,Select all
+external.brush,브러시 크기,Brush size
+external.filled,내부 채우기,Filled
+external.shape,타일 모양,Tile shape
+external.group,그룹,Group
+external.ungrouped,전체 / 그룹 없음,All / ungrouped
+external.addGroup,그룹 추가,Add group
+external.clearLayer,현재 레이어 비우기,Clear current layer
+external.clearObjects,방의 객체 모두 지우기,Clear room objects
+external.crop,크기 변경 시 잘리는 타일 삭제 허용,Allow terrain cropping on resize
+external.connected,연결됨,connected
+external.disconnected,연결 대기,offline
+external.serverOffline,편집 서버와 연결되지 않았습니다. 다시 연결 중…,Editor server is offline. Reconnecting…
+external.loading,프로젝트를 불러오는 중…,Loading project…
+external.noRooms,방을 추가해서 시작하세요,Add a room to begin
+external.noSelection,방 또는 객체를 선택하세요,Select a room or object
+external.noMaterials,등록된 리소스가 없습니다,No resources available
+external.modified,저장되지 않음,Unsaved changes
+external.saved,저장됨,Saved
+external.working,적용 중…,Applying…
+external.ready,준비,Ready
+external.filePath,파일 경로,File path
+external.exportDirectory,내보내기 폴더,Export directory
+external.confirmDiscard,저장되지 않은 변경 사항을 버리고 계속할까요?,Discard unsaved changes and continue?
+external.confirmOverwrite,선택한 위치에 같은 이름의 파일이 이미 있습니다. 덮어쓸까요?,The selected destination already contains files with the same name. Replace them?
+external.confirmClear,이 작업으로 선택한 내용이 삭제됩니다. 계속할까요? 실행 취소할 수 있습니다.,Delete this content? You can undo this operation.
+external.help,왼쪽 드래그: 그리기 · 가운데 드래그: 이동 · 오른쪽: 지우기 · 휠: 픽셀 줌,Left drag: draw · Middle drag: pan · Right: erase · Wheel: pixel zoom
+external.roomHelp,다른 방 클릭: 선택 · 선택 방 드래그: 이동 · 바깥 핸들: 크기 · Del: 방 삭제 · B: 브러시,Click another room: select · Drag active room: move · Outer handles: resize · Del: delete room · B: brush
+external.objectHelp,클릭: 선택 · 드래그: 이동 · Ctrl+오른쪽: 속성 · 노드 클릭: 선택,Click: select · Drag: move · Ctrl+right: properties · Click a node to select
+external.nodes,노드,Nodes
+external.addNode,커서 위치에 노드 추가,Add node at cursor
+external.deleteNode,선택 노드 삭제,Delete selected node
+external.rotation,회전,Rotation
+external.scale,배율,Scale
+external.flipH,좌우 반전,Flip horizontal
+external.flipV,상하 반전,Flip vertical
+external.metadata,맵 설정,Map settings
+external.advanced,고급 JSON,Advanced JSON
+external.jsonHelp,원본 맵 속성·스타일그라운드·그룹을 JSON 형식으로 편집합니다.,"Edit map properties, stylegrounds and layer groups as JSON."
+external.invalidJson,올바른 JSON을 입력하세요.,Enter valid JSON.
+external.bound,경계,Bounds
+external.zoom,픽셀 배율,Pixel scale
+external.sourcePixels,원본 픽셀,Source pixels
+external.emptyFiles,저장된 맵이 없습니다. 경로를 입력하세요.,No saved maps. Enter a path.
+external.changeApplied,변경 사항을 적용했습니다,Changes applied
+external.snap,방 스냅,Room snapping
+external.theme,지역 색,Region color
+external.jsonValues,속성 JSON,Properties JSON
+external.shortcut,단축키,Shortcuts
+external.confirm,확인,Confirm
+external.continue,계속,Continue
+external.required,필수 값을 입력하세요.,Enter the required values.
+external.outline,외곽선,Outline
+external.workspaceHint,16×16 타일 · 자동 타일 연결,16×16 tiles · Automatic tile connections
+external.edit,편집,Edit
+external.deleteRoom,방 삭제,Delete room
+external.objectProperties,객체 속성,Object properties
+external.selected,개 선택됨,selected
+external.applyTransform,위치·크기 적용,Apply transform
+external.applyProperties,속성 적용,Apply properties
+external.mixed,혼합 값 — 입력하면 모두 적용,Mixed — edit to apply to all
+external.cameraSize,시야 크기,View size
+external.minimapHelp,가운데 드래그: 이동 · 휠: 확대 · 클릭: 방 선택,Middle drag: pan · Wheel: zoom · Click: select room
+external.overview,전체 지도 배율,Overview scale
+external.editView,편집 화면,Edit view
+external.visibleArea,표시 영역,Visible area
+external.strokeTooLong,"한 번의 작업은 경로 16,384칸 또는 브러시 적용 65,536칸을 넘을 수 없습니다. 변경을 취소했습니다.","A gesture cannot exceed 16,384 path cells or 65,536 brush-expanded cells. The change was cancelled."
+external.writerBusy,이전 변경 사항을 적용하는 중입니다. 잠시 후 다시 그려 주세요.,The previous change is still being applied. Please draw again in a moment.
+external.brushWheelHelp,Ctrl + 휠: 브러시 크기 조절 (1–16),Ctrl + wheel: brush size (1–16)
+external.sourceModified,맵 수정됨,Map modified
+external.sourceSaved,맵 저장됨,Map saved
+external.sourceSaveHint,원본 맵의 저장 상태입니다. 방 JSON 자동 내보내기와 별개이며 Ctrl+S로 저장합니다.,Authoring map save status. Separate from automatic room JSON export. Save with Ctrl+S.
+external.syncEditing,JSON 편집 중,JSON editing
+external.syncEditingHint,편집이 끝나고 1초 동안 변경이 없으면 방 JSON을 자동 저장합니다.,Room JSON is exported after editing stops for one second.
+external.syncExportQueued,JSON 저장 대기,JSON queued
+external.syncExportQueuedHint,최근 편집을 묶어서 방 JSON을 저장할 예정입니다.,Waiting for the idle interval before exporting the latest room JSON.
+external.syncExporting,JSON 저장 중,JSON exporting
+external.syncExportingHint,방 JSON을 백그라운드에서 저장하고 있습니다.,Room JSON is being published in the background.
+external.syncExportSaved,JSON 저장됨,JSON exported
+external.syncExportSavedHint,최신 방 JSON이 저장되었습니다. 원본 맵 저장은 별도입니다.,The latest room JSON was exported. The authoring map is saved separately.
+external.syncExportError,JSON 저장 오류,JSON export error
+external.syncExportErrorHint,방 JSON을 저장하지 못했습니다. 원인을 해결하면 자동으로 다시 시도합니다.,Room JSON export failed. It will retry automatically after the cause is resolved.
+external.syncServerOffline,서버 연결 끊김,Server disconnected
+external.syncServerOfflineHint,로컬 MetroidvaniaStudio 서버에 연결할 수 없습니다. 저장 및 반영 상태를 확인할 수 없습니다.,Cannot reach the local MetroidvaniaStudio server. Export and application status cannot be confirmed.
+external.studioConnected,로컬 스튜디오 연결됨,Local studio connected
+external.import,JSON 가져오기,Import JSON
+external.importTooLarge,32MiB 이하 JSON만 가져올 수 있습니다.,Import requires JSON of 32 MiB or less.
+external.cameraHelp,현재 방을 설정된 기준 해상도와 픽셀 배율로 미리 봅니다.,Preview the current room at the configured reference resolution and pixel scale.
+enum.MetroidvaniaStudioTool.Brush,브러시,Brush
+enum.MetroidvaniaStudioTool.Bucket,채우기,Bucket
+enum.MetroidvaniaStudioTool.Circle,원,Circle
+enum.MetroidvaniaStudioTool.Ellipse,타원,Ellipse
+enum.MetroidvaniaStudioTool.Line,직선,Line
+enum.MetroidvaniaStudioTool.Placement,배치,Placement
+enum.MetroidvaniaStudioTool.Rectangle,사각형,Rectangle
+enum.MetroidvaniaStudioTool.Rooms,방,Rooms
+enum.MetroidvaniaStudioTool.Selection,선택,Selection
+enum.MapLayer.All,모든 레이어,All layers
+enum.MapLayer.BackgroundDecals,배경 장식,Background decals
+enum.MapLayer.BackgroundTiles,배경 타일,Background tiles
+enum.MapLayer.Entities,오브젝트,Entities
+enum.MapLayer.ForegroundDecals,전경 장식,Foreground decals
+enum.MapLayer.ForegroundTiles,전경 타일,Foreground tiles
+enum.MapLayer.Triggers,트리거,Triggers
+enum.TileShape.BottomLeft,경사 / 왼쪽 아래,Slope / bottom left
+enum.TileShape.BottomRight,경사 \ 오른쪽 아래,Slope \ bottom right
+enum.TileShape.Solid,사각형,Solid
+enum.TileShape.TopLeft,경사 \ 왼쪽 위,Slope \ top left
+enum.TileShape.TopRight,경사 / 오른쪽 위,Slope / top right
+stageThemes.blue,파랑 테마,Blue theme
+stageThemes.darkGray,짙은 회색 테마,Dark gray theme
+stageThemes.green,초록 테마,Green theme
+stageThemes.orange,주황 테마,Orange theme
+stageThemes.yellow,노랑 테마,Yellow theme

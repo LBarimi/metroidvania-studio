@@ -1,0 +1,28 @@
+# Generated build and local workspace state
+**/bin/
+**/obj/
+**/node_modules/
+**/.test-output/
+MetroidvaniaStudio/dist/
+MetroidvaniaStudio/.local/
+.local/
+artifacts/
+TestResults/
+*.log
+*.pdb
+*.tmp
+*.user
+.vs/
+.idea/
+.DS_Store
+Thumbs.db
+# Private engine/workspace connections
+**/.studio/
+**/Library/
+**/Temp/
+**/Logs/
+**/UserSettings/
+
+**/dist/
+
+**/.local/
