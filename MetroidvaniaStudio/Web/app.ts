@@ -139,6 +139,22 @@ function importDocument(): void {
   }, { once: true });
   input.click();
 }
+async function cameraSettingsDialog(): Promise<void> {
+  await settleFileSnapshot();
+  if (!state) return;
+  const camera = map.cameraProfile!, expectation = expectedAt(state), inputs = new Map<string, HTMLInputElement>();
+  showModal(locale.t('cameraSettings'), body => {
+    body.append(text('p', locale.t('cameraSettingsHelp')));
+    for (const [key, caption, value, maximum] of [['ppu', 'PPU', camera.ppu, 8192], ['referenceWidth', locale.t('resolutionWidth'), camera.referenceWidth, 16384], ['referenceHeight', locale.t('resolutionHeight'), camera.referenceHeight, 16384]] as const) {
+      const [label, input] = labelInput(caption, value, 'number'); input.min = '1'; input.max = String(maximum); input.step = '1'; input.id = `camera-${key}`; body.append(label); inputs.set(key, input);
+    }
+    body.append(button(locale.t('cameraDefaults'), () => { for (const [key, value] of Object.entries({ ppu: 16, referenceWidth: 320, referenceHeight: 180 })) inputs.get(key)!.value = String(value); }));
+  }, async () => {
+    const values = numberValues(inputs);
+    for (const [key, value] of Object.entries(values)) if (!Number.isInteger(value) || value < 1 || value > (key === 'ppu' ? 8192 : 16384)) throw new Error(locale.t('cameraSettingsInvalid'));
+    await run('cameraSettings', values, expectation);
+  });
+}
 function metadataDialog(): void {
   if (!state) return; let area: HTMLTextAreaElement;
   const snapshot = state.document, expectation = expectedAt(state);
@@ -164,9 +180,10 @@ function drawChrome(): void {
   el<HTMLInputElement>('room-search').placeholder = locale.t('search'); el<HTMLInputElement>('palette-search').placeholder = locale.t('search'); el<HTMLButtonElement>('add-room').title = locale.t('addRoom');
   const actions = el('file-actions'); actions.replaceChildren(button(locale.t('new'), () => fileDialog('new')), button(locale.t('open'), () => fileDialog('open')), button(locale.t('import'), importDocument, 'optional'), button(locale.t('save'), save, 'accent'), button(locale.t('saveAs'), () => fileDialog('saveAs'), 'optional'), button(locale.t('export'), () => fileDialog('exportRooms'), 'optional'));
   const undo = button('↶', () => run('undo'), 'icon'), redo = button('↷', () => run('redo'), 'icon'); undo.title = locale.t('undo') + ' · Ctrl+Z'; redo.title = locale.t('redo') + ' · Ctrl+Y'; undo.id = 'undo'; redo.id = 'redo'; actions.append(text('span', '', 'divider'), undo, redo);
+  const cameraSettings = button(locale.t('cameraSettings'), cameraSettingsDialog, 'ghost'); cameraSettings.id = 'camera-settings-action';
   const metadata = button('⚙ ' + locale.t('metadata'), metadataDialog, 'ghost'); metadata.id = 'metadata-action';
   const inspectorToggle = button('☷ ' + locale.t('inspector'), () => { inspectorHidden = !inspectorHidden; localStorage.setItem('mapstudio.inspectorHidden', String(inspectorHidden)); updateView(); }, 'ghost'); inspectorToggle.id = 'inspector-toggle';
-  const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('span', locale.t('workspaceHint'), 'hint'), text('div', '', 'spacer'), metadata, inspectorToggle);
+  const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('span', locale.t('workspaceHint'), 'hint'), text('div', '', 'spacer'), cameraSettings, metadata, inspectorToggle);
   updateView(); drawPanels(true); renderInspector(true);
 }
 function updateView(): void {

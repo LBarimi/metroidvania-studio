@@ -25,6 +25,7 @@ public sealed record EditorWorkspaceInfo(string name, string mapsPath);
 
 public sealed class EditorState
 {
+    public CameraProfile camera { get; init; } = new();
     public long revision { get; init; }
     public long documentRevision { get; init; }
     public long catalogRevision { get; init; }

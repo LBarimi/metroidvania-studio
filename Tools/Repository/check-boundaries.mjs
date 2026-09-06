@@ -27,18 +27,19 @@ export function inspectBoundaries(files) {
     const name = file.name.replaceAll('\\', '/');
     const text = decode(file.bytes);
     const report = (rule, location = 'content') => issues.push({ path: file.name, location, rule });
-    if (engineAsset.test(name) || engineRoot.test(name)) report('engine-file', 'filename');
+    const integration = name.startsWith('engine/unity/');
+    if (!integration && (engineAsset.test(name) || engineRoot.test(name))) report('engine-file', 'filename');
     if (/\.map\.json$/i.test(name) && !name.startsWith('Samples/Maps/') && !/(?:^|\/)Tests\/Fixtures\//.test(name))
       report('private-map-location', 'filename');
     if (windowsPath.test(text) || homePath.test(text) || uncPath.test(text)) report('machine-path');
-    if (sourceFile.test(name) && (engineCode.test(text) || engineReference.test(text))) report('engine-code');
+    if (!integration && sourceFile.test(name) && (engineCode.test(text) || engineReference.test(text))) report('engine-code');
     if (/\.(?:csproj|props|targets)$/i.test(name)) {
       for (const match of text.matchAll(/<(?:Compile|ProjectReference|EmbeddedResource|Content|None)\b[^>]*\b(?:Include|Update)\s*=\s*["']([^"']+)["']/g)) {
         for (const item of match[1].split(';')) {
           if (item.includes('$(') || item.includes('%(')) continue;
           const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(name), item.replaceAll('\\', '/')));
           if (absoluteAsset.test(item) || resolved === '..' || resolved.startsWith('../')) report('external-source-link');
-          if (engineRoot.test(resolved)) report('engine-source-link');
+          if (engineRoot.test(resolved) || !integration && resolved.startsWith('engine/')) report('engine-source-link');
         }
       }
     }

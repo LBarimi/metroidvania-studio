@@ -71,6 +71,7 @@ try {
   checks.push('offline status survives pointer redraws and a 204 response restores connectivity');
 
   await page.locator('#language').selectOption('EN');
+  await page.waitForFunction(() => document.querySelector('#status-export')?.textContent === 'JSON exported');
   assert.equal(await page.locator('#status-export').textContent(), 'JSON exported');
   await page.locator('#language').selectOption('KR');
   const evidence = path.join(repository, 'Logs/MetroidvaniaStudioSync'); await mkdir(evidence, { recursive: true });

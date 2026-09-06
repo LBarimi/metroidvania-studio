@@ -236,11 +236,11 @@ export class MapCanvas {
     else { if (this.state) this.syncIndexes(this.state); this.requestDraw(); }
   }
   async settled(): Promise<void> { await this.tileIdle; await this.gestureTail; if (this.brushSizeTask) await this.brushSizeTask; }
-  get cameraProfile(): CameraProfile | undefined { return this.state?.catalog.camera; }
+  get cameraProfile(): CameraProfile | undefined { return this.state?.camera || this.state?.catalog.camera; }
   get viewportSize(): Point {
     if (this.cameraPreview) {
       const camera = this.cameraProfile;
-      if (camera) { const y = camera.orthographicSize * 2; return { x: y * camera.referenceWidth / camera.referenceHeight, y }; }
+      if (camera) { const y = camera.orthographicSize * 2 * camera.ppu / 16; return { x: y * camera.referenceWidth / camera.referenceHeight, y }; }
     }
     return { x: this.width / this.scale, y: this.height / this.scale };
   }
@@ -249,7 +249,7 @@ export class MapCanvas {
     const previousRoom = this.state?.selection.roomId;
     if (previousInstance !== state.instanceId || previousRoom !== state.selection.roomId
       || this.state?.selection.tool !== state.selection.tool || this.state?.selection.layer !== state.selection.layer) this.roomSelectionId = null;
-    const camera = state.catalog.camera;
+    const camera = state.camera || state.catalog.camera;
     const nextCameraToken = camera ? [camera.ppu, camera.referenceWidth, camera.referenceHeight, camera.orthographicSize].join(':') : '';
     const cameraChanged = nextCameraToken !== this.cameraProfileToken;
     const selectionToken = this.state?.selection === state.selection ? this.selectionRenderToken : JSON.stringify(state.selection);
@@ -1114,7 +1114,7 @@ export class MapCanvas {
   }
   private visibleWorldBounds(camera = this.cameraProfile): Rect {
     if (this.cameraPreview && camera) {
-      const height = camera.orthographicSize * 2, width = height * camera.referenceWidth / camera.referenceHeight;
+      const height = camera.orthographicSize * 2 * camera.ppu / 16, width = height * camera.referenceWidth / camera.referenceHeight;
       return { x: this.center.x - width / 2, y: this.center.y - height / 2, width, height };
     }
     const low = this.toWorld({ x: 0, y: this.height }), high = this.toWorld({ x: this.width, y: 0 });
@@ -1122,7 +1122,7 @@ export class MapCanvas {
   }
   private cameraScreenRect(): Rect | null {
     const camera = this.cameraProfile; if (!camera) return null;
-    const height = camera.orthographicSize * 2, width = height * camera.referenceWidth / camera.referenceHeight;
+    const height = camera.orthographicSize * 2 * camera.ppu / 16, width = height * camera.referenceWidth / camera.referenceHeight;
     return this.screenRect({ x: this.center.x - width / 2, y: this.center.y - height / 2, width, height });
   }
   private screenRect(rect: Rect): Rect { const p = this.toScreen({ x: rect.x, y: rect.y + rect.height }); return { ...p, width: rect.width * this.scale, height: rect.height * this.scale }; }

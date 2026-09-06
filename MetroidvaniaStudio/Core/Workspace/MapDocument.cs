@@ -170,6 +170,7 @@ namespace MetroidvaniaStudio
             Require(rooms.Count <= MaximumRoomCount, "A map cannot contain more than " + MaximumRoomCount + " rooms.");
             Require(stylegrounds != null, "Map stylegrounds are missing.");
             ValidateProperties(properties, "Map");
+            MapCameraSettings.Resolve(this);
             var ids = new HashSet<string>(StringComparer.Ordinal);
             Dictionary<string, MapLayerGroup> groups = MapLayerGroups.Validate(this, ids);
 

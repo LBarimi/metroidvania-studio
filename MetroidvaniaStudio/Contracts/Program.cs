@@ -59,6 +59,7 @@ result.Append($"export const MAX_BRUSH_SIZE = {MapBrushGeometry.MaximumBrushSize
 result.Append($"export const MAP_FORMAT_VERSION = {MapDocument.CurrentFormatVersion};\n");
 result.Append($"export const TILE_SIZE = {MapDocument.RequiredTileSize};\n");
 string generated = result.ToString();
+if (!IntegrationContracts.Write(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output))!, "../..")), check)) return 1;
 bool schemaCurrent = MapSchema.Write(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output))!, "../Contracts/map-format-v2.schema.json")), check);
 string? current = File.Exists(output) ? File.ReadAllText(output).Replace("\r\n", "\n") : null;
 if (current == generated) { Console.WriteLine("C# / TypeScript contracts are current."); return schemaCurrent ? 0 : 1; }

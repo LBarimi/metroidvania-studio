@@ -56,6 +56,7 @@ var tests = new (string name, Action run)[]
     ("room property move and resize plans final bounds atomically", () => Fixture(RoomPropertyMoveResize)),
     ("room property resize failure preserves metadata and bounds", () => Fixture(RoomPropertyLockedFailure)),
     ("room selection and movement validation are atomic", () => Fixture(RoomTargetAtomicity)),
+    ("camera settings persist, export and undo atomically", () => Fixture(CameraSettings)),
     ("camera profiles reject invalid catalog values atomically", () => Fixture(CameraValidation)),
     ("disk and catalog health notices survive ordinary commands", () => Fixture(PersistentHealthNotices)),
     ("completed command retry is idempotent", () => Fixture(IdempotentCommand)),
@@ -1730,4 +1731,26 @@ static void JsonImport(EditorWorkspace workspace)
     Send(workspace, "import", ("discard", true), ("document", JsonDocument.Parse(MapDocumentStore.Serialize(imported)).RootElement));
     Check(workspace.Session.Document.name == "Imported document" && workspace.Session.FilePath == null && workspace.State().dirty,
         "Imported browser JSON opens as an unsaved authoring document.");
+}
+
+static void CameraSettings(EditorWorkspace w)
+{
+    Check(StateElement(w).GetProperty("camera").GetProperty("ppu").GetInt32() == 16, "HTTP camera fields must serialize.");
+    Check(w.State().camera.ppu == 16 && w.State().camera.referenceWidth == 320 && w.State().camera.referenceHeight == 180, "Default profile must be portable.");
+    string before = Snapshot(w);
+    Send(w, "cameraSettings", ("ppu", 32), ("referenceWidth", 400), ("referenceHeight", 224));
+    Check(w.State().camera.orthographicSize == 3.5f && w.State(false, false, false).camera.ppu == 32, "Partial replies carry effective world-unit camera settings.");
+    w.FlushAutoExports();
+    MapDocument output = MapDocumentStore.Deserialize(File.ReadAllText(AutoFiles(w).Single()));
+    Check(MapCameraSettings.Resolve(output).referenceWidth == 400 && output.formatVersion == 2, "Room export preserves settings without changing the JSON envelope.");
+    foreach (int value in new[] { 0, -1, 8193 })
+    {
+        string unchanged = Snapshot(w);
+        Throws<InvalidOperationException>(() => Send(w, "cameraSettings", ("ppu", value), ("referenceWidth", 320), ("referenceHeight", 180)));
+        Check(Snapshot(w) == unchanged, "Invalid setting must not partially change the map.");
+    }
+    Send(w, "undo"); Check(Snapshot(w) == before && w.State().camera.ppu == 16, "One Undo restores all settings.");
+    Send(w, "redo"); Check(w.State().camera.ppu == 32, "Redo restores profile.");
+    Send(w, "save", ("path", "camera.map.json"));
+    Check(MapCameraSettings.Resolve(MapDocumentStore.Deserialize(File.ReadAllText(w.Session.FilePath!))).referenceHeight == 224, "Saved JSON includes reference resolution.");
 }

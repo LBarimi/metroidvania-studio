@@ -66,3 +66,11 @@ test('staged engine references remain blocked when unstaged text is already clea
     rmSync(scratch, { recursive: true, force: true });
   }
 });
+
+test('engine adapter is scoped while core references and private paths remain blocked', () => {
+  const source = 'using ' + ['Unit', 'yEngine'].join('') + ';';
+  assert.deepEqual(inspectBoundaries([file('engine/unity/Assets/Adapter/Reader.cs', source), file('engine/unity/Assets/Adapter/Reader.cs.meta', 'guid: ' + 'a'.repeat(32))]), []);
+  assert.ok(inspectBoundaries([file('MetroidvaniaStudio/Core/Reader.cs', source)]).length);
+  assert.ok(inspectBoundaries([file('engine/unity/Reader.cs', privatePath)]).some(x => x.rule === 'machine-path'));
+  assert.ok(inspectBoundaries([file('MetroidvaniaStudio/Core/Core.csproj', '<Project><ItemGroup><Compile Include="../../engine/unity/Assets/Adapter/Reader.cs" /></ItemGroup></Project>')]).some(x => x.rule === 'engine-source-link'));
+});

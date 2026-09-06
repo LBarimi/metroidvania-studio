@@ -67,6 +67,7 @@ export interface EditorNodeSelection {
 }
 
 export interface EditorState {
+  camera: CameraProfile;
   canRedo: boolean;
   canUndo: boolean;
   catalog?: Catalog;

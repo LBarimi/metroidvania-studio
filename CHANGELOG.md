@@ -2,6 +2,9 @@
 
 ## 0.1.0
 
+- Per-map PPU and reference-resolution settings with compatible JSON metadata.
+- Optional Unity package with resource import, room loading, camera setup and local refresh.
+
 - Separate local build and instant-run batch files with reusable builds and preserved workspaces.
 - Independent web studio and configurable local workspaces.
 - Tile painting, room layout, minimap and room JSON export.

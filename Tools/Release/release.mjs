@@ -78,6 +78,7 @@ export function packRelease(state) {
     '--self-contained', 'false', '-p:UseAppHost=false', '-p:UseSharedCompilation=false', '-p:DebugType=None',
     '--output', path.join(bundle, 'MetroidvaniaStudio/Server')]);
   for (const relative of bundleInputs) copy(relative, bundle);
+  run(node, ['engine/unity/build-package.mjs', path.join(bundle, `engine/unity/MetroidvaniaStudio-Unity-${state.version}.unitypackage`)]);
   if (existsSync(path.join(root, 'LICENSE'))) copy('LICENSE', bundle);
   if (existsSync(path.join(root, 'NOTICE'))) copy('NOTICE', bundle);
   const manifest = packageFiles(bundle).sort().map(file => ({ path: file.replaceAll('\\', '/'),

@@ -395,13 +395,14 @@ try {
       visible: true, locked: false, foreground: [], background: [], objects: [], properties: [] };
     const material = { id: 'blank-theme', name: 'Blank theme', color: '#123456', themeId: '   ', sprites: [] };
     const first = { ...source, revision: 1, documentRevision: 1, catalogRevision: 1,
+      camera: { ppu: 16, referenceWidth: 320, referenceHeight: 180, orthographicSize: 5.625 },
       catalog: { ...source.catalog, materials: [material], camera: { ppu: 16, referenceWidth: 320, referenceHeight: 180, orthographicSize: 5.625 } },
       document: { ...structuredClone(source.document), rooms: [room], layerGroups: [] },
       selection: { ...structuredClone(source.selection), roomId: room.id, layer: 0, tool: 3, material: material.id,
         shape: 0, brushSize: 1, groupId: '', hiddenLayers: [], lockedLayers: [], objects: [], area: null, nodes: [] } };
     const editor = new MapCanvas(canvas, async () => first, () => {}, () => {}); editor.setState(first); editor.gameView(true);
     await new Promise(resolve => requestAnimationFrame(resolve)); const initialScale = editor.pixelScale;
-    const second = { ...first, revision: 2, catalog: { ...first.catalog,
+    const second = { ...first, revision: 2, camera: { ppu: 16, referenceWidth: 640, referenceHeight: 360, orthographicSize: 11.25 }, catalog: { ...first.catalog,
       camera: { ppu: 16, referenceWidth: 640, referenceHeight: 360, orthographicSize: 11.25 } } };
     editor.setState(second); await new Promise(resolve => requestAnimationFrame(resolve)); const updatedScale = editor.pixelScale;
     const tile = { roomId: room.id, layer: 0, erase: false, live: true, material: material.id, shape: 0, groupId: '', brushSize: 1,

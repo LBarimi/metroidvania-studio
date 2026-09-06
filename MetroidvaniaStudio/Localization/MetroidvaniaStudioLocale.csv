@@ -199,3 +199,9 @@ stageThemes.darkGray,짙은 회색 테마,Dark gray theme
 stageThemes.green,초록 테마,Green theme
 stageThemes.orange,주황 테마,Orange theme
 stageThemes.yellow,노랑 테마,Yellow theme
+external.cameraSettings,카메라 설정,Camera settings
+external.cameraSettingsHelp,맵마다 저장됩니다. PPU는 월드 단위당 픽셀 수이며 타일 원본은 16×16입니다. 해상도는 게임 시야를 정합니다.,Saved per map. PPU sets pixels per world unit; source tiles remain 16×16. Resolution defines the game view.
+external.resolutionWidth,기준 해상도 가로,Reference width
+external.resolutionHeight,기준 해상도 세로,Reference height
+external.cameraDefaults,기본값 16 PPU · 320×180,Defaults 16 PPU · 320×180
+external.cameraSettingsInvalid,PPU는 1~8192 및 해상도는 1~16384 사이 정수로 입력하세요.,Use integer PPU from 1 to 8192 and resolution from 1 to 16384.

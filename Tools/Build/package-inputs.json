@@ -12,5 +12,6 @@
   "Samples",
   "README.md",
   "CHANGELOG.md",
-  "version.json"
+  "version.json",
+  "engine/unity/README.md"
 ]

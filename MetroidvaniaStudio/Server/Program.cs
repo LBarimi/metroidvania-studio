@@ -78,14 +78,14 @@ app.MapPost("/api/shutdown", async (HttpContext context) =>
     context.Response.OnCompleted(() => { app.Lifetime.StopApplication(); return Task.CompletedTask; });
     return Results.Ok(new { stopping = true, instanceId = workspace.InstanceId });
 });
-app.MapGet("/api/state", (long? since, string? instanceId, long? documentRevision, long? catalogRevision) =>
+app.MapGet("/api/state", (long? since, string? instanceId, long? documentRevision, long? catalogRevision, bool? full) =>
 {
     lock (workspace.Gate)
     {
         bool sameInstance = instanceId == workspace.InstanceId;
         if (workspace.IsStateCurrent(since, instanceId, documentRevision, catalogRevision)) return Results.NoContent();
-        bool includeDocument = !sameInstance || documentRevision != workspace.DocumentRevision;
-        bool includeCatalog = !sameInstance || catalogRevision != workspace.CatalogRevision;
+        bool includeDocument = full == true || !sameInstance || documentRevision != workspace.DocumentRevision;
+        bool includeCatalog = full == true || !sameInstance || catalogRevision != workspace.CatalogRevision;
         return Results.Json(workspace.State(includeDocument, includeCatalog));
     }
 });

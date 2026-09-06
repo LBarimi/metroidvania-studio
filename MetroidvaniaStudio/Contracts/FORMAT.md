@@ -10,7 +10,7 @@ The JSON schema describes structural validation. `MapDocumentStore` additionally
 
 ## Coordinates and identity
 
-Room positions are integer world coordinates in tile units. Positive X points right and positive Y points up. Tile cells, object positions and path nodes use coordinates local to their room. Object rectangles use a lower-left origin; rotation is in degrees around the rectangle center. A cell is 16 by 16 source pixels. Preview pixel scale and reference resolution are catalog settings and do not change the stored map coordinates.
+Room positions are integer world coordinates in tile units. Positive X points right and positive Y points up. Tile cells, object positions and path nodes use coordinates local to their room. Object rectangles use a lower-left origin; rotation is in degrees around the rectangle center. A cell is 16 by 16 source pixels. PPU and reference resolution do not change stored tile coordinates. A consuming engine converts tile coordinates to world units by multiplying by `16 / PPU`.
 
 Shape values remain stable: 0 is solid, 1 fills the bottom-left triangle, 2 the bottom-right triangle, 3 the top-left triangle and 4 the top-right triangle. Layer values are 0 foreground tiles, 1 background tiles, 2 entities, 3 triggers, 4 foreground decorations and 5 background decorations. The value 6 selects all layers in editing commands and is not a stored content layer.
 
@@ -23,3 +23,13 @@ A complete authoring file contains rooms, shared properties, background layers a
 User-defined object properties and unknown background effect properties are opaque data and survive an import/export round trip. The editor does not run their game behavior. Unknown structural fields require an explicit format update instead of being silently discarded.
 
 Any future incompatible change requires a format-version increment and an explicit migrator. Generated declarations and JSON schema, literal version-2 compatibility tests, Unicode round trips and existing format migration tests must pass together before publication.
+
+## Per-map camera settings
+
+Camera settings use reserved document property keys `metroidvaniaStudio.camera.ppu`, `metroidvaniaStudio.camera.width` and `metroidvaniaStudio.camera.height`. Values are decimal integer strings; PPU accepts 1–8192 and each resolution dimension 1–16384. The web settings action writes all three together in one undoable transaction. Reserved values are validated before import or commit.
+
+Using the existing metadata envelope preserves format-version-2 compatibility: older readers can retain these properties without knowing their meaning. Missing settings use the workspace catalog defaults (normally 16 / 320 / 180). Explicit settings travel with complete maps and every room export. Camera half-height in world units is `height / (2 × PPU)`; visible source tile extent is `width / 16` by `height / 16`.
+
+The server returns an effective `camera` with each changed state response, including compact edit acknowledgements. A state request with `full=true` includes both document and resource catalog whenever revision tokens are stale; an unchanged request still returns 204. This permits consumers with inline JSON object serialization to request complete snapshots without polling large unchanged documents.
+
+The build also generates engine adapter DTOs, camera-setting logic and tile-mask geometry from the same core definitions. `--check-contracts` checks the TypeScript, schema and adapter outputs together. Engine API code stays under `engine/unity`.

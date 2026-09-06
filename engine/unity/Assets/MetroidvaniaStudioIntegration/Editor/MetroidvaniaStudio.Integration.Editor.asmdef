@@ -1,0 +1,10 @@
+{
+  "name": "MetroidvaniaStudio.Integration.Editor",
+  "rootNamespace": "MetroidvaniaStudio.Integration.Editor",
+  "references": [
+    "MetroidvaniaStudio.Integration"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
+}

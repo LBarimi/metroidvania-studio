@@ -40,6 +40,12 @@ try {
         $source = Join-Path $studioRoot $notice
         if (Test-Path -LiteralPath $source -PathType Leaf) { Copy-Item -LiteralPath $source -Destination (Join-Path $output $notice) }
     }
+    & $nodePath (Join-Path $studioRoot 'engine/unity/build-package.mjs')
+    if ($LASTEXITCODE -ne 0) { throw 'Engine package build failed.' }
+    $packageName = "MetroidvaniaStudio-Unity-$version.unitypackage"
+    $engineOutput = Join-Path $output 'engine/unity'
+    New-Item -ItemType Directory -Path $engineOutput -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $studioRoot ("engine/unity/Builds/" + $packageName)) -Destination (Join-Path $engineOutput $packageName)
     # Machine-specific paths stay in ignored local state and are revalidated on use.
     $toolchainPath = Join-Path $localRoot 'toolchain.json'
     $toolchainTemp = Join-Path $localRoot ('toolchain-' + [Guid]::NewGuid().ToString('N') + '.tmp')

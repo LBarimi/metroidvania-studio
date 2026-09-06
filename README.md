@@ -2,7 +2,7 @@
 
 A web-based 2D world editor for metroidvania games. Create connected rooms, paint tilemaps, and design minimaps with JSON export for cross-engine workflows.
 
-The browser UI and local server run independently. Workspaces contain maps, resource definitions and textures; each game supplies its own importer for the exported JSON.
+The browser UI and local server run independently. Workspaces contain maps, resource definitions and textures; the Unity adapter in `engine/unity` imports exported JSON and follows a local studio session. Other consumers can implement the same JSON contract.
 
 ## Run on Windows
 
@@ -47,6 +47,12 @@ Pass the same `-Project` and `-Port` when restarting or stopping a custom worksp
 - `Textures/`: workspace texture files referenced by the catalogue.
 
 Project-owned examples are in `Samples/`. They provide default resources without importing another project's data. Workspace paths are independent of the application source tree. JSON keeps room positions, layers, tile materials, objects and metadata; rendering and game behavior belong to the consuming application.
+
+## Camera settings and engine packages
+
+Use **Camera settings** in the web toolbar to configure PPU (default 16) and reference resolution (default 320×180). Settings belong to the current map, support Undo/Redo, and survive save, import and per-room JSON export. Source tiles remain 16×16; PPU changes world-unit conversion, while resolution changes the visible game area.
+
+The Unity adapter targets 6000.3.9f1. Root builds also create `engine/unity/Builds/MetroidvaniaStudio-Unity-<version>.unitypackage`. Import it into Unity, open **Tools > MetroidvaniaStudio**, connect to the running local studio and load a room. See `engine/unity/README.md` for installation, live refresh, offline imports and runtime APIs. Engine assemblies are never referenced by the web studio or server.
 
 ## Development
 

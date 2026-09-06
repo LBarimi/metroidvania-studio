@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 #nullable enable
 #pragma warning disable CS8618 // Wire DTOs are populated by their producer or JSON deserializer.
@@ -8,8 +9,8 @@ namespace MetroidvaniaStudio
 {
     [Serializable] public sealed class CameraProfile
     {
-        public int ppu = 16, referenceWidth = 320, referenceHeight = 180;
-        public float orthographicSize = 5.625f, x, y;
+        [JsonInclude] public int ppu = 16, referenceWidth = 320, referenceHeight = 180;
+        [JsonInclude] public float orthographicSize = 5.625f, x, y;
     }
 
     [Serializable] public sealed class SpriteData

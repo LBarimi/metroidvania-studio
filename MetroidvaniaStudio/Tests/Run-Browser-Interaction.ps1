@@ -1,6 +1,8 @@
 param(
     [int]$Port = 18766,
     [string]$PlaywrightModule = '',
+    [switch]$CameraOnly,
+    [switch]$PerformanceOnly,
     [switch]$RoomOnly,
     [switch]$SyncOnly
 )
@@ -60,17 +62,20 @@ try {
     $env:METROIDVANIA_STUDIO_BASE_URL = "http://127.0.0.1:$Port"
     $env:METROIDVANIA_STUDIO_TEST_PROJECT_ROOT = $scratchRoot
     $env:METROIDVANIA_STUDIO_TEST_ISOLATED = '1'
-    if (-not $RoomOnly -and -not $SyncOnly) {
+    if (-not $RoomOnly -and -not $SyncOnly -and -not $PerformanceOnly) {
+        & node (Join-Path $PSScriptRoot 'browser-camera-settings.mjs')
+        if ($LASTEXITCODE -ne 0) { throw 'Camera settings validation failed.' }
+        if ($CameraOnly) { return }
         & node (Join-Path $PSScriptRoot 'browser-standalone.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Standalone workflow validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-interaction.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Browser interaction validation failed.' }
     }
-    if (-not $SyncOnly) {
+    if (-not $SyncOnly -and -not $PerformanceOnly) {
         & node (Join-Path $PSScriptRoot 'browser-room-workflow.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Room workflow validation failed.' }
     }
-    if (-not $RoomOnly) {
+    if (-not $RoomOnly -and -not $PerformanceOnly) {
         & node (Join-Path $PSScriptRoot 'browser-sync-status.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Export status validation failed.' }
     }

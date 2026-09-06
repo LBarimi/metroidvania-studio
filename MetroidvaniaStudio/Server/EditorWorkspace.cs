@@ -411,6 +411,7 @@ public sealed class EditorWorkspace
         }
         return new EditorState
         {
+            camera = MapCameraSettings.Resolve(Session.Document, Catalog.Data.GetProperty("camera").Deserialize<CameraProfile>(Catalog.Json)),
             revision = Revision, documentRevision = DocumentRevision, catalogRevision = CatalogRevision,
             instanceId = InstanceId, file = Session.FilePath == null ? null : Files.Relative(Session.FilePath),
             dirty = dirty, canUndo = Session.CanUndo, canRedo = Session.CanRedo, notice = Notice,
@@ -701,6 +702,9 @@ public sealed class EditorWorkspace
             case "flip": if (Canvas.IsTileLayer) Canvas.FlipSelection(B(command, "horizontal", true)); else Canvas.ObjectEditor.Flip(B(command, "horizontal", true)); break;
             case "rotate": if (Canvas.IsTileLayer) Canvas.RotateSelection(B(command, "clockwise", true)); else Canvas.ObjectEditor.Rotate(B(command, "clockwise", true)); break;
             case "selectAll": if (Canvas.Tool == MetroidvaniaStudioTool.Rooms) Canvas.RoomEditor.SelectAll(); else if (Canvas.IsTileLayer && Canvas.Room != null) Canvas.SelectArea(new RectInt(0, 0, Canvas.Room.width, Canvas.Room.height)); else Canvas.ObjectEditor.SelectAll(); break;
+            case "cameraSettings":
+                Session.Execute("Camera settings", document => MapCameraSettings.Apply(document, I(command, "ppu"), I(command, "referenceWidth"), I(command, "referenceHeight")));
+                break;
             case "documentProperties":
                 Session.Execute("Document properties", document =>
                 {

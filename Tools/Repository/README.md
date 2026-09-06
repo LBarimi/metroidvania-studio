@@ -30,8 +30,9 @@ Hooks are local safeguards and can be bypassed by Git options; keep the build
 check and the project instructions in use too.
 
 The same check also enforces repository boundaries through `check-boundaries.mjs`.
-It rejects literal machine paths, engine source/API references, engine asset and
-package directories, source links outside this repository, and private workspace
+It rejects literal machine paths, engine source/API references outside `engine/unity`,
+engine assets outside that adapter, studio project references into engine adapters,
+source links outside this repository, and private workspace
 maps or engine identifiers in sample catalogues. Both working files and the complete
 staged snapshot are checked; the existing fingerprints and commit-message check
 remain active. Portable environment-derived paths and ordinary web routes are allowed.
