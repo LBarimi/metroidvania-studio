@@ -4,7 +4,7 @@ Target: Unity **6000.3.9f1**. The web studio and its server remain independent o
 
 ## Install and connect
 
-1. Run the platform build script (`platform/win/web/build.bat` on Windows). The package is written to `engine/unity/metroidvania-studio.unitypackage` and included in the standalone build folder. `Build-UnityPackage.bat` invokes the same build.
+1. Use `engine/unity/metroidvania-studio.unitypackage`, included in the repository and standalone builds. To regenerate it from source, run the platform build script (`platform/win/web/build.bat` on Windows); `Build-UnityPackage.bat` invokes the same build.
 2. With your Unity project open, double-click the package and select **Import**. It installs under `Assets/MetroidvaniaStudioIntegration` with stable GUIDs.
 3. Start the web studio with the platform run script (`platform/win/web/run.bat` on Windows).
 4. In Unity, open **Tools > MetroidvaniaStudio**, connect to the displayed loopback address, select a room and press **Load / Reload room**.
@@ -36,7 +36,7 @@ Runtime APIs are in `MetroidvaniaStudio.Integration`. Import tools are in the ed
 
 ## 한국어
 
-루트 `platform` 폴더에서 운영체제에 맞는 **build** 파일을 실행하면 이 폴더의 `Builds` 안에 `.unitypackage`가 생성됩니다. Unity 프로젝트를 열고 패키지를 더블클릭한 뒤 **Import**를 누르세요.
+저장소에 포함된 `engine/unity/metroidvania-studio.unitypackage`를 사용하세요. Unity 프로젝트를 열고 패키지를 더블클릭한 뒤 **Import**를 누르면 됩니다. 소스에서 다시 생성하려면 루트 `platform` 폴더에서 운영체제에 맞는 **build** 파일을 실행하세요.
 
 웹 스튜디오를 실행한 상태에서 Unity의 **Tools > MetroidvaniaStudio**를 열고 **연결 / 새로고침 → 방 선택 → 방 로드** 순서로 사용합니다. **웹 편집 자동 반영**을 켜면 창이 열린 동안 변경 내용을 반영합니다. PPU와 기준 해상도는 웹의 **카메라 설정**에서 바꿉니다.
 

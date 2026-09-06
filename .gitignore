@@ -30,7 +30,7 @@ Thumbs.db
 /builds/
 /engine/unity/builds/
 
-/engine/unity/metroidvania-studio.unitypackage
+# Distributable engine packages are tracked in Git.
 
 # Local automation configuration is not published
 /.github/

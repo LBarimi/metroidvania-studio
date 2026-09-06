@@ -88,6 +88,8 @@ Project-owned examples are in `samples/`. They provide default resources without
 
 ## Camera settings and engine packages
 
+The ready-to-import Unity package is included at [`engine/unity/metroidvania-studio.unitypackage`](engine/unity/metroidvania-studio.unitypackage). See the [installation and JSON import guide](integrations/unity/README.md).
+
 Use **Edit > Camera settings** to configure PPU (default 16) and reference resolution (default 320×180). Settings belong to the current map, support Undo/Redo, and survive save, import and per-room JSON export. Source tiles remain 16×16; PPU changes world-unit conversion, while resolution changes the visible game area.
 
 The Unity adapter targets 6000.3.9f1. Platform builds also create `engine/unity/metroidvania-studio.unitypackage`. Import it into Unity, open **Tools > MetroidvaniaStudio**, connect to the running local studio and load a room. See `integrations/unity/README.md` for installation, live refresh, offline imports and runtime APIs. Engine assemblies are never referenced by the web studio or server.
