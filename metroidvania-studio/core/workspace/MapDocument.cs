@@ -150,7 +150,7 @@ namespace MetroidvaniaStudio
         public static MapDocument CreateDefault()
         {
             var document = new MapDocument();
-            document.rooms.Add(new MapRoom { id = "room_00", name = "room_00", width = 40, height = 24 });
+            document.rooms.Add(new MapRoom { id = "room_00", name = "room_00", width = 16, height = 10 });
             return document;
         }
 

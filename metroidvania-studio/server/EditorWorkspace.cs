@@ -703,7 +703,7 @@ public sealed partial class EditorWorkspace
             case "undo": Session.Undo(); break;
             case "redo": Session.Redo(); break;
             case "roomAdd":
-                Canvas.SelectRoom(Canvas.RoomEditor.Create(new RectInt(I(command, "x"), I(command, "y"), I(command, "width", 40), I(command, "height", 24)), command.TryGetProperty("name", out var roomName) ? roomName.GetString() : null));
+                Canvas.SelectRoom(Canvas.RoomEditor.Create(new RectInt(I(command, "x"), I(command, "y"), I(command, "width", 16), I(command, "height", 10)), command.TryGetProperty("name", out var roomName) ? roomName.GetString() : null));
                 break;
             case "roomMove": MoveRoom(command); break;
             case "roomResize": Canvas.RoomEditor.Resize(S(command, "id"), new RectInt(I(command, "x"), I(command, "y"), I(command, "width"), I(command, "height")), B(command, "crop")); break;

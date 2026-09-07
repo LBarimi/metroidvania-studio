@@ -669,6 +669,7 @@ static void DeleteFixtureDirectory(string path)
 }
 static void BrushSizeBoundary(EditorWorkspace w)
 {
+    Send(w, "roomResize", ("id", w.Canvas.ActiveRoomId), ("x", 0), ("y", 0), ("width", 32), ("height", 32));
     Send(w, "options", ("brushSize", MapBrushGeometry.MaximumBrushSize));
     Check(w.Canvas.BrushSize == MapBrushGeometry.MaximumBrushSize, "The maximum brush size must be accepted.");
     Send(w, "begin", ("x", 8), ("y", 8)); Send(w, "end", ("x", 8), ("y", 8));

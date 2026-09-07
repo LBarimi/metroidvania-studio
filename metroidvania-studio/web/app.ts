@@ -361,7 +361,7 @@ function roomAddDialog(at?: Point): void {
   showModal(locale.t('addRoom'), body => {
     const pair = labelInput(locale.t('name'), locale.t('rooms') + ' ' + ((state?.document.rooms.length || 0) + 1)); name = pair[1]; name.id = 'room-add-name'; body.append(pair[0]);
     const fields = text('div', '', 'fields');
-    for (const [key, value] of Object.entries({ x: at?.x ?? Math.round(map.center.x), y: at?.y ?? Math.round(map.center.y), width: at ? 16 : 20, height: at ? 10 : 12 })) {
+    for (const [key, value] of Object.entries({ x: at?.x ?? Math.round(map.center.x), y: at?.y ?? Math.round(map.center.y), width: 16, height: 10 })) {
       const [label, input] = labelInput(['x', 'y'].includes(key) ? key.toUpperCase() : locale.t(key), value, 'number');
       input.step = '1'; input.id = `room-add-${key}`;
       if (key === 'width' || key === 'height') { input.min = '1'; input.max = '1024'; }
