@@ -15,7 +15,7 @@
    macOS  : platform/mac/run.command
 
 連接 Unity
-1. 在 Unity 中開啟 Tools > MetroidvaniaStudio。
+1. 在 Unity 中開啟 Tools > Metroidvania Studio。
 2. 輸入正在執行的編輯器的本機位址，按下 Connect / Refresh。
    預設位址：http://127.0.0.1:18765/
 3. 選取房間並按下 Load / Reload room。房間會產生在目前場景中，請儲存場景。

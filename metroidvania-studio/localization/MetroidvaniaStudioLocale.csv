@@ -72,7 +72,7 @@ roomJson.saved_cleanup,"방 JSON {0}개 저장은 완료했습니다. 임시 백
 {2}","Все JSON комнат ({0}) сохранены. Не удалось удалить временную папку резервных копий: {1}
 {2}"
 roomJson.too_large,'{0}' 방 JSON이 32MiB 제한을 초과합니다.,The JSON for room '{0}' exceeds the 32 MiB limit.,部屋「{0}」のJSONが32 MiBを超えています。,房间“{0}”的 JSON 超过 32 MiB。,房間「{0}」的 JSON 超過 32 MiB。,JSON комнаты «{0}» превышает 32 МиБ.
-external.brand,MetroidvaniaStudio,MetroidvaniaStudio,MetroidvaniaStudio,MetroidvaniaStudio,MetroidvaniaStudio,MetroidvaniaStudio
+external.brand,Metroidvania Studio,Metroidvania Studio,Metroidvania Studio,Metroidvania Studio,Metroidvania Studio,Metroidvania Studio
 external.file,파일,File,ファイル,文件,檔案,Файл
 external.new,새 맵,New map,新しいマップ,新建地图,新增地圖,Новая карта
 external.open,맵 열기,Open map,マップを開く,打开地图,開啟地圖,Открыть карту
@@ -225,7 +225,7 @@ external.syncExportSavedHint,최신 방 JSON이 저장되었습니다. 원본 �
 external.syncExportError,JSON 저장 오류,JSON export error,JSON保存エラー,JSON 导出错误,JSON 匯出錯誤,Ошибка экспорта JSON
 external.syncExportErrorHint,방 JSON을 저장하지 못했습니다. 원인을 해결하면 자동으로 다시 시도합니다.,Room JSON export failed. It will retry automatically after the cause is resolved.,部屋JSONの保存に失敗しました。原因が解消されると自動で再試行します。,房间 JSON 保存失败。问题解决后将自动重试。,房間 JSON 儲存失敗。問題解決後將自動重試。,Не удалось сохранить JSON комнат. После устранения причины попытка повторится автоматически.
 external.syncServerOffline,서버 연결 끊김,Server disconnected,サーバー未接続,服务器连接已断开,伺服器連線已中斷,Сервер отключён
-external.syncServerOfflineHint,로컬 MetroidvaniaStudio 서버에 연결할 수 없습니다. 저장 및 반영 상태를 확인할 수 없습니다.,Cannot reach the local MetroidvaniaStudio server. Export and application status cannot be confirmed.,ローカルサーバーに接続できません。保存・反映状態を確認できません。,无法连接本地服务器，无法确认保存和应用状态。,無法連線至本機伺服器，無法確認儲存與套用狀態。,Нет связи с локальным сервером. Нельзя подтвердить сохранение и применение изменений.
+external.syncServerOfflineHint,로컬 Metroidvania Studio 서버에 연결할 수 없습니다. 저장 및 반영 상태를 확인할 수 없습니다.,Cannot reach the local Metroidvania Studio server. Export and application status cannot be confirmed.,ローカルサーバーに接続できません。保存・反映状態を確認できません。,无法连接本地服务器，无法确认保存和应用状态。,無法連線至本機伺服器，無法確認儲存與套用狀態。,Нет связи с локальным сервером. Нельзя подтвердить сохранение и применение изменений.
 external.studioConnected,로컬 스튜디오 연결됨,Local studio connected,ローカル接続済み,已连接本地工作室,已連線至本機工作室,Локальный сервер подключён
 external.import,맵 JSON 가져오기,Import map JSON,マップJSONを取り込む,导入地图 JSON,匯入地圖 JSON,Импорт карты JSON
 external.importTooLarge,가져올 JSON 전체 크기는 32MiB 이하여야 합니다.,The combined JSON size must not exceed 32 MiB.,JSONの合計サイズは32 MiB以下にしてください。,JSON 总大小不能超过 32 MiB。,JSON 總大小不能超過 32 MiB。,Общий размер JSON не должен превышать 32 МиБ.

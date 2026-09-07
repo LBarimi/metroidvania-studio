@@ -15,7 +15,7 @@ Start the web studio
    macOS  : platform/mac/run.command
 
 Connect Unity
-1. In Unity, open Tools > MetroidvaniaStudio.
+1. In Unity, open Tools > Metroidvania Studio.
 2. Enter the running studio's local address and press Connect / Refresh.
    Default address: http://127.0.0.1:18765/
 3. Select a room and press Load / Reload room. It is created in the active scene.

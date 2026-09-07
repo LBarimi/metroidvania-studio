@@ -14,7 +14,7 @@ var room_ids: Array[String] = []
 func _enter_tree() -> void:
     set_force_draw_over_forwarding_enabled()
     panel = VBoxContainer.new()
-    panel.name = "MetroidvaniaStudio"
+    panel.name = "Metroidvania Studio"
     for entry in [["1. Map JSON", 0], ["2. Catalog JSON", 1], ["3. Resource folder", 2]]:
         var button := Button.new()
         button.text = entry[0]

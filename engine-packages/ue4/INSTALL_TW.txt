@@ -26,7 +26,7 @@ Editor 目標，再啟用外掛。
 
 匯入範例房間
 1. 在關卡中放置 MetroidvaniaStudioRoom Actor。
-2. 在 Details > MetroidvaniaStudio > Import 中設定以下項目。
+2. 在 Details > Metroidvania Studio > Import 中設定以下項目。
    路徑皆相對於解壓縮資料夾：
      Map File          : plugin/MetroidvaniaStudio/samples/maps/Sample.map.json
      Catalog File      : plugin/MetroidvaniaStudio/samples/catalog.json

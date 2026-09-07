@@ -49,7 +49,7 @@ namespace MetroidvaniaStudio.Integration
             if (!library) throw new ArgumentNullException(nameof(library));
             MapRoom room = document.rooms.Find(value => value.id == roomId) ?? throw new InvalidOperationException("Room no longer exists.");
             float unit = 16f / library.ppu;
-            var root = new GameObject("[MetroidvaniaStudio] " + room.name); root.SetActive(false);
+            var root = new GameObject("[Metroidvania Studio] " + room.name); root.SetActive(false);
             try
             {
                 root.transform.position = new Vector3(room.x * unit, room.y * unit, 0);

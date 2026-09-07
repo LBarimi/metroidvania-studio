@@ -79,7 +79,7 @@ namespace MetroidvaniaStudio
         {
             if (text == null || !text.StartsWith(Header, StringComparison.Ordinal))
                 throw new InvalidDataException(text != null && text.StartsWith(Prefix, StringComparison.Ordinal)
-                    ? "Unsupported clipboard selection version." : "The clipboard does not contain a MetroidvaniaStudio selection.");
+                    ? "Unsupported clipboard selection version." : "The clipboard does not contain a Metroidvania Studio selection.");
             if (Encoding.UTF8.GetByteCount(text) > MapDocumentStore.MaximumFileBytes)
                 throw new InvalidDataException("Clipboard selection exceeds the 32 MiB limit.");
             MapDocument fragment = MapDocumentStore.Deserialize(text.Substring(Header.Length));

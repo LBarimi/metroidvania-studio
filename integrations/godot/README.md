@@ -6,9 +6,9 @@ Godot 4 addon. Tested with Godot 4.7.2 on Windows using headless import and scen
 
 1. Extract `engine-packages/godot/metroidvania-studio.zip` into a temporary folder.
 2. Close the target editor, double-click `install.bat`, and select `project.godot`. This copies and enables only this addon, preserving other plugins and making a backup.
-3. Open the project. In the MetroidvaniaStudio dock select the exported map JSON, `catalog.json`, resource directory and room, then press **Import / Reload room**.
+3. Open the project. In the Metroidvania Studio dock select the exported map JSON, `catalog.json`, resource directory and room, then press **Import / Reload room**.
 
-On Linux/macOS copy the archive's `addons/metroidvania-studio` into the project and enable **MetroidvaniaStudio** in Project Settings > Plugins. No executable engine binaries are shipped.
+On Linux/macOS copy the archive's `addons/metroidvania-studio` into the project and enable **Metroidvania Studio** in Project Settings > Plugins. No executable engine binaries are shipped.
 
 The generated scene embeds atlas textures, terrain geometry, triangle/solid collision, object metadata and trigger areas. Save it under version control with the addon. Reload replaces the generated scene for the same stable room ID; keep gameplay additions in a separate scene that instances it. Hidden layer groups are excluded. Object definitions and properties are metadata, not executable game behavior. Styleground effects and automatic live synchronization are not implemented in this initial adapter.
 

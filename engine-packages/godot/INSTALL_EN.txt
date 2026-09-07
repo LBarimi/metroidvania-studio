@@ -13,11 +13,11 @@ Install
 Windows: close the target project, run install.bat, select project.godot,
 then reopen the project. The installer copies and enables the addon.
 Manual installation on any supported desktop OS: copy addons/metroidvania-studio
-into the project's addons folder. Enable MetroidvaniaStudio in
+into the project's addons folder. Enable Metroidvania Studio in
 Project > Project Settings > Plugins.
 
 Try the sample
-In the MetroidvaniaStudio dock select these paths in the extracted package:
+In the Metroidvania Studio dock select these paths in the extracted package:
   1. Map JSON        : samples/maps/Sample.map.json
   2. Catalog JSON    : samples/catalog.json
   3. Resource folder : samples

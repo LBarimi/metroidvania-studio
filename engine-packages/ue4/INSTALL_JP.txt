@@ -26,7 +26,7 @@ plugin/MetroidvaniaStudio をプロジェクトの Plugins 内にコピーしま
 
 サンプルの読み込み
 1. レベルに MetroidvaniaStudioRoom アクターを配置します。
-2. Details > MetroidvaniaStudio > Import で次の項目を設定します。
+2. Details > Metroidvania Studio > Import で次の項目を設定します。
    パスは展開したフォルダーを基準にしています。
      Map File          : plugin/MetroidvaniaStudio/samples/maps/Sample.map.json
      Catalog File      : plugin/MetroidvaniaStudio/samples/catalog.json

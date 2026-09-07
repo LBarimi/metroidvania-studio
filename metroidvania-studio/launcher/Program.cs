@@ -44,7 +44,7 @@ internal static class Program
                     SaveSession(options, record);
                     if (!options.Restart && SamePath(record!.DllPath, dll))
                     {
-                        Console.WriteLine("MetroidvaniaStudio is already running: " + options.Url);
+                        Console.WriteLine("Metroidvania Studio is already running: " + options.Url);
                         OpenBrowser(options); return 0;
                     }
                     await Stop(options);
@@ -71,7 +71,7 @@ internal static class Program
                 }
                 if (ready == null) throw new InvalidOperationException("Startup timed out. The server was not force-stopped; inspect its log before retrying.");
                 SaveSession(options, new Session(process.Id, process.StartTime.ToUniversalTime(), options.Port, ready.InstanceId, options.Project, dll, token));
-                Console.WriteLine("MetroidvaniaStudio: " + options.Url);
+                Console.WriteLine("Metroidvania Studio: " + options.Url);
                 Console.WriteLine("MiniMap: " + options.Url + "?view=minimap");
                 Console.WriteLine("Workspace: " + options.Project);
                 if (options.Foreground) foreground = process; else process.Dispose();
@@ -221,7 +221,7 @@ internal static class Program
         if (!response.IsSuccessStatusCode) throw new InvalidOperationException("Server could not save and stop: " + await response.Content.ReadAsStringAsync());
         try { await process!.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(15)); }
         catch (TimeoutException) { throw new InvalidOperationException("The server is still saving. It was not force-stopped; retry later."); }
-        File.Delete(options.Record); Console.WriteLine("MetroidvaniaStudio saved its session and stopped.");
+        File.Delete(options.Record); Console.WriteLine("Metroidvania Studio saved its session and stopped.");
     }
     private static void SaveSession(Options options, Session record)
     {

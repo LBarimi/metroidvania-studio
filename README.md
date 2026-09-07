@@ -1,4 +1,4 @@
-# <img src="metroidvania-studio/web/studio-icon.svg" width="36" height="36" alt=""> MetroidvaniaStudio
+# <img src="metroidvania-studio/web/studio-icon.svg" width="36" height="36" alt=""> Metroidvania Studio
 
 **Build connected worlds, one room at a time.**
 
@@ -20,6 +20,8 @@ Runs locally on Windows, macOS, and Linux. No game engine installation is requir
 
 ## Get Started
 
+Download a ready-to-run package from [GitHub Releases](https://github.com/LBarimi/metroidvania-studio/releases/latest), extract it, and open the launch file at the top level.
+
 To build from source, install **Node.js 24+**, **.NET SDK 10**, and **Git**.
 
 | Platform | Build | Run |
@@ -30,7 +32,7 @@ To build from source, install **Node.js 24+**, **.NET SDK 10**, and **Git**.
 
 **Run** opens the studio in your browser and builds it on first launch if needed. After updating the source, use **Build**, then **Run**. Prebuilt web copies require **ASP.NET Core Runtime 10**.
 
-Your maps are saved in `.local/workspace/Maps`; room JSON exports are updated automatically in `Maps/AutoExport` inside that workspace. Keep your workspace when updating the studio.
+Release downloads keep maps in your user data folder. Source builds use `.local/workspace/Maps`. Room JSON exports update automatically in `Maps/AutoExport` inside the workspace. Keep your workspace when updating the studio.
 
 ## Editing Basics
 

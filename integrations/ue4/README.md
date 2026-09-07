@@ -6,7 +6,7 @@ Developed for Unreal Engine 4.27. The plugin uses the shared Unreal room loader 
 
 1. Extract `engine-packages/ue4/metroidvania-studio.zip` into a temporary folder.
 2. Close the target editor. Double-click `install.bat` and select the `.uproject`. The installer finds the matching engine automatically. If needed, pass `-EngineRoot` to `Install-Integration.ps1` or set `UNREAL_ENGINE4_PATH`. The C++ toolchain required by the engine must be installed.
-3. Open the project and place a **MetroidvaniaStudioRoom** actor in the level. In Details > MetroidvaniaStudio > Import, select **Map File**, **Catalog File**, **Resource Directory**, and optionally enter a stable **Room Id**. Empty ID selects the first room. Click **Import Room**.
+3. Open the project and place a **MetroidvaniaStudioRoom** actor in the level. In Details > Metroidvania Studio > Import, select **Map File**, **Catalog File**, **Resource Directory**, and optionally enter a stable **Room Id**. Empty ID selects the first room. Click **Import Room**.
 4. Save the level. Imported JSON and PNG bytes are stored in the actor; runtime reconstruction does not need the original files. **Rebuild Room** reconstructs the embedded data. **Clear Room** removes it. To import newer JSON, select the source files again and click **Import Room**.
 
 The archive carries source, not engine-version-specific DLLs. It preserves other plugins and backs up both the project file and any previous plugin under `.metroidvania-studio-backups`. Linux/macOS users can copy `plugin/MetroidvaniaStudio` into the project's `Plugins` directory and build with that platform's engine toolchain.

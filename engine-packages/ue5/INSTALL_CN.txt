@@ -26,7 +26,7 @@ Editor 目标，然后启用插件。
 
 导入示例房间
 1. 在关卡中放置 MetroidvaniaStudioRoom Actor。
-2. 在 Details > MetroidvaniaStudio > Import 中设置以下内容。
+2. 在 Details > Metroidvania Studio > Import 中设置以下内容。
    路径均相对于解压目录：
      Map File          : plugin/MetroidvaniaStudio/samples/maps/Sample.map.json
      Catalog File      : plugin/MetroidvaniaStudio/samples/catalog.json

@@ -90,7 +90,7 @@ int main(int argc, char **argv)
         else
         {
             Require(SDL_Init(SDL_INIT_VIDEO), SDL_GetError());
-            window = SDL_CreateWindow("MetroidvaniaStudio - arrows: move, R: reload", width * 3, height * 3,
+            window = SDL_CreateWindow("Metroidvania Studio - arrows: move, R: reload", width * 3, height * 3,
                                       SDL_WINDOW_RESIZABLE);
             Require(window != nullptr, SDL_GetError());
             renderer = SDL_CreateRenderer(window, nullptr);

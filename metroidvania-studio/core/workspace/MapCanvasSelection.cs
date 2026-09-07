@@ -118,7 +118,7 @@ namespace MetroidvaniaStudio
             if (Room == null || !Room.visible || Room.locked) return null;
             bool objectsOnly = UsesObjectSelection;
             bool nodesOnly = false;
-            var fragment = new MapDocument { name = "MetroidvaniaStudio selection" };
+            var fragment = new MapDocument { name = "Metroidvania Studio selection" };
             var room = new MapRoom { name = "Selection", width = 1, height = 1 };
             fragment.rooms.Add(room);
             Vector2 origin, size;

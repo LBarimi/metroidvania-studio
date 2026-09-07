@@ -13,17 +13,17 @@ Windows 설치
 1. 설치할 Godot 프로젝트를 닫습니다.
 2. 압축을 푼 폴더에서 install.bat를 실행합니다.
 3. 대상 프로젝트의 project.godot 파일을 선택합니다.
-4. 설치가 끝나면 프로젝트를 엽니다. MetroidvaniaStudio 도크가 표시됩니다.
+4. 설치가 끝나면 프로젝트를 엽니다. Metroidvania Studio 도크가 표시됩니다.
    설치 프로그램은 애드온 복사와 플러그인 활성화를 수행합니다.
 
 수동 설치 (Windows / Linux / macOS)
 1. ZIP의 addons/metroidvania-studio 폴더를 프로젝트의 addons 아래에 복사합니다.
    최종 위치: <프로젝트>/addons/metroidvania-studio/plugin.cfg
 2. 프로젝트를 열고 Project > Project Settings > Plugins에서
-   MetroidvaniaStudio를 활성화합니다. 메뉴 이름은 에디터 언어에 따라 다릅니다.
+   Metroidvania Studio를 활성화합니다. 메뉴 이름은 에디터 언어에 따라 다릅니다.
 
 샘플 방 불러오기
-MetroidvaniaStudio 도크에서 아래 항목을 순서대로 지정합니다.
+Metroidvania Studio 도크에서 아래 항목을 순서대로 지정합니다.
 경로는 압축을 푼 폴더 기준입니다.
   1. Map JSON        : samples/maps/Sample.map.json
   2. Catalog JSON    : samples/catalog.json

@@ -26,7 +26,7 @@ ZIP의 plugin/MetroidvaniaStudio 폴더를 프로젝트의 Plugins 아래에 복
 
 샘플 방 불러오기
 1. 레벨에 MetroidvaniaStudioRoom 액터를 배치합니다.
-2. 액터의 Details > MetroidvaniaStudio > Import에서 아래 파일을 지정합니다.
+2. 액터의 Details > Metroidvania Studio > Import에서 아래 파일을 지정합니다.
    경로는 압축을 푼 폴더 기준입니다.
      Map File          : plugin/MetroidvaniaStudio/samples/maps/Sample.map.json
      Catalog File      : plugin/MetroidvaniaStudio/samples/catalog.json

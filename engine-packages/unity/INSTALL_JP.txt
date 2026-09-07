@@ -15,7 +15,7 @@ Web スタジオの起動
    macOS  : platform/mac/run.command
 
 Unity との連携
-1. Unity で Tools > MetroidvaniaStudio を開きます。
+1. Unity で Tools > Metroidvania Studio を開きます。
 2. 起動中のスタジオのローカルアドレスを入力し、Connect / Refresh を押します。
    既定のアドレス: http://127.0.0.1:18765/
 3. 部屋を選び、Load / Reload room を押します。現在のシーンに部屋が生成されます。

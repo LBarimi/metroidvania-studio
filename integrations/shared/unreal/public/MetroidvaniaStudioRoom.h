@@ -23,24 +23,24 @@ class METROIDVANIASTUDIO_API AMetroidvaniaStudioRoom : public AActor
 public:
     AMetroidvaniaStudioRoom();
     // Select these in Details, then press Import Room. Imported data is saved in the level.
-    UPROPERTY(EditAnywhere, Category="MetroidvaniaStudio|Import", meta=(FilePathFilter="json")) FFilePath MapFile;
-    UPROPERTY(EditAnywhere, Category="MetroidvaniaStudio|Import", meta=(FilePathFilter="json")) FFilePath CatalogFile;
-    UPROPERTY(EditAnywhere, Category="MetroidvaniaStudio|Import") FDirectoryPath ResourceDirectory;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MetroidvaniaStudio|Import") FString RoomId;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="MetroidvaniaStudio|Display", meta=(ClampMin="0.001")) float UnitsPerWorldUnit = 100.0f;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MetroidvaniaStudio") FString LastError;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MetroidvaniaStudio") FString RoomName;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MetroidvaniaStudio") int32 PixelsPerUnit = 16;
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MetroidvaniaStudio") FIntPoint ReferenceResolution = FIntPoint(320,180);
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="MetroidvaniaStudio") UCameraComponent* RoomCamera;
-    UPROPERTY(BlueprintReadOnly, Category="MetroidvaniaStudio") FString MapDocumentJson;
+    UPROPERTY(EditAnywhere, Category="Metroidvania Studio|Import", meta=(FilePathFilter="json")) FFilePath MapFile;
+    UPROPERTY(EditAnywhere, Category="Metroidvania Studio|Import", meta=(FilePathFilter="json")) FFilePath CatalogFile;
+    UPROPERTY(EditAnywhere, Category="Metroidvania Studio|Import") FDirectoryPath ResourceDirectory;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Metroidvania Studio|Import") FString RoomId;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Metroidvania Studio|Display", meta=(ClampMin="0.001")) float UnitsPerWorldUnit = 100.0f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Metroidvania Studio") FString LastError;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Metroidvania Studio") FString RoomName;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Metroidvania Studio") int32 PixelsPerUnit = 16;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Metroidvania Studio") FIntPoint ReferenceResolution = FIntPoint(320,180);
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Metroidvania Studio") UCameraComponent* RoomCamera;
+    UPROPERTY(BlueprintReadOnly, Category="Metroidvania Studio") FString MapDocumentJson;
     UPROPERTY() FString CatalogJson;
     UPROPERTY() TMap<FString,FMetroidvaniaStudioImage> Images;
     UPROPERTY() UMaterialInterface* TileMaterial;
 
-    UFUNCTION(CallInEditor, BlueprintCallable, Category="MetroidvaniaStudio") bool ImportRoom();
-    UFUNCTION(CallInEditor, BlueprintCallable, Category="MetroidvaniaStudio") bool RebuildRoom();
-    UFUNCTION(CallInEditor, BlueprintCallable, Category="MetroidvaniaStudio") void ClearRoom();
+    UFUNCTION(CallInEditor, BlueprintCallable, Category="Metroidvania Studio") bool ImportRoom();
+    UFUNCTION(CallInEditor, BlueprintCallable, Category="Metroidvania Studio") bool RebuildRoom();
+    UFUNCTION(CallInEditor, BlueprintCallable, Category="Metroidvania Studio") void ClearRoom();
     virtual void OnConstruction(const FTransform& Transform) override;
 protected:
     virtual void BeginPlay() override;

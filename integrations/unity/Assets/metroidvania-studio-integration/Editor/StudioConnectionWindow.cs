@@ -30,14 +30,14 @@ namespace MetroidvaniaStudio.Integration.Editor
         private StudioResourceLibrary library;
         private string libraryToken, loadedToken;
         private static string L(string kr, string en) => Application.systemLanguage == SystemLanguage.Korean ? kr : en;
-        [MenuItem("Tools/MetroidvaniaStudio")]
-        public static void Open() { GetWindow<StudioConnectionWindow>("MetroidvaniaStudio"); }
+        [MenuItem("Tools/Metroidvania Studio")]
+        public static void Open() { GetWindow<StudioConnectionWindow>("Metroidvania Studio"); }
         private void OnEnable() { lifetime = new CancellationTokenSource(); EditorApplication.update += Poll; }
         private void OnDisable() { EditorApplication.update -= Poll; lifetime.Cancel(); lifetime.Dispose(); }
         private void OnDestroy() { client.Dispose(); }
         private void OnGUI()
         {
-            EditorGUILayout.LabelField("MetroidvaniaStudio", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Metroidvania Studio", EditorStyles.boldLabel);
             using (new EditorGUI.DisabledScope(busy || EditorApplication.isPlayingOrWillChangePlaymode))
             {
                 serverUrl = EditorGUILayout.TextField(L("로컬 스튜디오 주소", "Local studio URL"), serverUrl);

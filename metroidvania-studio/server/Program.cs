@@ -146,5 +146,5 @@ app.Lifetime.ApplicationStopping.Register(() =>
     workspace.FlushAutoExports();
     workspace.StopAutoExports();
 });
-Console.WriteLine($"MetroidvaniaStudio: http://127.0.0.1:{port} | Workspace: {project}");
+Console.WriteLine($"Metroidvania Studio: http://127.0.0.1:{port} | Workspace: {project}");
 app.Run();

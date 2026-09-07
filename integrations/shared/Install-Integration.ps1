@@ -8,7 +8,7 @@ if (!(Test-Path -LiteralPath $source -PathType Container)) { throw 'Extract the 
 if (!$ProjectFile) {
     Add-Type -AssemblyName System.Windows.Forms
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
-    $dialog.Title = 'Select the project to install MetroidvaniaStudio into'
+    $dialog.Title = 'Select the project to install Metroidvania Studio into'
     $dialog.Filter = if ($isGodot) { 'Godot project|project.godot' } else { 'Unreal project|*.uproject' }
     try {
         if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }

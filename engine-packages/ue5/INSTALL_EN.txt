@@ -25,7 +25,7 @@ project files if needed, and build the project's Editor target with the matching
 engine/platform toolchain. Enable the plugin in the project.
 
 Try the sample
-Place a MetroidvaniaStudioRoom actor. In Details > MetroidvaniaStudio > Import:
+Place a MetroidvaniaStudioRoom actor. In Details > Metroidvania Studio > Import:
   Map File          : plugin/MetroidvaniaStudio/samples/maps/Sample.map.json
   Catalog File      : plugin/MetroidvaniaStudio/samples/catalog.json
   Resource Directory: plugin/MetroidvaniaStudio/samples

@@ -12,13 +12,13 @@ Windows 安装
 1. 关闭目标 Godot 项目。
 2. 运行解压目录中的 install.bat。
 3. 选择目标项目的 project.godot 文件。
-4. 安装完成后打开项目，即可看到 MetroidvaniaStudio 面板。
+4. 安装完成后打开项目，即可看到 Metroidvania Studio 面板。
    安装程序会复制插件并将其启用。
 
 手动安装 (Windows / Linux / macOS)
 1. 将 addons/metroidvania-studio 复制到项目的 addons 目录下。
    最终路径：<project>/addons/metroidvania-studio/plugin.cfg
-2. 在 Project > Project Settings > Plugins 中启用 MetroidvaniaStudio。
+2. 在 Project > Project Settings > Plugins 中启用 Metroidvania Studio。
    菜单名称会随编辑器语言变化。
 
 导入示例房间
