@@ -1,0 +1,37 @@
+必要なものとインストール
+- Unity 6 を基準に開発されています。
+- このパッケージは Unity 連携モジュールです。Web スタジオとローカルサーバーは別に起動します。
+1. 対象の Unity プロジェクトを開きます。
+2. metroidvania-studio.unitypackage をダブルクリックするか、Unity の
+   Assets > Import Package > Custom Package から選択します。
+3. 全項目を選んで Import を押します。
+   インストール先: Assets/MetroidvaniaStudioIntegration
+   INSTALL_*.txt ファイルもこのフォルダーにあります。
+
+Web スタジオの起動
+1. スタジオのフォルダーから、OS に対応するランチャーで起動します。
+   Windows: platform/win/web/run.bat
+   Linux  : bash platform/linux/run.sh
+   macOS  : platform/mac/run.command
+
+Unity との連携
+1. Unity で Tools > MetroidvaniaStudio を開きます。
+2. 起動中のスタジオのローカルアドレスを入力し、Connect / Refresh を押します。
+   既定のアドレス: http://127.0.0.1:18765/
+3. 部屋を選び、Load / Reload room を押します。現在のシーンに部屋が生成されます。
+   シーンを保存してください。
+4. Follow web edits をオンにして、連携ウィンドウを開いたままにします。
+   読み込んだ部屋を Web スタジオで編集すると、Unity にも反映されます。
+   ゲームの実行中は自動更新が一時停止します。
+5. Remove imported room は現在のシーン内で連携モジュールが生成した部屋を除去します。
+   再読み込みは生成した部屋を置き換えます。ゲームロジックはその外側に置いてください。
+   手動の読み込みと除去は Undo に対応します。自動更新は連続した Undo 記録を追加しません。
+
+インポートしたデータとカメラ
+- テクスチャとリソースは Assets/MetroidvaniaStudioImports に保存されます。
+  シーン保存後はスタジオを終了しても使えます。切断してもデータは残ります。
+- 地形、オブジェクト、トリガー、メタデータを読み込みます。ゲーム動作は別途実装します。
+- 既定値は PPU 16、基準解像度 320x180 で、Web のカメラ設定に従います。
+- 読み込み時にメインカメラを部屋の中央へ移動し、カメラがなければ作成します。
+  StudioPixelCamera がカメラサイズと整数倍率のビューポートを管理します。
+- シーンの実行時にも、連携モジュールの Runtime コードと読み込み済みリソースが必要です。

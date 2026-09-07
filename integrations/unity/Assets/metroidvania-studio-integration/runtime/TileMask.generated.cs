@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 
 
-namespace MetroidvaniaStudio
+namespace MetroidvaniaStudio.Integration
 {
     /// <summary>Eight-neighbor blob masks, with corner bits gated by their two sides.</summary>
     public static class TileMask

@@ -1,0 +1,53 @@
+準備工作
+- 此套件是 Unreal Engine 5 的原始碼外掛。
+- 請解壓縮整個 ZIP 檔案，保留 .uplugin 檔案及其 Source 資料夾。
+
+啟動網頁編輯器
+在編輯器發行資料夾中，執行對應作業系統的指令碼。
+瀏覽器開啟後，即可編輯地圖並匯出房間 JSON。
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+Windows 安裝
+1. 關閉目標 Unreal 專案。
+2. 執行解壓縮資料夾中的 install.bat，選取目標 .uproject 檔案。
+3. 開啟專案並確認外掛已啟用。
+   安裝資料夾：<project>/Plugins/MetroidvaniaStudio
+
+如果未自動找到引擎，請在解壓縮資料夾中開啟 PowerShell 並執行：
+  .\Install-Integration.ps1 -ProjectFile "<project.uproject>" -EngineRoot "<engine-root>"
+請將角括號中的預留位置替換為實際的專案檔案與引擎根目錄。
+
+手動安裝 (Windows / Linux / macOS)
+將 plugin/MetroidvaniaStudio 複製到專案的 Plugins 資料夾下。
+視需要重新產生專案檔案，使用對應引擎與作業系統的 C++ 工具建置專案的
+Editor 目標，再啟用外掛。
+
+匯入範例房間
+1. 在關卡中放置 MetroidvaniaStudioRoom Actor。
+2. 在 Details > MetroidvaniaStudio > Import 中設定以下項目。
+   路徑皆相對於解壓縮資料夾：
+     Map File          : plugin/MetroidvaniaStudio/samples/maps/Sample.map.json
+     Catalog File      : plugin/MetroidvaniaStudio/samples/catalog.json
+     Resource Directory: plugin/MetroidvaniaStudio/samples
+     Room Id           : 留空則載入第一個房間
+3. 按下 Import Room 並儲存關卡。也可使用安裝到專案中的
+   Plugins/MetroidvaniaStudio/samples。
+
+匯入自己的地圖及重新匯入
+- 指定地圖 JSON、對應的 catalog.json，以及貼圖的資源根目錄。
+- 若 catalog 中的 asset 為 textures/Terrain.png，請選取 textures 的上層資料夾
+  作為資源根目錄，並保留路徑的大小寫。
+- Room Id 使用 JSON 中穩定的房間 ID，而不是房間名稱。
+- 編輯後按下 Import Room 重新讀取檔案。目前尚未支援自動同步。
+- Rebuild Room 依已儲存的資料重建；Clear Room 移除已匯入的房間。
+- JSON 與 PNG 資料儲存在 Actor 中。儲存關卡後不需原始檔案即可重建，
+  但遊戲執行時仍需要此外掛。
+
+像素完美攝影機
+將玩家控制器的View Target設為匯入的房間Actor。RoomCamera 依匯出的
+參考解析度（預設320x180）繪製，依PPU（預設16）將視圖對齊像素，
+再以最近鄰過濾進行整數倍放大。剩餘空間顯示為黑色；視窗小於參考解析度時，
+以1倍大小裁切顯示。遊戲HUD可以放在此影像上方。此攝影機用於軸向對齊的2D視圖。
+白色房間邊界只用於關卡編輯器，在Game View中隱藏。

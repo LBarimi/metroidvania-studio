@@ -1,0 +1,36 @@
+준비 사항과 설치
+- Unity 6 기준으로 제작되었습니다.
+- 웹 스튜디오와 로컬 서버는 별도로 실행하며, 이 패키지는 Unity 연동 모듈입니다.
+1. 대상 Unity 프로젝트를 엽니다.
+2. metroidvania-studio.unitypackage를 더블클릭하거나 Unity의
+   Assets > Import Package > Custom Package에서 선택합니다.
+3. 패키지의 전체 항목을 선택하고 Import를 누릅니다.
+   설치 위치: Assets/MetroidvaniaStudioIntegration
+   INSTALL_*.txt 파일도 이 폴더에 있습니다.
+
+웹 스튜디오 실행
+1. 스튜디오 폴더에서 운영체제에 맞는 실행 파일을 사용합니다.
+   Windows: platform/win/web/run.bat
+   Linux  : bash platform/linux/run.sh
+   macOS  : platform/mac/run.command
+
+유니티 연동 방법
+1. Unity에서 Tools > MetroidvaniaStudio를 엽니다.
+2. 실행 중인 스튜디오의 로컬 주소를 입력하고 연결 / 새로고침
+   (Connect / Refresh)을 누릅니다. 기본 주소는 http://127.0.0.1:18765/입니다.
+3. 방을 선택하고 방 로드 / 다시 로드 (Load / Reload room)를 누릅니다.
+   현재 씬에 방이 생성됩니다. 씬을 저장하세요.
+4. 웹 편집 자동 반영 (Follow web edits)을 켜고 연동 창을 열어 두세요.
+   불러온 방을 웹에서 수정하면 Unity에도 반영됩니다. 게임 실행 중에는 잠시 멈춥니다.
+5. 생성한 방 제거 (Remove imported room)는 현재 씬의 연동 모듈이 만든 방을 제거합니다.
+   다시 로드하면 생성된 방을 교체합니다. 게임 로직은 생성된 방 바깥에 두세요.
+   수동 로드와 제거는 Undo를 지원합니다. 자동 갱신은 연속 Undo 기록을 추가하지 않습니다.
+
+가져온 데이터와 카메라
+- 가져온 텍스처와 리소스는 Assets/MetroidvaniaStudioImports에 저장됩니다.
+  씬 저장 후에는 스튜디오를 꺼도 사용할 수 있습니다. 연결을 끊어도 데이터는 유지됩니다.
+- 방의 타일, 오브젝트, 트리거와 메타데이터를 가져옵니다. 게임 동작은 별도로 구현합니다.
+- 기본 PPU는 16, 기준 해상도는 320x180입니다. 웹의 카메라 설정을 따릅니다.
+- 로드 시 메인 카메라를 방 중앙으로 옮기며, 없으면 생성합니다.
+  StudioPixelCamera가 카메라 크기와 정수 배율 뷰포트를 관리합니다.
+- 가져온 씬 실행에는 연동 모듈의 Runtime 코드와 가져온 리소스도 필요합니다.

@@ -47,7 +47,7 @@ function buildRunner(checkout, failure = '') {
     if (args[0].endsWith('build-web.mjs')) { put(path.join(args[1], 'index.html'), '<!doctype html>'); return ''; }
     if (args[0].endsWith('build-packages.mjs')) {
       const output = args[args.indexOf('--output') + 1];
-      for (const engine of ['unity', 'godot', 'ue', 'sdl'])
+      for (const engine of ['unity', 'godot', 'ue4', 'ue5', 'sdl'])
         if (failure !== 'missing-' + engine) put(path.join(output, engine, engine === 'unity' ? 'metroidvania-studio.unitypackage' : 'metroidvania-studio.zip'), 'fixture package');
       return '';
     }
@@ -75,7 +75,7 @@ test('successful build publishes complete immutable output and then latest point
   assert.equal(calls.filter(call => call.args[0] === 'publish').length, 4);
   assert.equal(existsSync(path.join(checkout, '.local/build-v2.lock')), false);
 });
-for (const failure of ['Launcher', 'missing-Launcher', 'missing-godot', 'missing-ue', 'missing-sdl']) test(failure + ' failure preserves previous successful build and environment', () => {
+for (const failure of ['Launcher', 'missing-Launcher', 'missing-godot', 'missing-ue4', 'missing-ue5', 'missing-sdl']) test(failure + ' failure preserves previous successful build and environment', () => {
   const checkout = fixture();
   const good = buildStudio(options(checkout, buildRunner(checkout).runner));
   const latest = path.join(checkout, 'builds/latest.json'), bytes = readFileSync(latest);

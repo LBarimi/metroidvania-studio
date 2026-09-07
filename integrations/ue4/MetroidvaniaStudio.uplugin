@@ -1,0 +1,26 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0",
+  "FriendlyName": "MetroidvaniaStudio",
+  "Description": "Import JSON rooms with pixel-perfect rendering and collision in Unreal Engine 4.",
+  "Category": "Importers",
+  "CanContainContent": false,
+  "Modules": [
+    {
+      "Name": "MetroidvaniaStudio",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "ProceduralMeshComponent",
+      "Enabled": true
+    },
+    {
+      "Name": "Paper2D",
+      "Enabled": true
+    }
+  ]
+}

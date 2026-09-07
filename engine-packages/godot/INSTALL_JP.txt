@@ -1,0 +1,49 @@
+必要なもの
+- Godot 4 用のアドオンです。ZIP 全体を展開してください。
+
+Web スタジオの起動
+スタジオの配布フォルダーで、OS に対応するスクリプトを実行します。
+ブラウザーが開いたら、マップを編集して部屋の JSON をエクスポートします。
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+Windows でのインストール
+1. 対象の Godot プロジェクトを閉じます。
+2. 展開したフォルダーの install.bat を実行します。
+3. 対象プロジェクトの project.godot を選びます。
+4. 完了後にプロジェクトを開きます。MetroidvaniaStudio ドックが表示されます。
+   インストーラーはアドオンをコピーし、プラグインを有効にします。
+
+手動インストール (Windows / Linux / macOS)
+1. addons/metroidvania-studio をプロジェクトの addons 内にコピーします。
+   最終パス: <project>/addons/metroidvania-studio/plugin.cfg
+2. Project > Project Settings > Plugins で MetroidvaniaStudio を有効にします。
+   メニュー名はエディターの表示言語によって異なります。
+
+サンプルの読み込み
+ドックで次の項目を指定します。パスは展開したフォルダーを基準にしています。
+  Map JSON        : samples/maps/Sample.map.json
+  Catalog JSON    : samples/catalog.json
+  Resource folder : samples
+部屋を選び、Import / Reload room を押します。
+生成した .tscn は res://metroidvania-studio-imports に保存され、開かれます。
+ゲームのシーンに、この生成シーンのインスタンスを配置して使います。
+
+自分のマップと再インポート
+- マップ JSON、対応する catalog.json、テクスチャのリソースルートが必要です。
+- catalog の asset が textures/Terrain.png なら、textures の親フォルダーを
+  リソースルートに指定します。ファイル名の大文字と小文字を維持してください。
+- 編集後は同じ入力で Import / Reload room を押します。自動同期は未対応です。
+- 同じ部屋 ID の生成シーンは上書きされます。ゲームロジックは別のシーンに置き、
+  生成シーンをインスタンスとして使ってください。
+- 生成シーンにはテクスチャが埋め込まれますが、アドオンの実行時スクリプトも必要です。
+
+ピクセルパーフェクト表示
+インポート時に Configure pixel-perfect display をオンにすると、
+reference_resolution（既定値320x180）、ビューポート描画、整数倍率の
+拡大をプロジェクト設定に適用します。手動設定する場合はオフにしてください。
+RoomCamera は出力されたPPU（既定値16）を使い、カメラノードの位置を
+変えずに表示をピクセルに合わせます。表示位置の調整には view_offset を
+使ってください。このカメラのスムージングは無効です。
+白い部屋の境界線は2Dエディター専用で、実行中のゲームには表示されません。

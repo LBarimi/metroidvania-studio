@@ -27,7 +27,7 @@ export function zip(entries) {
   const index=Buffer.concat(central),end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50);end.writeUInt16LE(entries.size,8);end.writeUInt16LE(entries.size,10);end.writeUInt32LE(index.length,12);end.writeUInt32LE(offset,16);return Buffer.concat([...chunks,index,end]);
 }
 export function packageEntries(engine) {
-  if(!['godot','ue','sdl'].includes(engine))throw new Error('Unsupported integration.');
+  if(!['godot','ue4','ue5','sdl'].includes(engine))throw new Error('Unsupported integration.');
   const entries=new Map();
   const add=(destination,source)=>{if(entries.has(destination))throw new Error('Duplicate archive entry.');let bytes=readFileSync(path.join(root,source));
     if(/\.(?:md|txt|json|cfg|gd|uid|cs|cpp|h|ps1|bat|sh|uplugin)$/.test(source)||source.endsWith('CMakeLists.txt')) {
@@ -38,21 +38,24 @@ export function packageEntries(engine) {
     entries.set(destination,bytes);};
   const tree=(source,destination=source)=>{for(const name of files(source))add(destination+name.slice(source.length),name);};
   add('README.md',`integrations/${engine}/README.md`);
+  entries.set('README.md',Buffer.from(entries.get('README.md').toString('utf8').replaceAll(`../../engine-packages/${engine}/`,'')));
+  for(const language of ['KR','EN','JP','CN','TW'])add(`INSTALL_${language}.txt`,`engine-packages/${engine}/INSTALL_${language}.txt`);
   if(engine==='godot')tree('integrations/godot/addons','addons');
-  if(engine==='ue') {
+  if(engine==='ue4'||engine==='ue5') {
     const base='plugin/MetroidvaniaStudio';
-    add(base+'/MetroidvaniaStudio.uplugin','integrations/ue/MetroidvaniaStudio.uplugin');
-    add(base+'/Source/MetroidvaniaStudio/MetroidvaniaStudio.Build.cs','integrations/ue/source/MetroidvaniaStudio.Build.cs');
-    for(const folder of ['public','private'])tree(`integrations/ue/source/${folder}`,base+'/Source/MetroidvaniaStudio/'+(folder==='public'?'Public':'Private'));
+    add(base+'/MetroidvaniaStudio.uplugin',`integrations/${engine}/MetroidvaniaStudio.uplugin`);
+    add(base+'/Source/MetroidvaniaStudio/MetroidvaniaStudio.Build.cs',`integrations/${engine}/source/MetroidvaniaStudio.Build.cs`);
+    for(const folder of ['public','private'])tree(`integrations/shared/unreal/${folder}`,base+'/Source/MetroidvaniaStudio/'+(folder==='public'?'Public':'Private'));
     add(base+'/Source/MetroidvaniaStudio/Private/StudioDocument.h','integrations/shared/native/StudioDocument.h');
     entries.set(base+'/Config/FilterPlugin.ini',Buffer.from('[FilterPlugin]\n/samples/...\n'));
   }
   if(engine==='sdl') {
     tree('integrations/sdl/include','include');tree('integrations/sdl/src','src');
+    tree('integrations/sdl/src-sample','src-sample');
     add('include/StudioDocument.h','integrations/shared/native/StudioDocument.h');
     for(const file of ['CMakeLists.txt','Build-Sdl.ps1','build.bat','run.bat','build.sh','run.sh','THIRD-PARTY-NOTICES.txt'])add(file,'integrations/sdl/'+file);
-  } else for(const file of ['install.bat','Install-Integration.ps1'])add(file,'integrations/shared/'+file);
-  const sampleRoot=engine==='ue'?'plugin/MetroidvaniaStudio/samples':'samples';tree('samples',sampleRoot);
+  } else for(const file of ['install.bat','Install-Integration.ps1','Resolve-UnrealEngine.ps1'])add(file,'integrations/shared/'+file);
+  const sampleRoot=(engine==='ue4'||engine==='ue5')?'plugin/MetroidvaniaStudio/samples':'samples';tree('samples',sampleRoot);
   add(sampleRoot+'/maps/Coverage.json','integrations/shared/tests/fixtures/Coverage.json');
   // Catalog paths are case-sensitive on supported Unix filesystems.
   const catalog=JSON.parse(entries.get(sampleRoot+'/catalog.json').toString('utf8').replace(/^\uFEFF/,''));
@@ -68,10 +71,20 @@ export function packageEntries(engine) {
   return entries;
 }
 export function buildPackages(output=path.join(root,'engine-packages'),check=false) {
-  for(const engine of ['godot','ue','sdl']) {
-    const bytes=zip(packageEntries(engine)),filename=path.join(output,engine,'metroidvania-studio.zip');
+  for(const engine of ['godot','ue4','ue5','sdl']) {
+    const entries=packageEntries(engine),bytes=zip(entries),filename=path.join(output,engine,'metroidvania-studio.zip');
     if(check) {if(!existsSync(filename)||!readFileSync(filename).equals(bytes))throw new Error('Stale engine package: '+engine);}
     else {mkdirSync(path.dirname(filename),{recursive:true});writeFileSync(filename,bytes);}
+    for(const language of ['KR','EN','JP','CN','TW']) {
+      const name=`INSTALL_${language}.txt`,guide=path.join(output,engine,name),content=entries.get(name);
+      if(check) {if(!existsSync(guide)||!readFileSync(guide).equals(content))throw new Error('Stale install guide: '+engine+'/'+name);}
+      else writeFileSync(guide,content);
+    }
+    if(engine==='sdl')for(const [name,content] of entries)if(name.startsWith('src-sample/')) {
+      const sample=path.join(output,engine,name);
+      if(check) {if(!existsSync(sample)||!readFileSync(sample).equals(content))throw new Error('Stale SDL sample: '+name);}
+      else {mkdirSync(path.dirname(sample),{recursive:true});writeFileSync(sample,content);}
+    }
     console.log(`${engine}: ${bytes.length} bytes${check?' (current)':''}`);
   }
 }

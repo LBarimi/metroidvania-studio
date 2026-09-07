@@ -6,11 +6,13 @@ var picker: EditorFileDialog
 var map_path := ""
 var catalog_path := ""
 var resources := ""
+var pixel_display: CheckBox
 var rooms: OptionButton
 var status: Label
 var room_ids: Array[String] = []
 
 func _enter_tree() -> void:
+    set_force_draw_over_forwarding_enabled()
     panel = VBoxContainer.new()
     panel.name = "MetroidvaniaStudio"
     for entry in [["1. Map JSON", 0], ["2. Catalog JSON", 1], ["3. Resource folder", 2]]:
@@ -21,6 +23,11 @@ func _enter_tree() -> void:
         panel.add_child(button)
     rooms = OptionButton.new()
     panel.add_child(rooms)
+    pixel_display = CheckBox.new()
+    pixel_display.text = "Configure pixel-perfect display"
+    pixel_display.tooltip_text = "Use the map resolution with integer viewport scaling."
+    pixel_display.button_pressed = true
+    panel.add_child(pixel_display)
     var load_button := Button.new()
     load_button.text = "Import / Reload room"
     load_button.pressed.connect(import_room)
@@ -80,9 +87,13 @@ func import_room() -> void:
     var scene := PackedScene.new()
     var result := scene.pack(root)
     if result == OK: result = ResourceSaver.save(scene, output)
+    var reference: Vector2i = root.get_meta("reference_resolution", Vector2i(320, 180))
     root.free()
     if result != OK:
         status.text = "Could not save the imported scene."
+        return
+    if pixel_display.button_pressed and configure_pixel_display(reference) != OK:
+        status.text = "Room saved, but display settings could not be saved."
         return
     get_editor_interface().get_resource_filesystem().scan()
     if output in get_editor_interface().get_open_scenes():
@@ -90,3 +101,32 @@ func import_room() -> void:
     else:
         get_editor_interface().open_scene_from_path(output)
     status.text = "Room saved. Textures and collision are embedded."
+
+func configure_pixel_display(reference: Vector2i) -> Error:
+    ProjectSettings.set_setting("display/window/size/viewport_width", reference.x)
+    ProjectSettings.set_setting("display/window/size/viewport_height", reference.y)
+    ProjectSettings.set_setting("display/window/stretch/mode", "viewport")
+    ProjectSettings.set_setting("display/window/stretch/aspect", "keep")
+    ProjectSettings.set_setting("display/window/stretch/scale_mode", "integer")
+    ProjectSettings.set_setting("rendering/anti_aliasing/quality/msaa_2d", 0)
+    return ProjectSettings.save()
+
+func _forward_canvas_force_draw_over_viewport(overlay: Control) -> void:
+    var root = get_editor_interface().get_edited_scene_root()
+    if root: draw_room_outlines(root, overlay)
+
+func draw_room_outlines(node: Node, overlay: Control) -> void:
+    if node is Node2D and node.has_meta("room"):
+        if not node.is_visible_in_tree(): return
+        var room: Dictionary = node.get_meta("room")
+        var unit := 16.0 / maxf(1.0, float(node.get_meta("ppu", 16)))
+        var width := float(room.get("width", 0)) * unit
+        var height := float(room.get("height", 0)) * unit
+        if width <= 0 or height <= 0: return
+        var transform: Transform2D = get_editor_interface().get_editor_viewport_2d().global_canvas_transform * node.get_global_transform_with_canvas()
+        var corners := PackedVector2Array()
+        for corner in [Vector2.ZERO, Vector2(width, 0), Vector2(width, -height), Vector2(0, -height), Vector2.ZERO]:
+            corners.append(transform * corner)
+        overlay.draw_polyline(corners, Color.WHITE, 2.0, false)
+        return
+    for child in node.get_children(): draw_room_outlines(child, overlay)

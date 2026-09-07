@@ -1,0 +1,61 @@
+先執行範例
+1. 將整個 metroidvania-studio.zip 解壓縮到一個資料夾中。
+2. 安裝 CMake 3.24 以上版本與 C++17 編譯器。Windows 也可以安裝 Visual Studio 的
+   「使用 C++ 的桌面開發」工作負載與 CMake 工具。
+   找不到 SDL 3.4 以上版本時，首次建置會下載 SDL。
+3. 在解壓縮資料夾中執行：
+   Windows：按兩下 run.bat，首次執行會自動建置。
+   Linux/macOS：在終端機執行 sh build.sh，再執行 sh run.sh。
+   方向鍵移動攝影機，R 重新載入房間，Esc 結束。
+
+從哪裡開始看程式碼？
+src-sample 包含預覽程式實際使用的程式碼。ZIP 旁也有相同的資料夾，方便直接查看。
+建置時請使用完整解壓縮後的套件內程式碼。
+
+  sample-room.cpp：先看這個檔案，了解載入地圖 → 設定攝影機 → 繪製畫面的流程。
+  sample-room.h  ：輸入檔案路徑與範例類別的宣告。
+  main.cpp       ：建立 SDL 視窗、處理輸入、繪製迴圈與釋放資源。
+
+sample-room.cpp 的 Reload() 呼叫 room_.Load(...)，Draw() 呼叫 room_.Draw(...)。
+可以先理解這兩個呼叫。修改程式碼後，Windows 執行 build.bat 再執行 run.bat；
+Linux/macOS 執行 sh build.sh 再執行 sh run.sh。
+src-sample 無法單獨建置，還需要套件中的 include、src、CMakeLists.txt 與 samples。
+
+啟動網頁編輯器
+在編輯器發行資料夾中，執行對應作業系統的指令碼。
+瀏覽器開啟後，即可編輯地圖並匯出房間 JSON。
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+換成自己的 JSON
+預設讀取下列檔案，路徑以解壓縮資料夾為基準：
+  地圖 JSON  ：samples/maps/Sample.map.json
+  資源目錄表 ：samples/catalog.json
+  資源根目錄 ：samples
+
+啟動時傳入自己的路徑即可，不必修改程式碼：
+  Windows: run.bat "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+  Linux/macOS: sh run.sh "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+將角括號內容換成實際值，省略房間 ID 時會載入第一個房間。
+房間 ID 是 JSON 中的 id，可能與畫面上的名稱不同。
+路徑可使用相對於解壓縮資料夾的路徑或絕對路徑，也需要對應的 catalog 與貼圖。
+若 asset 為 textures/Terrain.png，請把 textures 的上層資料夾設為資源根目錄。
+保留檔名大小寫，編輯後按 R 重新載入。
+
+接入自己的 SDL 專案
+1. 將整個套件放入專案的 third-party/metroidvania-studio 資料夾。
+2. 把 src-sample 中的 sample-room.h 與 sample-room.cpp 複製到自己的 src 資料夾。
+   main.cpp 供參考；若已有 main，就不必複製它。
+3. 使用 add_executable 宣告自己的執行檔目標後，在 CMakeLists.txt 加入：
+
+   add_subdirectory(third-party/metroidvania-studio)
+   target_sources(my_app PRIVATE src/sample-room.cpp)
+   target_link_libraries(my_app PRIVATE metroidvania-studio-sdl)
+
+   將 my_app 替換成自己的目標名稱。
+4. include sample-room.h。參考 main.cpp，先建立 SDL_Renderer，再建立 SampleRoom，
+   並在自己的繪製迴圈呼叫 Draw(width,height)。先銷毀範例物件，再銷毀 SDL_Renderer。
+5. 熟悉後也能直接使用 include/StudioSdlRoom.h 的 SdlRoom。
+   碰撞資訊位於範例的 Data().primitives，直接使用 SdlRoom 時則為 data.primitives。
+   物理與遊戲行為由自己的專案實作。

@@ -50,25 +50,25 @@ if ($isGodot) {
     } else { $updated = $original.TrimEnd() + "`n`n[editor_plugins]`n" + 'enabled=PackedStringArray("' + $plugin + '")' + "`n" }
 } else {
     $data = $original | ConvertFrom-Json
-    if (!$EngineRoot) { $EngineRoot = $env:UNREAL_ENGINE_PATH }
-    if (!$EngineRoot) { $EngineRoot = [Environment]::GetEnvironmentVariable('UNREAL_ENGINE_PATH','User') }
-    if (!$EngineRoot) { throw 'Set UNREAL_ENGINE_PATH or pass -EngineRoot with the installed Unreal Engine directory.' }
-    $versionFile = Join-Path $EngineRoot 'Engine/Build/Build.version'
-    if (!(Test-Path -LiteralPath $versionFile)) { throw 'Invalid Unreal Engine directory.' }
-    $engineVersion = Get-Content -LiteralPath $versionFile -Raw | ConvertFrom-Json
-    if ($engineVersion.MajorVersion -ne 5) { throw 'This package targets Unreal Engine 5. Unreal Engine 4 is not yet supported.' }
-    if ($data.PSObject.Properties.Name -contains 'EngineAssociation' -and $data.EngineAssociation -match '^5\.(\d+)') {
-        if ([int]$Matches[1] -ne $engineVersion.MinorVersion) { throw 'The selected engine version does not match the project. Pass the matching -EngineRoot.' }
-    }
+    $manifestPath = Join-Path $PSScriptRoot 'package-manifest.json'
+    if (!(Test-Path -LiteralPath $manifestPath)) { throw 'Extract the complete package before installing.' }
+    $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+    . (Join-Path $PSScriptRoot 'Resolve-UnrealEngine.ps1')
+    $association = if ($data.PSObject.Properties.Name -contains 'EngineAssociation') { [string]$data.EngineAssociation } else { '' }
+    $engine = Resolve-StudioUnrealEngine -ExplicitRoot $EngineRoot -PackageEngine $manifest.engine -Association $association
+    $EngineRoot = $engine.Root
     $runner = Join-Path $EngineRoot 'Engine/Build/BatchFiles/RunUAT.bat'
     if (!(Test-Path -LiteralPath $runner)) { throw 'Unreal build tools are missing.' }
     $buildRoot = Join-Path ([IO.Path]::GetTempPath()) ('ms-ue-' + [Guid]::NewGuid().ToString('N').Substring(0,12))
-    Write-Host 'Compiling the plugin for the selected engine. The project will be updated after the build succeeds.'
-    & $runner BuildPlugin ('-Plugin=' + (Join-Path $source 'MetroidvaniaStudio.uplugin')) ('-Package=' + $buildRoot) '-TargetPlatforms=Win64' '-UTF8Output'
+    Write-Host 'Installing MetroidvaniaStudio...'
+    $buildArgs = @('BuildPlugin', ('-Plugin=' + (Join-Path $source 'MetroidvaniaStudio.uplugin')), ('-Package=' + $buildRoot), '-TargetPlatforms=Win64', '-UTF8Output')
+    if ($engine.Major -eq 4) { $buildArgs += '-VS2019' }
+    & $runner @buildArgs
     if ($LASTEXITCODE -ne 0) { throw 'Plugin compilation failed. The target project has not been changed.' }
-    if (!(Test-Path -LiteralPath (Join-Path $buildRoot 'Binaries/Win64/UnrealEditor-MetroidvaniaStudio.dll'))) { throw 'The compiled plugin is incomplete.' }
+    $editorBinary = if ($engine.Major -eq 4) { 'UE4Editor' } else { 'UnrealEditor' }
+    if (!(Test-Path -LiteralPath (Join-Path $buildRoot ('Binaries/Win64/' + $editorBinary + '-MetroidvaniaStudio.dll')))) { throw 'The compiled plugin is incomplete.' }
     $source = $buildRoot
-    $plugins = if ($data.PSObject.Properties.Name -contains 'Plugins') { @($data.Plugins) } else { @() }
+    $plugins = @(if ($data.PSObject.Properties.Name -contains 'Plugins') { $data.Plugins | Where-Object { $null -ne $_ } })
     $found = $false
     foreach ($entry in $plugins) { if ($entry.Name -eq 'MetroidvaniaStudio') { $entry | Add-Member -NotePropertyName Enabled -NotePropertyValue $true -Force; $found = $true } }
     if (!$found) { $plugins += [pscustomobject]@{Name='MetroidvaniaStudio';Enabled=$true} }

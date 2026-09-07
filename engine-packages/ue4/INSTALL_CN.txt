@@ -1,0 +1,53 @@
+准备工作
+- 本包是 Unreal Engine 4.27 的源码插件。
+- 请解压整个 ZIP 文件，保留 .uplugin 文件及其 Source 目录。
+
+启动网页编辑器
+在编辑器发行目录中，运行对应操作系统的脚本。
+浏览器打开后，即可编辑地图并导出房间 JSON。
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+Windows 安装
+1. 关闭目标 Unreal 项目。
+2. 运行解压目录中的 install.bat，选择目标 .uproject 文件。
+3. 打开项目并确认插件已启用。
+   安装目录：<project>/Plugins/MetroidvaniaStudio
+
+如果未自动找到引擎，请在解压目录中打开 PowerShell 并运行：
+  .\Install-Integration.ps1 -ProjectFile "<project.uproject>" -EngineRoot "<engine-root>"
+请将尖括号占位符替换为实际的项目文件和引擎根目录。
+
+手动安装 (Windows / Linux / macOS)
+将 plugin/MetroidvaniaStudio 复制到项目的 Plugins 目录下。
+按需重新生成项目文件，使用对应引擎和操作系统的 C++ 工具构建项目的
+Editor 目标，然后启用插件。
+
+导入示例房间
+1. 在关卡中放置 MetroidvaniaStudioRoom Actor。
+2. 在 Details > MetroidvaniaStudio > Import 中设置以下内容。
+   路径均相对于解压目录：
+     Map File          : plugin/MetroidvaniaStudio/samples/maps/Sample.map.json
+     Catalog File      : plugin/MetroidvaniaStudio/samples/catalog.json
+     Resource Directory: plugin/MetroidvaniaStudio/samples
+     Room Id           : 留空则加载第一个房间
+3. 点击 Import Room 并保存关卡。也可使用安装到项目中的
+   Plugins/MetroidvaniaStudio/samples。
+
+导入自己的地图及重新导入
+- 指定地图 JSON、对应的 catalog.json 以及纹理资源根目录。
+- 若 catalog 中的 asset 为 textures/Terrain.png，请选择 textures 的上级目录
+  作为资源根目录，并保留路径的大小写。
+- Room Id 使用 JSON 中稳定的房间 ID，而不是房间名称。
+- 编辑后点击 Import Room 重新读取文件。目前不支持自动同步。
+- Rebuild Room 根据已保存的数据重建；Clear Room 移除已导入的房间。
+- JSON 和 PNG 数据保存在 Actor 中。保存关卡后无需原始文件即可重建，
+  但游戏运行时仍需要该插件。
+
+像素完美摄像机
+将玩家控制器的View Target设为导入的房间Actor。RoomCamera 按导出的
+参考分辨率（默认320x180）渲染，依据PPU（默认16）将视图对齐到像素，
+再以最近邻过滤进行整数倍放大。剩余空间显示为黑色；窗口小于参考分辨率时，
+按1倍大小裁剪显示。游戏HUD可以放在此图像上方。此摄像机用于轴对齐的2D视图。
+白色房间边界仅用于关卡编辑器，在Game View中隐藏。

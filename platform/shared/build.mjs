@@ -100,7 +100,7 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
     }
     for (const notice of ['LICENSE', 'NOTICE']) if (existsSync(path.join(studioRoot, notice))) copyFileSync(path.join(studioRoot, notice), path.join(output, notice));
     runner(process.execPath, [path.join(studioRoot, 'integrations/build-packages.mjs'), '--output', path.join(output, 'engine-packages')], { cwd: studioRoot });
-    for (const engine of ['unity', 'godot', 'ue', 'sdl']) {
+    for (const engine of ['unity', 'godot', 'ue4', 'ue5', 'sdl']) {
       const packageName = engine === 'unity' ? 'metroidvania-studio.unitypackage' : 'metroidvania-studio.zip';
       if (!existsSync(path.join(output, 'engine-packages', engine, packageName))) throw new Error(`Incomplete engine package: ${engine}`);
     }

@@ -1,0 +1,51 @@
+Format / requirements
+UE4.27 source plugin: keep MetroidvaniaStudio.uplugin and its Source folder together.
+Extract the entire ZIP.
+
+Start the web studio
+Run the script for your operating system from the studio distribution folder.
+When the browser opens, edit your map and export room JSON.
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+Install on Windows
+1. Close the target Unreal project.
+2. Run install.bat in the extracted folder and select the target .uproject.
+3. Open the project and check that the plugin is enabled.
+   Installed folder: <project>/Plugins/MetroidvaniaStudio
+
+If the engine is not found automatically, open PowerShell in the extracted folder and run:
+  .\Install-Integration.ps1 -ProjectFile "<project.uproject>" -EngineRoot "<engine-root>"
+Replace the bracketed placeholders with your project file and engine root.
+
+Manual installation
+Copy plugin/MetroidvaniaStudio into the project's Plugins folder, regenerate
+project files if needed, and build the project's Editor target with the matching
+engine/platform toolchain. Enable the plugin in the project.
+
+Try the sample
+Place a MetroidvaniaStudioRoom actor. In Details > MetroidvaniaStudio > Import:
+  Map File          : plugin/MetroidvaniaStudio/samples/maps/Sample.map.json
+  Catalog File      : plugin/MetroidvaniaStudio/samples/catalog.json
+  Resource Directory: plugin/MetroidvaniaStudio/samples
+  Room Id           : leave empty to load the first room
+These paths are relative to the extracted ZIP. The installed copy is under
+Plugins/MetroidvaniaStudio/samples. Click Import Room and save the level.
+
+Use your exports
+Select your map JSON, matching catalog and resource root. Catalog asset paths
+resolve from that root; preserve path casing. Room Id accepts the stable JSON
+room ID. Click Import Room again to read updated files. Rebuild Room reconstructs
+the embedded data; Clear Room removes it. Automatic live sync is not implemented.
+JSON and PNG bytes are saved in the actor, so the saved level does not need the
+original files. The runtime still needs this plugin.
+
+Pixel-perfect camera
+Set the player controller's view target to the imported room actor. RoomCamera
+renders at the exported reference resolution (default 320x180), aligns its view
+to source pixels using PPU (default 16), then presents the image with nearest
+filtering at an integer scale. Extra window space stays black; a window smaller
+than the reference resolution crops the image at 1x. Game HUD widgets can be
+placed above this image. The camera is intended for axis-aligned 2D views.
+White room boundaries appear in the level editor only; Game View hides them.

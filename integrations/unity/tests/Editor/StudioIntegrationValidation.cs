@@ -50,6 +50,7 @@ public static class StudioIntegrationValidation
             Check(camera.orthographicSize == 3.5f && camera.transform.position.x == -1 && camera.transform.position.y == 1.75f, "Camera centers on the scaled room");
             var renderTexture = new RenderTexture(1000, 600, 16); camera.targetTexture = renderTexture; camera.GetComponent<StudioPixelCamera>().Apply();
             Check(Mathf.Approximately(camera.rect.width, .8f) && Mathf.Approximately(camera.rect.height, 448f / 600), "Camera viewport uses integer pixel magnification");
+            Check(Mathf.Approximately(camera.pixelRect.x, 100) && Mathf.Approximately(camera.pixelRect.y, 76), "Camera viewport is centered on whole pixels");
             camera.targetTexture = null; UnityEngine.Object.DestroyImmediate(renderTexture);
             var pixel = camera.GetComponent<StudioPixelCamera>(); pixel.referenceWidth = 401; pixel.referenceHeight = 225;
             pixel.SendMessage("LateUpdate");

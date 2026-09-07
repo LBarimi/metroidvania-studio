@@ -1,3 +1,6 @@
+import { archiveText } from './archive-text.mjs';
+import { pngText } from './png-text.mjs';
+
 function decode(bytes) {
   if (bytes[0] === 0xff && bytes[1] === 0xfe) return bytes.subarray(2).toString('utf16le');
   if (bytes[0] === 0xfe && bytes[1] === 0xff) {
@@ -53,5 +56,16 @@ function gifText(bytes) {
 }
 
 export function contentText(bytes) {
-  return /^GIF8[79]a$/.test(bytes.subarray(0, 6).toString('ascii')) ? gifText(bytes) : decode(bytes);
+  let remaining = 128 * 1024 * 1024;
+  const visit = (data, depth = 0) => {
+    if (depth > 8) throw new Error('Archive nesting is too deep to inspect.');
+    remaining -= data.length;
+    if (remaining < 0) throw new Error('Archive content is too large to inspect.');
+    const archive = archiveText(data, child => visit(child, depth + 1), decode);
+    if (archive !== null) return archive;
+    const png = pngText(data, decode);
+    if (png !== null) return png;
+    return /^GIF8[79]a$/.test(data.subarray(0, 6).toString('ascii')) ? gifText(data) : decode(data);
+  };
+  return visit(bytes);
 }

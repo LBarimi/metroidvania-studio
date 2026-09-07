@@ -1,5 +1,8 @@
 #include "MetroidvaniaStudioRoom.h"
+#include "Runtime/Launch/Resources/Version.h"
 #include "Camera/CameraComponent.h"
+#include "MetroidvaniaStudioPixelCamera.h"
+#include "MetroidvaniaStudioRoomOutline.h"
 #include "Engine/Texture2D.h"
 #include "ImageUtils.h"
 #include "TextureResource.h"
@@ -19,11 +22,15 @@ AMetroidvaniaStudioRoom::AMetroidvaniaStudioRoom()
 {
     PrimaryActorTick.bCanEverTick = false;
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RoomRoot"));
-    RoomCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("RoomCamera"));
+    RoomCamera = CreateDefaultSubobject<UMetroidvaniaStudioPixelCamera>(TEXT("RoomCamera"));
     RoomCamera->SetupAttachment(RootComponent);
     RoomCamera->ProjectionMode = ECameraProjectionMode::Orthographic;
     RoomCamera->bConstrainAspectRatio = true;
-    RoomCamera->SetRelativeRotation(FRotator(0,90,0));
+    RoomCamera->SetRelativeRotation(FRotator(0,-90,0));
+#if WITH_EDITORONLY_DATA
+    RoomOutline = CreateEditorOnlyDefaultSubobject<UMetroidvaniaStudioRoomOutline>(TEXT("RoomOutline"));
+    if (RoomOutline) RoomOutline->SetupAttachment(RootComponent);
+#endif
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> Material(TEXT("/Paper2D/MaskedUnlitSpriteMaterial.MaskedUnlitSpriteMaterial"));
     TileMaterial = Material.Object;
 }
@@ -31,6 +38,9 @@ void AMetroidvaniaStudioRoom::DestroyGenerated()
 {
     for(auto* Mesh : GeneratedMeshes) if(IsValid(Mesh)) Mesh->DestroyComponent();
     GeneratedMeshes.Reset(); bBuilt=false;
+#if WITH_EDITORONLY_DATA
+    if (RoomOutline) RoomOutline->SetBoxExtent(FVector::ZeroVector);
+#endif
 }
 void AMetroidvaniaStudioRoom::ClearRoom()
 {
@@ -111,7 +121,12 @@ bool AMetroidvaniaStudioRoom::RebuildRoom()
             auto* Texture=Textures.FindRef(B.Asset);
             if(!Texture) {
                 Texture=UTexture2D::CreateTransient(1,1,PF_B8G8R8A8);
-                auto& Mip=Texture->GetPlatformData()->Mips[0];auto* Pixels=static_cast<uint32*>(Mip.BulkData.Lock(LOCK_READ_WRITE));*Pixels=0xffffffff;Mip.BulkData.Unlock();Texture->UpdateResource();
+#if ENGINE_MAJOR_VERSION >= 5
+                auto& Mip=Texture->GetPlatformData()->Mips[0];
+#else
+                auto& Mip=Texture->PlatformData->Mips[0];
+#endif
+                FMemory::Memset(Mip.BulkData.Lock(LOCK_READ_WRITE), 255, 4);Mip.BulkData.Unlock();Texture->UpdateResource();
             }
             Material->SetTextureParameterValue(TEXT("SpriteTexture"),Texture);Mesh->SetMaterial(0,Material);
             if(B.Collision.Num()) {Mesh->SetCollisionConvexMeshes(B.Collision);Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);Mesh->SetCollisionResponseToAllChannels(ECR_Block);}
@@ -120,7 +135,20 @@ bool AMetroidvaniaStudioRoom::RebuildRoom()
         SetActorLocation(FVector(static_cast<double>(Room.x)*16*Scale,GetActorLocation().Y,static_cast<double>(Room.y)*16*Scale));
         PixelsPerUnit=Room.ppu;ReferenceResolution=FIntPoint(Room.referenceWidth,Room.referenceHeight);RoomName=FromUtf8(Room.name);
         RoomCamera->OrthoWidth=Room.referenceWidth*Scale;RoomCamera->AspectRatio=static_cast<float>(Room.referenceWidth)/Room.referenceHeight;
-        RoomCamera->SetRelativeLocation(FVector(Room.width*8*Scale,-1000,Room.height*8*Scale));
+        RoomCamera->SetRelativeLocation(FVector(Room.width*8*Scale,1000,Room.height*8*Scale));
+        if (auto* PixelCamera = Cast<UMetroidvaniaStudioPixelCamera>(RoomCamera))
+        {
+            PixelCamera->PixelsPerUnit = PixelsPerUnit;
+            PixelCamera->ReferenceResolution = ReferenceResolution;
+            PixelCamera->UnitsPerWorldUnit = UnitsPerWorldUnit;
+        }
+#if WITH_EDITORONLY_DATA
+        if (RoomOutline)
+        {
+            RoomOutline->SetBoxExtent(FVector(Room.width*8*Scale, 0, Room.height*8*Scale));
+            RoomOutline->SetRelativeLocation(FVector(Room.width*8*Scale, 0, Room.height*8*Scale));
+        }
+#endif
         LastError.Empty();bBuilt=true;return true;
     } catch(const std::exception& Error){LastError=FromUtf8(Error.what());UE_LOG(LogTemp,Error,TEXT("MetroidvaniaStudio: %s"),*LastError);return false;}
 }

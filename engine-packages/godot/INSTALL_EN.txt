@@ -1,0 +1,42 @@
+Format / requirements
+Godot 4 editor addon, identified by addons/metroidvania-studio/plugin.cfg.
+Extract the entire ZIP first.
+
+Start the web studio
+Run the script for your operating system from the studio distribution folder.
+When the browser opens, edit your map and export room JSON.
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+Install
+Windows: close the target project, run install.bat, select project.godot,
+then reopen the project. The installer copies and enables the addon.
+Manual installation on any supported desktop OS: copy addons/metroidvania-studio
+into the project's addons folder. Enable MetroidvaniaStudio in
+Project > Project Settings > Plugins.
+
+Try the sample
+In the MetroidvaniaStudio dock select these paths in the extracted package:
+  1. Map JSON        : samples/maps/Sample.map.json
+  2. Catalog JSON    : samples/catalog.json
+  3. Resource folder : samples
+Choose a room and press Import / Reload room. The generated .tscn is saved under
+res://metroidvania-studio-imports and opened. Instance it in your game scene.
+
+Use your exports
+Choose your map JSON, matching catalog.json and resource root. Catalog asset
+paths resolve from that root: for textures/Terrain.png, choose the parent of
+textures. Preserve path casing. Reimport manually after editing; automatic live
+sync is not implemented. Reimport overwrites the generated scene for the same
+room ID, so keep gameplay additions in a separate scene that instances it.
+Generated scenes embed textures but still require the addon's runtime script.
+
+Pixel-perfect display
+Keep Configure pixel-perfect display enabled when importing a room. It applies
+reference_resolution (default 320x180), viewport rendering and integer window
+scaling to Project Settings. Disable it to manage display settings yourself.
+The supplied RoomCamera uses the exported PPU (default 16) and aligns the view
+to source pixels without changing the camera node's position. Use view_offset
+for a framing offset. Smoothing is disabled for this camera.
+White room boundaries appear only in the 2D editor, never in the running game.

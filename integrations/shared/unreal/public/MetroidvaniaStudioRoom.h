@@ -6,6 +6,7 @@
 
 class UProceduralMeshComponent;
 class UCameraComponent;
+class UMetroidvaniaStudioRoomOutline;
 class UMaterialInterface;
 
 USTRUCT()
@@ -44,6 +45,9 @@ public:
 protected:
     virtual void BeginPlay() override;
 private:
+#if WITH_EDITORONLY_DATA
+    UPROPERTY() UMetroidvaniaStudioRoomOutline* RoomOutline = nullptr;
+#endif
     UPROPERTY(Transient) TArray<UProceduralMeshComponent*> GeneratedMeshes;
     bool bBuilt = false;
     void DestroyGenerated();

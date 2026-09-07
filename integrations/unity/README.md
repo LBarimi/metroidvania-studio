@@ -1,6 +1,10 @@
 # Unity integration
 
-Target: Unity **6000.3.9f1**. The web studio and its server remain independent of this adapter.
+Installation guides: [한국어](../../engine-packages/unity/INSTALL_KR.txt) · [English](../../engine-packages/unity/INSTALL_EN.txt) · [日本語](../../engine-packages/unity/INSTALL_JP.txt) · [简体中文](../../engine-packages/unity/INSTALL_CN.txt) · [繁體中文](../../engine-packages/unity/INSTALL_TW.txt).
+
+The five UTF-8 guides are included in the `.unitypackage` and install under `Assets/MetroidvaniaStudioIntegration`.
+
+Developed for **Unity 6**. The web studio and its server remain independent of this adapter.
 
 ## Install and connect
 
@@ -41,3 +45,5 @@ Runtime APIs are in `MetroidvaniaStudio.Integration`. Import tools are in the ed
 웹 스튜디오를 실행한 상태에서 Unity의 **Tools > MetroidvaniaStudio**를 열고 **연결 / 새로고침 → 방 선택 → 방 로드** 순서로 사용합니다. **웹 편집 자동 반영**을 켜면 창이 열린 동안 변경 내용을 반영합니다. PPU와 기준 해상도는 웹의 **카메라 설정**에서 바꿉니다.
 
 JSON 파일만 가져올 때는 맵 JSON과 함께 리소스 카탈로그 및 텍스처 폴더를 선택해야 합니다. 가져온 리소스는 Unity 프로젝트에 저장되므로 이후에는 웹 스튜디오를 끄더라도 씬을 사용할 수 있습니다.
+
+Imported room boundaries are drawn in white in Scene view when Gizmos are enabled. They are not included in Game view or player builds.

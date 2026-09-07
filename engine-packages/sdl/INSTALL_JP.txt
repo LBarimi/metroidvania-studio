@@ -1,0 +1,65 @@
+まずサンプルを起動する
+1. metroidvania-studio.zip 全体を任意のフォルダーに展開します。
+2. CMake 3.24 以降と C++17 コンパイラーを用意します。Windows では
+   Visual Studio の「C++ によるデスクトップ開発」と CMake ツールも使えます。
+   SDL 3.4 以降が見つからない場合、初回ビルド時に SDL をダウンロードします。
+3. 展開したフォルダーで実行します。
+   Windows: run.bat をダブルクリック。初回は自動でビルドします。
+   Linux/macOS: ターミナルで sh build.sh、続けて sh run.sh を実行します。
+   矢印キーでカメラ移動、R で再読み込み、Esc で終了します。
+
+コードはどこから読む？
+src-sample には実際のプレビューで使われるコードが入っています。
+ZIP の隣にも同じフォルダーがあるので、すぐにコードを確認できます。
+ビルドには、パッケージ全体を展開したフォルダー内のコードを使ってください。
+
+  sample-room.cpp : 最初に読むファイル。読み込み → カメラ設定 → 描画の流れです。
+  sample-room.h   : 入力ファイルのパスとサンプルクラスの宣言です。
+  main.cpp        : SDL ウィンドウの作成、入力、描画ループ、終了処理です。
+
+sample-room.cpp の Reload() が room_.Load(...) を、Draw() が room_.Draw(...)
+を呼び出します。まずはこの 2 か所を見てください。
+コード変更後は Windows なら build.bat → run.bat、Linux/macOS なら
+sh build.sh → sh run.sh で再実行します。src-sample だけではビルドできません。
+パッケージの include、src、CMakeLists.txt、samples も必要です。
+
+Web スタジオの起動
+スタジオの配布フォルダーで、OS に対応するスクリプトを実行します。
+ブラウザーが開いたら、マップを編集して部屋の JSON をエクスポートします。
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+自分の JSON に切り替える
+標準の入力は以下のとおりです。パスは展開したフォルダーが基準です。
+  マップ JSON    : samples/maps/Sample.map.json
+  カタログ       : samples/catalog.json
+  リソースルート : samples
+
+起動時に自分のパスを渡せます。コードの変更は不要です。
+  Windows: run.bat "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+  Linux/macOS: sh run.sh "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+山括弧の部分を実際の値に置き換えます。ID を省略すると最初の部屋を読み込みます。
+部屋 ID は JSON 内の id です。画面上の名前とは異なる場合があります。
+パスは展開したフォルダーからの相対パスか絶対パスで指定してください。
+JSON に対応するカタログとテクスチャも必要です。asset が textures/Terrain.png
+なら、textures の親フォルダーをリソースルートにします。
+ファイル名の大文字・小文字を維持し、編集後は R で読み直します。
+
+自分の SDL プロジェクトに組み込む
+1. パッケージ全体を third-party/metroidvania-studio に配置します。
+2. src-sample の sample-room.h と sample-room.cpp を自分の src にコピーします。
+   main.cpp は参考用です。既存の main があれば、そのまま使えます。
+3. add_executable で実行ファイルを宣言した後、CMakeLists.txt に追加します。
+   my_app は実際のターゲット名に置き換えてください。
+
+   add_subdirectory(third-party/metroidvania-studio)
+   target_sources(my_app PRIVATE src/sample-room.cpp)
+   target_link_libraries(my_app PRIVATE metroidvania-studio-sdl)
+
+4. sample-room.h を include します。main.cpp の例のように、SDL_Renderer の作成後に
+   SampleRoom を作り、自分の描画ループから Draw(width,height) を呼び出します。
+   サンプルオブジェクトを先に破棄し、その後 SDL_Renderer を破棄してください。
+5. 慣れたら include/StudioSdlRoom.h の SdlRoom を直接利用できます。
+   衝突情報はサンプルの Data().primitives、または SdlRoom の data.primitives で取得します。
+   物理やゲーム動作は自分のプロジェクトで実装します。

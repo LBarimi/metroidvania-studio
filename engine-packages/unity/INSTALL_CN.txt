@@ -1,0 +1,36 @@
+准备工作与安装
+- 基于 Unity 6 开发。
+- 本包是 Unity 适配模块。网页编辑器与本地服务器需要单独启动。
+1. 打开目标 Unity 项目。
+2. 双击 metroidvania-studio.unitypackage，或在 Unity 中通过
+   Assets > Import Package > Custom Package 选择该文件。
+3. 选中全部项目，点击 Import。
+   安装目录：Assets/MetroidvaniaStudioIntegration
+   INSTALL_*.txt 文件也位于此目录。
+
+启动网页编辑器
+1. 在编辑器发行目录中，使用对应操作系统的启动脚本：
+   Windows: platform/win/web/run.bat
+   Linux  : bash platform/linux/run.sh
+   macOS  : platform/mac/run.command
+
+连接 Unity
+1. 在 Unity 中打开 Tools > MetroidvaniaStudio。
+2. 输入正在运行的编辑器的本地地址，点击 Connect / Refresh。
+   默认地址：http://127.0.0.1:18765/
+3. 选择房间并点击 Load / Reload room。房间将生成在当前场景中，请保存场景。
+4. 开启 Follow web edits，并保持连接窗口打开。
+   在网页编辑器中修改已导入的房间，Unity 中的房间也会自动更新。
+   游戏运行期间会暂停自动更新。
+5. Remove imported room 只移除适配模块在当前场景中生成的房间。
+   重新加载会替换生成的房间，请将游戏逻辑放在生成内容之外。
+   手动加载和移除支持 Undo；自动更新不会连续添加 Undo 记录。
+
+导入的数据与相机
+- 纹理和资源保存在 Assets/MetroidvaniaStudioImports 中。
+  保存场景后可关闭网页编辑器继续使用，断开连接不会删除数据。
+- 适配模块导入地形、对象、触发器和元数据。游戏行为由自己的项目实现。
+- 默认 PPU 为 16，参考分辨率为 320x180，遵循网页端相机设置。
+- 加载时会将主相机移到房间中心；没有主相机时会创建一个。
+  StudioPixelCamera 管理相机尺寸和整数缩放视口。
+- 运行导入的场景时，仍需要适配模块的 Runtime 代码以及导入的资源。

@@ -1,0 +1,37 @@
+Requirements and installation
+- Developed for Unity 6.
+- This package is the Unity adapter. The web studio and local server run separately.
+1. Open your target Unity project.
+2. Double-click metroidvania-studio.unitypackage, or select it through
+   Assets > Import Package > Custom Package in Unity.
+3. Select all package entries and press Import.
+   Installed folder: Assets/MetroidvaniaStudioIntegration
+   The INSTALL_*.txt files are also in this folder.
+
+Start the web studio
+1. Start the studio using the launcher for your operating system in the studio folder:
+   Windows: platform/win/web/run.bat
+   Linux  : bash platform/linux/run.sh
+   macOS  : platform/mac/run.command
+
+Connect Unity
+1. In Unity, open Tools > MetroidvaniaStudio.
+2. Enter the running studio's local address and press Connect / Refresh.
+   Default address: http://127.0.0.1:18765/
+3. Select a room and press Load / Reload room. It is created in the active scene.
+   Save the scene.
+4. Enable Follow web edits and keep the connection window open.
+   Changes you make to the loaded room in the web studio also appear in Unity.
+   Automatic updates pause while the game is running.
+5. Remove imported room removes only the adapter's generated rooms in the active
+   scene. Reload replaces the generated room. Keep gameplay additions outside it.
+   Manual loads and removal support Undo; automatic refresh does not add ongoing Undo entries.
+
+Imported data and camera
+- Textures and resources are saved under Assets/MetroidvaniaStudioImports.
+  Saved scenes work with the studio closed. Disconnecting does not remove the data.
+- The adapter imports terrain, objects, triggers and metadata. Implement game behavior separately.
+- Defaults are PPU 16 and reference resolution 320x180, following the web camera settings.
+- Loading centers the main camera on the room, creating one if needed.
+  StudioPixelCamera manages camera size and an integer-scaled viewport.
+- Imported scenes still need the adapter's Runtime code and imported resources at runtime.

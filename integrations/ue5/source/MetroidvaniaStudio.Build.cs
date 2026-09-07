@@ -7,7 +7,7 @@ public class MetroidvaniaStudio : ModuleRules
         PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
         CppStandard = CppStandardVersion.Default;
         bEnableExceptions = true;
-        PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "ProceduralMeshComponent" });
-        PrivateDependencyModuleNames.AddRange(new[] { "Projects", "Paper2D" });
+        PublicDependencyModuleNames.AddRange(new[] { "Core", "CoreUObject", "Engine", "ProceduralMeshComponent", "UMG", "SlateCore" });
+        PrivateDependencyModuleNames.AddRange(new[] { "Projects", "Paper2D", "Slate", "RenderCore" });
     }
 }

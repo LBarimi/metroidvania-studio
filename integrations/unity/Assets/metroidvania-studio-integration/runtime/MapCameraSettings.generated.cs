@@ -2,7 +2,7 @@
 using System;
 using System.Globalization;
 
-namespace MetroidvaniaStudio
+namespace MetroidvaniaStudio.Integration
 {
     /// <summary>Camera units are separate from the document's fixed source-pixel tile grid.</summary>
     public static class MapCameraSettings

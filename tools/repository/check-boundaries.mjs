@@ -19,7 +19,7 @@ export function inspectBoundaries(files) {
     const name = file.name.replaceAll('\\', '/');
     const text = contentText(file.bytes);
     const report = (rule, location = 'content') => issues.push({ path: file.name, location, rule });
-    const integration = /^integrations\/(?:unity|godot|ue|sdl)\//.test(name);
+    const integration = /^integrations\/(?:unity|godot|ue4|ue5|sdl|shared\/unreal)\//.test(name);
     if (name !== 'commit message') {
       const directories = name.split('/').slice(0, -1);
       if (directories.some(part => !/^\.?[a-z0-9]+(?:-[a-z0-9]+)*$/.test(part)
@@ -29,7 +29,8 @@ export function inspectBoundaries(files) {
     if (/\.map\.json$/i.test(name) && !name.startsWith('samples/maps/') && !/(?:^|\/)tests\/fixtures\//.test(name))
       report('private-map-location', 'filename');
     if (windowsPath.test(text) || homePath.test(text) || uncPath.test(text)) report('machine-path');
-    if (!integration && sourceFile.test(name) && (engineCode.test(text) || engineReference.test(text))) report('engine-code');
+    const sdlSample = /^engine-packages\/sdl\/src-sample\/[^/]+\.(?:cpp|h)$/.test(name);
+    if (!integration && !sdlSample && sourceFile.test(name) && (engineCode.test(text) || engineReference.test(text))) report('engine-code');
     if (/\.(?:csproj|props|targets)$/i.test(name)) {
       for (const match of text.matchAll(/<(?:Compile|ProjectReference|EmbeddedResource|Content|None)\b[^>]*\b(?:Include|Update)\s*=\s*["']([^"']+)["']/g)) {
         for (const item of match[1].split(';')) {

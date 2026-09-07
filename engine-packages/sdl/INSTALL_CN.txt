@@ -1,0 +1,61 @@
+先运行示例
+1. 将整个 metroidvania-studio.zip 解压到一个文件夹中。
+2. 安装 CMake 3.24 及以上版本和 C++17 编译器。Windows 也可以安装 Visual Studio 的
+   “使用 C++ 的桌面开发”工作负载和 CMake 工具。
+   找不到 SDL 3.4 及以上版本时，首次构建会下载 SDL。
+3. 在解压目录中运行：
+   Windows：双击 run.bat，首次运行会自动构建。
+   Linux/macOS：在终端运行 sh build.sh，然后运行 sh run.sh。
+   方向键移动相机，R 重新加载房间，Esc 退出。
+
+从哪里开始看代码？
+src-sample 包含预览程序实际使用的代码。ZIP 旁边也有相同的文件夹，方便直接查看。
+构建时请使用完整解压后的包内代码。
+
+  sample-room.cpp：先看这个文件，了解加载地图 → 设置相机 → 绘制画面的流程。
+  sample-room.h  ：输入文件路径和示例类的声明。
+  main.cpp       ：创建 SDL 窗口、处理输入、绘制循环和释放资源。
+
+sample-room.cpp 的 Reload() 调用 room_.Load(...)，Draw() 调用 room_.Draw(...)。
+可以先理解这两个调用。修改代码后，Windows 运行 build.bat 再运行 run.bat；
+Linux/macOS 运行 sh build.sh 再运行 sh run.sh。
+src-sample 不能单独构建，还需要包中的 include、src、CMakeLists.txt 和 samples。
+
+启动网页编辑器
+在编辑器发行目录中，运行对应操作系统的脚本。
+浏览器打开后，即可编辑地图并导出房间 JSON。
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+换成自己的 JSON
+默认读取以下文件，路径以解压目录为基准：
+  地图 JSON  ：samples/maps/Sample.map.json
+  资源目录表 ：samples/catalog.json
+  资源根目录 ：samples
+
+启动时传入自己的路径即可，无需修改代码：
+  Windows: run.bat "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+  Linux/macOS: sh run.sh "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+将尖括号内容替换为实际值，省略房间 ID 时加载第一个房间。
+房间 ID 是 JSON 中的 id，可能与界面上的名称不同。
+路径可以是相对于解压目录的路径或绝对路径。还需要匹配的 catalog 和纹理。
+如果 asset 是 textures/Terrain.png，请将 textures 的上级目录设为资源根目录。
+保留文件名大小写，编辑后按 R 重新加载。
+
+接入自己的 SDL 项目
+1. 将整个包放入项目的 third-party/metroidvania-studio 文件夹。
+2. 把 src-sample 中的 sample-room.h 和 sample-room.cpp 复制到自己的 src 文件夹。
+   main.cpp 用于参考；如果已有 main，无需复制它。
+3. 用 add_executable 声明自己的可执行目标后，在 CMakeLists.txt 中加入：
+
+   add_subdirectory(third-party/metroidvania-studio)
+   target_sources(my_app PRIVATE src/sample-room.cpp)
+   target_link_libraries(my_app PRIVATE metroidvania-studio-sdl)
+
+   将 my_app 替换为自己的目标名称。
+4. include sample-room.h。参照 main.cpp，先创建 SDL_Renderer，再创建 SampleRoom，
+   在自己的绘制循环中调用 Draw(width,height)。先销毁示例对象，再销毁 SDL_Renderer。
+5. 熟悉后也可以直接使用 include/StudioSdlRoom.h 中的 SdlRoom。
+   碰撞信息位于示例的 Data().primitives，直接使用 SdlRoom 时则为 data.primitives。
+   物理和游戏行为由自己的项目实现。

@@ -1,0 +1,46 @@
+准备工作
+- 本插件适用于 Godot 4。请先解压整个 ZIP 文件。
+
+启动网页编辑器
+在编辑器发行目录中，运行对应操作系统的脚本。
+浏览器打开后，即可编辑地图并导出房间 JSON。
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+Windows 安装
+1. 关闭目标 Godot 项目。
+2. 运行解压目录中的 install.bat。
+3. 选择目标项目的 project.godot 文件。
+4. 安装完成后打开项目，即可看到 MetroidvaniaStudio 面板。
+   安装程序会复制插件并将其启用。
+
+手动安装 (Windows / Linux / macOS)
+1. 将 addons/metroidvania-studio 复制到项目的 addons 目录下。
+   最终路径：<project>/addons/metroidvania-studio/plugin.cfg
+2. 在 Project > Project Settings > Plugins 中启用 MetroidvaniaStudio。
+   菜单名称会随编辑器语言变化。
+
+导入示例房间
+在面板中依次设置以下内容，路径均相对于 ZIP 的解压目录：
+  Map JSON        : samples/maps/Sample.map.json
+  Catalog JSON    : samples/catalog.json
+  Resource folder : samples
+选择房间并点击 Import / Reload room。
+生成的 .tscn 会保存到 res://metroidvania-studio-imports 并打开。
+请将该场景作为实例放入自己的游戏场景中使用。
+
+导入自己的地图及重新导入
+- 需要地图 JSON、对应的 catalog.json 以及纹理资源根目录。
+- 若 catalog 中的 asset 为 textures/Terrain.png，资源根目录应选择
+  textures 的上级目录。请保留文件名和路径的大小写。
+- 编辑地图后，用相同输入再次点击 Import / Reload room。目前不支持自动同步。
+- 相同房间 ID 的生成场景会被覆盖。请将游戏逻辑放在独立场景中，实例化生成场景。
+- 生成场景内嵌纹理，但运行时仍需要插件的运行时脚本。
+
+像素完美显示
+导入时保持 Configure pixel-perfect display 开启，即可将地图的
+reference_resolution（默认320x180）、视口渲染和整数倍缩放应用到项目设置。
+如需自行管理显示设置，请关闭此选项。RoomCamera 使用导出的PPU（默认16），
+仅将视图对齐到像素，不改变摄像机节点的位置。请用 view_offset 调整取景偏移。
+此摄像机禁用平滑。白色房间边界仅在2D编辑器中显示，不会出现在运行的游戏中。

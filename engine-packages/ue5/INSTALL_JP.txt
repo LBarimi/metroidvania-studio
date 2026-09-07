@@ -1,0 +1,54 @@
+必要なもの
+- Unreal Engine 5 用のソースプラグインです。
+- ZIP 全体を展開し、.uplugin と Source フォルダーを一緒に保持してください。
+
+Web スタジオの起動
+スタジオの配布フォルダーで、OS に対応するスクリプトを実行します。
+ブラウザーが開いたら、マップを編集して部屋の JSON をエクスポートします。
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+Windows でのインストール
+1. 対象の Unreal プロジェクトを閉じます。
+2. 展開したフォルダーの install.bat を実行し、対象の .uproject を選びます。
+3. プロジェクトを開き、プラグインが有効であることを確認します。
+   インストール先: <project>/Plugins/MetroidvaniaStudio
+
+エンジンが自動で見つからない場合は、展開したフォルダーで PowerShell を開き、実行します。
+  .\Install-Integration.ps1 -ProjectFile "<project.uproject>" -EngineRoot "<engine-root>"
+山括弧の部分を、実際のプロジェクトファイルとエンジンルートに置き換えてください。
+
+手動インストール (Windows / Linux / macOS)
+plugin/MetroidvaniaStudio をプロジェクトの Plugins 内にコピーします。
+必要に応じてプロジェクトファイルを再生成し、対象エンジンと OS の C++ ビルド環境で
+プロジェクトの Editor ターゲットをビルドして、プラグインを有効にします。
+
+サンプルの読み込み
+1. レベルに MetroidvaniaStudioRoom アクターを配置します。
+2. Details > MetroidvaniaStudio > Import で次の項目を設定します。
+   パスは展開したフォルダーを基準にしています。
+     Map File          : plugin/MetroidvaniaStudio/samples/maps/Sample.map.json
+     Catalog File      : plugin/MetroidvaniaStudio/samples/catalog.json
+     Resource Directory: plugin/MetroidvaniaStudio/samples
+     Room Id           : 空欄にすると最初の部屋
+3. Import Room を押し、レベルを保存します。インストール先の
+   Plugins/MetroidvaniaStudio/samples も利用できます。
+
+自分のマップと再インポート
+- マップ JSON、対応する catalog.json、テクスチャのリソースルートを指定します。
+- catalog の asset が textures/Terrain.png なら、textures の親フォルダーを
+  ルートに指定します。パスの大文字と小文字を維持してください。
+- Room Id は部屋の名前ではなく、JSON 内の固定の部屋 ID を指定します。
+- 編集後は Import Room を押してファイルを読み直します。自動同期は未対応です。
+- Rebuild Room は保存済みのデータから再構築します。Clear Room は部屋を除去します。
+- JSON と PNG データはアクターに保存されます。レベル保存後は元ファイルなしで
+  再構築できますが、ゲーム実行時にもこのプラグインが必要です。
+
+ピクセルパーフェクトカメラ
+プレイヤーコントローラーのView Targetをインポートした部屋アクターに設定します。
+RoomCamera は出力された基準解像度（既定値320x180）で描画し、PPU（既定値16）
+に従って表示をピクセルに合わせ、補間なしの整数倍率で拡大します。
+余白は黒になります。ウィンドウが基準解像度より小さい場合は1倍で切り抜きます。
+ゲームHUDはこの画像の上に配置できます。軸に沿った2D表示用のカメラです。
+白い境界線はレベルエディター専用で、Game Viewでは非表示です。

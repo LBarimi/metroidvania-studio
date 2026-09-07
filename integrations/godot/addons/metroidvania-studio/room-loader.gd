@@ -249,7 +249,9 @@ func load_room(map_path: String, catalog_path: String, resource_root: String, ro
             view.surfaces.append(data)
             holder.add_child(view)
             view.owner = root
-    var view_camera := Camera2D.new()
+    var view_camera = preload("pixel-camera.gd").new()
+    view_camera.pixels_per_unit = ppu
+    view_camera.reference_resolution = reference
     view_camera.name = "RoomCamera"
     view_camera.position = Vector2(width, -height) * unit * 0.5
     view_camera.zoom = Vector2(ppu, ppu)

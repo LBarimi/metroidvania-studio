@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { gzipSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -40,9 +41,22 @@ export function buildPackage(destination) {
       }
     } else entries.push(tarFile(`${guid}/asset`, readFileSync(asset)));
   }
-  visit(source); entries.push(Buffer.alloc(1024));
+  visit(source);
+  const guides = new Map();
+  for (const language of ['KR', 'EN', 'JP', 'CN', 'TW']) {
+    const name = `INSTALL_${language}.txt`, relative = `Assets/MetroidvaniaStudioIntegration/${name}`;
+    const bytes = Buffer.from(readFileSync(path.join(root, 'engine-packages/unity', name), 'utf8').replaceAll('\r\n', '\n'));
+    // Text guides live beside the archive; stable import metadata is generated only inside it.
+    const guid = createHash('sha256').update(`metroidvania-studio:install-guide:${relative}`).digest('hex').slice(0, 32);
+    if (guids.has(guid)) throw new Error('Duplicate install guide GUID.');
+    guids.add(guid); guides.set(name, bytes);
+    const metadata = Buffer.from(`fileFormatVersion: 2\nguid: ${guid}\nTextScriptImporter:\n  externalObjects: {}\n  userData:\n  assetBundleName:\n  assetBundleVariant:\n`);
+    entries.push(tarFile(`${guid}/pathname`, Buffer.from(relative)), tarFile(`${guid}/asset.meta`, metadata), tarFile(`${guid}/asset`, bytes));
+  }
+  entries.push(Buffer.alloc(1024));
   const output = destination ? path.resolve(destination) : path.join(root, 'engine-packages/unity/metroidvania-studio.unitypackage');
   mkdirSync(path.dirname(output), { recursive: true }); writeFileSync(output, gzipSync(Buffer.concat(entries), { level: 9 }));
+  for (const [name, bytes] of guides) writeFileSync(path.join(path.dirname(output), name), bytes);
   console.log(`Unity package: ${output} (${guids.size} assets)`); return output;
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) buildPackage(process.argv[2]);

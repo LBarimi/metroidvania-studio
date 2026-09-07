@@ -1,0 +1,65 @@
+Run the sample first
+1. Extract the entire metroidvania-studio.zip into a folder of your choice.
+2. Install CMake 3.24+ and a C++17 compiler. On Windows, Visual Studio's
+   Desktop development with C++ workload and CMake tools also work.
+   If SDL 3.4+ is unavailable, the first build downloads SDL.
+3. From the extracted folder:
+   Windows: double-click run.bat; the first run builds automatically.
+   Linux/macOS: run sh build.sh, then sh run.sh in a terminal.
+   Arrow keys move the camera, R reloads the room, Escape closes the window.
+
+Where to start reading the code
+src-sample contains the code used by the running preview. The same folder is
+available beside the ZIP for quick browsing. To build it, use the copy inside
+the fully extracted package.
+
+  sample-room.cpp : Start here: load a map, position the camera, draw a frame.
+  sample-room.h   : Input file paths and the sample class declarations.
+  main.cpp        : SDL window creation, input, rendering loop and cleanup.
+
+In sample-room.cpp, Reload() calls room_.Load(...) and Draw() calls room_.Draw(...).
+These two calls are the main integration points.
+After editing code, run build.bat then run.bat on Windows, or sh build.sh then
+sh run.sh on Linux/macOS. src-sample needs the package's include, src,
+CMakeLists.txt and samples; it is not a separate standalone download.
+
+Start the web studio
+Run the script for your operating system from the studio distribution folder.
+When the browser opens, edit your map and export room JSON.
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+Try your own JSON
+The default input paths are relative to the extracted package:
+  Map JSON     : samples/maps/Sample.map.json
+  Catalog      : samples/catalog.json
+  Resource root: samples
+
+Pass your own paths when launching; no code change is needed:
+  Windows: run.bat "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+  Linux/macOS: sh run.sh "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+Replace the bracketed placeholders. Omit room ID to load the first room.
+Use the stable id field in JSON; it can differ from the room's display name.
+Paths are absolute or relative to the extracted package. Your JSON also needs
+its matching catalog and textures. If a catalog asset is textures/Terrain.png,
+choose the parent of textures as the resource root. Preserve filename casing.
+Press R to load your edits again.
+
+Connect it to your SDL project
+1. Put the whole package in your project's third-party/metroidvania-studio folder.
+2. Copy sample-room.h and sample-room.cpp from src-sample into your own src folder.
+   main.cpp is a reference; keep your existing main if you already have one.
+3. After declaring your executable with add_executable, add to CMakeLists.txt:
+
+   add_subdirectory(third-party/metroidvania-studio)
+   target_sources(my_app PRIVATE src/sample-room.cpp)
+   target_link_libraries(my_app PRIVATE metroidvania-studio-sdl)
+
+   Replace my_app with your target name.
+4. Include sample-room.h. As shown in main.cpp, create SampleRoom after your
+   SDL_Renderer, and call Draw(width,height) from your own rendering loop.
+   Destroy the sample object before destroying the renderer.
+5. You can later use SdlRoom from include/StudioSdlRoom.h directly.
+   Collision data is in SampleRoom.Data().primitives, or SdlRoom.data.primitives
+   when using the loader directly. Connect physics and game behavior in your project.

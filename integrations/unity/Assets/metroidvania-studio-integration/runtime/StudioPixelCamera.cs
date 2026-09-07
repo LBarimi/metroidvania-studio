@@ -35,7 +35,7 @@ namespace MetroidvaniaStudio.Integration
             float fit = Mathf.Min(width / (float)Mathf.Max(1, referenceWidth), height / (float)Mathf.Max(1, referenceHeight));
             float scale = fit >= 1 ? Mathf.Floor(fit) : 1f / Mathf.Ceil(1f / Mathf.Max(.00001f, fit));
             float w = referenceWidth * scale / width, h = referenceHeight * scale / height;
-            target.rect = new Rect(Mathf.Floor((1 - w) * width * .5f) / width, Mathf.Floor((1 - h) * height * .5f) / height, w, h);
+            target.rect = new Rect(Mathf.Floor((width - referenceWidth * scale) * .5f) / width, Mathf.Floor((height - referenceHeight * scale) * .5f) / height, w, h);
         }
     }
 }

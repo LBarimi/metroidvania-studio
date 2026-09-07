@@ -1,0 +1,53 @@
+패키지와 준비 사항
+- Godot 4용 애드온입니다. 엔진이 읽는 설정 파일은 plugin.cfg입니다.
+- ZIP 전체를 먼저 압축 해제하세요. addons 폴더 전체가 필요합니다.
+
+웹 스튜디오 실행
+스튜디오 배포본 폴더에서 운영체제에 맞는 스크립트를 실행합니다.
+브라우저가 열리면 맵을 편집하고 방 JSON을 내보냅니다.
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+Windows 설치
+1. 설치할 Godot 프로젝트를 닫습니다.
+2. 압축을 푼 폴더에서 install.bat를 실행합니다.
+3. 대상 프로젝트의 project.godot 파일을 선택합니다.
+4. 설치가 끝나면 프로젝트를 엽니다. MetroidvaniaStudio 도크가 표시됩니다.
+   설치 프로그램은 애드온 복사와 플러그인 활성화를 수행합니다.
+
+수동 설치 (Windows / Linux / macOS)
+1. ZIP의 addons/metroidvania-studio 폴더를 프로젝트의 addons 아래에 복사합니다.
+   최종 위치: <프로젝트>/addons/metroidvania-studio/plugin.cfg
+2. 프로젝트를 열고 Project > Project Settings > Plugins에서
+   MetroidvaniaStudio를 활성화합니다. 메뉴 이름은 에디터 언어에 따라 다릅니다.
+
+샘플 방 불러오기
+MetroidvaniaStudio 도크에서 아래 항목을 순서대로 지정합니다.
+경로는 압축을 푼 폴더 기준입니다.
+  1. Map JSON        : samples/maps/Sample.map.json
+  2. Catalog JSON    : samples/catalog.json
+  3. Resource folder : samples
+방 드롭다운에서 방을 선택하고 Import / Reload room을 누릅니다.
+res://metroidvania-studio-imports 아래에 .tscn이 저장되고 열립니다.
+원하는 게임 씬에 이 생성된 씬을 인스턴스로 배치해서 사용하세요.
+
+내 맵 불러오기와 다시 불러오기
+- 내보낸 맵 JSON, 대응하는 catalog.json, 텍스처가 있는 리소스 루트가 필요합니다.
+- 리소스 루트는 catalog의 asset 상대 경로가 시작되는 폴더입니다.
+  예: asset이 textures/Terrain.png이면 textures 폴더의 상위를 선택합니다.
+- 파일 이름의 대소문자를 그대로 유지하세요.
+- 맵 편집 후 같은 입력으로 Import / Reload room을 다시 누르면 갱신됩니다.
+  자동 실시간 동기화는 아직 지원하지 않습니다.
+- 같은 방 ID의 생성된 씬은 다시 저장됩니다. 게임 로직은 별도 씬에 두고
+  생성된 씬을 인스턴스로 사용하는 편이 좋습니다.
+- 생성된 씬은 텍스처를 포함합니다. 배포 시 애드온의 런타임 스크립트도 필요합니다.
+
+픽셀퍼펙트 표시
+방을 가져올 때 Configure pixel-perfect display를 켜 두세요. 맵의
+reference_resolution(기본 320x180), 뷰포트 렌더링, 정수 배율 확대를
+프로젝트 설정에 적용합니다. 화면 설정을 직접 관리하려면 체크를 끄세요.
+RoomCamera는 내보낸 PPU(기본 16)를 사용하며 카메라 노드 위치를 바꾸지
+않고 시야만 픽셀에 맞춥니다. 시야 오프셋은 view_offset으로 지정하세요.
+이 카메라는 보간을 사용하지 않습니다. 흰색 방 경계는 2D 편집기에서만
+표시되고 실행 중인 게임에는 나타나지 않습니다.

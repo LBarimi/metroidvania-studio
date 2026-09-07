@@ -1,0 +1,66 @@
+샘플 먼저 실행하기
+1. metroidvania-studio.zip 전체를 원하는 폴더에 압축 해제합니다.
+2. CMake 3.24 이상과 C++17 컴파일러를 준비합니다.
+   Windows는 Visual Studio의 'C++를 사용한 데스크톱 개발'과 CMake 도구를
+   설치해도 됩니다. SDL 3.4 이상이 없으면 첫 빌드에서 SDL을 내려받습니다.
+3. 압축을 푼 폴더에서 실행합니다.
+   Windows: run.bat 더블클릭 (처음에는 자동으로 빌드합니다.)
+   Linux/macOS: 터미널에서 sh build.sh 실행 후 sh run.sh
+   방향키로 화면 이동, R로 방 다시 읽기, Esc로 종료합니다.
+
+샘플 코드는 어디부터 보면 되나요?
+src-sample 폴더에는 실제로 실행되는 예제 코드가 들어 있습니다.
+ZIP 옆에도 같은 폴더가 있어 코드를 바로 열어볼 수 있습니다.
+빌드할 때는 ZIP 전체를 푼 폴더 안의 코드를 사용하세요.
+
+  sample-room.cpp : 먼저 읽어보세요. 맵 읽기 → 카메라 설정 → 화면 그리기입니다.
+  sample-room.h   : JSON, 카탈로그, 리소스 폴더 경로와 샘플 클래스의 선언입니다.
+  main.cpp        : SDL 창 생성, 입력, 반복 그리기, 종료 순서를 보여줍니다.
+
+sample-room.cpp의 Reload()에서 room_.Load(...)로 맵을 읽고,
+Draw()에서 room_.Draw(...)로 화면에 그립니다. 우선 이 두 곳을 보면 됩니다.
+코드를 수정했다면 Windows는 build.bat 후 run.bat,
+Linux/macOS는 sh build.sh 후 sh run.sh로 다시 실행합니다.
+src-sample만으로는 빌드할 수 없습니다. 패키지의 include, src,
+CMakeLists.txt와 samples도 함께 있어야 합니다.
+
+웹 스튜디오 실행
+스튜디오 배포본 폴더에서 운영체제에 맞는 스크립트를 실행합니다.
+브라우저가 열리면 맵을 편집하고 방 JSON을 내보냅니다.
+  Windows: platform/win/web/run.bat
+  Linux  : bash platform/linux/run.sh
+  macOS  : platform/mac/run.command
+
+내 JSON으로 바꿔보기
+샘플은 기본적으로 아래 파일을 읽습니다. 경로는 압축을 푼 폴더 기준입니다.
+  맵 JSON    : samples/maps/Sample.map.json
+  카탈로그   : samples/catalog.json
+  리소스 루트: samples
+
+내 파일을 읽을 때는 실행할 때 경로를 넘기면 됩니다. 코드 수정은 필요 없습니다.
+  Windows: run.bat "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+  Linux/macOS: sh run.sh "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+꺾쇠 부분을 내 경로로 바꾸고, 방 ID를 생략하면 첫 번째 방을 읽습니다.
+방 ID는 JSON 안의 id 값입니다. 화면에 표시되는 방 이름과 다를 수 있습니다.
+경로는 압축을 푼 폴더 기준 또는 절대 경로로 입력하세요.
+JSON뿐 아니라 대응하는 catalog와 텍스처도 필요합니다.
+catalog의 asset이 textures/Terrain.png이면 textures의 상위 폴더를
+리소스 루트로 지정합니다. 파일 이름의 대소문자를 유지하고, 편집 후 R로 다시 읽습니다.
+
+내 SDL 프로젝트에 연결하기
+1. 패키지 전체를 내 프로젝트의 third-party/metroidvania-studio에 둡니다.
+2. src-sample의 sample-room.h와 sample-room.cpp를 내 프로젝트의 src로 복사합니다.
+   main.cpp는 참고용입니다. 이미 내 프로그램의 main이 있다면 복사하지 않아도 됩니다.
+3. 내 실행 파일 타깃을 add_executable로 선언한 뒤 CMakeLists.txt에 추가합니다.
+   my_app은 내 프로젝트의 타깃 이름으로 바꾸세요.
+
+   add_subdirectory(third-party/metroidvania-studio)
+   target_sources(my_app PRIVATE src/sample-room.cpp)
+   target_link_libraries(my_app PRIVATE metroidvania-studio-sdl)
+
+4. 내 코드에서 sample-room.h를 include합니다. main.cpp의 예처럼 SDL_Renderer를
+   만든 후 SampleRoom을 생성하고, 내 반복 그리기 안에서 Draw(width,height)를 호출합니다.
+   샘플 객체를 먼저 제거한 다음 SDL_Renderer를 제거하세요.
+5. 익숙해지면 샘플 클래스 없이 include/StudioSdlRoom.h의 SdlRoom을 직접 사용해도 됩니다.
+   충돌 정보는 샘플의 Data().primitives 또는 SdlRoom의 data.primitives에서 읽습니다.
+   물리와 게임 동작은 내 프로젝트에서 연결합니다.

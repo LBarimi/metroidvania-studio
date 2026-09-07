@@ -1,0 +1,36 @@
+準備工作與安裝
+- 以 Unity 6 為基準開發。
+- 此套件是 Unity 整合模組。網頁編輯器與本機伺服器需要另外啟動。
+1. 開啟目標 Unity 專案。
+2. 按兩下 metroidvania-studio.unitypackage，或在 Unity 中透過
+   Assets > Import Package > Custom Package 選取該檔案。
+3. 選取全部項目，按下 Import。
+   安裝資料夾：Assets/MetroidvaniaStudioIntegration
+   INSTALL_*.txt 檔案也位於此資料夾。
+
+啟動網頁編輯器
+1. 在編輯器發行資料夾中，使用對應作業系統的啟動指令碼：
+   Windows: platform/win/web/run.bat
+   Linux  : bash platform/linux/run.sh
+   macOS  : platform/mac/run.command
+
+連接 Unity
+1. 在 Unity 中開啟 Tools > MetroidvaniaStudio。
+2. 輸入正在執行的編輯器的本機位址，按下 Connect / Refresh。
+   預設位址：http://127.0.0.1:18765/
+3. 選取房間並按下 Load / Reload room。房間會產生在目前場景中，請儲存場景。
+4. 開啟 Follow web edits，並保持連接視窗開啟。
+   在網頁編輯器中修改已匯入的房間，Unity 中的房間也會自動更新。
+   遊戲執行期間會暫停自動更新。
+5. Remove imported room 只移除整合模組在目前場景中產生的房間。
+   重新載入會替換產生的房間，請將遊戲邏輯放在產生內容之外。
+   手動載入與移除支援 Undo；自動更新不會連續新增 Undo 記錄。
+
+匯入的資料與攝影機
+- 貼圖與資源儲存在 Assets/MetroidvaniaStudioImports 中。
+  儲存場景後可關閉網頁編輯器繼續使用，中斷連線不會刪除資料。
+- 整合模組匯入地形、物件、觸發器與中繼資料。遊戲行為由自己的專案實作。
+- 預設 PPU 為 16，參考解析度為 320x180，遵循網頁端的攝影機設定。
+- 載入時會將主攝影機移至房間中央；沒有主攝影機時會建立一個。
+  StudioPixelCamera 管理攝影機尺寸與整數縮放的檢視區。
+- 執行匯入的場景時，仍需要整合模組的 Runtime 程式碼以及匯入的資源。
