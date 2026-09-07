@@ -7,6 +7,7 @@ import type { MapFileHandle } from './file-access.js';
 import { initializeWorkspaceFolders, openWorkspaceFolders } from './workspace-folders.js';
 import { openScriptDialog } from './script-dialog.js';
 import { EditorApi, EditorApiError, localJson } from './api.js';
+import { createCameraControls } from './camera-controls.js';
 import { Locale, LANGUAGES } from './locale.js';
 import type { Language } from './locale.js';
 import { syncLabels } from './sync-status.js';
@@ -338,22 +339,7 @@ function roomContextMenu(point: Point, client: Point): void {
   });
   create.focus();
 }
-async function cameraSettingsDialog(): Promise<void> {
-  await settleFileSnapshot();
-  if (!state) return;
-  const camera = map.cameraProfile!, expectation = expectedAt(state), inputs = new Map<string, HTMLInputElement>();
-  showModal(locale.t('cameraSettings'), body => {
-    body.append(text('p', locale.t('cameraSettingsHelp')));
-    for (const [key, caption, value, maximum] of [['ppu', 'PPU', camera.ppu, 8192], ['referenceWidth', locale.t('resolutionWidth'), camera.referenceWidth, 16384], ['referenceHeight', locale.t('resolutionHeight'), camera.referenceHeight, 16384]] as const) {
-      const [label, input] = labelInput(caption, value, 'number'); input.min = '1'; input.max = String(maximum); input.step = '1'; input.id = `camera-${key}`; body.append(label); inputs.set(key, input);
-    }
-    body.append(button(locale.t('cameraDefaults'), () => { for (const [key, value] of Object.entries({ ppu: 16, referenceWidth: 320, referenceHeight: 180 })) inputs.get(key)!.value = String(value); }));
-  }, async () => {
-    const values = numberValues(inputs);
-    for (const [key, value] of Object.entries(values)) if (!Number.isInteger(value) || value < 1 || value > (key === 'ppu' ? 8192 : 16384)) throw new Error(locale.t('cameraSettingsInvalid'));
-    await run('cameraSettings', values, expectation);
-  });
-}
+let cameraControls: ReturnType<typeof createCameraControls> | undefined;
 function roomAddDialog(at?: Point): void {
   const expectation = state ? expectedAt(state) : undefined;
   let name: HTMLInputElement; const inputs = new Map<string, HTMLInputElement>();
@@ -386,7 +372,6 @@ function drawChrome(): void {
   el<HTMLInputElement>('room-search').placeholder = locale.t('search'); el<HTMLInputElement>('palette-search').placeholder = locale.t('search'); el<HTMLButtonElement>('add-room').title = locale.t('addRoom');
   const actions = el('file-actions'); actions.replaceChildren();
   const undo = button(locale.t('undo') + '   Ctrl+Z', () => run('undo')), redo = button(locale.t('redo') + '   Ctrl+Y', () => run('redo')); undo.title = locale.t('undo') + ' · Ctrl+Z'; redo.title = locale.t('redo') + ' · Ctrl+Y'; undo.id = 'undo'; redo.id = 'redo';
-  const cameraSettings = button(locale.t('cameraSettings'), cameraSettingsDialog, 'ghost'); cameraSettings.id = 'camera-settings-action';
   const inspectorToggle = button('☷ ' + locale.t('inspector'), () => { inspectorHidden = !inspectorHidden; localStorage.setItem('mapstudio.inspectorHidden', String(inspectorHidden)); updateView(); }, 'ghost'); inspectorToggle.id = 'inspector-toggle';
   const scripts = button(locale.t('scripts.menu'), () => openScriptDialog({ t: key => locale.t(key),
     prepare: async () => { await settleFileSnapshot(); await api.refresh(false); if (!api.state) throw new Error(locale.t('loading')); return { instanceId: api.state.instanceId, documentRevision: api.state.documentRevision }; },
@@ -398,7 +383,7 @@ function drawChrome(): void {
     button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
     button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')), null, button(locale.t('storageFolders'), () => openWorkspaceFolders(locale)), scripts]));
-  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null, cameraSettings]),
+  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo]),
     menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('sampleWorld'), openSampleWorld), null, button(locale.t('docs.title'), () => { window.open('/docs/index.html', '_blank', 'noopener'); }), button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }), null, button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
   const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
   updateView(); drawPanels(true); renderInspector(true);
@@ -413,12 +398,18 @@ function updateView(): void {
   map.setActive(!miniMode); mini.setActive(miniMode);
   const tabButtons = el('tabs').querySelectorAll('button'); tabButtons[0]?.classList.toggle('active', !miniMode); tabButtons[1]?.classList.toggle('active', miniMode);
   const toolbar = el('view-toolbar'); toolbar.replaceChildren(button('⊞ ' + locale.t('fit'), () => { if (miniMode) mini.fit(); else if (map.cameraPreview) { map.gameView(false); updateView(); requestAnimationFrame(() => map.fit()); } else map.fit(); }), button('⌾ ' + locale.t('frameRoom'), () => miniMode ? mini.frameRoom() : map.frameRoom()));
+  cameraControls = undefined;
   if (!miniMode) {
     const camera = button(locale.t('camera'), () => { map.gameView(); updateView(); }, map.cameraPreview ? 'active' : ''); camera.id = 'camera-preview'; camera.setAttribute('aria-pressed', String(map.cameraPreview)); camera.title = locale.t('cameraHelp');
     const defaults = button(locale.t('tilesetDefaultView'), () => { map.setDefaultTiles(!map.showDefaultTiles); updateView(); }, map.showDefaultTiles ? 'active' : '');
     defaults.id = 'default-tile-view'; defaults.setAttribute('aria-pressed', String(map.showDefaultTiles));
     toolbar.append(defaults);
-    toolbar.append(camera, button('−', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, -1), 'icon'), text('span', '', 'zoom-readout'), button('+', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, 1), 'icon'));
+    cameraControls = createCameraControls(key => locale.t(key), values => run('cameraSettings', () => {
+      const current = map.cameraProfile!;
+      return { ppu: current.ppu, referenceWidth: current.referenceWidth, referenceHeight: current.referenceHeight, ...values };
+    }), toast);
+    cameraControls.update(map.cameraProfile);
+    toolbar.append(camera, cameraControls.element, button('−', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, -1), 'icon'), text('span', '', 'zoom-readout'), button('+', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, 1), 'icon'));
   }
   toolbar.append(text('div', '', 'spacer'));
   if (!miniMode && !map.cameraPreview) toolbar.append(check(locale.t('grid'), map.showGrid, checked => { map.showGrid = checked; map.requestDraw(); })[0]);
@@ -736,7 +727,7 @@ function stateChanged(): void {
   else if (!state.notice && lastNotice && el('toast').textContent === lastNotice) {
     el('toast').hidden = true; clearTimeout(toastTimer);
   }
-  lastNotice = state.notice || ''; map.setState(state); mini.setState(state); queuePanels(); drawStatus();
+  lastNotice = state.notice || ''; map.setState(state); mini.setState(state); cameraControls?.update(map.cameraProfile); queuePanels(); drawStatus();
 }
 api.addEventListener('state', stateChanged); api.addEventListener('busy', () => drawStatus()); api.addEventListener('error', event => toast((event as CustomEvent).detail));
 api.addEventListener('connection', () => drawStatus()); api.addEventListener('offline', () => drawStatus());

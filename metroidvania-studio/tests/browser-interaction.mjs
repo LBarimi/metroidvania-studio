@@ -284,7 +284,8 @@ try {
   assert.equal(await page.locator('#undo').isDisabled(), true, 'Game view must disable authoring history buttons.');
   assert.equal(await page.locator('#redo').isDisabled(), true, 'Game view must disable authoring history buttons.');
   assert.equal(await page.locator('#inspector-toggle').isDisabled(), true, 'Game view must disable its hidden inspector control.');
-  assert.equal(await page.locator('#view-toolbar select').count(), 0, 'Game view must not show MiniMap-only outline controls.');
+  assert.equal(await page.locator('#minimap-outline-width, #minimap-entrance-length').count(), 0, 'Game view must not show MiniMap-only controls.');
+  assert.equal(await page.locator('#view-toolbar .camera-controls select').count(), 2);
   assert.ok(previewCanvas.width > editCanvas.width + 300, 'Game view must reclaim the authoring side panels for a larger preview.');
   assert.equal(previewBacking.resolution, `${profile.referenceWidth}x${profile.referenceHeight}`);
   assert.equal(previewBacking.scale, expectedCameraScale, 'Game view must choose the largest fitting integer physical-pixel scale.');

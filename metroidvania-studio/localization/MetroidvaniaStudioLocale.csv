@@ -275,12 +275,9 @@ stageThemes.darkGray,짙은 회색 테마,Dark gray theme,濃いグレーのテ�
 stageThemes.green,초록 테마,Green theme,緑のテーマ,绿色主题,綠色主題,Зелёная тема
 stageThemes.orange,주황 테마,Orange theme,オレンジのテーマ,橙色主题,橙色主題,Оранжевая тема
 stageThemes.yellow,노랑 테마,Yellow theme,黄色のテーマ,黄色主题,黃色主題,Жёлтая тема
-external.cameraSettings,카메라 설정,Camera settings,カメラ設定,相机设置,攝影機設定,Настройки камеры
-external.cameraSettingsHelp,맵마다 저장됩니다. PPU는 월드 단위당 픽셀 수이며 타일 원본은 16×16입니다. 해상도는 게임 시야를 정합니다.,Saved per map. PPU sets pixels per world unit; source tiles remain 16×16. Resolution defines the game view.,設定はマップごとに保存されます。PPUはワールド単位あたりのピクセル数です。元のタイルは16×16のままです。解像度でゲームの表示範囲を設定します。,设置随地图保存。PPU 表示每世界单位的像素数，源图块保持 16×16。分辨率决定游戏视野。,設定隨地圖儲存。PPU 表示每世界單位的像素數，原始圖塊保持 16×16。解析度決定遊戲視野。,Настройки сохраняются в карте. PPU — число пикселей на единицу мира; исходные тайлы остаются 16×16. Разрешение задаёт игровой обзор.
-external.resolutionWidth,기준 해상도 가로,Reference width,基準解像度の幅,基准分辨率宽度,基準解析度寬度,Ширина разрешения
-external.resolutionHeight,기준 해상도 세로,Reference height,基準解像度の高さ,基准分辨率高度,基準解析度高度,Высота разрешения
-external.cameraDefaults,기본값 16 PPU · 320×180,Defaults 16 PPU · 320×180,初期値 16 PPU · 320×180,默认 16 PPU · 320×180,預設 16 PPU · 320×180,По умолчанию: 16 PPU · 320×180
-external.cameraSettingsInvalid,PPU는 1~8192 및 해상도는 1~16384 사이 정수로 입력하세요.,Use integer PPU from 1 to 8192 and resolution from 1 to 16384.,PPUは1～8192、解像度は1～16384の整数を入力してください。,PPU 须为 1–8192 的整数，分辨率须为 1–16384 的整数。,PPU 須為 1–8192 的整數，解析度須為 1–16384 的整數。,PPU: целое число от 1 до 8192; разрешение: от 1 до 16384.
+external.resolution,해상도,Resolution,解像度,分辨率,解析度,Разрешение
+external.ppuHelp,월드 단위당 픽셀 수입니다. 맵에 저장됩니다.,Pixels per world unit. Saved with the map.,ワールド単位あたりのピクセル数です。マップに保存されます。,每世界单位的像素数。随地图保存。,每世界單位的像素數。隨地圖儲存。,Пиксели на единицу мира. Сохраняется в карте.
+external.resolutionHelp,게임 시야의 기준 해상도입니다. 맵에 저장됩니다.,Reference resolution for the game view. Saved with the map.,ゲーム表示の基準解像度です。マップに保存されます。,游戏视野的基准分辨率。随地图保存。,遊戲視野的基準解析度。隨地圖儲存。,Базовое разрешение игрового обзора. Сохраняется в карте.
 external.language,언어,Language,言語,语言,語言,Язык
 external.helpMenu,도움말,Help,ヘルプ,帮助,說明,Справка
 external.settings,설정,Settings,設定,设置,設定,Настройки

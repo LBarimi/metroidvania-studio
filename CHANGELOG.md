@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Remove the raw map JSON settings dialog from Edit, while retaining camera settings and existing document metadata.
+- Place PPU and resolution preset dropdowns beside Game view, with per-map persistence, Undo/Redo and preservation of imported custom values. Remove the camera settings dialog from Edit.
+
+- Remove the raw map JSON settings dialog from Edit while preserving existing document metadata.
 
 - Store the workspace catalog inside `.studio`, migrate existing root catalogs with an internal backup, and preserve palette groups, texture references and custom catalog locations.
 

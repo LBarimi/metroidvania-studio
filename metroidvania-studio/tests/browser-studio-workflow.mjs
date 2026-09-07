@@ -125,10 +125,11 @@ try {
   checks.push('room inspector copy/paste, horizontal/vertical flips, rotation and delete affect whole rooms with Undo');
   assert.deepEqual(await page.locator('.top-actions > .menu > button').allTextContents(), ['File (F)', 'Edit (E)', 'Help (H)']);
   await page.locator('#map-canvas').focus(); await page.keyboard.press('Alt+e');
-  assert.equal(await page.locator('#camera-settings-action').isVisible(), true);
+  assert.equal(await page.locator('#camera-settings-action').count(), 0);
+  assert.equal(await page.locator('#camera-ppu').isVisible(), true);
   await page.locator('#redo').click(); await until(s => s.document.rooms.length === 1);
   await page.locator('#edit-menu-button').click(); await page.locator('#undo').click(); await until(s => JSON.stringify(s.document) === original);
-  checks.push('Edit menu contains working Undo/Redo plus camera and map settings; top bar has exactly three menus');
+  checks.push('Edit menu contains working Undo/Redo; camera controls sit beside Game view and the top bar has exactly three menus');
 
 
   await selectA(); await page.locator('#tools [data-tool="2"]').click(); await until(s => s.selection.tool === 2);
