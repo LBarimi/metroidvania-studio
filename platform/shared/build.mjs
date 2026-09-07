@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { currentBuild, sourceState } from './build-state.mjs';
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const versionPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
@@ -63,13 +64,18 @@ export function checkedInputs(studioRoot) {
     return relative;
   });
 }
-export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.METROIDVANIA_STUDIO_DOTNET || 'dotnet', runner = runCommand, checkOnly = false } = {}) {
+export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.METROIDVANIA_STUDIO_DOTNET || 'dotnet', runner = runCommand, checkOnly = false, ensureCurrent = false } = {}) {
   studioRoot = path.resolve(studioRoot);
   if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Node.js 24 or later is required for building.');
   const serverProject = path.join(studioRoot, 'metroidvania-studio/server/MetroidvaniaStudio.Server.csproj');
   const launcherProject = path.join(studioRoot, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.csproj');
   const cliProject = path.join(studioRoot, 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.csproj');
   if (!existsSync(serverProject) || !existsSync(launcherProject) || !existsSync(cliProject)) throw new Error('Building requires a source checkout. Use the run script for a prebuilt application.');
+  if (ensureCurrent && !checkOnly) {
+    const status = currentBuild(studioRoot);
+    if (status.current) { console.log('Local build is up to date.'); return status.output; }
+    console.log(status.reason + ' Building before launch...');
+  }
   const sdk = runner(dotnet, ['--list-sdks'], { cwd: studioRoot, capture: true });
   if (!/^10\./m.test(sdk || '')) throw new Error('.NET SDK 10 is required for building.');
   if (!/^git version /m.test(runner('git', ['--version'], { cwd: studioRoot, capture: true }) || '')) throw new Error('Git is required for source validation.');
@@ -81,6 +87,7 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
     const version = JSON.parse(readFileSync(path.join(studioRoot, 'version.json'), 'utf8')).version;
     if (!versionPattern.test(version)) throw new Error('Invalid build version.');
     const inputs = checkedInputs(studioRoot);
+    const source = sourceState(studioRoot);
     const stamp = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
     const folder = `${version}-${stamp}-${randomBytes(4).toString('hex')}`;
     const buildsRoot = path.join(studioRoot, 'builds'), output = path.join(buildsRoot, folder);
@@ -110,6 +117,9 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
     }
     for (const needed of ['metroidvania-studio/dist/index.html', 'metroidvania-studio/server/MetroidvaniaStudio.Server.dll',
       'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll', 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.dll']) if (!existsSync(path.join(output, needed))) throw new Error(`Incomplete build: ${needed}`);
+    if (sourceState(studioRoot).sourceHash !== source.sourceHash)
+      throw new Error('Source files changed during the build. Run again after saving your changes; the previous build is preserved.');
+    writeAtomic(path.join(output, 'source-state.json'), source);
     // Cache is private, ignored state. Only absolute discovered executables are persisted.
     let dotnetPath = path.isAbsolute(dotnet) ? dotnet : '';
     if (!dotnetPath) {
@@ -133,8 +143,9 @@ export function main(args = process.argv.slice(2)) {
   const options = {};
   for (let index = 0; index < args.length; index++) {
     if (args[index] === '--check') options.checkOnly = true;
+    else if (args[index] === '--ensure') options.ensureCurrent = true;
     else if (['--studio-root', '--dotnet'].includes(args[index]) && args[index + 1]) options[args[index++] === '--studio-root' ? 'studioRoot' : 'dotnet'] = args[index];
-    else throw new Error('Usage: build.mjs [--studio-root <folder>] [--dotnet <executable>] [--check]');
+    else throw new Error('Usage: build.mjs [--studio-root <folder>] [--dotnet <executable>] [--check] [--ensure]');
   }
   return buildStudio(options);
 }

@@ -65,10 +65,14 @@ if [ "$action" = check ] && [ ! -f "$launcher" ]; then
     node=$(find_node)
     exec "$node" "$shared_dir/build.mjs" --studio-root "$studio_root" --dotnet "$dotnet" --check
 fi
-if [ "$action" = run ] && [ "$published" = false ] && { [ ! -f "$launcher" ] || { [ ! -f "$studio_root/builds/latest.json" ] && [ "$explicit_build" = false ]; }; }; then
-    printf '%s\n' 'Building once before the first launch...'
-    node=$(find_node)
-    "$node" "$shared_dir/build.mjs" --studio-root "$studio_root" --dotnet "$dotnet"
+if [ "$action" = run ] && [ "$published" = false ]; then
+    if [ "$explicit_build" = false ] && [ -f "$launcher" ]; then
+        node=$(find_node)
+        "$node" "$shared_dir/build.mjs" --studio-root "$studio_root" --dotnet "$dotnet" --ensure
+    elif [ ! -f "$launcher" ]; then
+        node=$(find_node)
+        "$node" "$shared_dir/build.mjs" --studio-root "$studio_root" --dotnet "$dotnet"
+    fi
 fi
 if [ ! -f "$launcher" ]; then printf '%s\n' 'The launcher build was not produced.' >&2; exit 1; fi
 export DOTNET_CLI_TELEMETRY_OPTOUT=1

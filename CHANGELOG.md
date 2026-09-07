@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Source Run scripts automatically rebuild outdated or incomplete web builds before launch, while preserving the running session if a build fails.
+
 - Add a six-room sample world for fresh workspaces and a Help menu action to reopen it. Move README demonstrations ahead of setup while keeping a short automation introduction.
 
 - Reload registered tile and object textures after external image saves, preserving map edits and the previous image while replacements load.

@@ -36,11 +36,16 @@ function Invoke-StudioLauncher {
     $published = Test-Path -LiteralPath $launcher -PathType Leaf
     if (!$published) { $launcher = Join-Path $script:StudioToolsRoot 'metroidvania-studio/launcher/bin/Release/net10.0/MetroidvaniaStudio.Launcher.dll' }
     $launcherExists = Test-Path -LiteralPath $launcher -PathType Leaf
-    $latestExists = Test-Path -LiteralPath (Join-Path $script:StudioToolsRoot 'builds/latest.json') -PathType Leaf
     $hasExplicitBuild = $Arguments -contains '--build-directory'
     if (!$launcherExists -and $Action -eq 'check') { & (Join-Path $script:StudioToolsRoot 'metroidvania-studio/Build-MetroidvaniaStudio.ps1') -CheckOnly; return }
-    if (!$published -and $Action -eq 'run' -and (!$launcherExists -or (!$latestExists -and !$hasExplicitBuild))) {
-        Write-Output 'No complete local build yet. Building once before the first launch...'
+    if (!$published -and $Action -eq 'run' -and !$hasExplicitBuild) {
+        $node = Find-StudioRuntime -Name node.exe -VersionArgument --version -VersionPattern '^v(?:2[4-9]|[3-9][0-9]|[1-9][0-9]{2,})\.' -Requirement 'Node.js 24 or later is required for checking source builds.' -Locations @("$env:ProgramFiles/nodejs/node.exe", "$env:LOCALAPPDATA/Programs/nodejs/node.exe")
+        $buildDotnet = Find-StudioRuntime -Name dotnet.exe -Locations (Get-StudioDotnetLocations) -VersionArgument --list-runtimes -VersionPattern '(?m)^Microsoft\.AspNetCore\.App 10\.' -Requirement 'ASP.NET Core Runtime 10 is required.'
+        $buildArguments = @('--studio-root', $script:StudioToolsRoot, '--dotnet', $buildDotnet)
+        if ($launcherExists) { $buildArguments += '--ensure' }
+        & $node (Join-Path $script:StudioToolsRoot 'platform/shared/build.mjs') @buildArguments
+        if ($LASTEXITCODE -ne 0) { throw 'Build failed. The existing server and previous successful build were left unchanged.' }
+    } elseif (!$published -and $Action -eq 'run' -and !$launcherExists) {
         & (Join-Path $script:StudioToolsRoot 'metroidvania-studio/Build-MetroidvaniaStudio.ps1')
     }
     if (!(Test-Path -LiteralPath $launcher -PathType Leaf)) { throw 'The launcher build was not produced.' }

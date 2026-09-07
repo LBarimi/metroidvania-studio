@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
-import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { acquireBuildLock, buildStudio, checkedInputs } from './build.mjs';
+import { currentBuild, sourceState } from './build-state.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const fixtureParent = path.join(root, 'metroidvania-studio/.local');
@@ -26,9 +27,11 @@ function fixture() {
   put(path.join(checkout, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.csproj'));
   put(path.join(checkout, 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.csproj'));
   put(path.join(checkout, 'samples/maps/Sample.map.json'), '{"rooms":[]}');
+  put(path.join(checkout, 'samples/catalog.json'), '{}');
+  put(path.join(checkout, 'metroidvania-studio/localization/MetroidvaniaStudioLocale.csv'), 'Key,KR,EN');
   put(path.join(checkout, 'platform/shared/launch.sh'), '#!/bin/sh');
   put(path.join(checkout, 'tools/build/package-inputs.json'), JSON.stringify([
-    'metroidvania-studio/dist', 'samples', 'platform/shared/launch.sh', 'LICENSE', 'THIRD-PARTY-NOTICES.md'
+    'metroidvania-studio/dist', 'samples', 'metroidvania-studio/localization', 'platform/shared/launch.sh', 'LICENSE', 'THIRD-PARTY-NOTICES.md'
   ]));
   for (const notice of ['LICENSE', 'THIRD-PARTY-NOTICES.md'])
     put(path.join(checkout, notice), readFileSync(path.join(root, notice)));
@@ -45,11 +48,12 @@ function buildRunner(checkout, failure = '') {
       const name = args[1].includes('/server/') || args[1].includes('\\server\\') ? 'Server' : args[1].includes('Cli.csproj') ? 'Cli' : 'Launcher';
       if (failure === name) throw new Error('Fixture publish failure: ' + name);
       const output = args[args.indexOf('--output') + 1];
-      if (failure !== 'missing-' + name) put(path.join(output, 'MetroidvaniaStudio.' + name + '.dll'), name);
+      if (failure !== 'missing-' + name) for (const extension of ['dll', 'deps.json', 'runtimeconfig.json'])
+        put(path.join(output, 'MetroidvaniaStudio.' + name + '.' + extension), name);
       return '';
     }
     if (args[0].endsWith('build-runtime.mjs')) return '';
-    if (args[0].endsWith('build-web.mjs')) { put(path.join(args[1], 'index.html'), '<!doctype html>'); return ''; }
+    if (args[0].endsWith('build-web.mjs')) { for (const file of ['index.html', 'app.js', 'map-canvas.js']) put(path.join(args[1], file), 'fixture web'); return ''; }
     if (args[0].endsWith('build-packages.mjs')) {
       const output = args[args.indexOf('--output') + 1];
       for (const engine of ['unity', 'godot', 'ue4', 'ue5', 'sdl'])
@@ -103,6 +107,65 @@ for (const failure of ['Launcher', 'missing-Launcher', 'Cli', 'missing-Cli', 'mi
     else process.env.METROIDVANIA_STUDIO_DOTNET = previous;
   }
 });
+
+test('ensure skips compilation for matching content, including timestamp-only and local workspace changes', () => {
+  const checkout = fixture(), { runner } = buildRunner(checkout), output = buildStudio(options(checkout, runner));
+  assert.equal(currentBuild(checkout).current, true);
+  const source = path.join(checkout, 'metroidvania-studio/server/MetroidvaniaStudio.Server.csproj');
+  utimesSync(source, new Date(), new Date(Date.now() + 60000));
+  for (const relative of ['.local/workspace/Maps/draft.json', 'metroidvania-studio/.local/log.txt',
+    'metroidvania-studio/server/obj/generated.cs', 'metroidvania-studio/web/contracts.generated.ts']) put(path.join(checkout, relative), 'local or generated');
+  const noBuild = () => { throw new Error('Current builds must not invoke compilers or SDK checks.'); };
+  assert.equal(buildStudio({ ...options(checkout, noBuild), ensureCurrent: true }), output);
+});
+
+test('source comparison detects edits, additions, deletions and version changes', () => {
+  const checkout = fixture(), output = buildStudio(options(checkout, buildRunner(checkout).runner));
+  const original = sourceState(checkout);
+  for (const relative of ['metroidvania-studio/web/app.ts', 'metroidvania-studio/server/NewFeature.cs',
+    'metroidvania-studio/contracts/schema.json', 'metroidvania-studio/localization/extra.csv', 'samples/textures/custom.png',
+    'docs/guide.md', 'tools/docs/theme.css', 'platform/shared/build.mjs', 'engine-packages/godot/INSTALL_EN.txt']) {
+    const target = path.join(checkout, relative);
+    put(target, 'new input'); assert.equal(currentBuild(checkout).current, false, relative);
+    put(target, 'edited input'); assert.notEqual(sourceState(checkout).sourceHash, original.sourceHash);
+    unlinkSync(target); assert.equal(currentBuild(checkout).current, true, relative);
+  }
+  const source = path.join(checkout, 'samples/maps/Sample.map.json'), bytes = readFileSync(source);
+  unlinkSync(source); assert.equal(currentBuild(checkout).current, false);
+  put(source, bytes); assert.equal(currentBuild(checkout).current, true);
+  put(path.join(checkout, 'version.json'), '{"version":"0.1.1"}');
+  assert.match(currentBuild(checkout).reason, /version/);
+  assert.ok(existsSync(path.join(output, 'source-state.json')));
+});
+
+test('automatic rebuild upgrades legacy metadata and incomplete outputs without changing a successful pointer on failure', () => {
+  const checkout = fixture(), first = buildStudio(options(checkout, buildRunner(checkout).runner));
+  unlinkSync(path.join(first, 'source-state.json'));
+  assert.equal(currentBuild(checkout).current, false);
+  const next = buildStudio({ ...options(checkout, buildRunner(checkout).runner), ensureCurrent: true });
+  assert.notEqual(next, first); assert.equal(currentBuild(checkout).current, true);
+  const pointer = path.join(checkout, 'builds/latest.json'), before = readFileSync(pointer);
+  unlinkSync(path.join(next, 'metroidvania-studio/dist/app.js'));
+  assert.match(currentBuild(checkout).reason, /incomplete/);
+  assert.throws(() => buildStudio({ ...options(checkout, buildRunner(checkout, 'Launcher').runner), ensureCurrent: true }), /failure/);
+  assert.deepEqual(readFileSync(pointer), before);
+  const repaired = buildStudio({ ...options(checkout, buildRunner(checkout).runner), ensureCurrent: true });
+  assert.notEqual(repaired, next); assert.equal(currentBuild(checkout).current, true);
+});
+
+test('editing source during a build cannot mark the partial result current', () => {
+  const checkout = fixture(), { runner } = buildRunner(checkout);
+  buildStudio(options(checkout, runner));
+  const pointer = path.join(checkout, 'builds/latest.json'), before = readFileSync(pointer);
+  const changingRunner = (command, args, settings) => {
+    const result = runner(command, args, settings);
+    if (args[0].endsWith('build-packages.mjs')) put(path.join(checkout, 'metroidvania-studio/web/late.ts'), 'changed during build');
+    return result;
+  };
+  assert.throws(() => buildStudio(options(checkout, changingRunner)), /changed during the build/);
+  assert.deepEqual(readFileSync(pointer), before);
+});
+
 test('check only is read-only and validates SDK and Git without build output', () => {
   const checkout = fixture(), { runner, calls } = buildRunner(checkout);
   assert.equal(buildStudio({ ...options(checkout, runner), checkOnly: true }), null);
@@ -187,4 +250,51 @@ test('POSIX wrappers parse and preserve spaces, Unicode and modes without Node o
   execFileSync(shell, [run, '--build-directory', 'explicit bundle', '--project', workspace, '--no-browser'], { env, windowsHide: true });
   assert.deepEqual(readFileSync(argumentsPath, 'utf8').trimEnd().split('\n').slice(-5), ['--build-directory', 'explicit bundle', '--project', workspace, '--no-browser']);
   assert.equal(existsSync(path.join(checkout, 'builds')), false);
+});
+
+test('POSIX source runner checks freshness before launching and stops on a failed build', { skip: !shell }, () => {
+  const checkout = fixture(), launch = path.join(checkout, 'platform/shared/launch.sh');
+  copyFileSync(path.join(root, 'platform/shared/launch.sh'), launch);
+  put(path.join(checkout, 'metroidvania-studio/launcher/bin/Release/net10.0/MetroidvaniaStudio.Launcher.dll'), 'fixture');
+  const log = path.join(checkout, 'launch-order.txt'), node = path.join(checkout, 'fake node'), dotnet = path.join(checkout, 'fake dotnet');
+  put(node, "#!/bin/sh\nprintf 'build %s\\n' \"$*\" >> \"$STUDIO_TEST_ARGUMENTS\"\nexit \"$STUDIO_TEST_FAILURE\"\n");
+  put(dotnet, "#!/bin/sh\nprintf 'launch %s\\n' \"$*\" >> \"$STUDIO_TEST_ARGUMENTS\"\n");
+  chmodSync(node, 0o755); chmodSync(dotnet, 0o755);
+  const env = { ...process.env, METROIDVANIA_STUDIO_DOTNET: shellPath(dotnet), METROIDVANIA_STUDIO_NODE: shellPath(node), STUDIO_TEST_ARGUMENTS: shellPath(log), STUDIO_TEST_FAILURE: '0' };
+  execFileSync(shell, [shellPath(launch), 'run', '--no-browser'], { env, windowsHide: true });
+  assert.match(readFileSync(log, 'utf8'), /^build .*--ensure\nlaunch /);
+  put(log, '');
+  assert.throws(() => execFileSync(shell, [shellPath(launch), 'run', '--no-browser'], { env: { ...env, STUDIO_TEST_FAILURE: '1' }, windowsHide: true, stdio: 'pipe' }));
+  assert.doesNotMatch(readFileSync(log, 'utf8'), /launch /);
+});
+
+test('Windows source runner builds before launching, preserves arguments and aborts on failure', { skip: process.platform !== 'win32' }, () => {
+  const checkout = fixture(), runtime = path.join(checkout, 'metroidvania-studio/Runtime-Tools.ps1');
+  copyFileSync(path.join(root, 'metroidvania-studio/Runtime-Tools.ps1'), runtime);
+  const cachedLauncher = path.join(checkout, 'metroidvania-studio/launcher/bin/Release/net10.0/MetroidvaniaStudio.Launcher.dll');
+  put(cachedLauncher, 'fixture');
+  const log = path.join(checkout, 'launch-order.txt'), harness = path.join(checkout, 'invoke.ps1');
+  put(path.join(checkout, 'node.ps1'), '[IO.File]::AppendAllText($env:STUDIO_TEST_ARGUMENTS, "build $args" + [Environment]::NewLine)\n$global:LASTEXITCODE = [int]$env:STUDIO_TEST_FAILURE');
+  put(path.join(checkout, 'dotnet.ps1'), '[IO.File]::AppendAllText($env:STUDIO_TEST_ARGUMENTS, "launch $args" + [Environment]::NewLine)\n$global:LASTEXITCODE = 0');
+  put(harness, [
+    "$ErrorActionPreference = 'Stop'",
+    ". (Join-Path $PSScriptRoot 'metroidvania-studio/Runtime-Tools.ps1')",
+    "function Find-StudioRuntime { param($Name) if ($Name -eq 'node.exe') { return (Join-Path $PSScriptRoot 'node.ps1') } return (Join-Path $PSScriptRoot 'dotnet.ps1') }",
+    "Invoke-StudioLauncher -Action 'run' -Arguments @('--project', 'workspace 한글 space', '--no-browser')",
+  ].join('\n'));
+  const powershell = path.join(process.env.SystemRoot, 'System32/WindowsPowerShell/v1.0/powershell.exe');
+  const env = { ...process.env, STUDIO_TEST_ARGUMENTS: log, STUDIO_TEST_FAILURE: '0' };
+  const invoke = environment => execFileSync(powershell, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', harness], { env: environment, windowsHide: true, stdio: 'pipe' });
+  invoke(env);
+  const lines = readFileSync(log, 'utf8').trim().split(/\r?\n/);
+  assert.match(lines[0], /^build .*--ensure$/);
+  assert.match(lines[1], /^launch .*--project workspace .* space --no-browser$/);
+  put(log, '');
+  assert.throws(() => invoke({ ...env, STUDIO_TEST_FAILURE: '1' }));
+  assert.doesNotMatch(readFileSync(log, 'utf8'), /launch /);
+  // A ready-to-run package remains usable without Node or a source compiler.
+  put(log, '');
+  put(path.join(checkout, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll'), 'published fixture');
+  invoke({ ...env, STUDIO_TEST_FAILURE: '1' });
+  assert.match(readFileSync(log, 'utf8'), /^launch /);
 });

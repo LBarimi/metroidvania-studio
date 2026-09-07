@@ -18,6 +18,7 @@
   "integrations/unity/README.md",
   "metroidvania-studio/Build-MetroidvaniaStudio.ps1",
   "platform/shared/build.mjs",
+  "platform/shared/build-state.mjs",
   "platform/shared/launch.sh",
   "platform/linux/build.sh",
   "platform/linux/run.sh",

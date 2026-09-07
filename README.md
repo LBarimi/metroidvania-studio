@@ -32,7 +32,7 @@ To build from source, install **Node.js 24+**, **.NET SDK 10**, and **Git**.
 | macOS | `platform/mac/build.command` | `platform/mac/run.command` |
 | Linux | `bash platform/linux/build.sh` | `bash platform/linux/run.sh` |
 
-**Run** opens the studio in your browser and builds it on first launch if needed. After updating the source, use **Build**, then **Run**. Prebuilt web copies require **ASP.NET Core Runtime 10**.
+**Run** checks your local build against the current version and source files. It builds automatically when needed, then opens the studio in your browser. An up-to-date build starts immediately. Prebuilt web copies require **ASP.NET Core Runtime 10**.
 
 Release downloads keep maps in your user data folder. Source builds use `.local/workspace/Maps`. Room JSON exports update automatically in `Maps/AutoExport` inside the workspace. Keep your workspace when updating the studio.
 
