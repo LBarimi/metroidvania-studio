@@ -12,7 +12,9 @@ and it does not change the ownership or licensing of maps and assets you import.
   Node.js uses the MIT License and includes dependencies under additional
   licenses: [upstream license and notices](https://github.com/nodejs/node/blob/main/LICENSE).
 - **.NET and ASP.NET Core** provide the server and launcher runtime. The web
-  build requires a separately installed runtime. These projects use the MIT
+  download requires a separately installed runtime. The Windows, macOS, and Linux downloads
+  include official runtime files under `app/runtime`, with their license and notice
+  files preserved. These projects use the MIT
   License, with additional notices for their dependencies:
   [.NET license](https://github.com/dotnet/runtime/blob/main/LICENSE.TXT),
   [.NET third-party notices](https://github.com/dotnet/runtime/blob/main/THIRD-PARTY-NOTICES.TXT),

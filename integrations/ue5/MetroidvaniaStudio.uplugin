@@ -1,11 +1,26 @@
 {
   "FileVersion": 3,
-  "Version": 1,
-  "VersionName": "0.1.0",
-  "FriendlyName": "MetroidvaniaStudio",
+  "Version": 10000,
+  "VersionName": "1.0.0",
+  "FriendlyName": "Metroidvania Studio",
   "Description": "Load rooms from shared JSON with pixel textures and collision.",
   "Category": "Importers",
   "CanContainContent": false,
-  "Modules": [{ "Name": "MetroidvaniaStudio", "Type": "Runtime", "LoadingPhase": "Default" }],
-  "Plugins": [{ "Name": "ProceduralMeshComponent", "Enabled": true }, { "Name": "Paper2D", "Enabled": true }]
+  "Modules": [
+    {
+      "Name": "MetroidvaniaStudio",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "ProceduralMeshComponent",
+      "Enabled": true
+    },
+    {
+      "Name": "Paper2D",
+      "Enabled": true
+    }
+  ]
 }

@@ -1,0 +1,36 @@
+{
+  "sources": [
+    {
+      "component": "webview2",
+      "version": "1.0.4191.47",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/1.0.4191.47/microsoft.web.webview2.1.0.4191.47.nupkg",
+      "sha256": "f492bbf547d0da329553b6727435b677579b1e9f91cc9e4a1ad029366d5f23d0",
+      "files": [
+        {
+          "path": "lib_manual/netcoreapp3.0/Microsoft.Web.WebView2.Core.dll",
+          "sha256": "e6f54c8ce208e3797c427d01ad671b47cb25abc85604753d6ec2546d0ffef550"
+        },
+        {
+          "path": "lib_manual/netcoreapp3.0/Microsoft.Web.WebView2.WinForms.dll",
+          "sha256": "087d8e5b340155f612aac2549424ba65c2320c24329745e85b49eee900d56dc9"
+        },
+        {
+          "path": "runtimes/win-x64/native/WebView2Loader.dll",
+          "sha256": "c66e4a92fdc7a216118e43b7a5024ea2200e8c43f9310bf20d96a0084f82c5bc"
+        }
+      ]
+    },
+    {
+      "component": "apphost",
+      "version": "10.0.11",
+      "url": "https://api.nuget.org/v3-flatcontainer/microsoft.netcore.app.host.win-x64/10.0.11/microsoft.netcore.app.host.win-x64.10.0.11.nupkg",
+      "sha256": "b7990e8ef5922bb141d9f96efb3da3dbaae0edcef0ae67598cb5872424107e30",
+      "files": [
+        {
+          "path": "runtimes/win-x64/native/apphost.exe",
+          "sha256": "40097086830aaef3892c0d1a44040cd20d93d197bd61aaf3c62d1f0fc49d8a4d"
+        }
+      ]
+    }
+  ]
+}

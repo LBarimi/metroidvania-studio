@@ -1,5 +1,12 @@
 # Changes
 
+## 1.0.0
+
+- First stable release with connected rooms, responsive tile painting, room transforms, and minimap editing.
+- Export engine-neutral JSON and import rooms through Unity, Godot, Unreal Engine 4/5, and SDL3 packages.
+- Add ready-to-run web, Windows, macOS, and Linux downloads with launch files at the archive root.
+- Bundle the Windows x64 runtime and macOS/Linux runtimes for both ARM64 and x64; retain licenses and dependency notices.
+
 ## 0.1.0
 
 - Add Godot, Unreal Engine 5 and SDL3 integration packages, local installers, portable JSON loading and native validation.

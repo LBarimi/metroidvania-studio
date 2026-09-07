@@ -1,0 +1,37 @@
+{
+  "version": "10.0.11",
+  "files": [
+    {
+      "rid": "osx-arm64",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.11/aspnetcore-runtime-10.0.11-osx-arm64.tar.gz",
+      "sha512": "722903f96180ad025e602e7964500c87b0385fc862bf7db3c174d5ee20e3d07404e10e19c38bd57df081eab08df8ab06f5f5d349fa1a1c3b6c47f68052c309f3"
+    },
+    {
+      "rid": "osx-x64",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.11/aspnetcore-runtime-10.0.11-osx-x64.tar.gz",
+      "sha512": "3fed5b52436bb4a477955e2acb7410ce100fe2cbeb967e9b60dd5c4ddddec10854ae2f0b895cbefb8635ed4de3a09333fb16e8ee36cbbef49b1d9632758f866f"
+    },
+    {
+      "rid": "linux-arm64",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.11/aspnetcore-runtime-10.0.11-linux-arm64.tar.gz",
+      "sha512": "9549f7a59d5d6f7dd3e965bf88631698b23974aff4e34d589037d6ae9a3f4433902881b4d23f7e18602ab954823f5be35015054a6eccb57041b0f20d92873ed7"
+    },
+    {
+      "rid": "linux-x64",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.11/aspnetcore-runtime-10.0.11-linux-x64.tar.gz",
+      "sha512": "4c6be0623330074e699dab8084be15a1baebb7a518c0dd8ce99f93cf79777cd46f3a38ef9d25edc152ed606f084b63736bd9e4082eb32d188fc357bf6ac4d1d6"
+    },
+    {
+      "rid": "win-x64",
+      "component": "aspnetcore-runtime",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.11/aspnetcore-runtime-10.0.11-win-x64.zip",
+      "sha512": "1c8de827f63cc1fe66894151c552ac81f59d1841a3a3e278603ba1d51c282a2599254801625eb58a8bb3677ceff3af46cbeff368e46f9fbd312a0dba3fe96f4a"
+    },
+    {
+      "rid": "win-x64",
+      "component": "windowsdesktop",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.11/windowsdesktop-runtime-10.0.11-win-x64.zip",
+      "sha512": "1d32a9bf6c93f50dee5734048f825998b98266d0e28846dbee0310e2aad7e28fc2251e38ffad6a474a1e57381895130f2b3e1e1a4f875ac7f79271d91c6eb433"
+    }
+  ]
+}

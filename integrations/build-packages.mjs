@@ -14,14 +14,14 @@ function files(folder) {
     return stat.isDirectory()?files(relative):[relative];
   });
 }
-export function zip(entries) {
+export function zip(entries, { executables = new Set() } = {}) {
   const chunks=[],central=[];let offset=0;
   for(const [name,bytes] of [...entries].sort(([a],[b])=>a<b?-1:a>b?1:0)) {
     if(!name||name.startsWith('/')||name.includes('\\')||name.split('/').some(x=>!x||x==='.'||x==='..'))throw new Error('Invalid archive path.');
     const filename=Buffer.from(name),packed=deflateRawSync(bytes,{level:9}),crc=crc32(bytes);
     const header=Buffer.alloc(30);header.writeUInt32LE(0x04034b50);header.writeUInt16LE(20,4);header.writeUInt16LE(0x800,6);header.writeUInt16LE(8,8);header.writeUInt16LE(33,12);header.writeUInt32LE(crc,14);header.writeUInt32LE(packed.length,18);header.writeUInt32LE(bytes.length,22);header.writeUInt16LE(filename.length,26);
     chunks.push(header,filename,packed);
-    const directory=Buffer.alloc(46);directory.writeUInt32LE(0x02014b50);directory.writeUInt16LE(0x0314,4);directory.writeUInt16LE(20,6);directory.writeUInt16LE(0x800,8);directory.writeUInt16LE(8,10);directory.writeUInt16LE(33,14);directory.writeUInt32LE(crc,16);directory.writeUInt32LE(packed.length,20);directory.writeUInt32LE(bytes.length,24);directory.writeUInt16LE(filename.length,28);directory.writeUInt32LE(((name.endsWith('.sh')?0o100755:0o100644)*65536)>>>0,38);directory.writeUInt32LE(offset,42);
+    const directory=Buffer.alloc(46);directory.writeUInt32LE(0x02014b50);directory.writeUInt16LE(0x0314,4);directory.writeUInt16LE(20,6);directory.writeUInt16LE(0x800,8);directory.writeUInt16LE(8,10);directory.writeUInt16LE(33,14);directory.writeUInt32LE(crc,16);directory.writeUInt32LE(packed.length,20);directory.writeUInt32LE(bytes.length,24);directory.writeUInt16LE(filename.length,28);directory.writeUInt32LE((((name.endsWith('.sh')||name.endsWith('.command')||executables.has(name))?0o100755:0o100644)*65536)>>>0,38);directory.writeUInt32LE(offset,42);
     central.push(directory,filename);offset+=header.length+filename.length+packed.length;
   }
   const index=Buffer.concat(central),end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50);end.writeUInt16LE(entries.size,8);end.writeUInt16LE(entries.size,10);end.writeUInt32LE(index.length,12);end.writeUInt32LE(offset,16);return Buffer.concat([...chunks,index,end]);
