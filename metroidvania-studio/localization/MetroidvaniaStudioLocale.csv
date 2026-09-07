@@ -1,4 +1,7 @@
 Key,KR,EN,JA,ZH_CN,ZH_TW,RU
+sampleWorld,샘플 월드 열기,Open sample world,サンプルワールドを開く,打开示例世界,開啟範例世界,Открыть пример мира
+sampleUnavailable,설치 폴더에서 샘플 월드를 찾을 수 없습니다.,The sample world is missing from this installation.,インストールフォルダーにサンプルがありません。,安装目录中缺少示例世界。,安裝目錄中缺少範例世界。,Пример мира отсутствует в этой установке.
+sampleCatalogMismatch,샘플에 필요한 기본 팔레트가 없습니다. 기본 작업공간에서 열어주세요.,This sample needs the default palettes and object definitions. Open it in a default workspace.,このサンプルには標準パレットとオブジェクト定義が必要です。,此示例需要默认调色板和对象定义。请在默认工作区中打开。,此範例需要預設調色盤與物件定義。請在預設工作區中開啟。,Для примера нужны стандартные палитры и определения объектов. Откройте его в стандартном рабочем пространстве.
 filePermissionDenied,이 파일에 저장할 권한이 없습니다. 다른 이름으로 저장해주세요.,Permission to save this file was denied. Use Save map as.,保存権限がありません。別名で保存してください。,无权保存此文件。请另存为。,沒有儲存此檔案的權限。請另存新檔。,Нет разрешения на запись. Сохраните карту под другим именем.
 fileChangedOutside,파일이 다른 곳에서 변경되었습니다. 다시 열거나 다른 이름으로 저장해주세요.,The file changed outside the editor. Reopen it or use Save map as.,ファイルが外部で変更されました。開き直すか別名で保存してください。,文件已被外部修改。请重新打开或另存为。,檔案已被外部修改。請重新開啟或另存新檔。,Файл изменён вне редактора. Откройте его заново или сохраните под другим именем.
 fileDownloadStarted,JSON 다운로드를 시작했습니다. 파일은 브라우저의 다운로드 설정에 따라 저장됩니다.,JSON download started. The browser download settings determine where it is saved.,JSONのダウンロードを開始しました。保存先はブラウザーの設定に従います。,已开始下载JSON。保存位置由浏览器下载设置决定。,已開始下載JSON。儲存位置依瀏覽器下載設定決定。,Загрузка JSON началась. Место сохранения определяется настройками браузера.

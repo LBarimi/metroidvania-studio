@@ -137,7 +137,7 @@ public sealed partial class EditorWorkspace
         QueueAutoExport();
     }
 
-    private static MapEditSession LoadInitialSession(ProjectFiles files, string recovery, out string? startupNotice,
+    private MapEditSession LoadInitialSession(ProjectFiles files, string recovery, out string? startupNotice,
         out ProjectFiles.DiskFingerprint? initialFingerprint)
     {
         startupNotice = null;
@@ -192,7 +192,8 @@ public sealed partial class EditorWorkspace
                 startupNotice = "Ignored an invalid recovery snapshot (" + error.Message + "). " + disposition;
             }
         }
-        foreach (string relative in files.List())
+        string[] savedMaps = files.List();
+        foreach (string relative in savedMaps)
         {
             string path = files.Map(relative);
             try
@@ -205,6 +206,11 @@ public sealed partial class EditorWorkspace
             {
                 startupNotice ??= "Skipped an unreadable saved map (" + relative + "): " + error.Message;
             }
+        }
+        if (savedMaps.Length == 0 && startupNotice == null && files.SampleWorldPath is { } samplePath && File.Exists(samplePath))
+        {
+            try { return new MapEditSession(LoadSampleWorld()); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException) { }
         }
         return new MapEditSession(MapDocument.CreateDefault());
     }
@@ -751,6 +757,13 @@ public sealed partial class EditorWorkspace
                 TrackOpenedFile(opened.Fingerprint);
                 break;
             case "importRooms": ImportRooms(command); break;
+            case "sampleWorld":
+                if (HasUnsavedChanges && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
+                MapDocument sample = LoadSampleWorld();
+                Session.New(sample);
+                InvalidateDiskContentProbe();
+                diskFingerprint = null; observedDiskFingerprint = null; rejectedDiskFingerprint = null; observedDiskMissing = false;
+                SetDiskHealthNotice(null); break;
             case "browserSave": AcknowledgeBrowserSave(command); break;
             case "browserOpen":
             case "import":

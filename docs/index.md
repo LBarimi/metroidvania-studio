@@ -12,6 +12,8 @@ Metroidvania Studio supports Lua scripts, a headless CLI, a local MCP server, an
 | [Live web API](api/live-api.md) | Work on the document currently open in the studio |
 | [Local npm package](distribution/local-package.md) | Build and test an installable package from source |
 
+Start with the [sample-world walkthrough](sample-world.md) to explore painting, room layout and the minimap.
+
 ## Open and save maps
 
 Use **File → Open map** to choose a JSON map from your computer. **Save map** or **Ctrl+S** writes back to that file; **Save map as** lets you choose another name or folder. **Import map JSON** opens a copy with no link to the original file. Room JSON exports and workspace recovery continue in the background.

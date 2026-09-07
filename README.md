@@ -4,21 +4,7 @@
 
 A web-based 2D world editor for metroidvania games. Create connected rooms, paint tilemaps, and design minimaps with JSON export for cross-engine workflows.
 
-Runs locally on Windows, macOS, and Linux. No game engine installation is required to use the studio.
-
-## Scripts & Automation
-
-Use **File → Scripts** to generate rooms or repeat editing tasks. Run the same operations headlessly through the **CLI**, or connect an **AI agent** through the local **MCP server**. Dry runs, atomic updates, and revision checks keep scripted edits reviewable.
-
-Install the CLI and MCP tools with **Node.js 24+** and the **.NET 10 runtime**:
-
-```sh
-npm install --global metroidvania-studio
-```
-
-Using a program download? Run `metroidvania-studio-cli.cmd help` on Windows, or `bash metroidvania-studio-cli.sh help` on macOS/Linux. See [headless from a download](docs/cli/release-downloads.md).
-
-Start with the [automation guides](docs/index.md), [API reference](docs/api/index.md), [Lua examples](docs/examples/connected-rooms.lua), or [MCP setup](docs/mcp/setup.md).
+**Automate your workflow:** [Lua scripts](docs/scripting/quick-start.md), a [headless CLI](docs/cli/quick-start.md), and a [local MCP server for AI agents](docs/mcp/setup.md).
 
 ## Add Rooms & Paint Tiles
 
@@ -34,6 +20,8 @@ Start with the [automation guides](docs/index.md), [API reference](docs/api/inde
 
 ## Get Started
 
+Runs locally on Windows, macOS, and Linux. No game engine installation is required.
+
 Download a ready-to-run package from [GitHub Releases](https://github.com/LBarimi/metroidvania-studio/releases/latest), extract it, and open the launch file at the top level.
 
 To build from source, install **Node.js 24+**, **.NET SDK 10**, and **Git**.
@@ -47,6 +35,12 @@ To build from source, install **Node.js 24+**, **.NET SDK 10**, and **Git**.
 **Run** opens the studio in your browser and builds it on first launch if needed. After updating the source, use **Build**, then **Run**. Prebuilt web copies require **ASP.NET Core Runtime 10**.
 
 Release downloads keep maps in your user data folder. Source builds use `.local/workspace/Maps`. Room JSON exports update automatically in `Maps/AutoExport` inside the workspace. Keep your workspace when updating the studio.
+
+## Try the Sample World
+
+A new workspace opens a six-room world with a looping route, a vertical shaft, a side chamber, slopes, background tiles, and object markers. You can also open it through **Help → Open sample world**.
+
+Paint a room, **Ctrl-click** two rooms to move them together, or switch to the minimap and **double-click** a room to jump back into editing. See the [five-minute walkthrough](docs/sample-world.md) or [sample JSON](samples/maps/starter-world.map.json).
 
 ## Editing Basics
 
@@ -71,6 +65,20 @@ Open **Help → Documentation** for searchable guides and the API reference, inc
 | SDL3 | [C++ source ZIP](engine-packages/sdl/metroidvania-studio.zip) | [Guide](engine-packages/sdl/INSTALL_EN.txt) |
 
 Each engine folder includes translated installation guides. Maps use a shared [JSON format](metroidvania-studio/contracts/FORMAT.md); engine packages handle importing and rendering, while gameplay stays in your game project.
+
+## Scripts & Automation
+
+Use **File → Scripts** to generate rooms or repeat editing tasks. Run the same operations headlessly through the **CLI**, or connect an **AI agent** through the local **MCP server**. Dry runs, atomic updates, and revision checks keep scripted edits reviewable.
+
+Install the CLI and MCP tools with **Node.js 24+** and the **.NET 10 runtime**:
+
+```sh
+npm install --global metroidvania-studio
+```
+
+Using a program download? Run `metroidvania-studio-cli.cmd help` on Windows, or `bash metroidvania-studio-cli.sh help` on macOS/Linux. See [headless from a download](docs/cli/release-downloads.md).
+
+Start with the [automation guides](docs/index.md), [API reference](docs/api/index.md), [Lua examples](docs/examples/connected-rooms.lua), or [MCP setup](docs/mcp/setup.md).
 
 ## License
 

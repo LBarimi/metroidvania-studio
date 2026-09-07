@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add a six-room sample world for fresh workspaces and a Help menu action to reopen it. Move README demonstrations ahead of setup while keeping a short automation introduction.
+
 - Reload registered tile and object textures after external image saves, preserving map edits and the previous image while replacements load.
 
 - Use system file pickers for opening and saving maps, with file change checks and save receipts that preserve editing history and recovery. Group map creation and opening at the top of File.

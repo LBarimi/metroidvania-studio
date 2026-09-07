@@ -94,6 +94,7 @@ public sealed class ProjectFiles
             return ResolveWithin(studioRoot, "samples", "catalog.json");
         }
     }
+    public string? SampleWorldPath => studioRoot == null ? null : ResolveWithin(studioRoot, "samples/maps", "starter-world.map.json");
     public string RecoveryPath => Resolve(mapsRelative, ".Recovery/Workspace.map.json");
     public ProjectFiles(string project, Action<string>? beforeMapPublish = null,
         Action<string>? beforeConditionalRollback = null, Action<string>? beforeConflictDestinationCheck = null,

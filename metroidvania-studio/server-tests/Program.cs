@@ -5,6 +5,7 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("sample world startup, topology and recovery preserve user data", () => Fixture(SampleWorldWorkflow)),
     ("texture saves refresh resources without invalidating map edits", () => Fixture(TextureReload)),
     ("browser files preserve save state, undo and recovery", () => Fixture(BrowserFileLifecycle)),
     ("browser file paths and delayed save receipts are validated", () => Fixture(BrowserFileValidation)),
@@ -163,6 +164,58 @@ static void SyncPublication(EditorWorkspace w)
     JsonElement document = StateElement(w).GetProperty("document");
     Check(document.GetProperty("formatVersion").GetInt32() == 2 && !document.TryGetProperty("version", out _),
         "The shared document contract must retain the actual serialized formatVersion field.");
+}
+
+static void SampleWorldWorkflow(EditorWorkspace fixture)
+{
+    string repository = Path.GetFullPath("../../../../..", AppContext.BaseDirectory);
+    var files = new ProjectFiles(Path.Combine(fixture.Files.ProjectPath, "starter"), studioRoot: repository);
+    var w = new EditorWorkspace(files);
+    try
+    {
+        Check(w.Session.Document.name == "Starter World" && w.Session.Document.rooms.Count == 6, "Fresh workspaces must open the bundled world.");
+        Check(w.Session.FilePath == null, "A sample is an editable copy, never the installed source file.");
+        var state = w.State();
+        Check(state.connections!.Length == 6, "The six paired entrances must produce six connections.");
+        var reached = new HashSet<string> { "landing" };
+        for (int i = 0; i < 6; i++) foreach (var connection in state.connections)
+        {
+            if (reached.Contains(connection.roomAId)) reached.Add(connection.roomBId);
+            if (reached.Contains(connection.roomBId)) reached.Add(connection.roomAId);
+        }
+        Check(reached.Count == 6, "Every sample room must belong to one connected world.");
+        foreach (var a in w.Session.Document.rooms) foreach (var b in w.Session.Document.rooms)
+            if (a != b) Check(a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y, "Sample rooms must not overlap.");
+        string original = File.ReadAllText(files.SampleWorldPath!);
+        Send(w, "documentProperties", ("name", "My trial"));
+        Throws<WorkspaceConflict>(() => Send(w, "sampleWorld"));
+        Check(w.Session.Document.name == "My trial", "Opening the example needs confirmation before discarding edits.");
+        w.FlushRecovery();
+        var reopened = new EditorWorkspace(files);
+        try { Check(reopened.Session.Document.name == "My trial", "Recovery must take priority over the sample."); }
+        finally { reopened.StopAutoExports(); reopened.Canvas.Dispose(); }
+        Send(w, "sampleWorld", ("discard", true));
+        Check(w.Session.Document.name == "Starter World" && w.Session.FilePath == null, "Explicit sample opening restores an independent copy.");
+        Check(File.ReadAllText(files.SampleWorldPath!) == original, "Editing must leave the installed sample untouched.");
+        Send(w, "save", ("path", "kept.json")); w.FlushRecovery();
+        var saved = new EditorWorkspace(files);
+        try { Check(saved.Session.FilePath == files.Map("kept.json"), "Saved maps must take priority over the sample."); }
+        finally { saved.StopAutoExports(); saved.Canvas.Dispose(); }
+    }
+    finally { w.FlushRecovery(); w.StopAutoExports(); w.Canvas.Dispose(); }
+    var customFiles = new ProjectFiles(Path.Combine(fixture.Files.ProjectPath, "custom"), studioRoot: repository);
+    Directory.CreateDirectory(Path.GetDirectoryName(customFiles.CatalogWritePath)!);
+    const string emptyCatalog = "{\"materials\":[],\"objects\":[],\"camera\":{\"ppu\":16,\"referenceWidth\":320,\"referenceHeight\":180,\"orthographicSize\":5.625}}";
+    File.WriteAllText(customFiles.CatalogWritePath, emptyCatalog);
+    var custom = new EditorWorkspace(customFiles);
+    try
+    {
+        Check(custom.Session.Document.name != "Starter World", "Incompatible custom palettes cannot be replaced at startup.");
+        string before = Snapshot(custom);
+        Throws<InvalidOperationException>(() => Send(custom, "sampleWorld", ("discard", true)));
+        Check(Snapshot(custom) == before && File.ReadAllText(customFiles.CatalogWritePath) == emptyCatalog, "A rejected sample must preserve the map and custom catalog.");
+    }
+    finally { custom.StopAutoExports(); custom.Canvas.Dispose(); }
 }
 
 static void TextureReload(EditorWorkspace w)
