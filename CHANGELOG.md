@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add grassland, rock, ice cavern, volcanic and ancient ruins terrain art in a separate biome texture collection, with matching four-source and 47-state PNGs, four slopes per theme and editable Aseprite originals.
+
 - Place PPU and resolution preset dropdowns beside Game view, with per-map persistence, Undo/Redo and preservation of imported custom values. Remove the camera settings dialog from Edit.
 
 - Remove the raw map JSON settings dialog from Edit while preserving existing document metadata.
