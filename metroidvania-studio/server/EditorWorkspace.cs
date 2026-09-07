@@ -427,7 +427,8 @@ public sealed partial class EditorWorkspace
             workspace = new EditorWorkspaceInfo(Path.GetFileName(Files.ProjectPath), Files.MapsLabel),
             export = autoExporter.Status(Canvas.ActiveRoomId, Canvas.RoomEditor.SelectedIds), selection = selection,
             document = includeDocument ? new ValidatedJson(documentJson) : null,
-            connections = includeDocument ? connectionData : null, catalog = includeCatalog ? Catalog.Data : null
+            connections = includeDocument ? connectionData : null, catalog = includeCatalog ? Catalog.Data : null,
+            paletteGroups = includeCatalog ? Catalog.PaletteGroups : null
         };
     }
     public bool IsStateCurrent(long? revision, string? instanceId, long? documentRevision, long? catalogRevision)
@@ -665,7 +666,7 @@ public sealed partial class EditorWorkspace
         {
             case "options": Options(command); break;
             case "paletteAdd":
-                string paletteId = Catalog.AddPalette(S(command, "name"), S(command, "color"));
+                string paletteId = Catalog.AddPalette(S(command, "name"), S(command, "color"), command.TryGetProperty("groupId", out var paletteGroup) ? paletteGroup.GetString()! : Catalog.DefaultPaletteGroup);
                 CatalogRevision++; SetCatalogHealthNotice(null);
                 Canvas.Material = paletteId;
                 if (Canvas.Tool is MetroidvaniaStudioTool.Rooms or MetroidvaniaStudioTool.Selection)
@@ -676,7 +677,22 @@ public sealed partial class EditorWorkspace
                 Catalog.ConfigurePalette(S(command, "id"), S(command, "name"), S(command, "color"),
                     JsonSerializer.Deserialize<PaletteTileset>(command.GetProperty("settings"), Catalog.Json)!,
                     command.TryGetProperty("png", out var palettePng) ? palettePng.GetString() : null, command.GetProperty("expectedMaterial"),
-                    command.TryGetProperty("uploads", out var paletteUploads) ? JsonSerializer.Deserialize<Dictionary<string, string>>(paletteUploads, Catalog.Json) : null);
+                    command.TryGetProperty("uploads", out var paletteUploads) ? JsonSerializer.Deserialize<Dictionary<string, string>>(paletteUploads, Catalog.Json) : null,
+                    command.TryGetProperty("placement", out var palettePlacement) ? JsonSerializer.Deserialize<PalettePlacement>(palettePlacement, Catalog.Json) : null);
+                CatalogRevision++; SetCatalogHealthNotice(null);
+                break;
+            case "paletteGroupAdd":
+                Catalog.AddPaletteGroup(S(command, "name"));
+                CatalogRevision++; SetCatalogHealthNotice(null);
+                break;
+            case "paletteGroupMove":
+                Catalog.MovePaletteGroup(S(command, "id"), command.GetProperty("beforeId").GetString(), command.TryGetProperty("name", out var groupName) ? groupName.GetString() : null,
+                    command.TryGetProperty("expectedGroups", out var groupOrderBefore) ? JsonSerializer.Deserialize<EditorPaletteGroup[]>(groupOrderBefore, Catalog.Json) : null);
+                CatalogRevision++; SetCatalogHealthNotice(null);
+                break;
+            case "paletteMove":
+                Catalog.MovePalette(S(command, "id"), S(command, "groupId"), command.GetProperty("beforeId").GetString(),
+                    command.TryGetProperty("expectedGroups", out var groupsBefore) ? JsonSerializer.Deserialize<EditorPaletteGroup[]>(groupsBefore, Catalog.Json) : null);
                 CatalogRevision++; SetCatalogHealthNotice(null);
                 break;
             case "selectRoom":

@@ -46,4 +46,6 @@ public sealed class EditorState
     public EditorConnection[]? connections { get; init; }
     [WireType(typeof(CatalogData)), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public JsonElement? catalog { get; init; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public EditorPaletteGroup[]? paletteGroups { get; init; }
 }

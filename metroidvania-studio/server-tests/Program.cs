@@ -5,6 +5,8 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("palette groups persist order, moves and empty groups without changing maps or textures", () => Fixture(PaletteGroupTests.Ordering)),
+    ("palette grouping preserves legacy data and rejects stale or invalid changes", () => Fixture(PaletteGroupTests.Validation)),
     ("readable texture library migration preserves sprites and original sources", TextureWorkflowTests.Library),
     ("native map dialog starts in Maps and restricts writes to selected JSON", TextureWorkflowTests.NativeFiles),
     ("portable storage migration preserves maps, original textures and recovery", PortableWorkspaceTests.Migration),

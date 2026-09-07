@@ -69,6 +69,12 @@ export interface EditorNodeSelection {
   index: number;
 }
 
+export interface EditorPaletteGroup {
+  id: string;
+  materials: string[];
+  name: string;
+}
+
 export interface EditorState {
   browserFileId: string | null;
   camera: CameraProfile;
@@ -84,6 +90,7 @@ export interface EditorState {
   file: string | null;
   instanceId: string;
   notice: string | null;
+  paletteGroups?: EditorPaletteGroup[];
   revision: number;
   selection?: Selection;
   workspace: EditorWorkspaceInfo;

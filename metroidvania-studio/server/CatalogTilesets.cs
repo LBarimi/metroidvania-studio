@@ -10,7 +10,7 @@ public sealed partial class Catalog
     public JsonElement Material(string id) => Data.GetProperty("materials").EnumerateArray().FirstOrDefault(m => m.GetProperty("id").GetString() == id)
         is { ValueKind: JsonValueKind.Object } material ? material : throw new ArgumentException("@tilesetMissingPalette");
 
-    public void ConfigurePalette(string id, string name, string color, PaletteTileset settings, string? pngBase64, JsonElement expectedMaterial, Dictionary<string, string>? uploads = null)
+    public void ConfigurePalette(string id, string name, string color, PaletteTileset settings, string? pngBase64, JsonElement expectedMaterial, Dictionary<string, string>? uploads = null, PalettePlacement? placement = null)
     {
         JsonElement current = Material(id);
         if (!JsonNode.DeepEquals(JsonNode.Parse(current.GetRawText()), JsonNode.Parse(expectedMaterial.GetRawText())))
@@ -20,6 +20,8 @@ public sealed partial class Catalog
         if (color.Length != 7 || color[0] != '#' || !color[1..].All(char.IsAsciiHexDigit)) throw new ArgumentException("@paletteInvalidColor");
         if (Data.GetProperty("materials").EnumerateArray().Any(m => m.GetProperty("id").GetString() != id
             && string.Equals(m.GetProperty("name").GetString(), name, StringComparison.OrdinalIgnoreCase))) throw new ArgumentException("@paletteDuplicateName");
+        CheckGroupExpectation(placement?.expectedGroups);
+        var placedGroups = placement == null ? null : PlacePalette(PaletteGroups, id, placement.groupId, placement.beforeId);
         ValidateTileset(settings);
         ProjectFiles.DiskFingerprint? expected = null;
         string catalogPath = files.CatalogPath;
@@ -76,6 +78,7 @@ public sealed partial class Catalog
         var atlas = TilesetComposer.Compose(asset, color, settings, source, images);
         settings = settings with { atlasHash = Convert.ToHexString(SHA256.HashData(atlas.Png)) };
         var next = JsonNode.Parse(Data.GetRawText())!;
+        if (placedGroups != null) next["editorPaletteGroups"] = JsonSerializer.SerializeToNode(placedGroups);
         var material = next["materials"]!.AsArray().First(m => m!["id"]!.GetValue<string>() == id)!;
         material["name"] = name; material["color"] = color;
         if (string.IsNullOrWhiteSpace(material["themeId"]?.GetValue<string>())) material["themeId"] = id;

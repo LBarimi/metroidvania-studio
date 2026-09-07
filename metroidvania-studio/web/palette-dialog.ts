@@ -1,10 +1,12 @@
+import { palettePlacementControls } from './palette-groups.js';
+import type { EditorPaletteGroup } from './types.js';
 import type { Command, Material } from './types.js';
 import type { Locale } from './locale.js';
 import { folderStartIn, openWorkspaceFolders, workspaceFolder } from './workspace-folders.js';
 import { composeTileset, defaultTile, drawTilesetExample, TILESET_MASKS } from './tileset-preview.js';
 import type { TilesetMode, TilesetSettings } from './tileset-preview.js';
 
-export function openPaletteDialog(material: Material, locale: Locale, command: Command): void {
+export function openPaletteDialog(material: Material, locale: Locale, command: Command, groups?: EditorPaletteGroup[]): void {
   const t = (key: string) => locale.t(key);
   const element = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', label = '') => {
     const node = document.createElement(tag); node.className = className; node.textContent = label; return node;
@@ -19,11 +21,14 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   let currentSource = settings.source, selected = 0, generation = 0, disposed = false, locked = false, loading = false;
   let colorTimer = 0, previewKey = '';
   const dialog = element('dialog', 'tileset-dialog'); dialog.id = 'tileset-dialog';
+  const placement = groups?.length ? palettePlacementControls(material.id, groups, locale) : undefined;
+  let configurationBaseline: string | undefined;
   const heading = element('div', 'dialog-title', t('tilesetTitle'));
   heading.append(button('×', () => { if (!locked) dialog.close(); }, 'icon ghost'));
   const body = element('div', 'dialog-body'), footer = element('div', 'dialog-footer');
   const name = element('input'); name.id = 'tileset-name'; name.value = material.name; name.maxLength = 80;
   const color = element('input'); color.id = 'tileset-color'; color.type = 'color'; color.value = /^#[a-f0-9]{6}$/i.test(material.color) ? material.color : '#9655cf';
+  const originalColor = color.value;
   const mode = element('select'); mode.id = 'tileset-mode';
   for (const [value, key] of [['template','tilesetTemplate'], ['four','tilesetFour'], ['blob47','tileset47']]) { const o = element('option', '', t(key)); o.value = value; mode.append(o); }
   mode.value = settings.mode;
@@ -67,7 +72,8 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   const error = element('div', 'modal-error'); error.id = 'tileset-error'; error.setAttribute('role', 'status');
   const apply = button(t('apply'), () => void save(), 'accent'); apply.id = 'tileset-apply';
   footer.append(button(t('cancel'), () => dialog.close()), apply);
-  body.append(fields, hint, columns, error); dialog.append(heading, body, footer); document.body.append(dialog); dialog.showModal();
+  body.append(fields); if (placement) body.append(placement.element);
+  body.append(hint, columns, error); dialog.append(heading, body, footer); document.body.append(dialog); dialog.showModal();
   dialog.addEventListener('close', () => { disposed = true; generation++; window.clearTimeout(colorTimer); dialog.remove(); });
   dialog.addEventListener('cancel', e => { if (locked) e.preventDefault(); });
   mode.onchange = () => {
@@ -191,7 +197,10 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
       if (inputs.reduce((n,s) => n + s!.blob.size,0) > 8 * 1024 * 1024 || inputs.reduce((n,s) => n + s!.image.naturalWidth * s!.image.naturalHeight,0) > 2048 * 2048) throw new Error('@tilesetImageLimit');
       const uploads = Object.fromEntries(used.filter(key => sources.get(key)?.png).map(key => [key, sources.get(key)!.png]));
       locked = true; body.inert = true; footer.inert = true;
-      await command('paletteConfigure', { id: material.id, name: name.value, color: color.value, settings, uploads, expectedMaterial: material });
+      const position = placement?.value();
+      if (configurationBaseline === JSON.stringify([name.value, color.value, settings])) {
+        if (position) await command('paletteMove', { id: material.id, groupId: position.groupId, beforeId: position.beforeId, expectedGroups: position.expectedGroups });
+      } else await command('paletteConfigure', { id: material.id, name: name.value, color: color.value, settings, uploads, expectedMaterial: material, ...(position ? { placement: position } : {}) });
       dialog.close();
     } catch (e) { error.textContent = errorText(e); }
     finally { locked = false; body.inert = false; footer.inert = false; }
@@ -214,9 +223,10 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
       if (!saved) settings.slots = [...TILESET_MASKS.map(mask => material.sprites.find(s => s.shape === 0 && s.mask === mask)),
         ...[1,2,3,4].map(shape => material.sprites.find(s => s.shape === shape))].map(s => s && sources.has(s.asset)
         ? { x: s.x, y: sources.get(s.asset)!.image.naturalHeight - s.y - s.height, asset: s.asset } : null);
+      configurationBaseline = JSON.stringify([material.name, originalColor, settings]);
       render();
     } catch (e) { if (!disposed && token === generation) error.textContent = errorText(e); }
     finally { if (!disposed && token === generation) { loading = false; apply.disabled = false; } }
   }
-  if (settings.source) void initial();
+  if (settings.source) void initial(); else configurationBaseline = JSON.stringify([material.name, originalColor, settings]);
 }

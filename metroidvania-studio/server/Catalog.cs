@@ -226,6 +226,7 @@ public sealed partial class Catalog(ProjectFiles files)
                 AddWork(ref work, choices.GetArrayLength());
             }
         }
+        _ = ReadPaletteGroups(catalog);
     }
 
     private static JsonElement RequiredArray(JsonElement owner, string key, string context)

@@ -7,7 +7,7 @@ namespace MetroidvaniaStudio.Server;
 
 public sealed partial class Catalog
 {
-    public string AddPalette(string name, string color)
+    public string AddPalette(string name, string color, string groupId = DefaultPaletteGroup)
     {
         name = name.Trim(); color = color.Trim().ToUpperInvariant();
         if (name.Length is 0 or > 80 || name.Any(char.IsControl))
@@ -16,6 +16,9 @@ public sealed partial class Catalog
             throw new ArgumentException("Choose a six-digit HEX color such as #9655CF.");
         if (Data.GetProperty("materials").EnumerateArray().Any(m => string.Equals(m.GetProperty("name").GetString(), name, StringComparison.OrdinalIgnoreCase)))
             throw new ArgumentException("A palette with that name already exists.");
+
+        var groups = PaletteGroups;
+        if (!groups.Any(g => g.id == groupId)) throw new ArgumentException("@paletteGroupMissing");
 
         // Never overwrite a changed or invalid catalog, including a newly created workspace override.
         string source = files.CatalogPath, destination = files.CatalogWritePath;
@@ -36,7 +39,8 @@ public sealed partial class Catalog
         var material = new MaterialData { id = id, name = name, color = color, themeId = id, sprites = atlas.Sprites };
         var nextNode = JsonNode.Parse(Data.GetRawText())!;
         nextNode["materials"]!.AsArray().Add(JsonSerializer.SerializeToNode(material, Json));
-        string serialized = nextNode.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+        nextNode["editorPaletteGroups"] = JsonSerializer.SerializeToNode(groups.Select(g => g.id == groupId ? g with { materials = [.. g.materials, id] } : g));
+        string serialized = nextNode.ToJsonString();
         byte[] bytes = Utf8.GetBytes(serialized);
         if (bytes.LongLength > MaximumCatalogBytes) throw new InvalidDataException("The palette catalog is full.");
         JsonElement next = ParseClone(serialized); ValidateComplexity(next);

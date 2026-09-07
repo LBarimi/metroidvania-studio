@@ -36,10 +36,16 @@ public sealed partial class ProjectFiles
     }
     internal string TextureDestination(string asset) => Resolve(texturesRelative, asset[9..]);
     internal string TextureBackup(string relative) => Resolve(".studio/texture-backup", relative);
-    internal void PublishTextureCatalog(string text, DiskFingerprint expected)
+    internal void PublishTextureCatalog(string text, DiskFingerprint? expected)
     {
         string destination = CatalogWritePath, staged = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
-        try { File.WriteAllText(staged, text, StrictUtf8); PublishIfUnchanged(staged, destination, expected, FingerprintUtf8(text)); }
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            File.WriteAllText(staged, text, StrictUtf8);
+            if (expected.HasValue) PublishIfUnchanged(staged, destination, expected.Value, FingerprintUtf8(text));
+            else File.Move(staged, destination);
+        }
         finally { DeleteBestEffort(staged); }
     }
 }

@@ -876,3 +876,21 @@ dialog::backdrop { background: #050505b8; }
 
 .tileset-drop { padding: 10px 12px; border: 1px dashed #555; color: #bbb; font-size: 12px; }
 .tileset-drop.drop-target { border-color: #59c8ff; background: #213440; }
+
+.palette-add-group svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1; }
+.palette-group { margin-top: 6px; min-width: 0; }
+.palette-group-header { display: flex; align-items: center; background: #292929; min-height: 28px; }
+.palette-group-toggle { flex: 1; display: flex; align-items: center; gap: 5px; padding: 4px 2px; min-width: 0; text-align: left; border: 0; background: transparent; }
+.palette-group-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.palette-group-settings { flex: 0 0 23px; padding: 0; border: 0; background: transparent; font-size: 18px; }
+.palette-group-items { display: grid; gap: 1px; padding-top: 2px; }
+.palette-group-items[hidden] { display: none; }
+.palette-drag-handle { flex: 0 0 12px; display: flex; align-items: center; justify-content: center; color: #888; cursor: grab; user-select: none; }
+.palette-group-empty { padding: 9px 5px; color: #999; font-size: 11px; border: 1px dashed #444; }
+.palette-group [data-drop="before"] { box-shadow: inset 0 2px #59c8ff; }
+.palette-group [data-drop="after"] { box-shadow: inset 0 -2px #59c8ff; }
+.palette-group [data-drop="inside"] { outline: 1px solid #59c8ff; background: #263c48; }
+.palette-placement { display: flex; align-items: end; gap: 8px; margin-top: 12px; }
+.palette-placement label { flex: 1; }
+.palette-placement span { align-self: center; font-size: 12px; }
+.palette-placement button { min-width: 30px; }

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Organize palettes in named, collapsible groups, with existing palettes under Default. Reorder groups and palettes by dragging or settings controls, move palettes between groups, and preserve the layout without changing map tiles or textures.
+
 - Keep default Maps, Textures and catalog.json beside the application or at the project root; preserve legacy data when migrating. Add storage folder shortcuts, remembered browser file dialogs and automatic desktop dialog locations.
 - Keep palette source selection separate from rule assignment, defer expensive color previews until pointer input settles, and allow PNG open/save dialogs to remember the texture folder.
 

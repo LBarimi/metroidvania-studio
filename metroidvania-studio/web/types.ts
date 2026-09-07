@@ -2,8 +2,8 @@
 // and presentation helpers belong in this file.
 export * from './contracts.generated.js';
 import type { EditorState, Room } from './contracts.generated.js';
-export type State = Omit<EditorState, 'document' | 'catalog' | 'selection' | 'connections'>
-  & Required<Pick<EditorState, 'document' | 'catalog' | 'selection' | 'connections'>>;
+export type State = Omit<EditorState, 'document' | 'catalog' | 'paletteGroups' | 'selection' | 'connections'>
+  & Required<Pick<EditorState, 'document' | 'catalog' | 'paletteGroups' | 'selection' | 'connections'>>;
 export type Color = string | { r: number; g: number; b: number; a?: number };
 export interface CommandExpectation { instanceId: string; revision: number }
 export type CommandValues = object | (() => object);

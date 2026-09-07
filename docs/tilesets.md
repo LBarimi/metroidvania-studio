@@ -2,6 +2,16 @@
 
 Open **…** beside a palette in the left sidebar. The same settings apply to its solid and slope brushes. Palette changes affect every tile using that palette; use **+** to create an independent palette first when needed.
 
+## Palette groups
+
+The folder-plus button beside **Palette** adds a group. Existing palettes appear in **Default**. Click a group title to fold or expand it.
+
+Drag a palette above or below another palette to change its order. Drop it on a group title or empty group to move it there. Drag a group by its handle to reorder the groups. Search finds both palette and group names.
+
+You can also open a palette’s **…** settings, choose its **Group**, and use **↑ / ↓** to set its position before applying. The group’s own **…** button changes its name or position. The palette creation dialog lets you choose a group too.
+
+Organization saves automatically to the workspace catalog and survives reopening. It leaves placed tiles, material IDs, PNG paths, and engine resources unchanged. **Cancel** in the settings dialog discards pending position changes.
+
 ## Four source tiles
 
 Choose **4-tile autotiling**, then import a PNG strip or four separate PNGs. Each source tile is **16×16 pixels**. To replace one slot, select it and import one 16×16 PNG. Selecting a slot alone never changes a rule.

@@ -65,6 +65,7 @@ try {
   await run('metroidvania-studio/tests/browser-documentation.mjs');
   await run('metroidvania-studio/tests/browser-sample-world.mjs');
   await run('metroidvania-studio/tests/browser-palettes.mjs');
+  await run('metroidvania-studio/tests/browser-palette-groups.mjs');
   await run('metroidvania-studio/tests/browser-tilesets.mjs');
   await run('metroidvania-studio/tests/browser-texture-reload.mjs');
   await run('metroidvania-studio/tests/browser-native-files.mjs');
