@@ -21,3 +21,8 @@
 *.cpp text eol=lf
 *.h text eol=lf
 *.uid text eol=lf
+
+# Keep retained upstream license bytes unchanged.
+metroidvania-studio/scripting/licenses/* -text
+metroidvania-studio/cli/licenses/* -text
+*.lua text eol=lf

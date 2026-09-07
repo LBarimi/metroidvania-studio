@@ -1,0 +1,14 @@
+{
+  "interpreter": "MoonSharp",
+  "version": "2.0.0",
+  "revision": "3154416e535ab96c0d52bf12e3e472985a1532f4",
+  "sourceUrl": "https://codeload.github.com/moonsharp-devs/moonsharp/zip/3154416e535ab96c0d52bf12e3e472985a1532f4",
+  "sourceSha256": "29cfd373b653ec7a2672dedd2738182324f3d53c1c2d183521dc90285db79bc5",
+  "archiveRoot": "moonsharp-3154416e535ab96c0d52bf12e3e472985a1532f4/",
+  "sourcePrefix": "src/MoonSharp.Interpreter/",
+  "licenseSha256": "0d42aedd4c41975a7c4e616703db9423c4bea0e5108e57e045809a2cb9fb386c",
+  "assemblyName": "MoonSharp.Interpreter",
+  "assemblyVersion": "2.0.0.0",
+  "targetFramework": "net10.0",
+  "constants": ["DOTNET_CORE", "NETFX_CORE"]
+}

@@ -1,0 +1,14 @@
+MoonSharp 2.0.0
+License: BSD 3-Clause; retain the accompanying moonsharp-license.txt.
+Source: https://github.com/moonsharp-devs/moonsharp/tree/3154416e535ab96c0d52bf12e3e472985a1532f4
+Source archive SHA-256: 29cfd373b653ec7a2672dedd2738182324f3d53c1c2d183521dc90285db79bc5
+License SHA-256: 0d42aedd4c41975a7c4e616703db9423c4bea0e5108e57e045809a2cb9fb386c
+
+The interpreter is compiled from the pinned source release for .NET 10,
+without debug paths or symbols. Original interpreter source files are unchanged.
+A build-only type alias resolves a framework name introduced after the source
+release. The assembly keeps its original name and version.
+
+This distribution includes the interpreter assembly only. No debugger binaries,
+icons, operating-system Lua executable, or native Lua library are included.
+The complete upstream license is retained without changes.
