@@ -148,6 +148,12 @@ static void RoomJsonSizes(EditorWorkspace w)
     void CheckSizes()
     {
         var files = DiskSizes(); var status = w.State().export;
+        if (files.Count > 0) foreach (var entry in MapRoomJsonExporter.Plan(w.Session.Document))
+        {
+            Check(files[entry.RoomId] == Encoding.UTF8.GetByteCount(entry.Json), "Displayed size must also match compact manual room exports, including Unicode.");
+            string actual = File.ReadAllText(AutoFiles(w).Single(file => MapDocumentStore.Load(file).rooms.Single().id == entry.RoomId));
+            Check(actual == entry.Json && !actual.Contains('\n'), "Automatic and manual room JSON must use identical compact encoding.");
+        }
         Check(!status.sizesPending && status.totalBytes == files.Values.Sum(), "Total size must equal all current UTF-8 room files, including shared metadata.");
         Check(status.selectedBytes == w.Canvas.RoomEditor.SelectedIds.Sum(id => files[id]), "Selected size must equal only the selected room files.");
     }
@@ -1106,7 +1112,7 @@ static void EqualMetadataDiskReload(EditorWorkspace w)
     var info = new FileInfo(path);
     DateTime timestamp = info.LastWriteTimeUtc; long length = info.Length;
     var external = w.Session.Document.Clone(); external.name = "External";
-    string replacement = MapDocumentStore.Serialize(external, true);
+    string replacement = MapDocumentStore.Serialize(external);
     Check(System.Text.Encoding.UTF8.GetByteCount(replacement) == length,
         "The disk polling fixture must preserve byte length.");
     File.WriteAllText(path, replacement);

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Save and export map JSON without indentation across the browser, desktop and CLI. Keep automatic room exports and size readouts consistent with manual exports, with culture-independent numeric round trips.
+
 - Show selected-room and total room JSON sizes in the status bar with two decimal places, reusing background export byte counts.
 
 - Clear a multiple-room selection when clicking empty map space, without painting or creating a room.

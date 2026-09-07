@@ -1,10 +1,12 @@
 using MetroidvaniaStudio;
 using System.Text;
+using System.Globalization;
 using MetroidvaniaStudio.Primitives;
 
 var tests = new (string name, Action run)[]
 {
     ("v2 fields and Unicode round trip", RoundTrip),
+    ("compact UTF-8 saves and exports preserve numbers across cultures", CompactCultureRoundTrip),
     ("published v2 wire field compatibility", WireCompatibility),
     ("typed JSON accessors preserve public map field semantics", JsonFieldAccess),
     ("large tile JSON avoids per-field boxing allocations", JsonTileAllocations),
@@ -76,6 +78,41 @@ static void InFiles(Action<string> action)
     Directory.CreateDirectory(path);
     try { action(path); } finally { Directory.Delete(path, true); }
 }
+static void CompactCultureRoundTrip() => InFiles(directory =>
+{
+    var document = Doc(Room("room", -12, 3)); document.name = "한글 日本語 中文 🌿";
+    document.rooms[0].objects.Add(new MapObject { id = "object", x = 1.25f, y = -0.5f, width = 2.75f,
+        rotation = -45.25f, scaleX = -1.5f, nodes = new List<Vector2> { new(3.5f, -7.25f) } });
+    document.stylegrounds.Add(new MapStyleground { id = "style", scrollX = 0.125f, scrollY = -2.5f });
+    document.properties.Add(new MapProperty { key = "note", value = "keep  two spaces\nnext line\t1,25" });
+    CultureInfo culture = CultureInfo.CurrentCulture, uiCulture = CultureInfo.CurrentUICulture;
+    try
+    {
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+        string expected = Json(document), legacy = MapDocumentStore.Serialize(document, true);
+        byte[] expectedBytes = new UTF8Encoding(false, true).GetBytes(expected);
+        Check(!expected.Contains('\n') && expected.Contains("\"x\":1.25") && expected.Contains("\"y\":-0.5"),
+            "Compact JSON must preserve standard decimal points and signs without formatting whitespace.");
+        foreach (string name in new[] { "ko-KR", "en-US", "de-DE", "fr-FR", "ar-SA", "tr-TR", "ja-JP", "zh-CN" })
+        {
+            CultureInfo.CurrentCulture = CultureInfo.CurrentUICulture = new CultureInfo(name);
+            Check(Json(MapDocumentStore.Deserialize(legacy)) == expected, "Pretty legacy JSON must load with identical values in " + name);
+            string savedPath = Path.Combine(directory, "saved.json");
+            Check(MapDocumentStore.SaveSnapshot(savedPath, document) == expected && File.ReadAllBytes(savedPath).SequenceEqual(expectedBytes),
+                "Direct saves must contain the same compact UTF-8 bytes in " + name);
+            var session = new MapEditSession(document);
+            string sessionPath = Path.Combine(directory, "session.json");
+            Check(session.SaveAndGetPersistedJson(sessionPath) == expected && !session.IsDirty,
+                "Session saves must retain compact bytes and saved-state semantics in " + name);
+            string exportedPath = MapRoomJsonExporter.Export(document, Path.Combine(directory, "rooms"), overwrite: true).Single();
+            Check(File.ReadAllBytes(exportedPath).SequenceEqual(expectedBytes), "Room exports must share the compact save format in " + name);
+            Check(Json(MapDocumentStore.Load(exportedPath)) == expected && Json(MapDocumentStore.Load(savedPath)) == expected,
+                "Every culture must load the numeric and Unicode values without changing user text.");
+        }
+    }
+    finally { CultureInfo.CurrentCulture = culture; CultureInfo.CurrentUICulture = uiCulture; }
+});
+
 static void WireCompatibility()
 {
     const string documentJson = """

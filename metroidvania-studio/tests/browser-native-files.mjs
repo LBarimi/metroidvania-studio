@@ -46,7 +46,9 @@ try {
   await page.locator('#map-canvas').focus(); await page.keyboard.press('Control+s');
   await page.waitForFunction(() => window.__filePickers.writes === 1);
   await page.waitForFunction(async () => !(await (await fetch('/api/state')).json()).dirty); await sync();
-  assert.equal(await page.evaluate(async () => JSON.parse(await window.__readMapFile('opened.map.json')).name), 'Saved by shortcut');
+  const savedJson = await page.evaluate(() => window.__readMapFile('opened.map.json'));
+  assert.equal(JSON.parse(savedJson).name, 'Saved by shortcut');
+  assert.equal(savedJson, JSON.stringify(JSON.parse(savedJson)), 'Browser file saves must be compact JSON without a trailing newline.');
   assert.equal(await page.evaluate(() => window.__filePickers.saveCalls), 0, 'Ctrl+S reuses the explicitly opened file.');
   assert.equal((await state()).browserFileId, fileId);
   await command('undo'); assert.equal((await state()).dirty, true); await command('redo'); assert.equal((await state()).dirty, false);

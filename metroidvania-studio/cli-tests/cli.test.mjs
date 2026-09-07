@@ -95,6 +95,8 @@ test('CLI provides machine-readable help/version and operation schemas', async (
 test('CLI creates, inspects, validates and refuses accidental overwrite', async t => {
   const workspace = await fixture(t);
   assert.equal((await cli(workspace, ['init', '--map', 'new/map.json', '--name', 'New'])).code, 0);
+  const createdJson = await readFile(join(workspace, 'new/map.json'), 'utf8');
+  assert.equal(createdJson, JSON.stringify(JSON.parse(createdJson)), 'CLI creates compact map JSON.');
   assert.equal((await cli(workspace, ['init', '--map', 'new/map.json'])).code, 3);
   assert.equal((await cli(workspace, ['validate', '--map', 'new/map.json'])).json.valid, true);
   const inspect = await cli(workspace, ['inspect', '--map', 'new/map.json']);
@@ -116,7 +118,9 @@ test('atomic batch, dry-run, revision conflict, room export, SVG preview', async
   assert.equal((await cli(workspace, ['apply', '--map', 'world.json', '--batch', 'edit.json', '--expected-revision', '0'.repeat(64)])).code, 3);
   const exported = await cli(workspace, ['export-room', '--map', 'world.json', '--room', 'start', '--output', 'exports/start.json']);
   assert.equal(exported.code, 0, exported.out);
-  assert.equal(JSON.parse(await readFile(join(workspace, 'exports/start.json'), 'utf8')).rooms.length, 1);
+  const roomJson = await readFile(join(workspace, 'exports/start.json'), 'utf8');
+  assert.equal(JSON.parse(roomJson).rooms.length, 1);
+  assert.equal(roomJson, JSON.stringify(JSON.parse(roomJson)), 'CLI room exports are compact JSON.');
   const preview = await cli(workspace, ['preview', '--map', 'world.json', '--output', 'preview.svg']);
   assert.equal(preview.code, 0, preview.out);
   assert.match(await readFile(join(workspace, 'preview.svg'), 'utf8'), /<svg.*#ffffff/);

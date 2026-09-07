@@ -263,7 +263,7 @@ namespace MetroidvaniaStudio
         public void Save(string path)
             => SaveAndGetPersistedJson(path);
 
-        /// <summary>Saves and returns the exact formatted JSON bytes' source text.</summary>
+        /// <summary>Saves and returns the exact compact JSON bytes' source text.</summary>
         public string SaveAndGetPersistedJson(string path)
             => SaveAndGetPersistedJson(path, (destination, json) => MapDocumentStore.SaveValidatedSnapshot(destination, json));
 
@@ -276,7 +276,7 @@ namespace MetroidvaniaStudio
             if (publish == null) throw new ArgumentNullException(nameof(publish));
             EndEdit();
             string current = Snapshot();
-            string persisted = MapDocumentStore.Serialize(Document, true);
+            string persisted = current;
             publish(path, persisted);
             FilePath = Path.GetFullPath(path);
             CurrentJson = current;

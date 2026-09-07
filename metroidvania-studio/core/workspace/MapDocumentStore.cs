@@ -116,7 +116,7 @@ namespace MetroidvaniaStudio
         public static string SaveSnapshot(string path, MapDocument document)
         {
             if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("Choose a map file path.", nameof(path));
-            string json = Serialize(document, true);
+            string json = Serialize(document);
             WriteValidatedSnapshot(path, json);
             return json;
         }

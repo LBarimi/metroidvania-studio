@@ -17,7 +17,7 @@ internal sealed class StudioService(WorkspaceFiles? files, LiveClient? live = nu
         if (Files.Exists(path)) throw new CliException("conflict", "The map file already exists.");
         if (name.Length > 4096) throw new CliException("limit_exceeded", "The map name is too long.");
         var document = new MapDocument { name = name };
-        string json = MapJson.ToJson(document, true);
+        string json = MapDocumentStore.Serialize(document);
         string revision = dryRun ? WorkspaceFiles.Hash(Encoding.UTF8.GetBytes(json)) : Files.Write(path, json, null, true, CancellationToken.None);
         return new { path, revision, dryRun, changed = true, roomCount = 0 };
     }

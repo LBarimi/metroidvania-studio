@@ -64,7 +64,7 @@ namespace MetroidvaniaStudio
                 string fileName = UniqueName(stem, names);
                 if (selected != null && !selected.Contains(room.id)) continue;
                 snapshot.rooms = new List<MapRoom> { room };
-                string json = MapDocumentStore.Serialize(snapshot, true);
+                string json = MapDocumentStore.Serialize(snapshot);
                 int byteCount;
                 try
                 {
@@ -193,7 +193,7 @@ namespace MetroidvaniaStudio
         private static void CheckSharedMetadataBudget(MapDocument snapshot, int roomCount)
         {
             snapshot.rooms = new List<MapRoom>();
-            string sharedJson = MapDocumentStore.Serialize(snapshot, true);
+            string sharedJson = MapDocumentStore.Serialize(snapshot);
             int sharedBytes;
             try { sharedBytes = Utf8.GetByteCount(sharedJson); }
             catch (EncoderFallbackException error)

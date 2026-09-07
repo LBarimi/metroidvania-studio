@@ -158,7 +158,7 @@ async function save(saveAs = false): Promise<void> {
     const handle = await pickMapSave(fileName, previous?.handle); choosing = false;
     const hash = previous?.hash ?? (handle ? await fileHash(await handle.getFile()) : '');
     await settleFileSnapshot(); const snapshot = state;
-    const json = JSON.stringify(snapshot.document, null, 2) + '\n';
+    const json = JSON.stringify(snapshot.document);
     if (!handle) { downloadMap(json, fileName); toast(locale.t('fileDownloadStarted'), true); return; }
     const savedHash = await writeMapFile(handle, json, hash);
     if (previous) previous.hash = savedHash;

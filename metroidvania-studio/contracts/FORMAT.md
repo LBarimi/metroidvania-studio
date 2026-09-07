@@ -4,7 +4,7 @@ The single source of the document contract is `core/workspace/MapDocument.cs` an
 
 ## Version and encoding
 
-Documents use `formatVersion: 2` and `tileSize: 16`. Output is UTF-8 without a byte-order mark; an optional UTF-8 byte-order mark is accepted on input. Version 1 files migrate to version 2 with empty layer groups. Future versions, unknown structural fields, duplicate JSON keys and invalid values are rejected before replacing the current document. A missing optional field retains its documented model default.
+Documents use `formatVersion: 2` and `tileSize: 16`. Saved and exported maps use compact JSON without indentation or a trailing newline. Numeric fields use culture-independent JSON numbers with a decimal point; loaders also accept whitespace-formatted JSON. User string values retain their whitespace and content. Output is UTF-8 without a byte-order mark; an optional UTF-8 byte-order mark is accepted on input. Version 1 files migrate to version 2 with empty layer groups. Future versions, unknown structural fields, duplicate JSON keys and invalid values are rejected before replacing the current document. A missing optional field retains its documented model default.
 
 The JSON schema describes structural validation. `MapDocumentStore` additionally validates unique IDs, group references, room containment, finite coordinates and bounded aggregate work. Each map file and an aggregate room export are limited to 32 MiB. A room can be up to 1024 by 1024 tiles; a document can contain at most 1024 rooms. The software release version is independent of the map format version.
 

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Encodings.Web;
 using MetroidvaniaStudio;
 
 namespace MetroidvaniaStudio.Server;
@@ -187,7 +188,8 @@ public sealed class AutoRoomExporter : IDisposable
         JsonElement root = parsed.RootElement;
         var roomElements = root.GetProperty("rooms").EnumerateArray().ToArray();
         if (roomElements.Length > MapDocument.MaximumRoomCount) throw new InvalidDataException("Too many rooms to auto-export.");
-        string sharedHash = Hash(WriteDocument(root, null));
+        // Invalidate older encodings once so manual and automatic room files share byte counts.
+        string sharedHash = Hash("compact-utf8-v1:" + WriteDocument(root, null));
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var next = new Manifest();
         var publications = new List<Publication>();
@@ -345,7 +347,8 @@ public sealed class AutoRoomExporter : IDisposable
     private static string WriteDocument(JsonElement root, JsonElement? room)
     {
         using var memory = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(memory))
+        using (var writer = new Utf8JsonWriter(memory, new JsonWriterOptions
+        { Indented = false, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping }))
         {
             writer.WriteStartObject();
             foreach (JsonProperty property in root.EnumerateObject())

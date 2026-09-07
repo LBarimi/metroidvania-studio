@@ -31,6 +31,7 @@ namespace MetroidvaniaStudio
             });
             return new JsonSerializerOptions
             {
+                // System.Text.Json numbers use the JSON format independently of CurrentCulture.
                 TypeInfoResolver = resolver, IncludeFields = true, WriteIndented = pretty,
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, PropertyNameCaseInsensitive = false, MaxDepth = 64
             };
