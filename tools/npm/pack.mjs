@@ -90,7 +90,7 @@ export function pack() {
   for (const file of files(path.join(root, 'docs'))) copy(file.full, path.join(stage, 'docs', file.name));
   for (const name of ['FORMAT.md', 'map-format-v2.schema.json']) copy(path.join(root, 'metroidvania-studio/contracts', name), path.join(stage, 'metroidvania-studio/contracts', name));
   buildDocs(path.join(stage, 'docs/site'));
-  const published = { name: manifest.name, version: manifest.version, description: manifest.description, license: manifest.license,
+  const published = { name: manifest.name, version: manifest.version, description: manifest.description, keywords: manifest.keywords, license: manifest.license,
     type: 'module', private: false, engines: manifest.engines, mcpName: manifest.mcpName, repository: manifest.repository,
     bin: { 'metroidvania-studio': 'bin/metroidvania-studio.mjs' }, files: ['bin/', 'app/', 'docs/', 'metroidvania-studio/contracts/', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'server.json'] };
   writeFileSync(path.join(stage, 'package.json'), JSON.stringify(published, null, 2) + '\n');

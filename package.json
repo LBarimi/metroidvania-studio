@@ -16,5 +16,17 @@
   "scripts": {
     "pack:local": "node tools/npm/pack.mjs",
     "test:package": "node --test tools/npm/wrapper.test.mjs"
-  }
+  },
+  "keywords": [
+    "metroidvania",
+    "map-editor",
+    "level-editor",
+    "tilemap",
+    "2d",
+    "lua",
+    "headless",
+    "cli",
+    "mcp",
+    "ai-agent"
+  ]
 }
