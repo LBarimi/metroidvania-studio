@@ -1,5 +1,9 @@
 # Changes
 
+## 1.2.1
+
+- Add npm search keywords and preserve them when generating the published package.
+
 ## 1.2.0
 
 - Browse saved Lua scripts and examples from File → Scripts, with workspace storage and conflict checks.
