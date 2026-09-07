@@ -18,3 +18,18 @@ test('publication requires the exact tag, reviewed archives and matching main re
   assert.throws(() => validatePublishContext({ ...state, remoteMain: null }, 'v1.0.0', report));
   assert.doesNotThrow(() => validatePublishContext(state, 'v1.0.0', report));
 });
+
+test('release replacement requires an exact unchanged tag object and matching prepared archives', () => {
+  const previous = 'b'.repeat(40);
+  const existing = { ...state, tagExists: true, tagObject: previous };
+  const replacement = { ...report, replacesTag: previous };
+  assert.equal(validateReleaseState(existing, previous), 'v1.0.0');
+  for (const value of ['v1.0.0', 'c'.repeat(40), '../tag']) assert.throws(() => validateReleaseState(existing, value));
+  assert.throws(() => validateReleaseState(state, previous));
+  assert.throws(() => validateReleaseState({ ...existing, branch: 'feature/test' }, previous));
+  assert.throws(() => validateReleaseState({ ...existing, status: ' M pending' }, previous));
+  assert.throws(() => validatePublishContext(existing, 'v1.0.0', report, previous));
+  assert.throws(() => validatePublishContext(existing, 'v1.0.1', replacement, previous));
+  assert.throws(() => validatePublishContext(existing, 'v1.0.0', replacement));
+  assert.doesNotThrow(() => validatePublishContext(existing, 'v1.0.0', replacement, previous));
+});

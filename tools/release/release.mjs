@@ -10,18 +10,23 @@ import { auditWindowsMetadata } from './vendor-metadata.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const stableVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
-export function validateReleaseState(state) {
+export function validateReleaseState(state, replaceTag = '') {
   assert.equal(state.branch, 'main', 'Releases are allowed only from main.');
   assert.ok(/^[0-9a-f]{40}$/.test(state.head), 'A committed main revision is required.');
   assert.equal(state.status, '', 'Commit or remove pending files before preparing a release.');
   assert.ok(stableVersion.test(state.version), 'Use a numeric major.minor.patch version.');
-  assert.equal(state.tagExists, false, 'The release tag already exists; increment the version.');
+  if (replaceTag) {
+    assert.match(replaceTag, /^[0-9a-f]{40}$/, 'Replacing a release requires its exact previous tag object.');
+    assert.equal(state.tagExists, true, 'Only an existing tag can be replaced.');
+    assert.equal(state.tagObject, replaceTag, 'The previous release tag changed; inspect it before retrying.');
+  } else assert.equal(state.tagExists, false, 'The release tag already exists; increment the version or explicitly replace its exact tag object.');
   if (state.remoteMain) assert.equal(state.head, state.remoteMain, 'main must match the fetched origin/main revision.');
   assert.ok(state.changeLog.includes(`## ${state.version}\n`), 'Add the release version to CHANGELOG.md.');
   return `v${state.version}`;
 }
-export function validatePublishContext(state, confirmation, report) {
-  const tag = validateReleaseState(state);
+export function validatePublishContext(state, confirmation, report, replaceTag = '') {
+  const tag = validateReleaseState(state, replaceTag);
+  assert.equal(report.replacesTag || '', replaceTag, 'Prepare archives for this exact release replacement.');
   assert.equal(confirmation, tag, 'Publishing requires --confirm followed by the exact version tag.');
   assert.ok(state.remoteMain, 'Fetch origin/main before publishing.');
   assert.equal(report.commit, state.head, 'Prepare archives from this exact main revision.');
@@ -43,8 +48,9 @@ function optionalRef(ref) {
 }
 export function readReleaseState() {
   const version = JSON.parse(readFileSync(path.join(root, 'version.json'), 'utf8')).version;
+  const tagObject = stableVersion.test(version) ? optionalRef(`refs/tags/v${version}`) : null;
   return { branch: git('branch', '--show-current'), head: git('rev-parse', 'HEAD'), status: git('status', '--porcelain', '--untracked-files=all'), version,
-    tagExists: stableVersion.test(version) && optionalRef(`refs/tags/v${version}`) !== null,
+    tagExists: tagObject !== null, tagObject,
     remoteMain: optionalRef('refs/remotes/origin/main'), changeLog: readFileSync(path.join(root, 'CHANGELOG.md'), 'utf8').replaceAll('\r\n', '\n') };
 }
 function validateSource() {
@@ -55,8 +61,8 @@ function validateSource() {
   run(node, ['metroidvania-studio/build-web.mjs', '--check-contracts']);
   for (const suite of ['Core.Tests', 'Server.Tests']) run(dotnet, ['run', '--project', `metroidvania-studio/${suite.toLowerCase().replace('.', '-')}/MetroidvaniaStudio.${suite}.csproj`, '--configuration', 'Release', '-p:UseSharedCompilation=false']);
 }
-export async function prepareRelease(state, windowsPackage, { candidate = false } = {}) {
-  if (!candidate) validateReleaseState(state);
+export async function prepareRelease(state, windowsPackage, { candidate = false, replaceTag = '' } = {}) {
+  if (!candidate) validateReleaseState(state, replaceTag);
   else { assert.ok(stableVersion.test(state.version)); assert.ok(/^[0-9a-f]{40}$/.test(state.head)); }
   assert.ok(windowsPackage && existsSync(windowsPackage), 'Provide the rebuilt Windows ZIP with --windows-package.');
   validateSource();
@@ -97,29 +103,30 @@ export async function prepareRelease(state, windowsPackage, { candidate = false 
       else blockingIssues.push({ archive: archive.name, path: name, rules: issues.map(issue => issue.rule) });
     }
   }
-  const report = { version: state.version, commit: state.head, candidate, archives, blockingIssues, vendorMetadata };
+  const report = { version: state.version, commit: state.head, candidate, replacesTag: replaceTag || null, archives, blockingIssues, vendorMetadata };
   writeFileSync(path.join(output, 'validation.json'), JSON.stringify(report, null, 2) + '\n');
-  if (!candidate) { const after = readReleaseState(); validateReleaseState(after); assert.equal(after.head, state.head); }
+  if (!candidate) { const after = readReleaseState(); validateReleaseState(after, replaceTag); assert.equal(after.head, state.head); }
   console.log(`Release inspection: ${blockingIssues.length} items require review. ${vendorMetadata.length} verified upstream runtime files contain vendor metadata.`);
   return report;
 }
 export async function main(args = process.argv.slice(2)) {
-  const options = { action: '--dry-run', confirmation: '', windowsPackage: '' };
+  const options = { action: '--dry-run', confirmation: '', windowsPackage: '', replaceTag: '' };
   for (let i = 0; i < args.length; i++) {
     const value = () => { assert.ok(args[i + 1], 'Missing option value.'); return args[++i]; };
     if (['--dry-run', '--pack', '--candidate', '--publish'].includes(args[i])) options.action = args[i];
     else if (args[i] === '--confirm') options.confirmation = value();
+    else if (args[i] === '--replace-tag') options.replaceTag = value();
     else if (args[i] === '--windows-package') options.windowsPackage = value();
     else throw new Error('Unknown release option.');
   }
   const state = readReleaseState();
   if (options.action === '--candidate') { await prepareRelease(state, options.windowsPackage, { candidate: true }); return; }
-  const tag = validateReleaseState(state);
+  const tag = validateReleaseState(state, options.replaceTag);
   if (options.action === '--dry-run') { console.log(`Ready to prepare ${tag} from main. No files or tags changed.`); return; }
-  if (options.action === '--pack') { await prepareRelease(state, options.windowsPackage); return; }
+  if (options.action === '--pack') { await prepareRelease(state, options.windowsPackage, { replaceTag: options.replaceTag }); return; }
   const output = path.join(root, '.local/release', state.version), report = JSON.parse(readFileSync(path.join(output, 'validation.json'), 'utf8'));
   assert.equal(report.candidate, false);
-  validatePublishContext(state, options.confirmation, report);
+  validatePublishContext(state, options.confirmation, report, options.replaceTag);
   for (const archive of report.archives) {
     assert.equal(path.resolve(archive.path), path.join(output, archive.name));
     assert.equal(createHash('sha256').update(readFileSync(archive.path)).digest('hex'), archive.sha256, 'Archive changed after validation.');
@@ -127,10 +134,23 @@ export async function main(args = process.argv.slice(2)) {
   const gh = process.env.METROIDVANIA_STUDIO_GH || 'gh';
   run(gh, ['auth', 'status']);
   run('git', ['fetch', 'origin', 'main', '--no-tags']);
-  const finalState = readReleaseState(); validatePublishContext(finalState, options.confirmation, report); assert.equal(finalState.head, state.head);
+  const finalState = readReleaseState(); validatePublishContext(finalState, options.confirmation, report, options.replaceTag); assert.equal(finalState.head, state.head);
   const notes = path.join(output, 'release-notes.md');
   const content = state.changeLog.split(`## ${state.version}\n`)[1].split(/\n## /)[0].trim();
   writeFileSync(notes, content + '\n\nDownloads: web (installed ASP.NET Core Runtime 10), Windows (desktop EXE), macOS and Linux (browser UI; ARM64 and x64 runtimes included).\n\nExtract the entire ZIP and open the launch file at its top level. Engine packages and license notices are included.\n');
+  if (options.replaceTag) {
+    const remoteTag = git('ls-remote', '--refs', 'origin', `refs/tags/${tag}`).split(/\s/)[0];
+    assert.equal(remoteTag, options.replaceTag, 'The remote release tag changed; nothing was replaced.');
+    run(gh, ['release', 'view', tag]);
+    // Hide downloads while replacing the complete set, then publish only after the
+    // guarded tag update succeeds. A failed upload leaves a recoverable draft.
+    run(gh, ['release', 'edit', tag, '--draft=true']);
+    run(gh, ['release', 'upload', tag, ...report.archives.map(file => file.path), path.join(output, 'SHA256SUMS.txt'), '--clobber']);
+    run('git', ['tag', '-a', '-f', tag, '-m', `Metroidvania Studio ${state.version}`, state.head]);
+    run('git', ['push', `--force-with-lease=refs/tags/${tag}:${options.replaceTag}`, 'origin', `refs/tags/${tag}`]);
+    run(gh, ['release', 'edit', tag, '--verify-tag', '--title', `Metroidvania Studio ${state.version}`, '--notes-file', notes, '--draft=false', '--latest']);
+    return;
+  }
   run('git', ['tag', '-a', tag, '-m', `Metroidvania Studio ${state.version}`, state.head]);
   run('git', ['push', 'origin', `refs/tags/${tag}`]);
   run(gh, ['release', 'create', tag, ...report.archives.map(file => file.path), path.join(output, 'SHA256SUMS.txt'), '--verify-tag', '--title', `Metroidvania Studio ${state.version}`, '--notes-file', notes, '--latest']);
