@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use open and closed eye icons for layer visibility.
+
 - Select multiple rooms with Ctrl/Cmd-click and drag them together while preserving their relative positions, with collision handling and one-step Undo.
 
 ## 1.2.1

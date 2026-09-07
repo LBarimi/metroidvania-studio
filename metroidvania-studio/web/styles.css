@@ -464,6 +464,10 @@ hr {
   font-size: 11px;
 }
 
+.layer-row .layer-visibility { display: grid; place-items: center; flex: none; }
+.layer-visibility img { display: block; width: 16px; height: 16px; image-rendering: pixelated; }
+.layer-visibility[aria-pressed="false"] img { opacity: .55; }
+
 .palette-list {
   display: grid;
   grid-template-columns: 1fr;
