@@ -19,7 +19,7 @@ Use `METROIDVANIA_STUDIO_DOTNET` to select an existing .NET host when it is not 
 
 - [CLI guide](docs/cli/quick-start.md)
 - [Lua scripting](docs/scripting/quick-start.md)
-- [Editing API](docs/api/README.md)
+- [Editing API](docs/api/index.md)
 - [Local installation](docs/distribution/local-package.md)
 
 Keep `LICENSE`, `THIRD-PARTY-NOTICES.md`, and `app/licenses` with redistributed copies.
