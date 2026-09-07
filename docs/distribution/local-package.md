@@ -9,12 +9,12 @@ node tools/scripting/build-runtime.mjs
 npm run pack:local
 ```
 
-The resulting archive is `builds/npm/metroidvania-studio-1.1.0.tgz`. The build checks the source version, matching npm/MCP metadata, required notices, and package contents. `builds/npm/latest.json` records the archive inventory and npm integrity hash. These are local build outputs.
+The resulting archive is `builds/npm/metroidvania-studio-1.2.0.tgz`. The build checks the source version, matching npm/MCP metadata, required notices, and package contents. `builds/npm/latest.json` records the archive inventory and npm integrity hash. These are local build outputs.
 
 Install the local archive in a separate test folder:
 
 ```sh
-npm install --offline --ignore-scripts --no-audit --no-fund ./metroidvania-studio-1.1.0.tgz
+npm install --offline --ignore-scripts --no-audit --no-fund ./metroidvania-studio-1.2.0.tgz
 node ./node_modules/metroidvania-studio/bin/metroidvania-studio.mjs version
 mkdir maps
 node ./node_modules/metroidvania-studio/bin/metroidvania-studio.mjs --workspace ./maps init --map world.map.json

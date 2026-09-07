@@ -1,3 +1,4 @@
+import { buildDocs } from '../tools/docs/build.mjs';
 import { readdir, mkdir, readFile, writeFile, copyFile } from 'node:fs/promises';
 import { stripTypeScriptTypes } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +29,7 @@ for (const name of await readdir(path.join(root, 'web'))) {
     await copyFile(path.join(root, 'web', name), path.join(outputRoot, name));
   }
 }
+buildDocs(path.join(outputRoot, 'docs'));
 const version = JSON.parse(await readFile(path.join(root, '../version.json'), 'utf8')).version;
 const revision = spawnSync('git', ['rev-parse', '--short=8', 'HEAD'], { cwd: root, encoding: 'utf8', windowsHide: true });
 await writeFile(path.join(outputRoot, 'build-info.json'), JSON.stringify({ version, revision: revision.status === 0 ? revision.stdout.trim() : '', builtAt: new Date().toISOString() }));

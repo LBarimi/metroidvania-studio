@@ -58,13 +58,13 @@ function validateSource() {
   run(node, ['tools/scripting/build-runtime.mjs']);
   run(node, ['tools/repository/check-text.mjs']);
   run(node, ['--test', 'tools/repository/check-text.test.mjs', 'tools/repository/check-boundaries.test.mjs', 'tools/release/release.test.mjs',
-    'tools/release/archives.test.mjs', 'tools/release/vendor-metadata.test.mjs', 'platform/shared/build.test.mjs', 'integrations/packages.test.mjs', 'integrations/unity/package.test.mjs', 'integrations/sdl/tests/boundary.test.mjs']);
+    'tools/release/archives.test.mjs', 'tools/docs/build.test.mjs', 'tools/release/vendor-metadata.test.mjs', 'platform/shared/build.test.mjs', 'integrations/packages.test.mjs', 'integrations/unity/package.test.mjs', 'integrations/sdl/tests/boundary.test.mjs']);
   run(node, ['metroidvania-studio/build-web.mjs', '--check-contracts']);
   for (const suite of ['Core.Tests', 'Server.Tests']) run(dotnet, ['run', '--project', `metroidvania-studio/${suite.toLowerCase().replace('.', '-')}/MetroidvaniaStudio.${suite}.csproj`, '--configuration', 'Release', '-p:UseSharedCompilation=false']);
   for (const [folder, name] of [['automation-tests', 'Automation.Tests'], ['scripting-tests', 'Scripting.Tests'], ['server-automation-tests', 'Server.Automation.Tests']])
     run(dotnet, ['run', '--project', `metroidvania-studio/${folder}/MetroidvaniaStudio.${name}.csproj`, '--configuration', 'Release', '-p:UseSharedCompilation=false']);
   run(dotnet, ['build', 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.csproj', '--configuration', 'Release', '-p:UseSharedCompilation=false']);
-  run(node, ['--test', 'metroidvania-studio/cli-tests/cli.test.mjs', 'metroidvania-studio/cli-tests/live-server.test.mjs']);
+  run(node, ['--test', 'tools/release/cli.test.mjs', 'metroidvania-studio/cli-tests/cli.test.mjs', 'metroidvania-studio/cli-tests/live-server.test.mjs']);
 }
 export async function prepareRelease(state, windowsPackage, { candidate = false, replaceTag = '' } = {}) {
   if (!candidate) validateReleaseState(state, replaceTag);

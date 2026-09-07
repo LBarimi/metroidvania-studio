@@ -47,3 +47,11 @@ Examples:
 - [Region properties](../examples/region-properties.lua)
 
 For command-line execution, see the [CLI guide](../cli/quick-start.md). For exact operations, read the [Lua API reference](api-reference.md) and [execution limits](execution-limits.md).
+
+## Saved scripts and examples
+
+Open **File → Scripts**. The library lists `.lua` files from the workspace `Scripts/` folder and the bundled examples. Opening an entry loads its code without running it. Select **Run** to apply it, or enable **Dry run** to inspect the result first.
+
+Use **New script**, enter a filename, and choose **Save to library** to keep code in the workspace. **Open script** imports a file from your computer; **Save script** downloads a copy. An example is read-only until saved as a workspace script. **Refresh list** picks up scripts added or changed outside the studio. If another program changes a script before you save, reopen it to review the changes instead of overwriting them.
+
+Scripts remain separate from map JSON and engine packages. The library accepts up to 256 files of at most 64 KiB each. Existing maps and autosave behavior are unchanged.

@@ -60,11 +60,11 @@ test('installed local package runs CLI, Lua and MCP without a source checkout', 
     const result = spawnSync(process.execPath, [wrapper, ...args], { cwd: directory, env, encoding: 'utf8', windowsHide: true, timeout: 30000 });
     assert.equal(result.status, 0, result.stdout + result.stderr); return JSON.parse(result.stdout);
   };
-  assert.equal(cli(['version']).version, '1.1.0');
+  assert.equal(cli(['version']).version, json(path.join(root, 'version.json')).version);
   const executable = spawnSync(process.execPath, [findNpm(), 'exec', '--offline', '--', 'metroidvania-studio', 'version'],
     { cwd: directory, env, encoding: 'utf8', windowsHide: true, timeout: 30000 });
   assert.equal(executable.status, 0, executable.stdout + executable.stderr);
-  assert.equal(JSON.parse(executable.stdout).version, '1.1.0');
+  assert.equal(JSON.parse(executable.stdout).version, json(path.join(root, 'version.json')).version);
   cli(['--workspace', workspace, 'init', '--map', 'world.map.json', '--name', 'World & 한글']);
   const batch = { apiVersion: 1, operations: [
     { op: 'room.add', id: 'a', name: 'Room & 한글', x: 0, y: 0, width: 16, height: 12 },

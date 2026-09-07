@@ -2,6 +2,8 @@
 
 The web server exposes automation under `/api/v1` on its existing loopback address. Use the address printed by the launcher; do not assume the default port is free.
 
+Download the [OpenAPI description](http.openapi.json) for HTTP endpoint names and request fields.
+
 For most clients, [CLI live mode](../cli/commands.md) or [MCP live mode](../mcp/setup.md) handles this protocol for you.
 
 ## Inspect and submit
@@ -63,3 +65,11 @@ Lua source is limited to **64 KiB** and HTTP batches to **8 MiB**. Workers have 
 The Lua runtime also limits instructions, operations, allocations, and logs; see [execution limits](../scripting/execution-limits.md). These are resource controls, not an operating-system sandbox for running arbitrary native code.
 
 The API keeps the existing Host/Origin checks and JSON request requirement. It is a local desktop interface, not an authenticated remote service. Client IDs support cancellation ownership and retry handling; they are not credentials. Do not forward its port or expose it through a proxy.
+
+## Script library
+
+- `GET /api/v1/scripts` lists workspace scripts and read-only examples.
+- `GET /api/v1/scripts/source?id=workspace/example.lua` returns source and a revision hash. Use the `id` from the list response.
+- `POST /api/v1/scripts` saves `{ "name": "example.lua", "source": "print(1)", "expectedRevision": null }` as a new workspace script. To update an existing file, provide the revision returned when it was opened. A conflicting save returns HTTP 409.
+
+Library requests never run scripts or change the active map. Files stay in the workspace `Scripts/` folder. Names cannot contain directory separators or traversal. Symlinks and junctions are rejected.

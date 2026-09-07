@@ -15,12 +15,12 @@ const payload = kind => new Map([
   ['build-info.json', Buffer.from('{"version":"1.0.0"}')],
   ...['app/metroidvania-studio/dist/index.html', 'app/metroidvania-studio/dist/app.js', 'app/samples/catalog.json',
     'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.dll', 'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.deps.json',
-    'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.runtimeconfig.json', 'app/docs/index.md', 'app/docs/api/index.md',
+    'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.runtimeconfig.json', 'app/docs/index.md', 'app/docs/api/index.md', 'app/metroidvania-studio/dist/docs/index.html', 'app/metroidvania-studio/dist/docs/docs.js',
     'app/metroidvania-studio/contracts/FORMAT.md', 'app/metroidvania-studio/contracts/map-format-v2.schema.json',
     'app/metroidvania-studio/server/MetroidvaniaStudio.Server.dll', 'app/metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll',
-    ...({ web: ['metroidvania-studio.bat', 'metroidvania-studio.command', 'metroidvania-studio.sh', 'app/launch.ps1'],
-      mac: ['metroidvania-studio.command', 'app/runtime/osx-arm64/dotnet', 'app/runtime/osx-x64/dotnet'],
-      linux: ['metroidvania-studio.sh', 'app/runtime/linux-arm64/dotnet', 'app/runtime/linux-x64/dotnet'], win: ['metroidvania-studio.exe', 'app/runtime/win-x64/dotnet.exe'] }[kind])]
+    ...({ web: ['metroidvania-studio-cli.cmd', 'metroidvania-studio-cli.sh', 'metroidvania-studio.bat', 'metroidvania-studio.command', 'metroidvania-studio.sh', 'app/launch.ps1'],
+      mac: ['metroidvania-studio-cli.sh', 'metroidvania-studio.command', 'app/runtime/osx-arm64/dotnet', 'app/runtime/osx-x64/dotnet'],
+      linux: ['metroidvania-studio-cli.sh', 'metroidvania-studio.sh', 'app/runtime/linux-arm64/dotnet', 'app/runtime/linux-x64/dotnet'], win: ['metroidvania-studio-cli.cmd', 'metroidvania-studio.exe', 'app/runtime/win-x64/dotnet.exe'] }[kind])]
     .map(name => [name, Buffer.from(name.endsWith('.exe') ? 'MZfixture' : 'fixture')])
 ]);
 test('release layouts require immediate root launch files and complete matching runtimes', () => {
@@ -95,7 +95,7 @@ test('every release rejects a missing automation worker or linked documentation'
   for (const kind of ['web', 'win', 'mac', 'linux']) {
     for (const required of ['app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.dll',
       'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.deps.json', 'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.runtimeconfig.json',
-      'app/docs/index.md', 'app/docs/api/index.md', 'app/metroidvania-studio/contracts/FORMAT.md',
+      'app/docs/index.md', 'app/docs/api/index.md', 'app/metroidvania-studio/dist/docs/index.html', 'app/metroidvania-studio/dist/docs/docs.js', 'app/metroidvania-studio/contracts/FORMAT.md',
       'app/metroidvania-studio/contracts/map-format-v2.schema.json']) {
       const files = payload(kind); files.delete(required);
       assert.throws(() => validateEntries(files, kind, '1.0.0'), /Incomplete release/, `${kind}: ${required}`);

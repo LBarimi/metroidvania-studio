@@ -6,6 +6,20 @@ A web-based 2D world editor for metroidvania games. Create connected rooms, pain
 
 Runs locally on Windows, macOS, and Linux. No game engine installation is required to use the studio.
 
+## Scripts & Automation
+
+Use **File → Scripts** to generate rooms or repeat editing tasks. Run the same operations headlessly through the **CLI**, or connect an **AI agent** through the local **MCP server**. Dry runs, atomic updates, and revision checks keep scripted edits reviewable.
+
+Install the CLI and MCP tools with **Node.js 24+** and the **.NET 10 runtime**:
+
+```sh
+npm install --global metroidvania-studio
+```
+
+Using a program download? Run `metroidvania-studio-cli.cmd help` on Windows, or `bash metroidvania-studio-cli.sh help` on macOS/Linux. See [headless from a download](docs/cli/release-downloads.md).
+
+Start with the [automation guides](docs/index.md), [API reference](docs/api/index.md), [Lua examples](docs/examples/connected-rooms.lua), or [MCP setup](docs/mcp/setup.md).
+
 ## Add Rooms & Paint Tiles
 
 ![Add a second room, paint its tiles, then pan back and paint the first room to connect their terrain](media/readme/create-and-paint.gif)
@@ -44,17 +58,7 @@ Release downloads keep maps in your user data folder. Source builds use `.local/
 
 See **Help → Shortcuts** for the full control list. The interface follows your browser language and can be changed from the language picker.
 
-## Scripts & Automation
-
-Use **Edit → Lua Scripts** to generate rooms or repeat editing tasks. Run the same operations headlessly through the **CLI**, or connect an **AI agent** through the local **MCP server**. Dry runs, atomic updates, and revision checks keep scripted edits reviewable.
-
-Install the CLI and MCP tools with **Node.js 24+** and the **.NET 10 runtime**:
-
-```sh
-npm install --global metroidvania-studio
-```
-
-Start with the [automation guides](docs/index.md), [Lua examples](docs/examples/connected-rooms.lua), or [MCP setup](docs/mcp/setup.md).
+Open **Help → Documentation** for searchable guides and the API reference, including offline access.
 
 ## Engine Packages
 

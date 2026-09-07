@@ -2,6 +2,8 @@
 
 The command line creates and edits map JSON without a browser, display, game engine, or running web server. It uses the same versioned operations and Lua API as the editor.
 
+Using a downloaded program ZIP? Start with [Headless from a release download](release-downloads.md); it includes a CLI launcher and needs no npm installation.
+
 Install with Node.js 24+ and the .NET 10 runtime:
 
 ```sh

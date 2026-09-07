@@ -1,3 +1,4 @@
+import { buildDocs } from '../docs/build.mjs';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync, copyFileSync, chmodSync } from 'node:fs';
 import path from 'node:path';
@@ -88,6 +89,7 @@ export function pack() {
   copy(path.join(root, 'tools/npm/README.md'), path.join(stage, 'README.md'));
   for (const file of files(path.join(root, 'docs'))) copy(file.full, path.join(stage, 'docs', file.name));
   for (const name of ['FORMAT.md', 'map-format-v2.schema.json']) copy(path.join(root, 'metroidvania-studio/contracts', name), path.join(stage, 'metroidvania-studio/contracts', name));
+  buildDocs(path.join(stage, 'docs/site'));
   const published = { name: manifest.name, version: manifest.version, description: manifest.description, license: manifest.license,
     type: 'module', private: false, engines: manifest.engines, mcpName: manifest.mcpName, repository: manifest.repository,
     bin: { 'metroidvania-studio': 'bin/metroidvania-studio.mjs' }, files: ['bin/', 'app/', 'docs/', 'metroidvania-studio/contracts/', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'server.json'] };

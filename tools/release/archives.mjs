@@ -81,11 +81,13 @@ export function validateEntries(entries, kind, version) {
   for (const name of entries.keys()) { safePath(name); assert.ok(!forbidden.test(name), 'Development file in release: ' + name); }
   for (const name of ['LICENSE', 'THIRD-PARTY-NOTICES.md', 'build-info.json', 'app/metroidvania-studio/dist/index.html', 'app/metroidvania-studio/dist/app.js', 'app/samples/catalog.json',
     'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.dll', 'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.deps.json',
-    'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.runtimeconfig.json', 'app/docs/index.md', 'app/docs/api/index.md',
+    'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.runtimeconfig.json', 'app/docs/index.md', 'app/docs/api/index.md', 'app/metroidvania-studio/dist/docs/index.html', 'app/metroidvania-studio/dist/docs/docs.js',
     'app/metroidvania-studio/contracts/FORMAT.md', 'app/metroidvania-studio/contracts/map-format-v2.schema.json']) assert.ok(entries.has(name), 'Incomplete release: ' + name);
   assert.equal(JSON.parse(entries.get('build-info.json')).version, version);
   const start = { web: 'metroidvania-studio.bat', win: 'metroidvania-studio.exe', mac: 'metroidvania-studio.command', linux: 'metroidvania-studio.sh' }[kind];
   assert.ok(start && entries.has(start), 'Root launch file is missing.');
+  if (kind === 'web' || kind === 'win') assert.ok(entries.has('metroidvania-studio-cli.cmd'), 'Windows CLI launcher is missing.');
+  if (kind !== 'win') assert.ok(entries.has('metroidvania-studio-cli.sh'), 'Unix CLI launcher is missing.');
   if (kind === 'win') {
     assert.ok(entries.get(start).subarray(0, 2).equals(Buffer.from('MZ')), 'The Windows file must be a real executable.');
     assert.ok(entries.has('app/runtime/win-x64/dotnet.exe'), 'Bundled Windows runtime is missing.');
@@ -140,6 +142,8 @@ export async function buildArchives({ common, output, version, commit, windowsPa
         }
       }
     }
+    if (kind === 'web' || kind === 'win') entries.set('metroidvania-studio-cli.cmd', readFileSync(path.join(root, 'tools/release/cli.cmd')));
+    if (kind !== 'win') { entries.set('metroidvania-studio-cli.sh', readFileSync(path.join(root, 'tools/release/cli.sh'))); executables.add('metroidvania-studio-cli.sh'); }
     entries.set('build-info.json', Buffer.from(JSON.stringify({ version, commit, package: kind, runtimeIncluded: kind !== 'web' }, null, 2) + '\n'));
     if (kind === 'win') {
       entries.delete('runtime-requirements.txt');
@@ -147,6 +151,7 @@ export async function buildArchives({ common, output, version, commit, windowsPa
     } else entries.set('INSTALL_EN.txt', Buffer.from(kind === 'web'
       ? 'Install ASP.NET Core Runtime 10. No SDK, Node.js, Git, or game engine is needed.\nExtract the entire archive to a writable folder.\nWindows: open metroidvania-studio.bat.\nmacOS: open metroidvania-studio.command.\nLinux: run bash metroidvania-studio.sh.\nThe launch file opens your browser. Add --stop to save and stop the local server.\nMaps are kept in your user data folder when replacing this download.\n'
       : `Extract the entire archive to a writable folder.\n${kind === 'mac' ? 'Open metroidvania-studio.command. If macOS blocks the downloaded file, use Open Anyway in Privacy & Security after verifying its source.' : 'Run bash metroidvania-studio.sh, or open it as an executable in your file manager.'}\nThe launch file opens your browser. Add --stop to save and stop the local server.\nThe .NET runtime is included for ARM64 and x64.\nMaps are kept in your user data folder when replacing this download.\n`));
+    entries.set('INSTALL_EN.txt', Buffer.concat([entries.get('INSTALL_EN.txt'), Buffer.from('\nHeadless commands: run metroidvania-studio-cli.cmd help on Windows, or bash metroidvania-studio-cli.sh help on macOS/Linux.\nOffline API guide: open app/metroidvania-studio/dist/docs/index.html, or use Help > Documentation in the editor.\n')]));
     validateEntries(entries, kind, version);
     const manifest = { version, commit, package: kind, files: [...entries].sort(([a], [b]) => a.localeCompare(b, 'en')).map(([name, bytes]) => ({ path: name, sha256: digest(bytes) })), vendorFiles };
     entries.set('release-manifest.json', Buffer.from(JSON.stringify(manifest, null, 2) + '\n'));

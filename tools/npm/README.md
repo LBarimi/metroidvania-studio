@@ -25,3 +25,5 @@ Use `METROIDVANIA_STUDIO_DOTNET` to select an existing .NET host when it is not 
 - [Local installation](docs/distribution/local-package.md)
 
 Keep `LICENSE`, `THIRD-PARTY-NOTICES.md`, and `app/licenses` with redistributed copies.
+
+Open `docs/site/index.html` inside the installed package for the searchable offline API reference.
