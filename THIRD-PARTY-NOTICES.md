@@ -23,6 +23,27 @@ and it does not change the ownership or licensing of maps and assets you import.
   If distributing runtime or SDK components with an application, retain the
   license and notice files supplied with those exact components.
 
+## Lua and automation
+
+- **MoonSharp Interpreter 2.0.0** runs Lua scripts under the BSD 3-Clause License.
+  Source builds verify a pinned upstream source archive and compile the interpreter
+  locally. The exact source revision and digest are recorded in
+  `tools/scripting/source-lock.json`; generated runtime files remain private build
+  inputs. The original license and provenance notice are retained in
+  `metroidvania-studio/scripting/licenses` and copied into CLI distributions.
+- **ModelContextProtocol.Core 2.2.0** implements MCP stdio transport. Its current
+  license is Apache-2.0 with retained MIT contributions; both the complete license
+  and third-party notices are included in
+  `metroidvania-studio/cli/licenses`.
+- The MCP SDK also uses **Microsoft.Extensions.AI.Abstractions**,
+  **Microsoft.Extensions.Logging.Abstractions**, and
+  **Microsoft.Extensions.DependencyInjection.Abstractions**, under MIT terms.
+  Exact versions, source revisions, and their license files are listed in
+  `metroidvania-studio/cli/licenses/dependencies.json`.
+
+Keep the `licenses` directory with redistributed CLI, npm, and application
+packages. These dependencies do not change the license of maps you create.
+
 ## SDL integration
 
 The SDL source package contains project-owned integration and sample code; it

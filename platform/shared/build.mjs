@@ -68,7 +68,8 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
   if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Node.js 24 or later is required for building.');
   const serverProject = path.join(studioRoot, 'metroidvania-studio/server/MetroidvaniaStudio.Server.csproj');
   const launcherProject = path.join(studioRoot, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.csproj');
-  if (!existsSync(serverProject) || !existsSync(launcherProject)) throw new Error('Building requires a source checkout. Use the run script for a prebuilt application.');
+  const cliProject = path.join(studioRoot, 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.csproj');
+  if (!existsSync(serverProject) || !existsSync(launcherProject) || !existsSync(cliProject)) throw new Error('Building requires a source checkout. Use the run script for a prebuilt application.');
   const sdk = runner(dotnet, ['--list-sdks'], { cwd: studioRoot, capture: true });
   if (!/^10\./m.test(sdk || '')) throw new Error('.NET SDK 10 is required for building.');
   if (!/^git version /m.test(runner('git', ['--version'], { cwd: studioRoot, capture: true }) || '')) throw new Error('Git is required for source validation.');
@@ -84,12 +85,15 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
     const folder = `${version}-${stamp}-${randomBytes(4).toString('hex')}`;
     const buildsRoot = path.join(studioRoot, 'builds'), output = path.join(buildsRoot, folder);
     mkdirSync(buildsRoot, { recursive: true }); mkdirSync(output);
+    runner(process.execPath, [path.join(studioRoot, 'tools/scripting/build-runtime.mjs')], { cwd: studioRoot });
     console.log('Building the web editor...');
     runner(process.execPath, [path.join(studioRoot, 'metroidvania-studio/build-web.mjs'), path.join(output, 'metroidvania-studio/dist')], { cwd: studioRoot });
-    for (const [name, project] of [['Server', serverProject], ['Launcher', launcherProject]]) {
+    for (const [name, project] of [['Server', serverProject], ['Launcher', launcherProject], ['Cli', cliProject]]) {
       console.log(`Building ${name.toLowerCase()}...`);
-      runner(dotnet, ['publish', project, '--configuration', 'Release', '--self-contained', 'false', '-p:UseAppHost=false',
-        '-p:UseSharedCompilation=false', '-p:DebugType=None', '--output', path.join(output, `metroidvania-studio/${name.toLowerCase()}`), '--nologo'], { cwd: studioRoot });
+      const properties = ['--configuration', 'Release', '--self-contained', 'false', '-p:UseAppHost=false',
+        '-p:UseSharedCompilation=false', '-p:DebugType=None', '-p:DebugSymbols=false', `-p:PathMap=${studioRoot}=/_/src`, `-p:Version=${version}`];
+      runner(dotnet, ['build', project, '--no-incremental', ...properties, '--nologo'], { cwd: studioRoot });
+      runner(dotnet, ['publish', project, '--no-build', '--no-restore', ...properties, '--output', path.join(output, `metroidvania-studio/${name.toLowerCase()}`), '--nologo'], { cwd: studioRoot });
     }
     for (const relative of inputs) {
       if (relative === 'metroidvania-studio/dist') continue;
@@ -105,7 +109,7 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
       if (!existsSync(path.join(output, 'engine-packages', engine, packageName))) throw new Error(`Incomplete engine package: ${engine}`);
     }
     for (const needed of ['metroidvania-studio/dist/index.html', 'metroidvania-studio/server/MetroidvaniaStudio.Server.dll',
-      'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll']) if (!existsSync(path.join(output, needed))) throw new Error(`Incomplete build: ${needed}`);
+      'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll', 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.dll']) if (!existsSync(path.join(output, needed))) throw new Error(`Incomplete build: ${needed}`);
     // Cache is private, ignored state. Only absolute discovered executables are persisted.
     let dotnetPath = path.isAbsolute(dotnet) ? dotnet : '';
     if (!dotnetPath) {

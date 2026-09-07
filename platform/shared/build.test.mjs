@@ -24,6 +24,7 @@ function fixture() {
   put(path.join(checkout, 'version.json'), '{"version":"0.1.0"}');
   put(path.join(checkout, 'metroidvania-studio/server/MetroidvaniaStudio.Server.csproj'));
   put(path.join(checkout, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.csproj'));
+  put(path.join(checkout, 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.csproj'));
   put(path.join(checkout, 'samples/maps/Sample.map.json'), '{"rooms":[]}');
   put(path.join(checkout, 'platform/shared/launch.sh'), '#!/bin/sh');
   put(path.join(checkout, 'tools/build/package-inputs.json'), JSON.stringify([
@@ -39,13 +40,15 @@ function buildRunner(checkout, failure = '') {
     calls.push({ command, args });
     if (args[0] === '--list-sdks') return '10.0.100 [sdk]\n';
     if (command === 'git' && args[0] === '--version') return 'git version 2.0\n';
+    if (args[0] === 'build') return '';
     if (args[0] === 'publish') {
-      const name = args[1].includes('/server/') || args[1].includes('\\server\\') ? 'Server' : 'Launcher';
+      const name = args[1].includes('/server/') || args[1].includes('\\server\\') ? 'Server' : args[1].includes('Cli.csproj') ? 'Cli' : 'Launcher';
       if (failure === name) throw new Error('Fixture publish failure: ' + name);
       const output = args[args.indexOf('--output') + 1];
       if (failure !== 'missing-' + name) put(path.join(output, 'MetroidvaniaStudio.' + name + '.dll'), name);
       return '';
     }
+    if (args[0].endsWith('build-runtime.mjs')) return '';
     if (args[0].endsWith('build-web.mjs')) { put(path.join(args[1], 'index.html'), '<!doctype html>'); return ''; }
     if (args[0].endsWith('build-packages.mjs')) {
       const output = args[args.indexOf('--output') + 1];
@@ -68,6 +71,7 @@ test('successful build publishes complete immutable output and then latest point
   assert.equal(pointer.formatVersion, 1);
   assert.equal(readFileSync(path.join(first, 'metroidvania-studio/server/MetroidvaniaStudio.Server.dll'), 'utf8'), 'Server');
   assert.equal(readFileSync(path.join(first, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll'), 'utf8'), 'Launcher');
+  assert.equal(readFileSync(path.join(first, 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.dll'), 'utf8'), 'Cli');
   assert.ok(existsSync(path.join(first, 'platform/shared/launch.sh')));
   const manifest = JSON.parse(readFileSync(path.join(root, 'tools/build/package-inputs.json')));
   for (const notice of ['LICENSE', 'THIRD-PARTY-NOTICES.md']) {
@@ -79,10 +83,10 @@ test('successful build publishes complete immutable output and then latest point
   assert.notEqual(second, first);
   assert.ok(existsSync(path.join(first, 'metroidvania-studio/dist/index.html')));
   assert.equal(JSON.parse(readFileSync(path.join(checkout, '.local/toolchain.json')))['dotnet.exe'], options(checkout, runner).dotnet);
-  assert.equal(calls.filter(call => call.args[0] === 'publish').length, 4);
+  assert.equal(calls.filter(call => call.args[0] === 'publish').length, 6);
   assert.equal(existsSync(path.join(checkout, '.local/build-v2.lock')), false);
 });
-for (const failure of ['Launcher', 'missing-Launcher', 'missing-godot', 'missing-ue4', 'missing-ue5', 'missing-sdl']) test(failure + ' failure preserves previous successful build and environment', () => {
+for (const failure of ['Launcher', 'missing-Launcher', 'Cli', 'missing-Cli', 'missing-godot', 'missing-ue4', 'missing-ue5', 'missing-sdl']) test(failure + ' failure preserves previous successful build and environment', () => {
   const checkout = fixture();
   const good = buildStudio(options(checkout, buildRunner(checkout).runner));
   const latest = path.join(checkout, 'builds/latest.json'), bytes = readFileSync(latest);

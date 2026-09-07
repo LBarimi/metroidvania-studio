@@ -32,5 +32,6 @@
   "integrations/godot/README.md",
   "integrations/ue4/README.md",
   "integrations/ue5/README.md",
-  "integrations/sdl/README.md"
+  "integrations/sdl/README.md",
+  "docs"
 ]

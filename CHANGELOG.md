@@ -1,5 +1,13 @@
 # Changes
 
+## 1.1.0
+
+- Add a versioned editing API shared by Lua scripts, headless commands, and local MCP tools.
+- Run Lua scripts from the web editor with dry runs, cancellation, bounded workers, and one-step Undo.
+- Protect live edits with document revision checks and preserve existing version-2 JSON and automatic room exports.
+- Add local npm package preparation, MCP metadata, API references, and script examples.
+- Publication is pending review.
+
 ## 1.0.0
 
 - Fix release web launchers when another workspace occupies the default port; remember an available loopback port for reopening and stopping the same session.

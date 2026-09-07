@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(MetroidvaniaStudioSdl VERSION 1.0.0 LANGUAGES C CXX)
+project(MetroidvaniaStudioSdl VERSION 1.1.0 LANGUAGES C CXX)
 option(STUDIO_BUILD_SAMPLE "Build the runnable room sample" ${PROJECT_IS_TOP_LEVEL})
 option(STUDIO_FETCH_SDL "Download pinned SDL when a local SDL package is unavailable" ON)
 find_package(SDL3 3.4 CONFIG QUIET)

@@ -55,11 +55,16 @@ export function readReleaseState() {
 }
 function validateSource() {
   const node = process.execPath, dotnet = process.env.METROIDVANIA_STUDIO_DOTNET || 'dotnet';
+  run(node, ['tools/scripting/build-runtime.mjs']);
   run(node, ['tools/repository/check-text.mjs']);
   run(node, ['--test', 'tools/repository/check-text.test.mjs', 'tools/repository/check-boundaries.test.mjs', 'tools/release/release.test.mjs',
     'tools/release/archives.test.mjs', 'tools/release/vendor-metadata.test.mjs', 'platform/shared/build.test.mjs', 'integrations/packages.test.mjs', 'integrations/unity/package.test.mjs', 'integrations/sdl/tests/boundary.test.mjs']);
   run(node, ['metroidvania-studio/build-web.mjs', '--check-contracts']);
   for (const suite of ['Core.Tests', 'Server.Tests']) run(dotnet, ['run', '--project', `metroidvania-studio/${suite.toLowerCase().replace('.', '-')}/MetroidvaniaStudio.${suite}.csproj`, '--configuration', 'Release', '-p:UseSharedCompilation=false']);
+  for (const [folder, name] of [['automation-tests', 'Automation.Tests'], ['scripting-tests', 'Scripting.Tests'], ['server-automation-tests', 'Server.Automation.Tests']])
+    run(dotnet, ['run', '--project', `metroidvania-studio/${folder}/MetroidvaniaStudio.${name}.csproj`, '--configuration', 'Release', '-p:UseSharedCompilation=false']);
+  run(dotnet, ['build', 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.csproj', '--configuration', 'Release', '-p:UseSharedCompilation=false']);
+  run(node, ['--test', 'metroidvania-studio/cli-tests/cli.test.mjs', 'metroidvania-studio/cli-tests/live-server.test.mjs']);
 }
 export async function prepareRelease(state, windowsPackage, { candidate = false, replaceTag = '' } = {}) {
   if (!candidate) validateReleaseState(state, replaceTag);
@@ -71,8 +76,8 @@ export async function prepareRelease(state, windowsPackage, { candidate = false,
   const stage = mkdtempSync(path.join(output, 'staging-')), common = path.join(stage, 'common');
   mkdirSync(common, { recursive: true });
   const dotnet = process.env.METROIDVANIA_STUDIO_DOTNET || 'dotnet';
-  for (const component of ['server', 'launcher']) {
-    const name = component === 'server' ? 'Server' : 'Launcher';
+  for (const component of ['server', 'launcher', 'cli']) {
+    const name = component === 'server' ? 'Server' : component === 'launcher' ? 'Launcher' : 'Cli';
     const project = `metroidvania-studio/${component}/MetroidvaniaStudio.${name}.csproj`;
     const properties = ['--configuration', 'Release', '--self-contained', 'false', '-p:UseAppHost=false',
       '-p:UseSharedCompilation=false', '-p:DebugType=None', '-p:DebugSymbols=false', `-p:PathMap=${root}=/_/src`, `-p:Version=${state.version}`];
@@ -80,7 +85,7 @@ export async function prepareRelease(state, windowsPackage, { candidate = false,
     run(dotnet, ['publish', project, '--no-build', '--no-restore', ...properties, '--output', path.join(common, 'app/metroidvania-studio', component)]);
   }
   run(process.execPath, ['metroidvania-studio/build-web.mjs', path.join(common, 'app/metroidvania-studio/dist')]);
-  for (const relative of ['metroidvania-studio/localization', 'samples']) cpSync(path.join(root, relative), path.join(common, 'app', relative), { recursive: true });
+  for (const relative of ['metroidvania-studio/localization', 'samples', 'docs']) cpSync(path.join(root, relative), path.join(common, 'app', relative), { recursive: true });
   for (const name of ['LICENSE', 'THIRD-PARTY-NOTICES.md']) cpSync(path.join(root, name), path.join(common, name));
   run(process.execPath, ['integrations/build-packages.mjs', '--output', path.join(common, 'engine-packages')]);
   const archives = await buildArchives({ common, output, version: state.version, commit: state.head, windowsPackage: path.resolve(windowsPackage) });
