@@ -4,7 +4,8 @@ public static class DocumentationEndpoints
 {
     public static void MapDocumentation(this WebApplication app, string webRoot)
     {
-        app.MapGet("/docs", () => Results.Redirect("/docs/"));
+        // Routing treats /docs and /docs/ as the same path. Redirect to a file to avoid a self-redirect.
+        app.MapGet("/docs", () => Results.Redirect("/docs/index.html"));
         app.MapGet("/docs/{**page}", (string? page) =>
         {
             page = string.IsNullOrEmpty(page) ? "index.html" : page;
