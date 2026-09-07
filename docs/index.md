@@ -12,6 +12,12 @@ Metroidvania Studio supports Lua scripts, a headless CLI, a local MCP server, an
 | [Live web API](api/live-api.md) | Work on the document currently open in the studio |
 | [Local npm package](distribution/local-package.md) | Build and test an installable package from source |
 
+## Open and save maps
+
+Use **File → Open map** to choose a JSON map from your computer. **Save map** or **Ctrl+S** writes back to that file; **Save map as** lets you choose another name or folder. **Import map JSON** opens a copy with no link to the original file. Room JSON exports and workspace recovery continue in the background.
+
+Chrome, Edge, and the Windows program support the file picker workflow. In browsers without a writable file picker, saving starts a JSON download using the browser's download settings. A download does not mark the document saved because the editor cannot confirm its completion.
+
 ## In the web editor
 
 Open **File → Scripts**. Write a script or load a UTF-8 `.lua` file, then select **Run**. The seed makes randomized scripts repeatable. **Dry run** validates the complete result without changing the map. **Cancel** discards an unfinished job.

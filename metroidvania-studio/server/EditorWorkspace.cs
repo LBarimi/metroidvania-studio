@@ -210,6 +210,7 @@ public sealed partial class EditorWorkspace
 
     private void DocumentChanged()
     {
+        if (Session.LastChangeKind is MapEditChangeKind.Reset or MapEditChangeKind.Save) browserFile = null;
         string nextJson = Session.CurrentJson;
         bool contentChanged = nextJson != documentJson;
         if (contentChanged)
@@ -414,8 +415,8 @@ public sealed partial class EditorWorkspace
         {
             camera = MapCameraSettings.Resolve(Session.Document, Catalog.Data.GetProperty("camera").Deserialize<CameraProfile>(Catalog.Json)),
             revision = Revision, documentRevision = DocumentRevision, catalogRevision = CatalogRevision,
-            instanceId = InstanceId, file = Session.FilePath == null ? null : Files.Relative(Session.FilePath),
-            dirty = dirty, canUndo = Session.CanUndo, canRedo = Session.CanRedo, notice = Notice,
+            instanceId = InstanceId, file = browserFile?.Name ?? (Session.FilePath == null ? null : Files.Relative(Session.FilePath)), browserFileId = browserFile?.Id,
+            dirty = HasUnsavedChanges, canUndo = Session.CanUndo, canRedo = Session.CanRedo, notice = Notice,
             workspace = new EditorWorkspaceInfo(Path.GetFileName(Files.ProjectPath), Files.MapsLabel),
             export = autoExporter.Status(Canvas.ActiveRoomId), selection = selection,
             document = includeDocument ? new ValidatedJson(documentJson) : null,
@@ -736,24 +737,28 @@ public sealed partial class EditorWorkspace
                 }); break;
             case "save": Save(command); break;
             case "open":
-                if (dirty && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
+                if (HasUnsavedChanges && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
                 string openPath = Files.Map(S(command, "path"));
                 ProjectFiles.StableMap opened = ProjectFiles.LoadStable(openPath);
                 Session.Load(opened.Document, openPath);
                 TrackOpenedFile(opened.Fingerprint);
                 break;
             case "importRooms": ImportRooms(command); break;
+            case "browserSave": AcknowledgeBrowserSave(command); break;
+            case "browserOpen":
             case "import":
-                if (dirty && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
+                if (HasUnsavedChanges && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
                 if (!command.TryGetProperty("document", out var importedJson) || importedJson.ValueKind != JsonValueKind.Object)
                     throw new InvalidDataException("The imported map must be a JSON object.");
+                string? browserName = action == "browserOpen" ? BrowserFileName(command) : null;
                 MapDocument imported = MapDocumentStore.Deserialize(importedJson.GetRawText());
                 Session.New(imported);
+                if (browserName != null) { browserFile = new BrowserFile(Guid.NewGuid().ToString("N"), browserName, documentJson); QueueRecovery(); }
                 InvalidateDiskContentProbe();
                 diskFingerprint = null; observedDiskFingerprint = null; rejectedDiskFingerprint = null; observedDiskMissing = false;
                 SetDiskHealthNotice(null); break;
             case "new":
-                if (dirty && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
+                if (HasUnsavedChanges && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
                 var created = MapDocument.CreateDefault(); created.name = S(command, "name", "Untitled"); Session.New(created);
                 InvalidateDiskContentProbe();
                 diskFingerprint = null; observedDiskFingerprint = null; rejectedDiskFingerprint = null; observedDiskMissing = false;

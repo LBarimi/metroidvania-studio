@@ -64,6 +64,7 @@ try {
   env.METROIDVANIA_STUDIO_TEST_WEB_ROOT = dist;
   await run('metroidvania-studio/tests/browser-documentation.mjs');
   await run('metroidvania-studio/tests/browser-palettes.mjs');
+  await run('metroidvania-studio/tests/browser-native-files.mjs');
   await run('metroidvania-studio/tests/browser-authoring.mjs');
   await run('metroidvania-studio/tests/browser-automation.mjs');
   if (args.includes('--performance')) {

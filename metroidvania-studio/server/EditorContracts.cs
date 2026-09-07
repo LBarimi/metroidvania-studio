@@ -31,6 +31,7 @@ public sealed class EditorState
     public long catalogRevision { get; init; }
     public string instanceId { get; init; } = "";
     public string? file { get; init; }
+    public string? browserFileId { get; init; }
     public bool dirty { get; init; }
     public bool canUndo { get; init; }
     public bool canRedo { get; init; }

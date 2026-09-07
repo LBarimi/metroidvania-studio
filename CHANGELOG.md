@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use system file pickers for opening and saving maps, with file change checks and save receipts that preserve editing history and recovery. Group map creation and opening at the top of File.
+
 - Add workspace palettes with custom names and colors, generated auto-tiles and slopes, and persistent catalog storage.
 
 - Fix the documentation redirect loop when opening the guide from Help.

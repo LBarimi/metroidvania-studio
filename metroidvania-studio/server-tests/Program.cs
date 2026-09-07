@@ -5,6 +5,8 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("browser files preserve save state, undo and recovery", () => Fixture(BrowserFileLifecycle)),
+    ("browser file paths and delayed save receipts are validated", () => Fixture(BrowserFileValidation)),
     ("palettes persist and paint with independent history", () => Fixture(PalettePersistence)),
     ("palette additions preserve external catalog changes", () => Fixture(PaletteExternalConflict)),
     ("palette storage respects workspace overrides and installation isolation", () => Fixture(PaletteStorageIsolation)),
@@ -161,6 +163,47 @@ static void SyncPublication(EditorWorkspace w)
     Check(document.GetProperty("formatVersion").GetInt32() == 2 && !document.TryGetProperty("version", out _),
         "The shared document contract must retain the actual serialized formatVersion field.");
 }
+
+static void BrowserFileLifecycle(EditorWorkspace w)
+{
+    string initial = Snapshot(w);
+    Send(w, "browserOpen", ("document", JsonSerializer.Deserialize<JsonElement>(initial)), ("fileName", "opened.map.json"), ("discard", true));
+    string id = w.State().browserFileId!;
+    Check(!w.State().dirty && w.State().file == "opened.map.json" && !string.IsNullOrEmpty(id), "Opening a native file establishes a clean receipt.");
+    Check(w.Session.FilePath == null, "The browser file must not become an arbitrary server path.");
+    Send(w, "documentProperties", ("name", "Changed"));
+    Check(w.State().dirty, "Editing must dirty the native file.");
+    Send(w, "browserSave", ("fileName", "opened.map.json"), ("browserFileId", id));
+    Check(!w.State().dirty && w.State().browserFileId == id && w.Session.CanUndo, "Save acknowledgement keeps the native handle identity and history.");
+    Send(w, "undo"); Check(w.State().dirty, "Undo past the saved state must be dirty.");
+    Send(w, "redo"); Check(!w.State().dirty, "Redo to the saved state must be clean.");
+    w.FlushRecovery(); Check(File.Exists(w.Files.RecoveryPath), "External files still need a recovery snapshot.");
+    var recovered = w.Files.LoadRecovery(); Check(recovered.Document.name == "Changed" && recovered.SavedPath == null, "Recovery must contain edits without an external filesystem path.");
+    w.FlushAutoExports(); Check(w.State().export.phase == "saved", "Automatic room export still works.");
+    Send(w, "new", ("name", "Fresh"));
+    Check(w.State().browserFileId == null && w.State().file == null && w.State().dirty, "A new map cannot reuse the previous native target.");
+    Throws<WorkspaceConflict>(() => Send(w, "browserSave", ("fileName", "old.json"), ("browserFileId", id)));
+    Check(w.State().dirty && w.State().browserFileId == null, "A stale receipt must not mark another map saved.");
+}
+
+static void BrowserFileValidation(EditorWorkspace w)
+{
+    string initial = Snapshot(w);
+    foreach (string name in new[] { "../map.json", "folder/map.json", "folder\\map.json", "map.txt", "" })
+        Throws<ArgumentException>(() => Send(w, "browserOpen", ("document", JsonSerializer.Deserialize<JsonElement>(initial)), ("fileName", name), ("discard", true)));
+    Check(Snapshot(w) == initial && w.State().browserFileId == null, "Rejected files cannot change the active map.");
+    Send(w, "save", ("path", "original.json"));
+    Send(w, "documentProperties", ("name", "External copy"));
+    Send(w, "browserSave", ("fileName", "copy.json"));
+    Check(w.Session.FilePath == null && w.Session.CanUndo && !w.State().dirty, "Native Save As detaches the old workspace file without clearing history.");
+    Check(File.ReadAllText(w.Files.Map("original.json")).Contains(w.Session.Document.name) == false, "Native Save As must not overwrite the old workspace file.");
+    long savedRevision = w.Revision; string savedId = w.State().browserFileId!;
+    Send(w, "documentProperties", ("name", "Newer edit"));
+    var stale = JsonSerializer.SerializeToElement(new { action = "browserSave", clientId = "A", commandId = "late-save", expectedInstanceId = w.InstanceId,
+        expectedRevision = savedRevision, browserFileId = savedId, fileName = "copy.json" });
+    Throws<WorkspaceConflict>(() => w.Command(stale)); Check(w.State().dirty, "A delayed save receipt must never mark later edits saved.");
+}
+
 
 static void PalettePersistence(EditorWorkspace w)
 {

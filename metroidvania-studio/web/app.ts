@@ -1,3 +1,5 @@
+import { pickMapFile, pickMapSave, fileHash, writeMapFile, downloadMap, canceledFileDialog } from './file-access.js';
+import type { MapFileHandle } from './file-access.js';
 import { openScriptDialog } from './script-dialog.js';
 import { EditorApi, EditorApiError, localJson } from './api.js';
 import { Locale, LANGUAGES } from './locale.js';
@@ -115,32 +117,57 @@ async function runFileAction(action: 'save' | 'exportRooms', values: Record<stri
 async function fileDialog(action: string, scope = 'all'): Promise<void> {
   await settleFileSnapshot();
   const snapshot = state, expectation = snapshot ? expectedAt(snapshot) : undefined;
-  if (['open', 'new'].includes(action) && snapshot?.dirty && !await confirmAction(locale.t('confirmDiscard'))) return;
+  if (action === 'new' && snapshot?.dirty && !await confirmAction(locale.t('confirmDiscard'))) return;
   let input: HTMLInputElement;
-  const initial = action === 'new' ? '' : action === 'exportRooms' ? 'Exports' : snapshot?.file || 'NewMap.map.json';
   const dialog = showModal(locale.t(action === 'exportRooms' ? scope === 'selected' ? 'exportSelected' : scope === 'changed' ? 'exportChanged' : 'exportAll' : action), body => {
-    const [label, field] = labelInput(locale.t(action === 'new' ? 'name' : action === 'exportRooms' ? 'exportDirectory' : 'filePath'), initial); input = field; body.append(label); if (action === 'exportRooms') body.append(text('p', locale.t('exportHelp')));
-    if (action !== 'new' && action !== 'exportRooms') body.append(text('p', (state?.workspace?.mapsPath || 'Maps') + '/', 'mono subtle'));
-    if (action === 'open') { const list = text('div', locale.t('loading'), 'file-list'); body.append(list); void localJson<string[]>('/api/files').then(files => { list.replaceChildren(); if (!files.length) list.append(text('p', locale.t('emptyFiles'))); for (const path of files) list.append(button(path, () => { input.value = path; })); }).catch(error => { list.textContent = error instanceof Error ? error.message : String(error); }); }
+    const [label, field] = labelInput(locale.t(action === 'new' ? 'name' : 'exportDirectory'), action === 'new' ? '' : 'Exports');
+    input = field; body.append(label); if (action === 'exportRooms') body.append(text('p', locale.t('exportHelp')));
   }, async () => {
     const value = input.value.trim(); if (!value) throw new Error(locale.t('required')); map.cancel();
-    const commandAction = action === 'saveAs' ? 'save' : action;
-    const values = action === 'new' ? { name: value, discard: true }
-      : action === 'exportRooms' ? { directory: value, scope } : { path: value, discard: action === 'open' };
-    if ((commandAction === 'save' || commandAction === 'exportRooms')
-      && !await runFileAction(commandAction, values, expectation, value)) return false;
-    if (commandAction !== 'save' && commandAction !== 'exportRooms') await run(commandAction, values, expectation);
-    if (action === 'new' || action === 'open') { map.frameRoom(); mini.fit(); }
-    toast(locale.t('changeApplied'), true);
-    return true;
-  }, action === 'open' ? 'open' : action === 'exportRooms' ? 'export' : action === 'new' ? 'new' : 'save');
+    if (action === 'new') { await run('new', { name: value, discard: true }, expectation); map.frameRoom(); mini.fit(); }
+    else if (!await runFileAction('exportRooms', { directory: value, scope }, expectation, value)) return false;
+    toast(locale.t('changeApplied'), true); return true;
+  }, action === 'new' ? 'new' : 'export');
   dialog.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target instanceof HTMLInputElement) { e.preventDefault(); (dialog.querySelector('.accent') as HTMLButtonElement).click(); } });
 }
-async function save(): Promise<void> {
-  await settleFileSnapshot(); const snapshot = state;
-  if (!snapshot?.file) return fileDialog('saveAs');
-  await api.command('save', { path: snapshot.file }, expectedAt(snapshot)); toast(locale.t('saved'), true);
+let attachedFile: { instanceId: string; id: string; handle: MapFileHandle; hash: string } | undefined;
+let fileBusy = false;
+async function openMap(): Promise<void> {
+  if (fileBusy || !state) return;
+  fileBusy = true; let choosing = true;
+  try {
+    const chosen = await pickMapFile(); choosing = false; if (!chosen) return;
+    if (chosen.file.size > 32 * 1024 * 1024) throw new Error(locale.t('importTooLarge'));
+    const document = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(await chosen.file.arrayBuffer()));
+    const hash = await fileHash(chosen.file);
+    await settleFileSnapshot(); const snapshot = state;
+    if (snapshot.dirty && !await confirmAction(locale.t('confirmDiscard'))) return;
+    const next = await run('browserOpen', { document, fileName: chosen.file.name, discard: true }, expectedAt(snapshot));
+    attachedFile = chosen.handle ? { instanceId: next.instanceId, id: next.browserFileId!, handle: chosen.handle, hash } : undefined;
+    map.frameRoom(); mini.fit();
+  } catch (error) { if (!choosing || !canceledFileDialog(error)) toast(error); }
+  finally { fileBusy = false; }
 }
+async function save(saveAs = false): Promise<void> {
+  if (fileBusy || !state) return;
+  fileBusy = true; let choosing = true;
+  try {
+    const previous = !saveAs && attachedFile?.instanceId === state.instanceId && attachedFile?.id === state.browserFileId ? attachedFile : undefined;
+    const fileName = state.file?.split('/').pop() || state.document.name.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').trim() + '.map.json';
+    const handle = await pickMapSave(fileName, previous?.handle); choosing = false;
+    const hash = previous?.hash ?? (handle ? await fileHash(await handle.getFile()) : '');
+    await settleFileSnapshot(); const snapshot = state;
+    const json = JSON.stringify(snapshot.document, null, 2) + '\n';
+    if (!handle) { downloadMap(json, fileName); toast(locale.t('fileDownloadStarted'), true); return; }
+    const savedHash = await writeMapFile(handle, json, hash);
+    if (previous) previous.hash = savedHash;
+    const next = await run('browserSave', { fileName: handle.name, browserFileId: previous?.id ?? null }, expectedAt(snapshot));
+    attachedFile = { instanceId: next.instanceId, id: next.browserFileId!, handle, hash: savedHash };
+    toast(locale.t('saved'), true);
+  } catch (error) { if (!choosing || !canceledFileDialog(error)) toast(error); }
+  finally { fileBusy = false; }
+}
+
 function importDocument(): void {
   const input = document.createElement('input'); input.type = 'file'; input.accept = '.json,application/json';
   input.id = 'json-import'; input.hidden = true; document.body.append(input);
@@ -357,9 +384,9 @@ function drawChrome(): void {
     prepare: async () => { await settleFileSnapshot(); await api.refresh(false); if (!api.state) throw new Error(locale.t('loading')); return { instanceId: api.state.instanceId, documentRevision: api.state.documentRevision }; },
     refresh: () => api.refresh(false) })); scripts.id = 'scripts-action';
   actions.prepend(menu('file-menu', locale.t('file') + ' (F)', [
-    button(locale.t('new'), () => fileDialog('new')), button(locale.t('addRoom'), roomAddDialog),
-    button(locale.t('open'), () => fileDialog('open')), button(locale.t('import'), importDocument), button(locale.t('importRooms'), importRooms), null,
-    button(locale.t('save') + '   Ctrl+S', save), button(locale.t('saveAs'), () => fileDialog('saveAs')), null,
+    button(locale.t('new'), () => fileDialog('new')), button(locale.t('open'), openMap), button(locale.t('import'), importDocument), null,
+    button(locale.t('save') + '   Ctrl+S', save), button(locale.t('saveAs'), () => save(true)), null,
+    button(locale.t('addRoom'), roomAddDialog), button(locale.t('importRooms'), importRooms), null,
     button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
     button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')), null, scripts]));
@@ -640,6 +667,7 @@ function renderStatus(point: Point): void {
 }
 function stateChanged(): void {
   state = api.state; if (!state) return;
+  if (attachedFile && (attachedFile.instanceId !== state.instanceId || attachedFile.id !== state.browserFileId)) attachedFile = undefined;
   if (state.notice && state.notice !== lastNotice) toast(state.notice);
   else if (!state.notice && lastNotice && el('toast').textContent === lastNotice) {
     el('toast').hidden = true; clearTimeout(toastTimer);
@@ -666,7 +694,7 @@ document.addEventListener('keydown', event => {
   const recognized = authoringShortcut(key, mod) || mod && key === 's' || !mod && key === 'f';
   if (((miniMode || map.cameraPreview) && authoringShortcut(key, mod)) || ((map.interacting || mini.interacting) && key !== 'escape' && recognized)) { event.preventDefault(); return; }
   let action: (() => unknown) | undefined;
-  if (mod && key === 's') action = () => event.shiftKey ? fileDialog('saveAs') : save();
+  if (mod && key === 's') action = () => save(event.shiftKey);
   else if (mod && key === 'z') action = () => run(event.shiftKey ? 'redo' : 'undo');
   else if (mod && key === 'y') action = () => run('redo');
   else if (mod && key === 'a') action = () => { map.selectRoomTarget(null); return run('selectAll'); };
@@ -687,7 +715,7 @@ document.addEventListener('keydown', event => {
   if (action) { event.preventDefault(); Promise.resolve().then(action).catch(error => toast(error)); }
 });
 window.addEventListener('beforeunload', event => {
-  if (!standalone && (state?.dirty || api.pending > 0 || map.hasPendingWork)) { event.preventDefault(); event.returnValue = ''; }
+  if (!standalone && (state?.dirty || fileBusy || api.pending > 0 || map.hasPendingWork)) { event.preventDefault(); event.returnValue = ''; }
 });
 window.addEventListener('pagehide', event => {
   // A persisted page remains live in the back-forward cache. For a real unload,

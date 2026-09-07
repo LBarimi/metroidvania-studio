@@ -186,16 +186,14 @@ try {
   const malformedMapRelative = '__browser_validation__/malformed.map.json';
   await writeFile(path.join(root, 'Maps', malformedMapRelative), '{', 'utf8');
   const beforeMalformedOpen = await state(); commandActions.length = 0; commandRequests.length = 0;
-  await page.locator('#file-menu-button').click(); await page.locator('#file-menu .menu-popup button').nth(2).click();
-  await page.locator('dialog .file-list').getByRole('button', { name: malformedMapRelative, exact: true }).click();
-  await page.locator('dialog .accent').click();
-  await page.locator('dialog .modal-error').filter({ hasText: /.+/ }).waitFor();
-  const malformedOpenRequest = await completedCommand('open'), afterMalformedOpen = await state();
-  assert.equal(malformedOpenRequest.status, 400, 'Opening malformed map JSON must be a structured client error, not HTTP 500.');
-  assert.equal(await page.locator('dialog').count(), 1, 'A failed Open must leave its dialog available for correction.');
+  const malformedOpenResponse = await apiFetch('/api/command', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'open', path: malformedMapRelative, clientId: 'workspace-file-check', commandId: crypto.randomUUID(),
+      expectedInstanceId: beforeMalformedOpen.instanceId, expectedRevision: beforeMalformedOpen.revision }) });
+  assert.equal(malformedOpenResponse.status, 400, 'Malformed workspace JSON must remain a structured client error.');
+  const afterMalformedOpen = await state();
   assertWorkspaceUnchanged(afterMalformedOpen, beforeMalformedOpen, 'A failed Open must preserve workspace revision.');
   assert.deepEqual(afterMalformedOpen.document, beforeMalformedOpen.document, 'A failed Open must preserve the active document.');
-  await page.locator('dialog .dialog-title button').click();
+  // OS file selection and native save receipts are covered by browser-native-files.mjs.
 
   commandActions.length = 0; commandRequests.length = 0;
   await page.locator('#edit-menu-button').click(); await page.locator('#metadata-action').click();
@@ -649,18 +647,12 @@ try {
   assert.deepEqual(commandActions, ['options'], 'A stroke during a delayed writer must not enqueue tileGesture.');
   await page.locator('#toast:not([hidden])').waitFor();
   assert.ok((await page.locator('#toast').innerText()).length > 0, 'A blocked stroke must explain that the editor is busy.');
-  await page.locator('#map-canvas').focus(); await page.keyboard.press('Control+s');
-  await page.waitForTimeout(80);
-  assert.deepEqual(commandActions, ['options'], 'Save must wait for an earlier options writer before capturing its revision.');
   releaseOptions();
-  current = await eventually(s => s.selection.material === delayedMaterial.id && !s.dirty, 'Save did not drain the delayed options writer.'); await clientAt(current.revision);
+  current = await eventually(s => s.selection.material === delayedMaterial.id, 'The delayed options writer did not finish.'); await clientAt(current.revision);
   await page.unroute('**/api/command', delayOptions);
-  assert.deepEqual(commandActions, ['options', 'save'], 'Save must run once immediately after the delayed options writer.');
-  const delayedOptionRequest = await completedCommand('options'), delayedSaveRequest = await completedCommand('save');
-  assert.equal(delayedSaveRequest.expectedInstanceId, delayedOptionRequest.expectedInstanceId);
-  assert.ok(delayedSaveRequest.expectedRevision >= delayedOptionRequest.responseRevision,
-    'Save must capture the completed options response or a newer passive export-status update.');
-  checks.push('save drains the ordered writer before capturing file state');
+  assert.deepEqual(commandActions, ['options'], 'Blocked strokes cannot add commands behind a pending writer.');
+  await command('save', { path: '__browser_validation__/working.map.json' }); await clientAt((await state()).revision);
+  checks.push('blocked strokes preserve the ordered writer');
   await page.locator('#toast').evaluate(node => node.hidden = true);
   commandActions.length = 0; commandRequests.length = 0;
   await drag(delayedStart, delayedEnd);
@@ -764,70 +756,11 @@ try {
   await page.locator('#language').selectOption('EN');
   const editorTab = page.getByRole('button', { name: 'Map editor', exact: true });
   await editorTab.waitFor(); await editorTab.click(); await page.locator('#map-canvas').waitFor({ state: 'visible' }); checks.push('KR/EN switch');
-  const beforeSaveAsOption = await state(), saveAsTool = beforeSaveAsOption.selection.tool === 0 ? 2 : 0;
-  let releaseSaveAsOption, markSaveAsOption;
-  const saveAsOptionGate = new Promise(resolve => { releaseSaveAsOption = resolve; });
-  const saveAsOptionIntercepted = new Promise(resolve => { markSaveAsOption = resolve; });
-  let delayedSaveAsOnce = false;
-  const delaySaveAsOption = async route => {
-    const body = JSON.parse(route.request().postData() || '{}');
-    if (!delayedSaveAsOnce && body.action === 'options' && body.tool === saveAsTool) {
-      delayedSaveAsOnce = true; markSaveAsOption(); await saveAsOptionGate;
-    }
-    await route.continue();
-  };
-  commandActions.length = 0; commandRequests.length = 0;
-  await page.route('**/api/command', delaySaveAsOption);
-  await page.locator(`#tools [data-tool="${saveAsTool}"]`).click();
-  await Promise.race([saveAsOptionIntercepted, new Promise((_, reject) => setTimeout(() => reject(new Error('Save As options request was not intercepted.')), 3000))]);
-  await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name: 'Save map as', exact: true }).click();
-  await page.waitForTimeout(80);
-  assert.equal(await page.locator('dialog').count(), 0, 'Save As must wait for the preceding options writer before opening its snapshot dialog.');
-  releaseSaveAsOption();
-  current = await eventually(s => s.selection.tool === saveAsTool, 'The options writer before Save As did not complete.'); await clientAt(current.revision);
-  await page.locator('dialog').waitFor();
-  await page.unroute('**/api/command', delaySaveAsOption);
-  await page.locator('dialog input').fill('__browser_validation__/한글.map.json');
-  await page.locator('dialog .accent').click();
-  current = await eventually(s => s.file === '__browser_validation__/한글.map.json' && !s.dirty, 'Save As did not publish into workspace Maps.'); await clientAt(current.revision);
-  assert.deepEqual(commandActions, ['options', 'save'], 'Save As must run once after the delayed options writer.');
-  const saveAsOptionRequest = await completedCommand('options'), drainedSaveAsRequest = await completedCommand('save');
-  assert.equal(drainedSaveAsRequest.expectedInstanceId, saveAsOptionRequest.expectedInstanceId);
-  assert.ok(drainedSaveAsRequest.expectedRevision >= saveAsOptionRequest.responseRevision,
-    'Save As must capture the completed options response or a newer passive export-status update.');
+  await command('save', { path: '__browser_validation__/한글.map.json' }); await clientAt((await state()).revision);
   const saved = await readFile(path.join(testFolder, '한글.map.json'));
   assert.notDeepEqual([...saved.subarray(0, 3)], [239, 187, 191]);
   assert.equal(JSON.parse(saved.toString('utf8')).rooms[0].foreground.length, 7);
-  checks.push('Save As drains the ordered writer and writes UTF-8 JSON in workspace Maps');
-
-  const collisionRelative = '__browser_validation__/existing.map.json';
-  const collisionPath = path.join(testFolder, 'existing.map.json');
-  const collisionDocument = JSON.parse(saved.toString('utf8'));
-  collisionDocument.name = 'PRESERVE UNTIL SAVE AS CONFIRMATION';
-  const collisionSentinel = Buffer.from(JSON.stringify(collisionDocument, null, 2), 'utf8');
-  await writeFile(collisionPath, collisionSentinel);
-  const saveConflictExpectation = await state(); commandRequests.length = 0;
-  await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name: 'Save map as', exact: true }).click();
-  await page.locator('dialog input').fill(collisionRelative);
-  await page.locator('dialog .accent').click();
-  const saveOverwriteDialog = page.locator('dialog').last();
-  await saveOverwriteDialog.getByText(/selected destination already contains files/i).waitFor();
-  const rejectedSaves = await completedCommands('save', 1);
-  assert.equal(rejectedSaves.length, 1, 'Save As must not retry before explicit overwrite confirmation.');
-  assert.equal(rejectedSaves[0].status, 409, 'An existing Save As target must be reported as a conflict.');
-  assert.deepEqual(await readFile(collisionPath), collisionSentinel, 'Save As must preserve existing bytes before confirmation.');
-  await saveOverwriteDialog.getByRole('button', { name: 'Continue', exact: true }).click();
-  await page.waitForFunction(() => document.querySelectorAll('dialog').length === 0);
-  await eventually(s => s.file === collisionRelative && !s.dirty, 'Confirmed Save As overwrite did not complete.');
-  const saveAttempts = await completedCommands('save', 2);
-  assert.deepEqual(saveAttempts.map(item => [item.path, item.overwrite]),
-    [[collisionRelative, false], [collisionRelative, true]], 'Save As must retry the captured path only with overwrite enabled.');
-  assert.ok(saveAttempts.every(item => item.clientId && item.commandId), 'Save As command envelopes need client and command IDs.');
-  assert.ok(saveAttempts.every(item => item.expectedInstanceId === saveConflictExpectation.instanceId
-    && item.expectedRevision === saveConflictExpectation.revision), 'Save As overwrite must preserve its captured server expectation.');
-  assert.notEqual(JSON.parse(await readFile(collisionPath, 'utf8')).name, collisionDocument.name,
-    'Confirmed Save As overwrite must replace the sentinel map.');
-  checks.push('Save As requires explicit overwrite and preserves captured target/revision');
+  checks.push('workspace saves preserve UTF-8 JSON');
 
   await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name: 'Save all rooms as JSON…', exact: true }).click();
   await page.locator('dialog input').fill('__browser_validation__/Rooms');
@@ -872,7 +805,7 @@ try {
   await clientAt(normalizedLayerOptions.revision);
   await page.waitForFunction(() => {
     const buttons = document.querySelectorAll('#layers .layer-row:first-child button');
-    return buttons[1]?.textContent === '●' && buttons[2]?.textContent === '▫';
+    return buttons[1]?.getAttribute('aria-pressed') === 'true' && buttons[2]?.textContent === '▫';
   });
   commandActions.length = 0;
   await page.locator('#layers .layer-row').first().evaluate(row => {
@@ -901,13 +834,10 @@ try {
     'Rapid group toggles must derive two ordered updates from current state.');
   checks.push('rapid layer and group toggles preserve every click');
 
-  await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name: 'Open map', exact: true }).click();
-  await page.locator('dialog').getByRole('button', { name: 'Continue', exact: true }).click();
-  await page.locator('dialog .file-list').getByRole('button', { name: initial.file, exact: true }).click();
-  await page.locator('dialog .accent').click();
-  current = await eventually(s => s.file === initial.file && !s.dirty, 'File menu open did not restore the existing map.');
+  await command('open', { path: initial.file, discard: true });
+  current = await eventually(s => s.file === initial.file && !s.dirty, 'Workspace open did not restore the existing map.');
   await clientAt(current.revision);
-  checks.push('File menu opens saved workspace map');
+  checks.push('workspace API opens a saved map');
   assert.equal(await page.evaluate(() => window.dispatchEvent(new Event('beforeunload', { cancelable: true }))), true,
     'A clean, idle editor must allow closing without an unsaved-work prompt.');
   const activeBounds = await page.locator('#map-canvas').boundingBox();

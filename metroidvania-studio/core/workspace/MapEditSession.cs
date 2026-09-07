@@ -252,6 +252,14 @@ namespace MetroidvaniaStudio
             Reset(next, null, null);
         }
 
+        /// <summary>Stops tracking a workspace file while preserving the current edit history.</summary>
+        public void DetachFile()
+        {
+            if (IsEditing) throw new InvalidOperationException("Finish or cancel the current map edit first.");
+            FilePath = null; savedJson = null;
+            NotifyChanged(MapEditChangeKind.Save);
+        }
+
         public void Save(string path)
             => SaveAndGetPersistedJson(path);
 
