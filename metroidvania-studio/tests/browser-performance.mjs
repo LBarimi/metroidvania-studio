@@ -556,10 +556,16 @@ try {
     const editor = new MapCanvas(canvas, async () => source, () => {}, () => {});
     const first = { ...source, revision: 1, catalogRevision: 41 }; editor.setState(first);
     editor.sprite(sprite, { x: 0, y: 0, width: 16, height: 16 });
-    const firstUrl = new URL(editor.images.get(sprite.asset).src);
+    const loaded = async () => {
+      const deadline = performance.now() + 5000;
+      while (editor.images.loading && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+      if (editor.images.loading) throw new Error('Timed out decoding atlas');
+      return new URL(editor.images.get(sprite.asset).src);
+    };
+    const firstUrl = await loaded();
     const second = { ...first, revision: 2, catalogRevision: 42 }; editor.setState(second);
     editor.sprite(sprite, { x: 0, y: 0, width: 16, height: 16 });
-    const secondUrl = new URL(editor.images.get(sprite.asset).src);
+    const secondUrl = await loaded();
     editor.dispose(); canvas.remove();
     return { firstVersion: firstUrl.searchParams.get('v'), secondVersion: secondUrl.searchParams.get('v'),
       samePath: firstUrl.searchParams.get('path') === secondUrl.searchParams.get('path') };

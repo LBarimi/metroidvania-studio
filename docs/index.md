@@ -18,6 +18,8 @@ Use **File → Open map** to choose a JSON map from your computer. **Save map** 
 
 Chrome, Edge, and the Windows program support the file picker workflow. In browsers without a writable file picker, saving starts a JSON download using the browser's download settings. A download does not mark the document saved because the editor cannot confirm its completion.
 
+See [Texture editing and engine resources](textures.md) for external image updates and portable resource files.
+
 ## In the web editor
 
 Open **File → Scripts**. Write a script or load a UTF-8 `.lua` file, then select **Run**. The seed makes randomized scripts repeatable. **Dry run** validates the complete result without changing the map. **Cancel** discards an unfinished job.

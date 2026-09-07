@@ -1,3 +1,4 @@
+import { AssetImages } from './asset-images.js';
 import { resolveRoomGroupMove } from './room-layout.js';
 import { activeRoom, colorCss, tileLayer, MAX_BRUSH_SIZE, roomOpacity } from './types.js';
 import type { State, Room, Cell, MapObject, Point, Rect, SpriteRect, Command, CommandExpectation, CameraProfile, Definition, Color } from './types.js';
@@ -153,7 +154,8 @@ export class MapCanvas {
   private onBrushSize: (size: number) => void;
   private onRoomContextMenu: (world: Point, client: Point) => void;
   private gesture: Gesture | null = null;
-  private images = new Map<string, HTMLImageElement>();
+  private images = new AssetImages();
+  private imageChanged = () => { this.clearExactTileChunks(); this.requestDraw(); };
   private occupancy = new Map<string, LayerIndex>();
   private objectLayers = new Map<string, Map<number, ObjectLayerIndex>>();
   private objectById = new Map<string, { roomId: string; entry: ObjectRenderEntry }>();
@@ -290,7 +292,10 @@ export class MapCanvas {
   }
   private rebuildCatalog(state: State): void {
     this.clearExactTileChunks();
-    this.materials.clear(); this.definitions.clear(); this.definitionColors.clear(); this.images.clear();
+    this.materials.clear(); this.definitions.clear(); this.definitionColors.clear();
+    this.images.setCatalog(state.instanceId, state.catalogRevision, [
+      ...state.catalog.materials.flatMap(material => material.sprites.map(sprite => sprite.asset)),
+      ...state.catalog.objects.flatMap(definition => definition.sprite ? [definition.sprite.asset] : [])]);
     for (const material of state.catalog.materials) {
       const solidMasks = new Map<number, SpriteRect>(), strictShapes = new Map<number, SpriteRect>(), fallbackShapes = new Map<number, SpriteRect>();
       for (const sprite of material.sprites) {
@@ -1530,14 +1535,9 @@ export class MapCanvas {
     return [...result];
   }
   private sprite(sprite: SpriteRect, rect: Rect, ctx = this.ctx): boolean {
-    let image = this.images.get(sprite.asset);
-    if (!image) {
-      image = new Image();
-      image.src = '/api/asset?path=' + encodeURIComponent(sprite.asset) + '&v=' + encodeURIComponent(String(this.catalogToken || ''));
-      image.onload = () => { this.clearExactTileChunks(); this.requestDraw(); }; this.images.set(sprite.asset, image);
-    }
-    if (!image.complete || !image.naturalWidth) return false;
+    const image = this.images.get(sprite.asset, this.imageChanged);
+    if (!image?.naturalWidth) return false;
     ctx.drawImage(image, sprite.x, image.naturalHeight - sprite.y - sprite.height, sprite.width, sprite.height, rect.x, rect.y, rect.width, rect.height); return true;
   }
-  dispose(): void { this.cancel(); this.active = false; this.resetWheel(); this.abort.abort(); this.resize.disconnect(); cancelAnimationFrame(this.raf); this.clearExactTileChunks(); }
+  dispose(): void { this.cancel(); this.active = false; this.resetWheel(); this.abort.abort(); this.resize.disconnect(); this.images.clear(); cancelAnimationFrame(this.raf); this.clearExactTileChunks(); }
 }

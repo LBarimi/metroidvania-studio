@@ -1,3 +1,4 @@
+import { AssetImages } from './asset-images.js';
 import { pickMapFile, pickMapSave, fileHash, writeMapFile, downloadMap, canceledFileDialog } from './file-access.js';
 import type { MapFileHandle } from './file-access.js';
 import { openScriptDialog } from './script-dialog.js';
@@ -479,7 +480,12 @@ function drawPanels(force = false): void {
 function drawPalette(): void {
   if (!state) return;
   const catalogToken = `${state.instanceId}:${state.catalogRevision}`;
-  if (thumbnailCatalogToken !== catalogToken) { thumbnailCatalogToken = catalogToken; thumbnails.clear(); }
+  if (thumbnailCatalogToken !== catalogToken) {
+    thumbnailCatalogToken = catalogToken;
+    thumbnails.setCatalog(state.instanceId, state.catalogRevision, [
+      ...state.catalog.materials.flatMap(material => material.sprites.map(sprite => sprite.asset)),
+      ...state.catalog.objects.flatMap(definition => definition.sprite ? [definition.sprite.asset] : [])]);
+  }
   const s = state.selection, options = el('brush-options'), palette = el('palette'); options.replaceChildren(); palette.replaceChildren();
   el<HTMLButtonElement>('add-palette').hidden = !tileLayer(s.layer);
   if (tileLayer(s.layer)) {
@@ -515,11 +521,18 @@ function addPaletteDialog(): void {
   }, 'paletteAdd');
   name.focus(); name.select();
 }
-const thumbnails = new Map<string, HTMLImageElement>();
+const thumbnails = new AssetImages();
 let thumbnailCatalogToken = '';
 function thumbnail(sprite: SpriteRect | null | undefined, color: string): HTMLCanvasElement {
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = 32; const ctx = canvas.getContext('2d')!; ctx.imageSmoothingEnabled = false; ctx.fillStyle = color; ctx.fillRect(4, 4, 24, 24);
-  if (sprite) { const key = `${thumbnailCatalogToken}:${sprite.asset}`; let image = thumbnails.get(key); if (!image) { image = new Image(); image.src = '/api/asset?path=' + encodeURIComponent(sprite.asset) + '&v=' + encodeURIComponent(thumbnailCatalogToken); thumbnails.set(key, image); } const draw = () => { if (!image!.naturalWidth) return; ctx.clearRect(0, 0, 32, 32); const factor = Math.min(28 / sprite.width, 28 / sprite.height), w = sprite.width * factor, h = sprite.height * factor; ctx.drawImage(image!, sprite.x, image!.naturalHeight - sprite.y - sprite.height, sprite.width, sprite.height, (32 - w) / 2, (32 - h) / 2, w, h); }; if (image.complete) draw(); else image.addEventListener('load', draw, { once: true }); }
+  if (sprite) {
+    const draw = () => {
+      const image = thumbnails.get(sprite.asset, draw); if (!image?.naturalWidth) return;
+      ctx.clearRect(0, 0, 32, 32);
+      const factor = Math.min(28 / sprite.width, 28 / sprite.height), w = sprite.width * factor, h = sprite.height * factor;
+      ctx.drawImage(image, sprite.x, image.naturalHeight - sprite.y - sprite.height, sprite.width, sprite.height, (32 - w) / 2, (32 - h) / 2, w, h);
+    }; draw();
+  }
   return canvas;
 }
 function selectedObjects(room: Room | undefined, ids: string[]): MapObject[] {

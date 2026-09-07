@@ -105,6 +105,7 @@ public sealed partial class EditorWorkspace
         catch (Exception error) when (error is InvalidDataException or IOException or UnauthorizedAccessException
             or JsonException or KeyNotFoundException or FormatException or OverflowException)
         { initialCatalogNotice = "Using the built-in catalog because EditorCatalog.json is invalid: " + error.Message; }
+        Catalog.RefreshTextures();
         recoveryPath = files.RecoveryPath;
         Session = LoadInitialSession(files, recoveryPath, out string? initialNotice, out diskFingerprint);
         notice = initialNotice;
@@ -456,6 +457,12 @@ public sealed partial class EditorWorkspace
         catch (Exception error) when (error is InvalidDataException or IOException or UnauthorizedAccessException
             or JsonException or KeyNotFoundException or FormatException or OverflowException)
         { SetCatalogHealthNotice("EditorCatalog.json could not be reloaded: " + error.Message); }
+        if (Catalog.RefreshTextures())
+        {
+            // Pixel changes affect rendering and engine resources, not the map or
+            // the meaning of an in-flight stroke. Keep document/gesture revisions.
+            Revision++; CatalogRevision++;
+        }
         if (Session.FilePath != null && !Session.IsEditing && gestureOwner == null)
         {
             try

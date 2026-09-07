@@ -5,6 +5,7 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("texture saves refresh resources without invalidating map edits", () => Fixture(TextureReload)),
     ("browser files preserve save state, undo and recovery", () => Fixture(BrowserFileLifecycle)),
     ("browser file paths and delayed save receipts are validated", () => Fixture(BrowserFileValidation)),
     ("palettes persist and paint with independent history", () => Fixture(PalettePersistence)),
@@ -162,6 +163,43 @@ static void SyncPublication(EditorWorkspace w)
     JsonElement document = StateElement(w).GetProperty("document");
     Check(document.GetProperty("formatVersion").GetInt32() == 2 && !document.TryGetProperty("version", out _),
         "The shared document contract must retain the actual serialized formatVersion field.");
+}
+
+static void TextureReload(EditorWorkspace w)
+{
+    Send(w, "paletteAdd", ("name", "Editable tiles"), ("color", "#112233"));
+    string id = w.Canvas.Material;
+    var material = w.Catalog.Data.GetProperty("materials").EnumerateArray().Single(m => m.GetProperty("id").GetString() == id);
+    string asset = material.GetProperty("sprites")[0].GetProperty("asset").GetString()!;
+    string path = w.Files.Asset(asset);
+    long initial = w.CatalogRevision;
+    Check(SpinWait.SpinUntil(() => { w.Tick(); return w.CatalogRevision > initial; }, 5000), "The initial texture probe must complete.");
+    string document = Snapshot(w), catalog = w.Catalog.Data.GetRawText();
+    bool dirty = w.State().dirty; long documentRevision = w.DocumentRevision, baseline = w.CatalogRevision;
+    byte[] replacement = PaletteAtlas.Create(asset, "#332211").Png;
+    Check(replacement.Length == new FileInfo(path).Length, "The fixture must preserve texture size.");
+    DateTime stamp = File.GetLastWriteTimeUtc(path);
+    File.WriteAllBytes(path, replacement); File.SetLastWriteTimeUtc(path, stamp);
+    long commandRevision = w.Revision;
+    Check(SpinWait.SpinUntil(() => { w.Tick(); return w.CatalogRevision > baseline; }, 8000), "Equal-metadata image changes must be detected.");
+    Check(w.DocumentRevision == documentRevision && Snapshot(w) == document && w.State().dirty == dirty
+        && w.Catalog.Data.GetRawText() == catalog, "Pixel updates must not mutate map content, history or catalog JSON.");
+    var beforePixelUpdate = JsonSerializer.SerializeToElement(new { action = "options", brushSize = 2, clientId = "pixel-test", commandId = "keep-input",
+        expectedInstanceId = w.InstanceId, expectedRevision = commandRevision });
+    w.Command(beforePixelUpdate);
+    Check(w.Canvas.BrushSize == 2, "A texture refresh cannot invalidate pending brush input.");
+    baseline = w.CatalogRevision;
+    File.WriteAllBytes(path, replacement[..(replacement.Length / 2)]);
+    var wait = System.Diagnostics.Stopwatch.StartNew();
+    while (wait.ElapsedMilliseconds < 1200) { w.Tick(); Thread.Sleep(10); }
+    Check(w.CatalogRevision == baseline, "Half-written images must not be published.");
+    byte[] final = PaletteAtlas.Create(asset, "#227744").Png;
+    string temporary = path + ".saving"; File.WriteAllBytes(temporary, final); File.Move(temporary, path, true);
+    Check(SpinWait.SpinUntil(() => { w.Tick(); return w.CatalogRevision > baseline; }, 5000), "Atomic replacements must refresh.");
+    baseline = w.CatalogRevision;
+    File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddSeconds(1));
+    wait.Restart(); while (wait.ElapsedMilliseconds < 1200) { w.Tick(); Thread.Sleep(10); }
+    Check(w.CatalogRevision == baseline, "Timestamp-only changes must not reload images.");
 }
 
 static void BrowserFileLifecycle(EditorWorkspace w)

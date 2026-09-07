@@ -40,7 +40,7 @@ export async function verifyRoomFocus(page) {
       mini.setState(next); mini.center = { x: 9, y: 4 }; mini.scale = 16; mini.draw();
     }
     try {
-      map.showGrid = map.showNames = false; map.setState(state); map.images.set('local-probe', image); map.pixelScale = 2;
+      map.showGrid = map.showNames = false; map.setState(state); map.images.get = () => image; map.pixelScale = 2;
       select('A'); const first = capture();
       const inactiveRect = mini.rect(rooms[1]);
       const miniCorner = pixel(miniCanvas, { x: inactiveRect.x - 2, y: inactiveRect.y - 2 });

@@ -53,7 +53,7 @@ try {
             brushSize: 1, groupId: '', hiddenLayers: [], lockedLayers: [], objects: [], nodes: [], area: null } };
         editor.setState(state); editor.pixelScale = 1; editor.center = { x: 80, y: 45 }; await frame();
         const deadline = performance.now() + 5000;
-        while ([...editor.images.values()].some(image => !image.complete) && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+        while (editor.images.loading && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
         editor.draw(); await frame(); editor.draw();
         tileCalls = 0; const times = [];
         for (let sample = 0; sample < 16; sample++) { await frame(); const start = performance.now(); editor.draw(); times.push(performance.now() - start); }
@@ -92,7 +92,7 @@ try {
       state = { ...state, document: before, documentRevision: state.documentRevision + 1, selection: { ...state.selection, roomId: 'scaling' }, catalogRevision: state.catalogRevision + 1 };
       editor.setState(state); await frame();
       const deadline = performance.now() + 5000;
-      while ([...editor.images.values()].some(image => !image.complete) && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
+      while (editor.images.loading && performance.now() < deadline) await new Promise(resolve => setTimeout(resolve, 20));
       comparePixels('catalog/image refresh rebuilds native sprite caches');
       const limits = [];
       for (let x = 80; x < 960; x += 64) { editor.center.x = x; editor.draw(); limits.push(editor.exactTileChunks?.size || 0); await frame(); }

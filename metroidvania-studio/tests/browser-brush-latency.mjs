@@ -32,7 +32,7 @@ try {
     editor.setState(state); editor.pixelScale = .5 * devicePixelRatio; editor.showGrid = true; editor.frameRoom();
     await new Promise(resolve => requestAnimationFrame(resolve));
     const deadline = performance.now() + 5000;
-    while ([...editor.images.values()].some(image => !image.complete) && performance.now() < deadline)
+    while (editor.images.loading && performance.now() < deadline)
       await new Promise(resolve => setTimeout(resolve, 20));
     editor.draw();
     const referenceFullMs = [];
