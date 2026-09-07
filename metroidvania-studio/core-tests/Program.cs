@@ -26,6 +26,7 @@ var tests = new (string name, Action run)[]
     ("room shrink clamps all eight handles to both terrain layers", ShrinkToTerrain),
     ("room shrink preserves crop, empty and local-coordinate behavior", ShrinkOptions),
     ("room creation preserves free coordinates and avoids occupied space in one Undo", RoomCreation),
+    ("group movement preserves gaps and resolves collisions in every direction", RoomGroupCollision),
     ("room clipboard, transforms and collision-only joins", RoomWorkflow),
     ("locked neighbor blocks resize atomically", LockedResize),
     ("node selection transforms and node-only deletion", Nodes),
@@ -925,6 +926,23 @@ static void RoomCreation()
         Throws<ArgumentOutOfRangeException>(() => edit.Create(bounds));
         Check(Json(session.Document) == before && !session.CanUndo, "Invalid creation must be rejected atomically.");
     }
+}
+
+static void RoomGroupCollision()
+{
+    foreach (var direction in new[] { new Vector2Int(1, 0), new Vector2Int(-1, 0), new Vector2Int(0, 1), new Vector2Int(0, -1) })
+    {
+        var a = Room("A", 0, 0, 8, 8);
+        var b = Room("B", 12 * direction.x, 12 * direction.y, 8, 8);
+        var c = Room("C", 24 * direction.x, 24 * direction.y, 8, 8);
+        var selected = new[] { a, b }; var all = new[] { a, b, c };
+        Check(MapRoomCollision.Resolve(selected, new Vector2Int(3 * direction.x, 3 * direction.y), all) == new Vector2Int(3 * direction.x, 3 * direction.y), "A free group destination keeps its gap.");
+        Check(MapRoomCollision.Resolve(selected, new Vector2Int(6 * direction.x, 6 * direction.y), all) == new Vector2Int(4 * direction.x, 4 * direction.y), "A group collision resolves as one rigid movement in either axis.");
+    }
+    var left = Room("left", 0, 0, 4, 4); var right = Room("right", 10, 0, 4, 4); var gap = Room("gap", 5, 1, 4, 4);
+    Check(MapRoomCollision.Resolve(new[] { left, right }, new Vector2Int(0, 1), new[] { left, right, gap }) == new Vector2Int(0, 1), "An obstacle in the empty space between rooms does not collide with an artificial bounding box.");
+    var end = Room("end", int.MaxValue - 4, 0, 4, 4);
+    Throws<ArgumentOutOfRangeException>(() => MapRoomCollision.Resolve(new[] { left, end }, new Vector2Int(1, 0), new[] { left, end }));
 }
 
 static void RoomWorkflow()

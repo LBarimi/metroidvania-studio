@@ -1,8 +1,12 @@
 import type { Room, Point } from './types.js';
 // Mirrors the core's open-interval collision rule; merely nearby rooms never attract a drag.
 export function resolveRoomMove(source: Room, delta: Point, rooms: Room[]): Point {
-  const x = source.x + delta.x, y = source.y + delta.y;
-  const targets = rooms.filter(room => room.id !== source.id);
+  return resolveRoomGroupMove([source], delta, rooms);
+}
+export function resolveRoomGroupMove(sources: Room[], delta: Point, rooms: Room[]): Point {
+  if (!sources.length) return { x: 0, y: 0 };
+  const ids = new Set(sources.map(room => room.id));
+  const targets = rooms.filter(room => !ids.has(room.id));
   const exits = (at: number, intervals: [number, number][]): number[] => {
     intervals.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
     for (let i = 0; i < intervals.length; i++) {
@@ -12,12 +16,20 @@ export function resolveRoomMove(source: Room, delta: Point, rooms: Room[]): Poin
     }
     return [at];
   };
-  const horizontal = targets.filter(r => y < r.y + r.height && y + source.height > r.y).map(r => [r.x - source.width, r.x + r.width] as [number, number]);
-  const vertical = targets.filter(r => x < r.x + r.width && x + source.width > r.x).map(r => [r.y - source.height, r.y + r.height] as [number, number]);
-  const candidates = [...exits(x, horizontal).map(x => ({ x, y })), ...exits(y, vertical).map(y => ({ x, y }))]
-    .filter(p => p.x >= -2147483648 && p.y >= -2147483648 && p.x + source.width <= 2147483647 && p.y + source.height <= 2147483647
-      && p.x - source.x >= -2147483648 && p.x - source.x <= 2147483647 && p.y - source.y >= -2147483648 && p.y - source.y <= 2147483647)
-    .sort((a, b) => Math.abs(a.x - x) + Math.abs(a.y - y) - Math.abs(b.x - x) - Math.abs(b.y - y));
-  const result = candidates[0] || source;
-  return { x: result.x - source.x, y: result.y - source.y };
+  const horizontal: [number, number][] = [], vertical: [number, number][] = [];
+  for (const source of sources) {
+    const x = source.x + delta.x, y = source.y + delta.y;
+    for (const target of targets) {
+      if (y < target.y + target.height && y + source.height > target.y)
+        horizontal.push([target.x - source.width - source.x, target.x + target.width - source.x]);
+      if (x < target.x + target.width && x + source.width > target.x)
+        vertical.push([target.y - source.height - source.y, target.y + target.height - source.y]);
+    }
+  }
+  const valid = (p: Point) => p.x >= -2147483648 && p.x <= 2147483647 && p.y >= -2147483648 && p.y <= 2147483647
+    && sources.every(s => s.x + p.x >= -2147483648 && s.y + p.y >= -2147483648 && s.x + p.x + s.width <= 2147483647 && s.y + p.y + s.height <= 2147483647);
+  if (!valid(delta)) return { x: 0, y: 0 };
+  const candidates = [...exits(delta.x, horizontal).map(x => ({ x, y: delta.y })), ...exits(delta.y, vertical).map(y => ({ x: delta.x, y }))]
+    .filter(valid).sort((a, b) => Math.abs(a.x - delta.x) + Math.abs(a.y - delta.y) - Math.abs(b.x - delta.x) - Math.abs(b.y - delta.y));
+  return candidates[0] || { x: 0, y: 0 };
 }

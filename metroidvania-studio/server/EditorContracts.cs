@@ -16,7 +16,7 @@ public sealed record EditorRect(float x, float y, float width, float height);
 public sealed record EditorNodeSelection(string id, int index);
 public sealed record EditorSelection(string? roomId, int tool, int layer, int shape,
     string material, int brushSize, bool filled, string objectDefinition, string groupId,
-    int[] hiddenLayers, int[] lockedLayers, string[] objects, EditorNodeSelection[] nodes, EditorRect? area);
+    int[] hiddenLayers, int[] lockedLayers, string[] objects, EditorNodeSelection[] nodes, EditorRect? area, string[] roomIds);
 public sealed record EditorConnection(string roomAId, string roomBId, bool vertical, double coordinate, double start, double end);
 public sealed record EditorExportStatus(string phase, long version, string? error,
     string? roomId, string? path, string? hash);

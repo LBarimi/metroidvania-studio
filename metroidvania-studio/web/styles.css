@@ -384,6 +384,7 @@ hr {
   border-color: transparent;
 }
 
+.room-row.selected { background: #253d4e; border-color: #72bde5; }
 .room-row:hover { background: #292929; border-color: transparent; }
 
 .room-row.active {

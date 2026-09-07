@@ -76,6 +76,8 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Room context menu validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-room-workflow.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Room workflow validation failed.' }
+        & node (Join-Path $PSScriptRoot 'browser-multi-room.mjs')
+        if ($LASTEXITCODE -ne 0) { throw 'Multi-room selection validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-studio-workflow.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Studio workflow checks failed.' }
     }

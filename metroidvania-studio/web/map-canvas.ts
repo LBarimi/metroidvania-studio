@@ -1,4 +1,4 @@
-import { resolveRoomMove } from './room-layout.js';
+import { resolveRoomGroupMove } from './room-layout.js';
 import { activeRoom, colorCss, tileLayer, MAX_BRUSH_SIZE, roomOpacity } from './types.js';
 import type { State, Room, Cell, MapObject, Point, Rect, SpriteRect, Command, CommandExpectation, CameraProfile, Definition, Color } from './types.js';
 
@@ -36,7 +36,7 @@ interface ObjectGesture {
   rebaseAfterPending: boolean;
   overflow: boolean;
 }
-interface Gesture { kind: 'selection' | 'pan' | 'paint' | 'room-menu' | 'room-create' | 'room-move' | 'room-resize' | 'object-move' | 'node-move'; pointer: number; start: Point; last: Point; screen: Point; center: Point; room: Room; area?: Rect; handle?: Point; terrainBounds?: Rect | null; node?: { id: string; index: number }; tile?: TileGesture; rawTileTime?: number; object?: ObjectGesture; expectation: CommandExpectation; tail: Promise<unknown>; failed: boolean }
+interface Gesture { kind: 'selection' | 'pan' | 'paint' | 'room-menu' | 'room-create' | 'room-move' | 'room-resize' | 'object-move' | 'node-move'; pointer: number; start: Point; last: Point; screen: Point; center: Point; room: Room; rooms?: Room[]; area?: Rect; handle?: Point; terrainBounds?: Rect | null; node?: { id: string; index: number }; tile?: TileGesture; rawTileTime?: number; object?: ObjectGesture; expectation: CommandExpectation; tail: Promise<unknown>; failed: boolean }
 interface ViewSnapshot { center: Point; pixelScale: number; overview: boolean }
 interface LayerIndex {
   rows: Map<number, Map<number, Cell>>;
@@ -203,6 +203,7 @@ export class MapCanvas {
   private brushSizeTarget: number | null = null;
   private brushSizeTask: Promise<void> | null = null;
   private roomSelectionId: string | null = null;
+  private selectedRooms = new Set<string>();
   constructor(canvas: HTMLCanvasElement, command: Command, onHover: (point: Point) => void, onInspect: () => void,
     onError: (key: string) => void = () => undefined, writerPending: () => boolean = () => false,
     refreshState: () => Promise<void> = async () => undefined, onBrushSize: (size: number) => void = () => undefined,
@@ -231,7 +232,7 @@ export class MapCanvas {
   get interacting(): boolean { return this.gesture !== null; }
   get hasPendingWork(): boolean { return this.gesture !== null || this.gestureCommandsPending > 0 || this.brushSizeTask !== null; }
   get brushSize(): number { return this.brushSizeTarget ?? this.state?.selection.brushSize ?? 1; }
-  get roomDeleteTarget(): string | null { return this.roomSelectionId === this.state?.selection.roomId ? this.roomSelectionId : null; }
+  get roomDeleteTarget(): string | null { if (this.selectedRooms.size > 1) return this.state?.selection.roomId || null; return this.roomSelectionId === this.state?.selection.roomId ? this.roomSelectionId : null; }
   selectRoomTarget(id: string | null): void { this.roomSelectionId = id; this.requestDraw(); }
   setActive(active: boolean): void {
     if (this.active === active) return;
@@ -266,6 +267,7 @@ export class MapCanvas {
     if (this.gesture && previousInstance && previousInstance !== state.instanceId) this.cancel();
     if (previousInstance && previousInstance !== state.instanceId) this.brushSizeTarget = null;
     this.state = state;
+    this.selectedRooms = new Set(state.selection.roomIds || []);
     if (this.cameraPreview && this.cameraScaleAuto && cameraChanged) this.pixelScale = this.fittedCameraScale(camera);
     if (this.active) this.syncIndexes(state);
     if (!this.initialized && state.document.rooms.length) { this.frameRoom(); this.initialized = true; }
@@ -507,7 +509,19 @@ export class MapCanvas {
       expectation: { instanceId: this.state.instanceId, revision: this.state.revision }, tail: this.gestureTail, failed: false };
     const handle = current && this.canResizeRoom(current) ? this.roomHandle(screen, current) : null;
     if (previewPan) g.kind = 'pan';
-    else if (e.button === 2 && !hit) g.kind = 'room-menu';
+    else if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
+      if (hit) {
+        this.enqueue(g, 'selectRoom', { id: hit.id, toggle: true }, state => { this.roomSelectionId = state.selection.roomIds?.length ? state.selection.roomId : null; });
+        this.gestureTail = g.tail;
+      }
+      return;
+    } else if (e.button === 2 && !hit) g.kind = 'room-menu';
+    else if (e.button === 0 && hit && this.selectedRooms.size > 1 && this.selectedRooms.has(hit.id)) {
+      g.kind = 'room-move'; g.room = hit;
+    } else if (e.button === 2 && hit && this.selectedRooms.size > 1) {
+      this.enqueue(g, 'selectRoom', { id: hit.id }, () => { this.roomSelectionId = hit.id; });
+      this.gestureTail = g.tail; return;
+    }
     else if (e.button === 0 && handle) {
       g.kind = 'room-resize'; g.room = current!; g.handle = handle; this.roomSelectionId = current!.id;
       g.terrainBounds = this.roomTerrainBounds(current!);
@@ -555,6 +569,11 @@ export class MapCanvas {
       else if (erase || selection.tool === 1) this.beginObjectGesture(g, local, erase, selection);
       else return;
     }
+    if (g.kind === 'room-move') {
+      g.rooms = this.selectedRooms.size > 1 && this.selectedRooms.has(g.room.id)
+        ? this.state.document.rooms.filter(room => this.selectedRooms.has(room.id)) : [g.room];
+      if (g.rooms.some(room => room.locked)) { this.onError('roomSelectionLocked'); return; }
+    }
     if (g.kind === 'selection') {
       if (this.raf) { cancelAnimationFrame(this.raf); this.raf = 0; } this.draw();
       const backdrop = document.createElement('canvas'); backdrop.width = this.canvas.width; backdrop.height = this.canvas.height;
@@ -585,9 +604,10 @@ export class MapCanvas {
     const damage = [previousHover, this.hover];
     const active = activeRoom(this.state);
     const handle = !this.cameraPreview && !g && active && this.canResizeRoom(active) ? this.roomHandle(screen, active) : null;
+    const groupMove = !this.cameraPreview && this.selectedRooms.size > 1 && this.selectedRooms.has(this.roomAt(this.hover)?.id || '');
     const moveHandle = !this.cameraPreview && !g && active && this.canResizeRoom(active) && this.roomMoveHandle(screen, active);
     const cursor = handle ? !handle.x ? 'ns-resize' : !handle.y ? 'ew-resize'
-      : handle.x === handle.y ? 'nesw-resize' : 'nwse-resize' : moveHandle ? 'grab' : g?.kind === 'room-move' || g?.kind === 'pan' ? 'grabbing' : '';
+      : handle.x === handle.y ? 'nesw-resize' : 'nwse-resize' : (moveHandle || groupMove) && !g ? 'grab' : g?.kind === 'room-move' || g?.kind === 'pan' ? 'grabbing' : '';
     if (this.canvas.style.cursor !== cursor) this.canvas.style.cursor = cursor;
     if (g && g.pointer === e.pointerId) {
       e.preventDefault(); g.last = this.hover;
@@ -667,7 +687,7 @@ export class MapCanvas {
         this.onRoomContextMenu({ x: Math.floor(g.start.x), y: Math.floor(g.start.y) }, { x: e.clientX, y: e.clientY });
     }
     else if (g.kind === 'room-create') this.enqueue(g, 'roomAdd', box(g.start, g.last));
-    else if (g.kind === 'room-move' && (dx || dy)) this.enqueue(g, 'roomMove', { id: g.room.id, dx, dy });
+    else if (g.kind === 'room-move' && (dx || dy)) this.enqueue(g, 'roomMove', { id: g.room.id, dx, dy, selected: (g.rooms?.length || 0) > 1 });
     else if (g.kind === 'room-resize') this.enqueue(g, 'roomResize', { id: g.room.id, ...this.resizedRoom(g), crop: this.crop, snap: this.snapRooms && !e.ctrlKey });
     else if (g.kind === 'object-move') { const step = e.ctrlKey || e.metaKey ? 16 : 1; const x = Math.round((g.last.x - g.start.x) * step) / step, y = Math.round((g.last.y - g.start.y) * step) / step; if (x || y) this.enqueue(g, 'objectMove', { dx: x, dy: y }); }
     else if (g.kind === 'node-move') this.enqueue(g, 'nodeMove', this.local(g.last, g.room));
@@ -1004,7 +1024,7 @@ export class MapCanvas {
     } return null;
   }
   private canResizeRoom(room: Room): boolean {
-    return room.visible && !room.locked && (this.state?.selection.tool === 0
+    return this.selectedRooms.size <= 1 && room.visible && !room.locked && (this.state?.selection.tool === 0
       || tileLayer(this.state?.selection.layer ?? -1));
   }
   private roomHandlePoint(room: Room, x: number, y: number): Point {
@@ -1172,11 +1192,15 @@ export class MapCanvas {
     }
     if (!this.cameraPreview && g?.kind === 'room-create') this.outline(box(g.start, g.last), '#72bde5', true);
     if (!this.cameraPreview && g?.kind === 'room-resize') this.outline(this.resizedRoom(g), '#ffffff', true);
-    if (!this.cameraPreview && g?.kind === 'room-move') {
-      const delta = resolveRoomMove(g.room, { x: Math.round(g.last.x - g.start.x), y: Math.round(g.last.y - g.start.y) }, this.state.document.rooms);
-      this.outline({ ...g.room, x: g.room.x + delta.x, y: g.room.y + delta.y }, '#ffffff', true);
+    if (!this.cameraPreview && this.selectedRooms.size > 1) {
+      for (const selected of this.state.document.rooms) if (selected.visible && this.selectedRooms.has(selected.id)) this.outline(selected, '#72bde5', false);
     }
-    if (!this.cameraPreview && room && tileLayer(s.layer) && s.tool !== 0 && s.tool !== 2) {
+    if (!this.cameraPreview && g?.kind === 'room-move') {
+      const rooms = g.rooms || [g.room];
+      const delta = resolveRoomGroupMove(rooms, { x: Math.round(g.last.x - g.start.x), y: Math.round(g.last.y - g.start.y) }, this.state.document.rooms);
+      for (const moved of rooms) if (moved.visible) this.outline({ ...moved, x: moved.x + delta.x, y: moved.y + delta.y }, '#ffffff', true);
+    }
+    if (!this.cameraPreview && this.selectedRooms.size <= 1 && room && tileLayer(s.layer) && s.tool !== 0 && s.tool !== 2) {
       const size = this.brushSize;
       const preview = g?.kind === 'paint' && [4, 6, 7, 8].includes(s.tool) ? box(g.start, this.hover) : { x: Math.floor(this.hover.x) - Math.floor((size - 1) / 2), y: Math.floor(this.hover.y) - Math.floor((size - 1) / 2), width: size, height: size };
       this.outline(preview, '#72bde5', false);

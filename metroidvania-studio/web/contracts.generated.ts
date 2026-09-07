@@ -201,6 +201,7 @@ export interface Selection {
   objectDefinition: string;
   objects: string[];
   roomId: string | null;
+  roomIds: string[];
   shape: number;
   tool: number;
 }

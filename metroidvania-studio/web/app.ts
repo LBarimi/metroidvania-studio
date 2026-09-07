@@ -193,6 +193,8 @@ function shortcutsDialog(): void {
     ['shortcutMoveRoom', locale.t('keyRoomTitleDrag')],
     ['shortcutResizeRoom', locale.t('keyRoomHandleDrag')],
     ['shortcutSelectRoom', locale.t('keyOtherRoomClick')],
+    ['shortcutRoomMultiSelect', `Ctrl / Cmd + ${locale.t('keyLeftClick')}`],
+    ['shortcutRoomGroupMove', locale.t('keyLeftDrag')],
     ['shortcutTileSelection', locale.t('keyLeftDrag')],
     ['shortcutMoveSelection', locale.t('keySelectionDrag')],
     ['shortcutNewSelection', `Shift + ${locale.t('keyLeftDrag')}`],
@@ -399,7 +401,7 @@ function panelKey(value: State): string {
   const rooms = value.document.rooms.map(room => [room.id, room.name, room.x, room.y, room.width, room.height,
     room.visible, room.locked, roomColor(room)]);
   const groups = value.document.layerGroups.map(group => [group.id, group.parentId, group.layer, group.name, group.visible, group.locked]);
-  const selection = value.selection, panelSelection = [selection.roomId, selection.tool, selection.layer, selection.shape,
+  const selection = value.selection, panelSelection = [selection.roomIds, selection.roomId, selection.tool, selection.layer, selection.shape,
     selection.material, selection.brushSize, selection.filled, selection.objectDefinition, selection.groupId,
     selection.hiddenLayers, selection.lockedLayers];
   return JSON.stringify([value.instanceId, value.catalogRevision, value.document.name, rooms, groups, panelSelection,
@@ -419,9 +421,25 @@ function drawPanels(force = false): void {
   el<HTMLButtonElement>('metadata-action').disabled = viewOnly; el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
   el<HTMLButtonElement>('undo').disabled = viewOnly || !state.canUndo; el<HTMLButtonElement>('redo').disabled = viewOnly || !state.canRedo;
   const connection = el('connection'); connection.textContent = locale.t(api.online ? 'studioConnected' : 'serverOffline'); connection.classList.toggle('online', api.online);
-  el('room-count').textContent = String(state.document.rooms.length);
+  el('room-count').textContent = s.roomIds.length > 1 ? `${s.roomIds.length} / ${state.document.rooms.length}` : String(state.document.rooms.length);
+  el('room-count').title = locale.t('selectedRooms').replace('{0}', String(s.roomIds.length));
   const rooms = el('room-list'); rooms.replaceChildren();
-  for (const room of state.document.rooms.filter(r => r.name.toLocaleLowerCase().includes(roomSearch.toLocaleLowerCase()))) { const b = button('', async () => { await run('selectRoom', { id: room.id }); map.selectRoomTarget(room.id); map.frameRoom(); }, 'room-row'); b.classList.toggle('active', room.id === s.roomId); b.classList.toggle('hidden', !room.visible); const swatch = text('span', '', 'swatch'); swatch.style.background = roomColor(room); b.append(swatch, text('span', (room.locked ? '▣ ' : '') + room.name, 'room-label'), text('span', `${room.width}×${room.height}`, 'room-size')); b.title = `${room.name} · ${room.x}, ${room.y}`; rooms.append(b); }
+  const selectedRooms = new Set(s.roomIds);
+  for (const room of state.document.rooms.filter(r => r.name.toLocaleLowerCase().includes(roomSearch.toLocaleLowerCase()))) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'room-row';
+    b.addEventListener('click', event => {
+      const toggle = event.ctrlKey || event.metaKey;
+      void run('selectRoom', { id: room.id, toggle }).then(next => {
+        map.selectRoomTarget(next.selection.roomIds.length ? next.selection.roomId : null);
+        if (!toggle) map.frameRoom();
+      }).catch(error => toast(error));
+    });
+    b.classList.toggle('active', room.id === s.roomId); b.classList.toggle('selected', selectedRooms.has(room.id));
+    b.setAttribute('aria-pressed', String(selectedRooms.has(room.id))); b.classList.toggle('hidden', !room.visible);
+    const swatch = text('span', '', 'swatch'); swatch.style.background = roomColor(room);
+    b.append(swatch, text('span', (room.locked ? '▣ ' : '') + room.name, 'room-label'), text('span', room.width + '×' + room.height, 'room-size'));
+    b.title = room.name + ' · ' + room.x + ', ' + room.y; rooms.append(b);
+  }
   if (!rooms.childElementCount) rooms.append(text('div', locale.t('noRooms'), 'empty'));
   const tools = el('tools'); tools.replaceChildren(); const icons = ['▱', '+', '⬚', '▰', '□', '▨', '╱', '○', '⬭'];
   TOOLS.forEach((name, index) => { if (!toolAvailable(index, s.layer)) return; const b = button('', () => option({ tool: index }), 'tool-button'); b.append(text('span', icons[index], 'symbol'), text('span', index === 2 ? locale.t(tileLayer(s.layer) ? 'tileSelection' : 'objectSelection') : locale.enum('MetroidvaniaStudioTool', name, index))); b.classList.toggle('active', s.tool === index); b.dataset.tool = String(index); b.title = locale.t(index === 2 ? 'selectionHelp' : index === 1 ? 'placementHelp' : index === 0 ? 'roomHelp' : 'help'); tools.append(b); });
@@ -469,7 +487,7 @@ function updateInspectorSelection(ids: string[]): boolean {
 async function editSelection(action: string, values: object = {}, inspector = false): Promise<void> {
   await map.settled(); if (!state) return;
   const room = activeRoom(state), selection = state.selection;
-  const roomTarget = selection.tool === 0 || !!map.roomDeleteTarget
+  const roomTarget = selection.roomIds.length > 1 || selection.tool === 0 || !!map.roomDeleteTarget
     || inspector && !selection.area && !selection.objects.length;
   const scope = action === 'paste' ? clipboardScope : roomTarget ? 'room' : 'content';
   if (action === 'copy' || action === 'cut') clipboardScope = scope;

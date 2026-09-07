@@ -407,7 +407,8 @@ public sealed partial class EditorWorkspace
                 Canvas.Material, Canvas.BrushSize, Canvas.Filled, Canvas.ObjectDefinition, Canvas.ActiveGroupId,
                 Canvas.HiddenLayers.Select(x => (int)x).ToArray(), Canvas.LockedLayers.Select(x => (int)x).ToArray(),
                 selectedObjects, selectedNodes,
-                area.HasValue ? new EditorRect(area.Value.x, area.Value.y, area.Value.width, area.Value.height) : null);
+                area.HasValue ? new EditorRect(area.Value.x, area.Value.y, area.Value.width, area.Value.height) : null,
+                Session.Document.rooms.Where(room => Canvas.RoomEditor.SelectedIds.Contains(room.id)).Select(room => room.id).ToArray());
         }
         return new EditorState
         {
@@ -652,7 +653,7 @@ public sealed partial class EditorWorkspace
             case "selectRoom":
                 string selectedRoom = S(command, "id");
                 RequireRoom(selectedRoom);
-                Canvas.SelectRoom(selectedRoom);
+                Canvas.SelectRoom(selectedRoom, toggle: B(command, "toggle"));
                 break;
             case "pick": Canvas.Pick(Cell(command)); break;
             case "begin":
@@ -674,7 +675,7 @@ public sealed partial class EditorWorkspace
                 break;
             // Explicit cancellation also dismisses selection. Internal gesture cleanup
             // keeps it intact when starting another stroke or recovering from failure.
-            case "cancel": Cancel(); Canvas.Deselect(); break;
+            case "cancel": Cancel(); Canvas.Deselect(); Canvas.RoomEditor.Clear(); break;
             case "tileGesture": TileGesture(command, owner); break;
             case "objectGesture": ObjectGesture(command, owner); break;
             case "undo": Session.Undo(); break;
@@ -799,6 +800,9 @@ public sealed partial class EditorWorkspace
         if (command.TryGetProperty("filled", out var flag)) flag.GetBoolean();
         foreach (string key in new[] { "hiddenLayers", "lockedLayers" })
             if (command.TryGetProperty(key, out var values)) foreach (var value in values.EnumerateArray()) EnumValue<MapLayer>(value);
+        if (Canvas.RoomEditor.SelectedIds.Count > 1 && Canvas.ActiveRoomId != null
+            && (command.TryGetProperty("tool", out var selectedTool) && EnumValue<MetroidvaniaStudioTool>(selectedTool) != MetroidvaniaStudioTool.Rooms
+                || command.TryGetProperty("layer", out _))) Canvas.SelectRoom(Canvas.ActiveRoomId);
         if (command.TryGetProperty("tool", out var tool)) Canvas.Tool = EnumValue<MetroidvaniaStudioTool>(tool);
         if (command.TryGetProperty("layer", out var layer)) { Canvas.Layer = EnumValue<MapLayer>(layer); Canvas.ActiveGroupId = ""; }
         if (command.TryGetProperty("shape", out var shape)) Canvas.Shape = EnumValue<TileShape>(shape);
@@ -1068,6 +1072,15 @@ public sealed partial class EditorWorkspace
         string id = S(command, "id");
         var room = RequireRoom(id);
         var delta = new Vector2Int(I(command, "dx"), I(command, "dy"));
+        if (B(command, "selected"))
+        {
+            if (!Canvas.RoomEditor.SelectedIds.Contains(id)) throw new ArgumentException("The drag target is not selected.");
+            var selected = Session.Document.rooms.Where(r => Canvas.RoomEditor.SelectedIds.Contains(r.id)).ToArray();
+            if (selected.Any(r => r.locked)) throw new InvalidOperationException("@roomSelectionLocked");
+            delta = MapRoomCollision.Resolve(selected, delta, Session.Document.rooms);
+            Canvas.RoomEditor.MoveSelected(delta);
+            return;
+        }
         delta = MapRoomCollision.Resolve(room, delta, Session.Document.rooms);
         if (room.locked) throw new InvalidOperationException("Room '" + room.name + "' is locked. Unlock it before moving it.");
         long x = (long)room.x + delta.x, y = (long)room.y + delta.y;

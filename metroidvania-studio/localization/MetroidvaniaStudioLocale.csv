@@ -1,4 +1,9 @@
 Key,KR,EN,JA,ZH_CN,ZH_TW,RU
+shortcutRoomMultiSelect,방 선택 추가·해제,Toggle room selection,部屋の選択を追加・解除,添加或取消房间选择,新增或取消房間選取,Добавить или убрать комнату из выбора
+shortcutRoomGroupMove,선택한 방 함께 이동,Move selected rooms together,選択した部屋をまとめて移動,一起移动所选房间,一起移動所選房間,Переместить выбранные комнаты вместе
+keyLeftClick,좌클릭,Left click,左クリック,左键点击,左鍵點擊,Левая кнопка мыши
+selectedRooms,{0}개 방 선택,{0} rooms selected,{0}個の部屋を選択,已选择{0}个房间,已選取{0}個房間,Выбрано комнат: {0}
+roomSelectionLocked,잠긴 방을 선택에서 해제하거나 잠금을 풀어주세요.,Unlock the selected rooms or remove locked rooms from the selection.,選択した部屋のロックを解除するか選択から外してください。,请解锁所选房间或取消选择已锁定的房间。,請解鎖所選房間或取消選取已鎖定的房間。,Разблокируйте выбранные комнаты или уберите заблокированные из выбора.
 builtin.category.Decoration,장식,Decoration,装飾,装饰,裝飾,Декорации
 builtin.category.Gameplay,게임플레이,Gameplay,ゲームプレイ,玩法,玩法,Игровые элементы
 builtin.category.Triggers,트리거,Triggers,トリガー,触发器,觸發器,Триггеры

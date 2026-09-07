@@ -30,6 +30,36 @@ namespace MetroidvaniaStudio
             return new Vector2Int((int)(valid[0].x - source.x), (int)(valid[0].y - source.y));
         }
 
+        /// <summary>Resolve the entire selection using one delta, preserving gaps and shapes between rooms.</summary>
+        public static Vector2Int Resolve(IReadOnlyList<MapRoom> sources, Vector2Int delta, IReadOnlyList<MapRoom> rooms)
+        {
+            if (sources.Count == 0) return Vector2Int.zero;
+            bool Valid(long dx, long dy) => dx >= int.MinValue && dx <= int.MaxValue && dy >= int.MinValue && dy <= int.MaxValue
+                && sources.All(s => (long)s.x + dx >= int.MinValue && (long)s.y + dy >= int.MinValue
+                    && (long)s.x + dx + s.width <= int.MaxValue && (long)s.y + dy + s.height <= int.MaxValue);
+            if (!Valid(delta.x, delta.y)) throw new ArgumentOutOfRangeException(nameof(delta), "The moved rooms exceed the supported coordinate range.");
+            var selected = new HashSet<string>(sources.Select(s => s.id), StringComparer.Ordinal);
+            var targets = rooms.Where(r => !selected.Contains(r.id)).ToArray();
+            var horizontal = new List<(long left, long right)>();
+            var vertical = new List<(long left, long right)>();
+            foreach (var source in sources)
+            {
+                long x = (long)source.x + delta.x, y = (long)source.y + delta.y;
+                foreach (var target in targets)
+                {
+                    if (y < (long)target.y + target.height && y + source.height > target.y)
+                        horizontal.Add(((long)target.x - source.width - source.x, (long)target.x + target.width - source.x));
+                    if (x < (long)target.x + target.width && x + source.width > target.x)
+                        vertical.Add(((long)target.y - source.height - source.y, (long)target.y + target.height - source.y));
+                }
+            }
+            var candidates = Exits(delta.x, horizontal).Select(x => (x, y: (long)delta.y))
+                .Concat(Exits(delta.y, vertical).Select(y => (x: (long)delta.x, y)))
+                .Where(p => Valid(p.x, p.y)).OrderBy(p => Math.Abs(p.x - delta.x) + Math.Abs(p.y - delta.y)).ToArray();
+            if (candidates.Length == 0) throw new InvalidOperationException("There is no non-overlapping room position within the supported range.");
+            return new Vector2Int((int)candidates[0].x, (int)candidates[0].y);
+        }
+
         private static IEnumerable<long> Exits(long at, IEnumerable<(long left, long right)> intervals)
         {
             var sorted = intervals.OrderBy(p => p.left).ThenBy(p => p.right).ToArray();

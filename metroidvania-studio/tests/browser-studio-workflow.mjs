@@ -1,5 +1,5 @@
 import { createRequire } from 'node:module';
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const version = JSON.parse(await readFile(path.join(repository, 'version.json'), 'utf8')).version;
 const root = path.resolve(process.env.METROIDVANIA_STUDIO_TEST_PROJECT_ROOT || '.');
 const relative = path.relative(path.join(repository, 'metroidvania-studio/.local'), root);
 assert.equal(process.env.METROIDVANIA_STUDIO_TEST_ISOLATED, '1');
@@ -71,7 +72,7 @@ try {
   await page.locator('#language').selectOption('EN'); await selectA();
   async function fileMenu(name) { await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name, exact: true }).click(); }
   await page.keyboard.press('Alt+h'); await page.getByRole('menuitem', { name: 'About', exact: true }).click();
-  await page.locator('.build-version').filter({ hasText: '0.1.0' }).waitFor();
+  await page.locator('.build-version').filter({ hasText: version }).waitFor();
   assert.equal(await page.locator('dialog img').evaluate(img => img.complete && img.naturalWidth > 0), true);
   await page.screenshot({ path: path.join(repository, '.local/logs/Studio-About.png') });
   await page.getByRole('button', { name: 'Close', exact: true }).click();

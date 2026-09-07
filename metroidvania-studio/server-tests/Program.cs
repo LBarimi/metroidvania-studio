@@ -24,6 +24,7 @@ var tests = new (string name, Action run)[]
     ("invalid begin releases gesture ownership", () => Fixture(InvalidBegin)),
     ("repeated begin cancels prior uncommitted stroke", () => Fixture(DuplicateBegin)),
     ("expired gesture releases ownership and cancels unfinished paint", () => Fixture(ExpiredGesture)),
+    ("multi-room selection, collision, history and exports stay atomic", () => Fixture(MultiRoomSelection)),
     ("named room creation is one undo", () => Fixture(RoomAdd)),
     ("room addition avoids overlap and redo restores adjusted bounds", () => Fixture(RoomAddCollision)),
     ("invalid room name never leaves a created room", () => Fixture(InvalidRoomAdd)),
@@ -1171,6 +1172,56 @@ static void RoomPropertyMoveResize(EditorWorkspace w)
     Send(w, "undo");
     Check(Snapshot(w) == before && !w.Session.CanUndo, "Combined bounds and propagated neighbors must be one Undo.");
 }
+static void MultiRoomSelection(EditorWorkspace w)
+{
+    var document = MapDocument.CreateDefault();
+    document.rooms.Clear();
+    foreach (var (id, x) in new[] { ("A", 0), ("B", 12), ("C", 24) })
+    {
+        var room = new MapRoom { id = id, name = id, x = x, y = 0, width = 8, height = 8 };
+        room.foreground.Add(new MapCell { x = 1, y = 1, material = "terrain" });
+        room.objects.Add(new MapObject { id = "object-" + id, x = 2, y = 2, width = 1, height = 1 });
+        document.rooms.Add(room);
+    }
+    Send(w, "import", ("document", JsonSerializer.Deserialize<JsonElement>(MapDocumentStore.Serialize(document))), ("discard", true));
+    Send(w, "selectRoom", ("id", "A"));
+    string before = Snapshot(w); long documentRevision = w.DocumentRevision; bool canUndo = w.Session.CanUndo;
+    Send(w, "selectRoom", ("id", "B"), ("toggle", true));
+    Check(w.State().selection!.roomIds.SequenceEqual(new[] { "A", "B" }) && w.Canvas.ActiveRoomId == "B", "Selection response contains all rooms and a primary room.");
+    Send(w, "selectRoom", ("id", "B"), ("toggle", true));
+    Check(w.State().selection!.roomIds.SequenceEqual(new[] { "A" }) && w.Canvas.ActiveRoomId == "A", "Toggling the primary room off keeps the remaining room active.");
+    Send(w, "selectRoom", ("id", "B"), ("toggle", true));
+    Check(Snapshot(w) == before && w.DocumentRevision == documentRevision && w.Session.CanUndo == canUndo, "Selection must not edit or export map data or create Undo history.");
+    Send(w, "roomMove", ("id", "A"), ("selected", true), ("dx", 6), ("dy", 0));
+    Check(w.Session.Document.rooms.Select(r => r.x).SequenceEqual(new[] { 4, 16, 24 }), "The entire group stops at the outside obstacle with the original gap intact.");
+    Check(w.State().selection!.roomIds.Length == 2 && w.Canvas.ActiveRoomId == "B", "Dragging a secondary room retains the group and primary room.");
+    Check(w.Session.Document.rooms.All(r => r.foreground[0].x == 1 && r.objects[0].x == 2), "Room contents keep their local coordinates.");
+    string moved = Snapshot(w);
+    w.FlushAutoExports();
+    var exports = AutoFiles(w).Select(f => MapDocumentStore.Deserialize(File.ReadAllText(f)).rooms.Single()).OrderBy(r => r.id).ToArray();
+    Check(exports.Select(r => r.x).SequenceEqual(new[] { 4, 16, 24 }), "All moved room JSON files contain the new positions.");
+    Send(w, "undo"); Check(Snapshot(w) == before && w.Session.CanUndo == canUndo, "One Undo restores the complete group.");
+    Send(w, "redo"); Check(Snapshot(w) == moved, "One Redo restores the complete group.");
+    Send(w, "roomProperties", ("id", "A"), ("locked", true));
+    string locked = Snapshot(w); long revision = w.Revision;
+    Throws<InvalidOperationException>(() => Send(w, "roomMove", ("id", "B"), ("selected", true), ("dx", 0), ("dy", 10)));
+    Check(Snapshot(w) == locked && w.Revision == revision && w.State().selection!.roomIds.Length == 2, "A locked group member prevents all movement without changing selection.");
+    Send(w, "roomProperties", ("id", "A"), ("locked", false));
+    string bounded = Snapshot(w); revision = w.Revision;
+    Throws<ArgumentOutOfRangeException>(() => Send(w, "roomMove", ("id", "A"), ("selected", true), ("dx", int.MaxValue), ("dy", 0)));
+    Check(Snapshot(w) == bounded && w.Revision == revision, "Coordinate overflow must leave every room unchanged.");
+    Throws<ArgumentException>(() => Send(w, "roomMove", ("id", "C"), ("selected", true), ("dx", 1), ("dy", 1)));
+    Check(Snapshot(w) == bounded && w.Revision == revision, "An unselected drag target cannot move the group.");
+    Send(w, "cancel"); Check(w.State().selection!.roomIds.Length == 0 && Snapshot(w) == bounded, "Escape clears the room selection without editing.");
+    Send(w, "selectRoom", ("id", "A"), ("toggle", true));
+    Send(w, "selectRoom", ("id", "A"), ("toggle", true));
+    Check(w.State().selection!.roomIds.Length == 0, "The last selected room can be toggled off.");
+    Send(w, "selectRoom", ("id", "A")); Send(w, "selectRoom", ("id", "B"), ("toggle", true));
+    Send(w, "options", ("tool", 3)); Check(w.State().selection!.roomIds.SequenceEqual(new[] { "B" }), "Choosing Brush returns to editing the primary room.");
+    Send(w, "selectRoom", ("id", "A"), ("toggle", true));
+    Send(w, "selectRoom", ("id", "C")); Check(w.State().selection!.roomIds.SequenceEqual(new[] { "C" }), "An ordinary selection replaces the group.");
+}
+
 static void RoomTargetAtomicity(EditorWorkspace w)
 {
     string first = w.Canvas.Room.id;

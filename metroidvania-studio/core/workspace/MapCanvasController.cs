@@ -95,11 +95,11 @@ namespace MetroidvaniaStudio
 
         public void Dispose() { Session.Changed -= OnChanged; ObjectEditor.Dispose(); RoomEditor.Dispose(); }
 
-        public void SelectRoom(string id)
+        public void SelectRoom(string id, bool toggle = false)
         {
             CancelGesture();
-            ActiveRoomId = id;
-            if (id == null) RoomEditor.Clear(); else RoomEditor.Select(id);
+            if (id == null) RoomEditor.Clear(); else RoomEditor.Select(id, toggle: toggle);
+            ActiveRoomId = toggle ? RoomEditor.PrimaryId ?? id : id;
             Selection = null;
             ObjectEditor.Clear();
         }
