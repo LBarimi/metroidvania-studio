@@ -61,7 +61,7 @@ function toast(error: unknown, success = false): void { const t = el('toast'); c
 const map = new MapCanvas(el('map-canvas'), api.command, point => drawStatus(point), () => { inspectorHidden = false; updateView(); renderInspector(true); }, key => toast(locale.t(key)), () => api.pending > 0, () => api.refresh(false), size => {
   const brush = el('brush-options').querySelector<HTMLInputElement>('input[type="number"]');
   if (brush) brush.value = String(size);
-});
+}, (point, client) => roomContextMenu(point, client));
 const mini = new MiniMap(el('mini-canvas'), id => { void run('selectRoom', { id }).then(() => { map.frameRoom(); }).catch(() => undefined); });
 function expectedAt(value: State): CommandExpectation { return { instanceId: value.instanceId, revision: value.revision }; }
 async function run(action: string, values: CommandValues = {}, expectation?: CommandExpectation): Promise<State> { await map.settled(); return api.command(action, values, expectation); }
@@ -166,6 +166,46 @@ function importRooms(): void {
     } catch (error) { toast(error); } finally { picker.remove(); }
   })(); }, { once: true }); picker.click();
 }
+function shortcutsDialog(): void {
+  const mod = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl';
+  const bindings: [string, string][] = [
+    ['shortcutDraw', locale.t('keyLeftDrag')],
+    ['shortcutEraseRoom', locale.t('keyRight')],
+    ['shortcutPan', locale.t('keyMiddleDrag')],
+    ['shortcutPanEmpty', locale.t('keyRightDrag')],
+    ['shortcutRoomMenu', locale.t('keyRight')],
+    ['zoom', locale.t('keyWheel')],
+    ['shortcutBrushSize', `Ctrl + ${locale.t('keyWheel')}`],
+    ['frameRoom', 'F'],
+    ['shortcutMoveRoom', locale.t('keyRoomTitleDrag')],
+    ['shortcutResizeRoom', locale.t('keyRoomHandleDrag')],
+    ['shortcutSelectRoom', locale.t('keyOtherRoomClick')],
+    ['shortcutTileSelection', locale.t('keyLeftDrag')],
+    ['shortcutMoveSelection', locale.t('keySelectionDrag')],
+    ['shortcutNewSelection', `Shift + ${locale.t('keyLeftDrag')}`],
+    ['shortcutPlaceObject', locale.t('keyPaletteClick')],
+    ['shortcutSizeObject', locale.t('keyLeftDrag')],
+    ['shortcutObjectProperties', `${mod} + ${locale.t('keyRight')}`],
+    ['shortcutSelectNode', locale.t('keyNodeClick')],
+    ['save', `${mod} + S`], ['saveAs', `${mod} + Shift + S`],
+    ['undo', `${mod} + Z`], ['redo', `${mod} + Y / ${mod} + Shift + Z`],
+    ['copy', `${mod} + C`], ['cut', `${mod} + X`], ['paste', `${mod} + V`],
+    ['selectAll', `${mod} + A`], ['shortcutDeleteSelected', 'Delete / Backspace'],
+    ['cancel', 'Esc'],
+    ...TOOLS.map((name, index): [string, string] => [`enum.MetroidvaniaStudioTool.${name}`, toolKeys[index].toUpperCase()]),
+    ['file', 'Alt + F'], ['edit', 'Alt + E'], ['helpMenu', 'Alt + H']
+  ];
+  const dialog = showModal(locale.t('shortcut'), body => {
+    body.tabIndex = 0; body.setAttribute('aria-label', locale.t('shortcut')); body.setAttribute('role', 'region');
+    const list = document.createElement('dl'); list.className = 'shortcut-list';
+    for (const [action, binding] of bindings) {
+      const row = text('div', '', 'shortcut-row'), key = text('dd', '', 'shortcut-binding');
+      key.append(text('kbd', binding)); row.append(text('dt', locale.t(action)), key); list.append(row);
+    }
+    body.append(list);
+  });
+  dialog.classList.add('shortcuts-dialog'); dialog.id = 'shortcuts-dialog';
+}
 async function aboutDialog(): Promise<void> {
   let info: { version?: string; revision?: string; builtAt?: string } = {};
   try { info = await localJson('/build-info.json'); } catch { /* Source previews can omit build metadata. */ }
@@ -175,6 +215,9 @@ async function aboutDialog(): Promise<void> {
     body.append(text('div', `${locale.t('buildVersion')}: ${info.version || locale.t('unavailable')}`, 'build-version'));
     if (info.revision) body.append(text('div', `${locale.t('revision')}: ${info.revision}`));
     if (info.builtAt) body.append(text('div', `${locale.t('buildDate')}: ${new Date(info.builtAt).toLocaleString(locale.htmlLanguage)}`));
+    const credits = text('div', '', 'about-credits');
+    credits.append(text('div', 'Copyright ⓒ Barimi', 'about-copyright'), text('div', 'sdfsdgxc@naver.com', 'about-email'));
+    body.append(credits);
   });
 }
 function menu(id: string, caption: string, items: (HTMLButtonElement | null)[]): HTMLElement {
@@ -202,10 +245,44 @@ function menu(id: string, caption: string, items: (HTMLButtonElement | null)[]):
   }); return root;
 }
 function closeMenus(): void {
+  document.getElementById('room-context-menu')?.remove();
   for (const node of document.querySelectorAll<HTMLElement>('.menu-popup')) node.hidden = true;
   for (const node of document.querySelectorAll('.menu > button')) node.setAttribute('aria-expanded', 'false');
 }
-document.addEventListener('pointerdown', event => { if (!(event.target as HTMLElement).closest('.menu')) closeMenus(); });
+document.addEventListener('pointerdown', event => {
+  if ((event.target as HTMLElement).closest('.menu')) return;
+  const dismissCanvasMenu = document.getElementById('room-context-menu') && event.target === el('map-canvas') && event.button === 0;
+  closeMenus();
+  // Dismissing the menu must not also paint, activate, move or resize a room.
+  if (dismissCanvasMenu) { event.preventDefault(); event.stopPropagation(); el('map-canvas').focus(); }
+}, true);
+window.addEventListener('blur', closeMenus);
+window.addEventListener('resize', closeMenus);
+el('map-canvas').addEventListener('wheel', closeMenus, { passive: true });
+function roomContextMenu(point: Point, client: Point): void {
+  if (!state || miniMode || map.cameraPreview) return;
+  closeMenus();
+  const instance = state.instanceId, documentRevision = state.documentRevision ?? state.revision;
+  const root = text('div', '', 'menu canvas-context-menu'); root.id = 'room-context-menu';
+  const panel = text('div', '', 'menu-popup'); panel.setAttribute('role', 'menu'); panel.setAttribute('aria-label', locale.t('rooms'));
+  const create = button(locale.t('addRoomHere'), () => {
+    closeMenus();
+    if (!state || state.instanceId !== instance || (state.documentRevision ?? state.revision) !== documentRevision) { toast(locale.t('writerBusy')); return; }
+    roomAddDialog(point);
+  });
+  create.setAttribute('role', 'menuitem'); panel.append(create); root.append(panel); document.body.append(root);
+  const bounds = root.getBoundingClientRect();
+  root.style.left = `${Math.max(4, Math.min(client.x, window.innerWidth - bounds.width - 4))}px`;
+  root.style.top = `${Math.max(4, Math.min(client.y, window.innerHeight - bounds.height - 4))}px`;
+  root.addEventListener('contextmenu', event => event.preventDefault());
+  root.addEventListener('keydown', event => {
+    if (!['Escape', 'Tab', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault(); event.stopPropagation();
+    if (event.key === 'Escape' || event.key === 'Tab') { closeMenus(); el('map-canvas').focus(); }
+    else create.focus();
+  });
+  create.focus();
+}
 async function cameraSettingsDialog(): Promise<void> {
   await settleFileSnapshot();
   if (!state) return;
@@ -227,13 +304,23 @@ function metadataDialog(): void {
   const snapshot = state.document, expectation = expectedAt(state);
   showModal(locale.t('metadata'), body => { body.append(text('p', locale.t('jsonHelp'))); area = document.createElement('textarea'); area.className = 'json-editor'; area.value = JSON.stringify({ properties: snapshot.properties, stylegrounds: snapshot.stylegrounds, layerGroups: snapshot.layerGroups }, null, 2); body.append(area); }, async () => { const values = JSON.parse(area.value); if (!values || typeof values !== 'object' || !Array.isArray(values.properties) || !Array.isArray(values.stylegrounds) || !Array.isArray(values.layerGroups)) throw new Error(locale.t('invalidJson')); await run('documentProperties', values, expectation); });
 }
-function roomAddDialog(): void {
+function roomAddDialog(at?: Point): void {
   const expectation = state ? expectedAt(state) : undefined;
   let name: HTMLInputElement; const inputs = new Map<string, HTMLInputElement>();
   showModal(locale.t('addRoom'), body => {
-    const pair = labelInput(locale.t('name'), locale.t('rooms') + ' ' + ((state?.document.rooms.length || 0) + 1)); name = pair[1]; body.append(pair[0]);
-    const fields = text('div', '', 'fields'); for (const [key, value] of Object.entries({ x: Math.round(map.center.x), y: Math.round(map.center.y), width: 20, height: 12 })) { const [label, input] = labelInput(['x', 'y'].includes(key) ? key.toUpperCase() : locale.t(key), value, 'number'); input.step = '1'; if (key === 'width' || key === 'height') input.min = '1'; inputs.set(key, input); fields.append(label); } body.append(fields);
-  }, async () => { await run('roomAdd', { name: name.value, ...numberValues(inputs) }, expectation); map.frameRoom(); }, 'addRoom');
+    const pair = labelInput(locale.t('name'), locale.t('rooms') + ' ' + ((state?.document.rooms.length || 0) + 1)); name = pair[1]; name.id = 'room-add-name'; body.append(pair[0]);
+    const fields = text('div', '', 'fields');
+    for (const [key, value] of Object.entries({ x: at?.x ?? Math.round(map.center.x), y: at?.y ?? Math.round(map.center.y), width: at ? 16 : 20, height: at ? 10 : 12 })) {
+      const [label, input] = labelInput(['x', 'y'].includes(key) ? key.toUpperCase() : locale.t(key), value, 'number');
+      input.step = '1'; input.id = `room-add-${key}`;
+      if (key === 'width' || key === 'height') { input.min = '1'; input.max = '1024'; }
+      inputs.set(key, input); fields.append(label);
+    }
+    body.append(fields, text('p', locale.t('addRoomPlacementHelp')));
+  }, async () => {
+    const created = await run('roomAdd', { name: name.value, ...numberValues(inputs) }, expectation);
+    map.selectRoomTarget(created.selection.roomId); map.frameRoom();
+  }, 'addRoom');
 }
 function addGroup(): void { if (!state || state.selection.layer === 6) return; const snapshot = state, expectation = expectedAt(state); let name: HTMLInputElement; showModal(locale.t('addGroup'), body => { const pair = labelInput(locale.t('name'), ''); name = pair[1]; body.append(pair[0]); }, async () => { if (!name.value.trim()) throw new Error(locale.t('required')); const id = crypto.randomUUID(); const changed = await run('documentProperties', { layerGroups: [...snapshot.document.layerGroups, { id, name: name.value, parentId: snapshot.selection.groupId || '', layer: snapshot.selection.layer, visible: true, locked: false }] }, expectation); await run('options', { groupId: id }, expectedAt(changed)); }); }
 function drawChrome(): void {
@@ -258,7 +345,7 @@ function drawChrome(): void {
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
     button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed'))]));
   actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null, cameraSettings, metadata]),
-    menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('shortcut'), () => showModal(locale.t('shortcut'), body => { for (const key of ['help', 'roomHelp', 'selectionHelp', 'placementHelp', 'objectHelp']) body.append(text('p', locale.t(key))); })), button(locale.t('about'), aboutDialog)]));
+    menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
   const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
   updateView(); drawPanels(true); renderInspector(true);
 }
@@ -494,7 +581,7 @@ function stateChanged(): void {
 api.addEventListener('state', stateChanged); api.addEventListener('busy', () => drawStatus()); api.addEventListener('error', event => toast((event as CustomEvent).detail));
 api.addEventListener('connection', () => drawStatus()); api.addEventListener('offline', () => drawStatus());
 locale.addEventListener('change', () => { languageVersion++; drawChrome(); }); el('language').addEventListener('change', () => locale.set(el<HTMLSelectElement>('language').value as Language));
-el('add-room').addEventListener('click', roomAddDialog); el('room-search').addEventListener('input', () => { roomSearch = el<HTMLInputElement>('room-search').value; drawPanels(); }); el('palette-search').addEventListener('input', () => { paletteSearch = el<HTMLInputElement>('palette-search').value; drawPalette(); }); el('group-select').addEventListener('change', () => { void option({ groupId: el<HTMLSelectElement>('group-select').value }).catch(() => undefined); });
+el('add-room').addEventListener('click', () => roomAddDialog()); el('room-search').addEventListener('input', () => { roomSearch = el<HTMLInputElement>('room-search').value; drawPanels(); }); el('palette-search').addEventListener('input', () => { paletteSearch = el<HTMLInputElement>('palette-search').value; drawPalette(); }); el('group-select').addEventListener('change', () => { void option({ groupId: el<HTMLSelectElement>('group-select').value }).catch(() => undefined); });
 el('inspector').addEventListener('focusout', () => { window.setTimeout(() => renderInspector(), 0); });
 const toolKeys = ['r', 'p', 'v', 'b', 'u', 'g', 'l', 'c', 'e'];
 function authoringShortcut(key: string, mod: boolean): boolean {

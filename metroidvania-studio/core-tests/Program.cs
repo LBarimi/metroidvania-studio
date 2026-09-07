@@ -20,9 +20,12 @@ var tests = new (string name, Action run)[]
     ("save/undo/redo dirty state and malformed load preservation", SaveLoad),
     ("map files require UTF-8 and allow its BOM", MapFileEncoding),
     ("all-layer clear preserves protected groups and other rooms", Clear),
-    ("room resize propagates gap and local data", Resize),
+    ("room resize moves only attached directional chains and preserves local data", Resize),
+    ("detached rooms and corner contacts stay fixed across all resize handles", ResizeDetached),
+    ("resize cannot push disconnected obstacles and remains atomic", ResizeObstacles),
     ("room shrink clamps all eight handles to both terrain layers", ShrinkToTerrain),
     ("room shrink preserves crop, empty and local-coordinate behavior", ShrinkOptions),
+    ("room creation preserves free coordinates and avoids occupied space in one Undo", RoomCreation),
     ("room clipboard, transforms and collision-only joins", RoomWorkflow),
     ("locked neighbor blocks resize atomically", LockedResize),
     ("node selection transforms and node-only deletion", Nodes),
@@ -350,13 +353,80 @@ static void Clear()
 }
 static void Resize()
 {
-    var doc = Doc(Room("target"), Room("right", 15), Room("far", 30));
-    doc.rooms[1].foreground.Add(new MapCell { x = 2, y = 3 });
-    doc.rooms[1].objects.Add(new MapObject { x = 1, y = 2, nodes = new List<Vector2> { new(4, 5) } });
-    var s = new MapEditSession(doc); using var edit = new MapRoomEditing(s); edit.Resize("target", new RectInt(0, 0, 14, 10));
-    Check(s.Document.rooms[1].x == 19 && s.Document.rooms[2].x == 34, "Resize preserves all external gaps.");
-    Check(s.Document.rooms[1].foreground[0].x == 2 && s.Document.rooms[1].objects[0].nodes[0] == new Vector2(4, 5), "Moved room keeps local contents.");
-    s.Undo(); Check(Json(s.Document) == Json(doc) && !s.CanUndo, "Whole layout one undo");
+    foreach (bool horizontal in new[] { true, false }) foreach (int direction in new[] { -1, 1 })
+        foreach (int delta in new[] { -2, 4 }) foreach (bool reversed in new[] { false, true })
+    {
+        MapRoom Neighbor(string id, int distance, int cross, int span) => horizontal
+            ? Room(id, direction * distance - (direction < 0 ? 10 : 0), cross, 10, span)
+            : Room(id, cross, direction * distance - (direction < 0 ? 10 : 0), span, 10);
+        int edge = direction > 0 ? 10 : 0;
+        var attached = Neighbor("attached", edge, 2, 6);
+        var chain = Neighbor("chain", edge + 10, 3, 3);
+        var detached = Neighbor("detached", edge + 25, 3, 3);
+        var doc = Doc(Room("target"), attached, chain, detached);
+        attached.foreground.Add(new MapCell { x = 2, y = 1 });
+        attached.objects.Add(new MapObject { id = "item", x = 1, y = 2, nodes = new List<Vector2> { new(2, 1) } });
+        chain.visible = false; // Visibility does not alter physical room contacts.
+        detached.locked = true;
+        if (reversed) doc.rooms.Reverse();
+        var session = new MapEditSession(doc); using var edit = new MapRoomEditing(session);
+        int offset = direction * delta;
+        var bounds = new RectInt(horizontal && direction < 0 ? offset : 0,
+            !horizontal && direction < 0 ? offset : 0, horizontal ? 10 + delta : 10, horizontal ? 10 : 10 + delta);
+        edit.Resize("target", bounds);
+        foreach (var before in new[] { attached, chain, detached })
+        {
+            var after = session.Document.rooms.Single(r => r.id == before.id);
+            int move = before == detached ? 0 : offset;
+            Check(after.x == before.x + (horizontal ? move : 0) && after.y == before.y + (horizontal ? 0 : move),
+                "Only edge-connected rooms follow expansion and contraction; a gap ends the chain.");
+            Check(MapJson.ToJson(after.foreground) == MapJson.ToJson(before.foreground)
+                && MapJson.ToJson(after.objects) == MapJson.ToJson(before.objects), "Neighbor contents remain at their local coordinates.");
+        }
+        string afterLayout = Json(session.Document);
+        session.Undo(); Check(Json(session.Document) == Json(doc) && !session.CanUndo, "Whole connected layout is one Undo.");
+        session.Redo(); Check(Json(session.Document) == afterLayout, "Redo restores the same contact layout.");
+    }
+}
+static void ResizeDetached()
+{
+    foreach (int hx in new[] { -1, 0, 1 }) foreach (int hy in new[] { -1, 0, 1 })
+        foreach (int delta in new[] { -2, 4 })
+    {
+        if (hx == 0 && hy == 0) continue;
+        var doc = Doc(Room("target"), Room("left", -15), Room("right", 15), Room("bottom", 0, -15),
+            Room("top", 0, 15), Room("diagonal", 20, 20));
+        foreach (var room in doc.rooms.Skip(1)) { room.locked = true; room.visible = false; }
+        var session = new MapEditSession(doc); using var edit = new MapRoomEditing(session);
+        edit.Resize("target", new RectInt(hx < 0 ? -delta : 0, hy < 0 ? -delta : 0,
+            hx == 0 ? 10 : 10 + delta, hy == 0 ? 10 : 10 + delta));
+        Check(MapJson.ToJson(session.Document.rooms.Skip(1).ToList()) == MapJson.ToJson(doc.rooms.Skip(1).ToList()),
+            "All detached rooms remain byte-for-byte unchanged, even when locked and hidden.");
+    }
+    var cornerDoc = Doc(Room("target"), Room("corner", 10, 10));
+    cornerDoc.rooms[1].locked = true;
+    var cornerSession = new MapEditSession(cornerDoc); using var cornerEdit = new MapRoomEditing(cornerSession);
+    cornerEdit.Resize("target", new RectInt(0, 0, 14, 10));
+    Check(cornerSession.Document.rooms[1].x == 10 && cornerSession.Document.rooms[1].y == 10,
+        "Touching only at a point must not transmit movement.");
+}
+static void ResizeObstacles()
+{
+    foreach (bool chain in new[] { false, true })
+    {
+        var doc = chain ? Doc(Room("target"), Room("attached", 10), Room("obstacle", 25))
+            : Doc(Room("target"), Room("obstacle", 15));
+        var session = new MapEditSession(doc); using var edit = new MapRoomEditing(session);
+        Throws<InvalidOperationException>(() => edit.Resize("target", new RectInt(0, 0, 16, 10)));
+        Check(Json(session.Document) == Json(doc) && !session.CanUndo && !session.IsEditing,
+            "An overlap must reject the complete change without moving the disconnected obstacle.");
+        edit.Resize("target", new RectInt(0, 0, 15, 10));
+        Check(session.Document.rooms.Last().x == doc.rooms.Last().x, "An exact fit is allowed and does not push the obstacle.");
+    }
+    var corner = Doc(Room("target"), Room("corner", 10, 10));
+    var cornerSession = new MapEditSession(corner); using var cornerEdit = new MapRoomEditing(cornerSession);
+    Throws<InvalidOperationException>(() => cornerEdit.Resize("target", new RectInt(0, 0, 12, 12)));
+    Check(Json(cornerSession.Document) == Json(corner) && !cornerSession.CanUndo, "Diagonal expansion cannot move a corner-only room.");
 }
 static void ShrinkToTerrain()
 {
@@ -385,11 +455,9 @@ static void ShrinkToTerrain()
         Check(result.x + result.objects[0].x == 24 && result.y + result.objects[0].y == -25
             && result.x + result.objects[0].nodes[0].x == 26 && result.y + result.objects[0].nodes[0].y == -24,
             "Object bodies and nodes must retain their world positions.");
-        Check(session.Document.rooms[1].x == 5 + expectedLeft - 20
-            && session.Document.rooms[2].x == 35 + expectedRight - 30
-            && session.Document.rooms[3].y == -45 + expectedBottom + 30
-            && session.Document.rooms[4].y == -15 + expectedTop + 20,
-            "Detached neighbors must follow the clamped edge delta and preserve their gaps.");
+        Check(session.Document.rooms[1].x == 5 && session.Document.rooms[2].x == 35
+            && session.Document.rooms[3].y == -45 && session.Document.rooms[4].y == -15,
+            "Terrain-clamped shrinking must leave detached neighbors in place.");
         string after = Json(session.Document);
         session.Undo(); Check(Json(session.Document) == Json(doc) && !session.CanUndo, "Clamped resize and all neighbors must undo together.");
         session.Redo(); Check(Json(session.Document) == after, "Redo must restore the exact clamped layout.");
@@ -407,7 +475,7 @@ static void ShrinkOptions()
     Check(result.x == -10 && result.y == -20 && result.width == 7 && result.height == 8
         && result.foreground.Single().x == 2 && result.background.Single().y == 7,
         "Inspector position and size must clamp dimensions while preserving local terrain.");
-    Check(session.Document.rooms[1].x == 2, "Inspector neighbor gap must use final clamped bounds.");
+    Check(session.Document.rooms[1].x == 15, "Inspector terrain clamping must not move detached rooms.");
     session.Undo(); Check(Json(session.Document) == Json(doc), "Inspector clamp must undo atomically.");
     edit.Resize("target", new RectInt(0, 0, 1, 1), true);
     result = session.Document.rooms[0];
@@ -425,7 +493,7 @@ static void ShrinkOptions()
 }
 static void LockedResize()
 {
-    var doc = Doc(Room("target"), Room("right", 15)); doc.rooms[1].locked = true;
+    var doc = Doc(Room("target"), Room("right", 10)); doc.rooms[1].locked = true;
     var s = new MapEditSession(doc); using var edit = new MapRoomEditing(s);
     Throws<InvalidOperationException>(() => edit.Resize("target", new RectInt(0, 0, 14, 10)));
     Check(Json(s.Document) == Json(doc) && !s.CanUndo, "Locked propagation rollback");
@@ -824,6 +892,39 @@ static void JsonTileAllocations()
     long allocated = GC.GetAllocatedBytesForCurrentThread() - before;
     Check(allocated < json.Length * 2L + 32768,
         $"Tile serialization must allocate primarily its result string, not boxed coordinates for every field ({allocated} bytes for {json.Length} characters).");
+}
+
+static void RoomCreation()
+{
+    static bool Overlaps(MapRoom a, MapRoom b) => (long)a.x < (long)b.x + b.width && (long)a.x + a.width > b.x
+        && (long)a.y < (long)b.y + b.height && (long)a.y + a.height > b.y;
+    var a = Room("A"); var b = Room("B", 18); b.visible = false; b.locked = true;
+    var session = new MapEditSession(Doc(a, b)); using var edit = new MapRoomEditing(session);
+    string before = Json(session.Document);
+    foreach (var bounds in new[] { new RectInt(-30, -20, 16, 10), new RectInt(10, 1, 8, 6),
+        new RectInt(int.MinValue, 0, 1, 1), new RectInt(int.MaxValue - 1, 0, 1, 1) })
+    {
+        string id = edit.Create(bounds, "Free room"); var room = session.Document.rooms.Single(r => r.id == id);
+        Check(room.x == bounds.x && room.y == bounds.y && room.width == bounds.width && room.height == bounds.height,
+            "Free coordinates, negative positions, exact fits and valid world limits must remain unchanged.");
+        session.Undo(); Check(Json(session.Document) == before, "Creation is one Undo.");
+    }
+    foreach (var bounds in new[] { new RectInt(9, 1, 8, 6), new RectInt(19, 2, 5, 5), new RectInt(-3, -2, 40, 20) })
+    {
+        string id = edit.Create(bounds, "New room"); var room = session.Document.rooms.Single(r => r.id == id);
+        Check(session.Document.rooms.Where(r => r.id != id).All(r => !Overlaps(r, room)),
+            "Creation must avoid every existing room, including hidden and locked rooms and whole clusters.");
+        Check(Json(Doc(session.Document.rooms.Take(2).ToArray())) == before, "Existing rooms must not move or change.");
+        if (bounds.width == 8) Check(room.x == 10 && room.y == 1, "The nearest eight-tile gap is an exact fit.");
+        string after = Json(session.Document);
+        session.Undo(); Check(Json(session.Document) == before, "One Undo removes both creation and placement adjustment.");
+        session.Redo(); Check(Json(session.Document) == after, "Redo restores the same identity and adjusted bounds."); session.Undo();
+    }
+    foreach (var bounds in new[] { new RectInt(0, 0, 0, 10), new RectInt(0, 0, 1025, 1), new RectInt(int.MaxValue, 0, 2, 2) })
+    {
+        Throws<ArgumentOutOfRangeException>(() => edit.Create(bounds));
+        Check(Json(session.Document) == before && !session.CanUndo, "Invalid creation must be rejected atomically.");
+    }
 }
 
 static void RoomWorkflow()

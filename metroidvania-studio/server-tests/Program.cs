@@ -25,9 +25,11 @@ var tests = new (string name, Action run)[]
     ("repeated begin cancels prior uncommitted stroke", () => Fixture(DuplicateBegin)),
     ("expired gesture releases ownership and cancels unfinished paint", () => Fixture(ExpiredGesture)),
     ("named room creation is one undo", () => Fixture(RoomAdd)),
+    ("room addition avoids overlap and redo restores adjusted bounds", () => Fixture(RoomAddCollision)),
     ("invalid room name never leaves a created room", () => Fixture(InvalidRoomAdd)),
     ("recovery write failure keeps committed edit and fresh revision", () => Fixture(RecoveryFailure)),
     ("invalid options preserve all current options", () => Fixture(InvalidOptions)),
+    ("tool changes and explicit cancel clear tile selection without editing", () => Fixture(TileSelectionDismissal)),
     ("brush size boundary is accepted and rejected atomically", () => Fixture(BrushSizeBoundary)),
     ("external disk changes block overwrite and preserve both copies", () => Fixture(DiskConflict)),
     ("same-path save detects a change at the atomic publish boundary", SaveBoundaryRace),
@@ -52,9 +54,10 @@ var tests = new (string name, Action run)[]
     ("invalid recovery is quarantined before saved-map fallback", () => Fixture(CorruptRecoveryFallback)),
     ("room resizing and continuous erase call shared core", () => Fixture(ResizeAndErase)),
     ("room property position moves contents without cropping", () => Fixture(RoomPropertyPosition)),
-    ("room property resize preserves neighbor gap in one Undo", () => Fixture(RoomPropertyResize)),
+    ("room property resize keeps detached rooms fixed in one Undo", () => Fixture(RoomPropertyResize)),
     ("room property move and resize plans final bounds atomically", () => Fixture(RoomPropertyMoveResize)),
     ("room property resize failure preserves metadata and bounds", () => Fixture(RoomPropertyLockedFailure)),
+    ("room property resize refuses detached collisions without metadata changes", () => Fixture(RoomPropertyDetachedCollision)),
     ("room selection and movement validation are atomic", () => Fixture(RoomTargetAtomicity)),
     ("room command routing and selection-only revisions", () => Fixture(RoomCommands)),
     ("room import and selective JSON exports preserve identities and source", () => Fixture(RoomFiles)),
@@ -346,6 +349,20 @@ static void RoomAdd(EditorWorkspace w)
     Check(w.Session.Document.rooms.Count == 2 && w.Canvas.Room.name == "named room", "Room created with intended name.");
     Send(w, "undo"); Check(w.Session.Document.rooms.Count == 1 && !w.Session.CanUndo, "Named room must disappear after one Undo.");
 }
+static void RoomAddCollision(EditorWorkspace w)
+{
+    string before = Snapshot(w); var original = w.Session.Document.rooms.Single();
+    var originalBounds = (original.x, original.y, original.width, original.height);
+    Send(w, "roomAdd", ("x", original.x - 2), ("y", original.y - 1), ("width", 16), ("height", 10), ("name", "New room"));
+    var added = w.Canvas.Room;
+    Check(added.id != original.id && added.width == 16 && added.height == 10, "The API creates and activates the requested room.");
+    Check((original.x, original.y, original.width, original.height) == originalBounds, "Creation leaves the existing room fixed.");
+    Check(added.x + added.width <= original.x || added.y + added.height <= original.y
+        || added.x >= original.x + original.width || added.y >= original.y + original.height, "New room must not overlap the existing room.");
+    string after = Snapshot(w);
+    Send(w, "undo"); Check(Snapshot(w) == before && !w.Session.CanUndo, "One Undo removes room creation and the position adjustment.");
+    Send(w, "redo"); Check(Snapshot(w) == after, "Redo restores the adjusted room and its identity.");
+}
 static void ExpiredGesture(EditorWorkspace w)
 {
     Send(w, "begin", ("x", 1), ("y", 1)); long before = w.Revision;
@@ -374,6 +391,33 @@ static void RecoveryFailure(EditorWorkspace w)
         Check(!string.IsNullOrWhiteSpace(w.Notice), "Recovery failure requires an explicit visible notice.");
     }
     finally { File.Delete(block); }
+}
+static void TileSelectionDismissal(EditorWorkspace w)
+{
+    Send(w, "begin", ("x", 2), ("y", 3)); Send(w, "end", ("x", 2), ("y", 3));
+    string before = Snapshot(w); long documentRevision = w.DocumentRevision, serialized = w.Session.SnapshotSerializationCount;
+    foreach (var layer in new[] { MapLayer.ForegroundTiles, MapLayer.BackgroundTiles })
+    foreach (var target in Enum.GetValues<MetroidvaniaStudioTool>().Where(t => t != MetroidvaniaStudioTool.Selection))
+    {
+        Send(w, "options", ("tool", (int)MetroidvaniaStudioTool.Selection), ("layer", (int)layer));
+        Send(w, "selectArea", ("x", 1), ("y", 2), ("width", 4), ("height", 4));
+        var selected = w.Canvas.Selection;
+        Send(w, "options", ("tool", (int)MetroidvaniaStudioTool.Selection), ("brushSize", 2));
+        Check(w.Canvas.Selection == selected, "The same tool and brush option changes must preserve the area.");
+        Throws<ArgumentException>(() => Send(w, "options", ("tool", (int)target), ("layer", 999)));
+        Check(w.Canvas.Selection == selected, "An invalid tool-change request must preserve selection atomically.");
+        Send(w, "options", ("tool", (int)target));
+        Check(!w.Canvas.Selection.HasValue && w.Canvas.Tool == target, "Switching to a different tool must dismiss the tile area.");
+        Send(w, "options", ("tool", (int)MetroidvaniaStudioTool.Selection));
+        Check(!w.Canvas.Selection.HasValue, "Returning to Selection must not resurrect the old area.");
+    }
+    Send(w, "selectArea", ("x", 1), ("y", 2), ("width", 4), ("height", 4));
+    Send(w, "cancel");
+    Check(!w.Canvas.Selection.HasValue && w.Canvas.Tool == MetroidvaniaStudioTool.Selection, "Explicit cancel clears selection while retaining the tool.");
+    Send(w, "delete"); Send(w, "cancel");
+    Check(Snapshot(w) == before && w.DocumentRevision == documentRevision && w.Session.CanUndo
+        && w.Session.SnapshotSerializationCount == serialized, "Dismissing selection must not change terrain, document revision, history or serialization work.");
+    Send(w, "undo"); Check(w.Canvas.Room.foreground.Count == 0 && !w.Session.CanUndo, "Undo still targets the preceding paint operation.");
 }
 static void InvalidOptions(EditorWorkspace w)
 {
@@ -999,7 +1043,7 @@ static void ResizeAndErase(EditorWorkspace w)
 {
     string first = w.Canvas.Room.id; Send(w, "roomAdd", ("x", 45), ("y", 0), ("width", 10), ("height", 10)); string right = w.Canvas.Room.id;
     Send(w, "roomResize", ("id", first), ("x", 0), ("y", 0), ("width", 44), ("height", 24));
-    Check(w.Session.Document.rooms.Single(r => r.id == right).x == 49, "Neighbor gap survives API resize.");
+    Check(w.Session.Document.rooms.Single(r => r.id == right).x == 45, "Detached room stays fixed during API resize.");
     Send(w, "selectRoom", ("id", first)); Send(w, "begin", ("x", 1), ("y", 1)); Send(w, "end", ("x", 5), ("y", 1));
     Send(w, "options", ("tool", (int)MetroidvaniaStudioTool.Rectangle));
     Send(w, "begin", ("x", 2), ("y", 1), ("erase", true)); Send(w, "end", ("x", 4), ("y", 1));
@@ -1056,7 +1100,7 @@ static void PortablePaths(EditorWorkspace w)
     Check(w.Files.List().Contains("case.map.json") && w.Files.List().Contains("CASE.map.json"),
         "Both case-distinct saved maps must remain discoverable.");
 }
-static void StartPropertyFixture(EditorWorkspace w, bool lockedNeighbor = false)
+static void StartPropertyFixture(EditorWorkspace w, bool lockedNeighbor = false, int neighborX = 15)
 {
     var target = new MapRoom { id = "target", name = "before", width = 10, height = 10 };
     target.foreground.Add(new MapCell { x = 0, y = 0, shape = TileShape.BottomLeft });
@@ -1065,7 +1109,7 @@ static void StartPropertyFixture(EditorWorkspace w, bool lockedNeighbor = false)
     target.objects.Add(new MapObject { id = "object", x = 2.5f, y = 3.5f,
         nodes = new List<MetroidvaniaStudio.Primitives.Vector2> { new(1, 1), new(8, 7) } });
     target.properties.Add(new MapProperty { key = "old", value = "kept" });
-    var neighbor = new MapRoom { id = "neighbor", name = "neighbor", x = 15, width = 10, height = 10, locked = lockedNeighbor };
+    var neighbor = new MapRoom { id = "neighbor", name = "neighbor", x = neighborX, width = 10, height = 10, locked = lockedNeighbor };
     neighbor.foreground.Add(new MapCell { x = 3, y = 4 });
     w.Session.New(new MapDocument { rooms = new List<MapRoom> { target, neighbor } });
     w.Canvas.SelectRoom(target.id);
@@ -1085,11 +1129,11 @@ static void RoomPropertyPosition(EditorWorkspace w)
 }
 static void RoomPropertyResize(EditorWorkspace w)
 {
-    StartPropertyFixture(w); string before = Snapshot(w);
+    StartPropertyFixture(w, true); string before = Snapshot(w);
     Send(w, "roomProperties", ("id", "target"), ("width", 14), ("name", "expanded"),
         ("properties", new[] { new { key = "new", value = "metadata" } }));
     var room = w.Canvas.Room; var neighbor = w.Session.Document.rooms.Single(r => r.id == "neighbor");
-    Check(room.width == 14 && neighbor.x == 19 && neighbor.x - (room.x + room.width) == 5, "Width expansion preserves the five-tile neighbor gap.");
+    Check(room.width == 14 && neighbor.x == 15 && neighbor.x - (room.x + room.width) == 1, "Expansion uses empty space without moving a detached locked room.");
     Check(room.name == "expanded" && room.properties.Single().key == "new" && neighbor.foreground.Single().x == 3, "Metadata and neighbor local data remain consistent.");
     string after = Snapshot(w); Send(w, "undo");
     Check(Snapshot(w) == before && !w.Session.CanUndo, "Bounds, neighbors and metadata roll back together in one undo.");
@@ -1097,22 +1141,30 @@ static void RoomPropertyResize(EditorWorkspace w)
 }
 static void RoomPropertyLockedFailure(EditorWorkspace w)
 {
-    StartPropertyFixture(w, true); string before = Snapshot(w); long revision = w.Revision;
+    StartPropertyFixture(w, true, 10); string before = Snapshot(w); long revision = w.Revision;
     Throws<InvalidOperationException>(() => Send(w, "roomProperties", ("id", "target"), ("width", 14),
         ("x", -20), ("name", "must not remain"), ("visible", false),
         ("properties", new[] { new { key = "replacement", value = "must not remain" } })));
     Check(Snapshot(w) == before && !w.Session.CanUndo && !w.Session.IsEditing, "Locked neighbor failure must preserve all metadata and bounds without a transaction.");
     Check(w.Revision == revision, "Detached validation failure must not change the live workspace revision.");
 }
+static void RoomPropertyDetachedCollision(EditorWorkspace w)
+{
+    StartPropertyFixture(w); string before = Snapshot(w); long revision = w.Revision;
+    Throws<InvalidOperationException>(() => Send(w, "roomProperties", ("id", "target"), ("x", 10), ("width", 14),
+        ("name", "rejected"), ("properties", new[] { new { key = "rejected", value = "rejected" } })));
+    Check(Snapshot(w) == before && w.Revision == revision && !w.Session.CanUndo && !w.Session.IsEditing,
+        "A detached obstacle must remain fixed and overlapping property edits must leave no partial metadata or history.");
+}
 static void RoomPropertyMoveResize(EditorWorkspace w)
 {
-    StartPropertyFixture(w); string before = Snapshot(w);
+    StartPropertyFixture(w, false, 10); string before = Snapshot(w);
     Send(w, "roomProperties", ("id", "target"), ("x", 10), ("width", 14));
     MapRoom target = w.Session.Document.rooms.Single(room => room.id == "target");
     MapRoom neighbor = w.Session.Document.rooms.Single(room => room.id == "neighbor");
-    Check(target.x == 10 && target.width == 14 && neighbor.x == 29
-        && neighbor.x - (target.x + target.width) == 5,
-        "The layout planner must preserve the original gap around the complete final target rectangle.");
+    Check(target.x == 10 && target.width == 14 && neighbor.x == 24
+        && neighbor.x == target.x + target.width,
+        "An attached neighbor follows the complete final target rectangle without a gap.");
     Check(target.foreground.Any(cell => cell.x == 0) && target.foreground.Any(cell => cell.x == 9)
         && target.objects.Single().x == 2.5f,
         "Inspector coordinate changes must retain target contents at their room-local positions.");

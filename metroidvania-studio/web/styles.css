@@ -564,19 +564,21 @@ hr {
 
 .canvas-help {
   position: absolute;
-  bottom: 8px;
+  bottom: 16px;
   left: 50%;
-  max-width: calc(100% - 24px);
-  overflow: hidden;
-  padding: 4px 8px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 5.6px 11.2px;
   transform: translateX(-50%);
-  color: #949494;
-  background: #0d0d0de6;
+  color: #dedede;
+  background: #0d0d0dbf;
   border: 1px solid #333;
   border-radius: 0;
-  font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
   pointer-events: none;
 }
 
@@ -697,6 +699,31 @@ dialog::backdrop { background: #050505b8; }
   border-top: 1px solid var(--line);
 }
 
+.shortcuts-dialog { width: min(1140px, calc(100vw - 32px)); max-height: calc(100dvh - 24px); }
+.shortcuts-dialog .dialog-body { display: block; max-height: none; overflow-x: auto; overflow-y: hidden; }
+.shortcuts-dialog .dialog-body:focus-visible { outline: 1px solid var(--accent); outline-offset: -2px; }
+.shortcut-list {
+  margin: 0;
+  height: min(560px, max(64px, calc(100dvh - 170px)));
+  column-width: 320px;
+  column-gap: 24px;
+  column-fill: auto;
+}
+.shortcut-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  break-inside: avoid;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.shortcut-row dt, .shortcut-row dd { margin: 0; }
+.shortcut-binding { text-align: right; }
+.shortcut-binding kbd { color: #b9d9ee; font: inherit; font-size: 12px; }
+
 .file-list { max-height: 220px; overflow: auto; display: grid; gap: 1px; }
 .file-list button { text-align: left; }
 .modal-error { color: #f1a0a6; white-space: pre-wrap; font-size: 11px; }
@@ -763,11 +790,16 @@ dialog::backdrop { background: #050505b8; }
 .menu { position: relative; }
 .menu-popup { position: absolute; top: calc(100% + 5px); left: 0; z-index: 100; min-width: 230px; max-width: min(360px, 90vw); padding: 5px; background: #222; border: 1px solid #484848; box-shadow: 0 8px 28px #0009; }
 .menu-popup[hidden] { display: none; }
-.top-actions .menu-popup button { display: block; width: 100%; padding: 7px 10px; text-align: left; white-space: nowrap; font-size: 12px; }
+.top-actions .menu-popup button, .canvas-context-menu .menu-popup button { display: block; width: 100%; padding: 7px 10px; text-align: left; white-space: nowrap; font-size: 12px; }
+.canvas-context-menu { position: fixed; z-index: 110; width: max-content; }
+.canvas-context-menu .menu-popup { position: relative; top: 0; left: 0; }
 .menu-popup hr { margin: 5px; }
 .brand-mark { width: 25px; height: 25px; border: 0; flex-shrink: 0; }
 .about-heading { display: flex; align-items: center; gap: 18px; padding: 8px 0 16px; }
 .about-heading strong { font-size: 20px; }
+.about-credits { display: grid; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #363636; user-select: text; }
+.about-copyright { color: #dedede; font-size: 12px; }
+.about-email { color: #b5dbf0; font-size: 11px; overflow-wrap: anywhere; }
 .build-version { margin-top: 16px; color: #b5dbf0; }
 .standalone-app .top-actions { display: flex; }
 .standalone-app #file-menu, .standalone-app #settings-menu, .standalone-app #undo, .standalone-app #redo, .standalone-app .divider { display: none; }

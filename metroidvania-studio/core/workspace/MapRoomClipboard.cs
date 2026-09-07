@@ -109,7 +109,7 @@ namespace MetroidvaniaStudio
                 }
                 copies.Add(copy.id, copy);
             }
-            // A single rectangular room changing size uses the same gap-preserving layout as resize.
+            // A single rectangular room changing size uses the same contact-only layout as resize.
             var first = copies.Values.First();
             MapRoomResizePlan layout = rotate && copies.Count == 1
                 ? MapRoomResizeLayout.Plan(session.Document.rooms, first.id, new RectInt(first.x, first.y, first.width, first.height)) : null;

@@ -87,6 +87,8 @@ external.rooms,방,Rooms,部屋,房间,房間,Комнаты
 external.tools,도구,Tools,ツール,工具,工具,Инструменты
 external.palette,팔레트,Palette,パレット,调色板,調色盤,Палитра
 external.layers,레이어,Layers,レイヤー,图层,圖層,Слои
+external.addRoomHere,여기에 방 생성,Create room here,ここに部屋を作成,在此创建房间,在此建立房間,Создать комнату здесь
+external.addRoomPlacementHelp,다른 방과 겹치면 기존 방은 그대로 두고 새 방만 가까운 빈자리로 이동합니다.,"If rooms would overlap, only the new room moves to a nearby free position.",他の部屋と重なる場合、新しい部屋だけを近くの空き位置に移動します。,如果与其他房间重叠，仅将新房间移到附近的空位。,如果與其他房間重疊，僅將新房間移到附近的空位。,При пересечении с другими комнатами только новая комната сдвигается на ближайшее свободное место.
 external.addRoom,방 추가,Add room,部屋を追加,添加房间,新增房間,Добавить комнату
 external.fit,전체 보기,Fit map,マップ全体を表示,显示整个地图,顯示整張地圖,Показать всю карту
 external.frameRoom,방 보기,Frame room,部屋を表示,显示当前房间,顯示目前房間,Показать комнату
@@ -135,7 +137,7 @@ external.exportDirectory,내보내기 폴더,Export directory,書き出し先フ
 external.confirmDiscard,저장되지 않은 변경 사항을 버리고 계속할까요?,Discard unsaved changes and continue?,未保存の変更を破棄して続けますか？,放弃未保存的更改并继续？,捨棄未儲存的變更並繼續？,Отбросить несохранённые изменения и продолжить?
 external.confirmOverwrite,선택한 위치에 같은 이름의 파일이 이미 있습니다. 덮어쓸까요?,The selected destination already contains files with the same name. Replace them?,同名のファイルがあります。上書きしますか？,目标位置已有同名文件。是否覆盖？,目標位置已有同名檔案。是否覆寫？,В выбранной папке уже есть файлы с такими именами. Заменить их?
 external.confirmClear,이 작업으로 선택한 내용이 삭제됩니다. 계속할까요? 실행 취소할 수 있습니다.,Delete this content? You can undo this operation.,削除しますか？この操作は元に戻せます。,删除这些内容？此操作可以撤销。,刪除這些內容？此操作可以復原。,Удалить эти данные? Операцию можно отменить.
-external.help,좌클릭 드래그: 그리기 · 휠클릭 드래그: 화면 이동 · 우클릭: 지우기 · 휠: 줌 · Ctrl+휠: 브러시 크기,Left drag: draw · Middle drag: pan · Right: erase · Wheel: zoom · Ctrl+wheel: brush size,左ドラッグ: 描画 · 中ドラッグ: 移動 · 右: 消去 · ホイール: ズーム · Ctrl+ホイール: ブラシサイズ,左键拖动：绘制 · 中键拖动：平移 · 右键：擦除 · 滚轮：缩放 · Ctrl+滚轮：笔刷大小,左鍵拖曳：繪製 · 中鍵拖曳：平移 · 右鍵：擦除 · 滾輪：縮放 · Ctrl+滾輪：筆刷大小,Левая кнопка: рисование · Средняя: панорама · Правая: ластик · Колесо: масштаб · Ctrl+колесо: кисть
+external.help,좌클릭 드래그: 그리기 · 휠클릭 드래그: 화면 이동 · 방 안 우클릭: 지우기 · 빈 공간 우클릭: 방 생성 메뉴 / 드래그: 화면 이동 · 휠: 줌 · Ctrl+휠: 브러시 크기,Left drag: draw · Middle drag: pan · Right inside a room: erase · Right on empty space: room menu / drag to pan · Wheel: zoom · Ctrl+wheel: brush size,左ドラッグ: 描画 · 中ドラッグ: 移動 · 部屋内の右クリック: 消去 · 空白で右クリック: 部屋メニュー / ドラッグ: 移動 · ホイール: ズーム · Ctrl+ホイール: ブラシサイズ,左键拖动：绘制 · 中键拖动：平移 · 房间内右键：擦除 · 空白处右键：房间菜单 / 拖动：平移 · 滚轮：缩放 · Ctrl+滚轮：笔刷大小,左鍵拖曳：繪製 · 中鍵拖曳：平移 · 房間內右鍵：擦除 · 空白處右鍵：房間選單 / 拖曳：平移 · 滾輪：縮放 · Ctrl+滾輪：筆刷大小,Левая: рисование · Средняя: панорама · Правая внутри комнаты: ластик · Правая на пустом месте: меню / перетаскивание: панорама · Колесо: масштаб · Ctrl+колесо: кисть
 external.roomHelp,방 이름 막대 드래그: 방 이동 · 외부 핸들: 크기 조절 · 다른 방 클릭: 선택 · Del: 방 삭제,Drag room title strip: move room · Outer handles: resize · Click another room: select · Del: delete room,部屋名の帯をドラッグ: 部屋移動 · 外側ハンドル: サイズ変更 · 別の部屋をクリック: 選択 · Del: 削除,拖动房间名称条：移动房间 · 外侧控制点：调整大小 · 点击其他房间：选中 · Del：删除,拖曳房間名稱列：移動房間 · 外側控制點：調整大小 · 點擊其他房間：選取 · Del：刪除,Полоса названия: перемещение комнаты · Внешние маркеры: размер · Щелчок по другой комнате: выбор · Del: удалить
 external.objectHelp,클릭: 선택 · 드래그: 이동 · Ctrl+오른쪽: 속성 · 노드 클릭: 선택,Click: select · Drag: move · Ctrl+right: properties · Click a node to select,クリック: 選択 · ドラッグ: 移動 · Ctrl+右クリック: プロパティ · ノードをクリック: 選択,点击：选择 · 拖动：移动 · Ctrl+右键：属性 · 点击节点：选择节点,點擊：選取 · 拖曳：移動 · Ctrl+右鍵：屬性 · 點擊節點：選取節點,Щелчок: выбор · Перетаскивание: перемещение · Ctrl+правая: свойства · Щелчок по узлу: выбор узла
 external.nodes,노드,Nodes,ノード,节点,節點,Узлы
@@ -157,6 +159,34 @@ external.changeApplied,변경 사항을 적용했습니다,Changes applied,変�
 external.snap,방 스냅,Room snapping,部屋のスナップ,房间吸附,房間吸附,Привязка комнат
 external.theme,지역 색,Region color,エリアの色,区域颜色,區域顏色,Цвет области
 external.jsonValues,속성 JSON,Properties JSON,プロパティJSON,属性 JSON,屬性 JSON,Свойства JSON
+external.shortcutDraw,타일 그리기,Draw tiles,タイルを描画,绘制图块,繪製圖塊,Рисовать тайлы
+external.shortcutEraseRoom,방 안에서 지우기,Erase inside a room,部屋内を消去,擦除房间内的内容,清除房間內的內容,Стирать внутри комнаты
+external.shortcutPan,화면 이동,Pan view,表示を移動,平移视图,平移視圖,Перемещать вид
+external.shortcutPanEmpty,화면 이동 (빈 공간),Pan from empty space,空白から表示を移動,从空白处平移,從空白處平移,Перемещать вид с пустого места
+external.shortcutRoomMenu,방 생성 메뉴 (빈 공간),Room menu on empty space,空白で部屋メニュー,空白处的房间菜单,空白處的房間選單,Меню комнаты на пустом месте
+external.shortcutBrushSize,브러시 크기 조절,Change brush size,ブラシサイズ変更,调整笔刷大小,調整筆刷大小,Изменить размер кисти
+external.shortcutMoveRoom,방 이동,Move room,部屋を移動,移动房间,移動房間,Переместить комнату
+external.shortcutResizeRoom,방 크기 조절,Resize room,部屋のサイズ変更,调整房间大小,調整房間大小,Изменить размер комнаты
+external.shortcutSelectRoom,방 선택,Select room,部屋を選択,选择房间,選取房間,Выбрать комнату
+external.shortcutTileSelection,타일 영역 선택 (선택 도구),Select tiles (Selection tool),タイル領域選択（選択ツール）,选择图块区域（选择工具）,選取圖塊區域（選取工具）,Выделить тайлы (инструмент выделения)
+external.shortcutMoveSelection,선택 영역 이동,Move selected area,選択領域を移動,移动所选区域,移動選取區域,Переместить выделение
+external.shortcutNewSelection,새 영역 선택 (선택 도구),New area (Selection tool),新しい領域（選択ツール）,新区域（选择工具）,新區域（選取工具）,Новая область (инструмент выделения)
+external.shortcutPlaceObject,오브젝트 배치,Place object,オブジェクト配置,放置对象,放置物件,Разместить объект
+external.shortcutSizeObject,영역 오브젝트 크기 지정,Size an area object,領域オブジェクトのサイズ,设置区域对象大小,設定區域物件大小,Задать размер объекта-области
+external.shortcutObjectProperties,오브젝트 속성,Object properties,オブジェクトのプロパティ,对象属性,物件屬性,Свойства объекта
+external.shortcutSelectNode,노드 선택,Select node,ノード選択,选择节点,選取節點,Выбрать узел
+external.shortcutDeleteSelected,선택한 방·내용 삭제,Delete selected room or content,選択した部屋・内容を削除,删除所选房间或内容,刪除所選房間或內容,Удалить выбранную комнату или содержимое
+external.keyLeftDrag,좌클릭 드래그,Left drag,左ドラッグ,左键拖动,左鍵拖曳,Левая + движение
+external.keyMiddleDrag,휠클릭 드래그,Middle drag,中ドラッグ,中键拖动,中鍵拖曳,Средняя + движение
+external.keyRightDrag,우클릭 드래그,Right drag,右ドラッグ,右键拖动,右鍵拖曳,Правая + движение
+external.keyRight,우클릭,Right click,右クリック,右键单击,右鍵點擊,Правая кнопка
+external.keyWheel,휠,Wheel,ホイール,滚轮,滾輪,Колесо
+external.keyRoomTitleDrag,방 이름 막대 드래그,Drag room title strip,部屋名の帯をドラッグ,拖动房间名称条,拖曳房間名稱列,Тянуть полосу названия
+external.keyRoomHandleDrag,외부 핸들 드래그,Drag outer handle,外側ハンドルをドラッグ,拖动外侧控制点,拖曳外側控制點,Тянуть внешний маркер
+external.keyOtherRoomClick,다른 방 클릭,Click another room,別の部屋をクリック,单击其他房间,點擊其他房間,Щёлкнуть другую комнату
+external.keySelectionDrag,선택 영역 안쪽 드래그,Drag inside selection,選択領域の内側をドラッグ,在选区内拖动,在選取區內拖曳,Тянуть внутри выделения
+external.keyPaletteClick,팔레트 선택 후 클릭,Pick in palette + click,パレットで選んでクリック,在调色板中选择后单击,在調色盤選取後點擊,Выбрать в палитре + щелчок
+external.keyNodeClick,노드 클릭,Click node,ノードをクリック,单击节点,點擊節點,Щёлкнуть узел
 external.shortcut,단축키,Shortcuts,ショートカット,快捷键,快速鍵,Горячие клавиши
 external.confirm,확인,Confirm,確認,确认,確認,Подтвердить
 external.continue,계속,Continue,続ける,继续,繼續,Продолжить

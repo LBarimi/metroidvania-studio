@@ -22,7 +22,17 @@ namespace MetroidvaniaStudio
         public string ActiveGroupId { get; set; } = "";
         public string ActiveRoomId { get; set; }
         public MapRoom Room => Session.Document.rooms.Find(room => room.id == ActiveRoomId);
-        public MetroidvaniaStudioTool Tool { get; set; } = MetroidvaniaStudioTool.Brush;
+        private MetroidvaniaStudioTool tool = MetroidvaniaStudioTool.Brush;
+        public MetroidvaniaStudioTool Tool
+        {
+            get => tool;
+            set
+            {
+                if (tool == value) return;
+                tool = value;
+                Selection = null;
+            }
+        }
         public MapLayer Layer { get; set; } = MapLayer.ForegroundTiles;
         public TileShape Shape { get; set; }
         public string Material { get; set; } = "terrain";

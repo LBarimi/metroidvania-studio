@@ -36,7 +36,7 @@ interface ObjectGesture {
   rebaseAfterPending: boolean;
   overflow: boolean;
 }
-interface Gesture { kind: 'selection' | 'pan' | 'paint' | 'room-create' | 'room-move' | 'room-resize' | 'object-move' | 'node-move'; pointer: number; start: Point; last: Point; screen: Point; center: Point; room: Room; area?: Rect; handle?: Point; terrainBounds?: Rect | null; node?: { id: string; index: number }; tile?: TileGesture; rawTileTime?: number; object?: ObjectGesture; expectation: CommandExpectation; tail: Promise<unknown>; failed: boolean }
+interface Gesture { kind: 'selection' | 'pan' | 'paint' | 'room-menu' | 'room-create' | 'room-move' | 'room-resize' | 'object-move' | 'node-move'; pointer: number; start: Point; last: Point; screen: Point; center: Point; room: Room; area?: Rect; handle?: Point; terrainBounds?: Rect | null; node?: { id: string; index: number }; tile?: TileGesture; rawTileTime?: number; object?: ObjectGesture; expectation: CommandExpectation; tail: Promise<unknown>; failed: boolean }
 interface ViewSnapshot { center: Point; pixelScale: number; overview: boolean }
 interface LayerIndex {
   rows: Map<number, Map<number, Cell>>;
@@ -151,6 +151,7 @@ export class MapCanvas {
   private writerPending: () => boolean;
   private refreshState: () => Promise<void>;
   private onBrushSize: (size: number) => void;
+  private onRoomContextMenu: (world: Point, client: Point) => void;
   private gesture: Gesture | null = null;
   private images = new Map<string, HTMLImageElement>();
   private occupancy = new Map<string, LayerIndex>();
@@ -204,9 +205,10 @@ export class MapCanvas {
   private roomSelectionId: string | null = null;
   constructor(canvas: HTMLCanvasElement, command: Command, onHover: (point: Point) => void, onInspect: () => void,
     onError: (key: string) => void = () => undefined, writerPending: () => boolean = () => false,
-    refreshState: () => Promise<void> = async () => undefined, onBrushSize: (size: number) => void = () => undefined) {
+    refreshState: () => Promise<void> = async () => undefined, onBrushSize: (size: number) => void = () => undefined,
+    onRoomContextMenu: (world: Point, client: Point) => void = () => undefined) {
     this.canvas = canvas; this.command = command; this.onHover = onHover; this.onInspect = onInspect;
-    this.onError = onError; this.writerPending = writerPending; this.refreshState = refreshState; this.onBrushSize = onBrushSize;
+    this.onError = onError; this.writerPending = writerPending; this.refreshState = refreshState; this.onBrushSize = onBrushSize; this.onRoomContextMenu = onRoomContextMenu;
     // Let supporting browsers present brush strokes without waiting for DOM
     // compositing. Unsupported browsers retain the ordinary Canvas2D path.
     const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true }); if (!ctx) throw new Error('Canvas2D unavailable'); this.ctx = ctx;
@@ -493,14 +495,15 @@ export class MapCanvas {
       expectation: { instanceId: this.state.instanceId, revision: this.state.revision }, tail: this.gestureTail, failed: false };
     const handle = current && this.canResizeRoom(current) ? this.roomHandle(screen, current) : null;
     if (previewPan) g.kind = 'pan';
+    else if (e.button === 2 && !hit) g.kind = 'room-menu';
     else if (e.button === 0 && handle) {
       g.kind = 'room-resize'; g.room = current!; g.handle = handle; this.roomSelectionId = current!.id;
       g.terrainBounds = this.roomTerrainBounds(current!);
     } else if (e.button === 0 && current && this.canResizeRoom(current) && this.roomMoveHandle(screen, current)) {
       g.kind = 'room-move'; g.room = current; this.roomSelectionId = current.id;
-    } else if (e.button === 0 && hit && hit.id !== selection.roomId) {
-      // Activating a different room consumes the entire click/drag. The next
-      // pointer-down may paint; the activation itself never places a tile/object.
+    } else if ((e.button === 0 || e.button === 2) && hit && hit.id !== selection.roomId) {
+      // Either button consumes its first click/drag when activating another room.
+      // Editing, erasing and picking require a new pointer-down in the active room.
       this.enqueue(g, 'selectRoom', { id: hit.id }, () => { this.roomSelectionId = hit.id; });
       this.gestureTail = g.tail; return;
     } else if (selection.tool === 0 && e.button === 0) {
@@ -548,6 +551,12 @@ export class MapCanvas {
     this.gesture = g; this.canvas.setPointerCapture(e.pointerId);
     if (g.tile?.live) this.drawBrushDamage([previousHover, world]); else this.requestDraw();
   }
+  private panGesture(g: Gesture, screen: Point, samples: PointerEvent[] = []): void {
+    // Once a context click becomes a drag, returning to its origin cannot reopen the menu.
+    const moved = (p: Point) => Math.hypot(p.x - g.screen.x, p.y - g.screen.y) > 4;
+    if (g.kind === 'room-menu' && (moved(screen) || samples.some(sample => moved(this.point(sample))))) g.kind = 'pan';
+    if (g.kind === 'pan') this.center = { x: g.center.x - (screen.x - g.screen.x) / this.scale, y: g.center.y + (screen.y - g.screen.y) / this.scale };
+  }
   private move(e: PointerEvent): void {
     const g = this.gesture;
     const coalesced = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [];
@@ -558,18 +567,19 @@ export class MapCanvas {
       samples = samples.filter(sample => sample.timeStamp > g.rawTileTime!);
     if (!samples.length) return;
     const previousHover = this.hover, previousRasterLength = g?.tile?.rasterLength;
-    const screen = this.point(samples[samples.length - 1]); this.hover = this.toWorld(screen); this.onHover(this.hover);
+    const screen = this.point(samples[samples.length - 1]);
+    if (g && g.pointer === e.pointerId && (g.kind === 'pan' || g.kind === 'room-menu')) this.panGesture(g, screen, samples);
+    this.hover = this.toWorld(screen); this.onHover(this.hover);
     const damage = [previousHover, this.hover];
     const active = activeRoom(this.state);
     const handle = !this.cameraPreview && !g && active && this.canResizeRoom(active) ? this.roomHandle(screen, active) : null;
     const moveHandle = !this.cameraPreview && !g && active && this.canResizeRoom(active) && this.roomMoveHandle(screen, active);
     const cursor = handle ? !handle.x ? 'ns-resize' : !handle.y ? 'ew-resize'
-      : handle.x === handle.y ? 'nesw-resize' : 'nwse-resize' : moveHandle ? 'grab' : g?.kind === 'room-move' ? 'grabbing' : '';
+      : handle.x === handle.y ? 'nesw-resize' : 'nwse-resize' : moveHandle ? 'grab' : g?.kind === 'room-move' || g?.kind === 'pan' ? 'grabbing' : '';
     if (this.canvas.style.cursor !== cursor) this.canvas.style.cursor = cursor;
     if (g && g.pointer === e.pointerId) {
       e.preventDefault(); g.last = this.hover;
-      if (g.kind === 'pan') { this.center = { x: g.center.x - (screen.x - g.screen.x) / this.scale, y: g.center.y + (screen.y - g.screen.y) / this.scale }; }
-      else if (g.kind === 'paint' && g.tile) for (const sample of samples) {
+      if (g.kind === 'paint' && g.tile) for (const sample of samples) {
         g.last = this.toWorld(this.point(sample));
         damage.push(g.last);
         this.extendTileGesture(g, this.local(g.last, g.room));
@@ -587,7 +597,10 @@ export class MapCanvas {
   }
   private up(e: PointerEvent): void {
     const g = this.gesture; if (!g || g.pointer !== e.pointerId) return;
-    e.preventDefault(); g.last = this.toWorld(this.point(e)); this.gesture = null; this.selectionBackdrop = null;
+    e.preventDefault(); const screen = this.point(e);
+    if (g.kind === 'pan' || g.kind === 'room-menu') this.panGesture(g, screen);
+    g.last = this.toWorld(screen); this.gesture = null; this.selectionBackdrop = null;
+    if (g.kind === 'pan') { this.hover = g.last; this.onHover(this.hover); this.canvas.style.cursor = ''; }
     if (this.canvas.hasPointerCapture(e.pointerId)) this.canvas.releasePointerCapture(e.pointerId);
     const dx = Math.round(g.last.x - g.start.x), dy = Math.round(g.last.y - g.start.y);
     if (g.kind === 'paint' && g.tile) {
@@ -637,6 +650,10 @@ export class MapCanvas {
       if (g.area) this.enqueue(g, 'moveSelection', { dx, dy });
       else this.enqueue(g, 'selectArea', this.selectionRect(g));
     }
+    else if (g.kind === 'room-menu') {
+      if (e.button === 2)
+        this.onRoomContextMenu({ x: Math.floor(g.start.x), y: Math.floor(g.start.y) }, { x: e.clientX, y: e.clientY });
+    }
     else if (g.kind === 'room-create') this.enqueue(g, 'roomAdd', box(g.start, g.last));
     else if (g.kind === 'room-move' && (dx || dy)) this.enqueue(g, 'roomMove', { id: g.room.id, dx, dy });
     else if (g.kind === 'room-resize') this.enqueue(g, 'roomResize', { id: g.room.id, ...this.resizedRoom(g), crop: this.crop, snap: this.snapRooms && !e.ctrlKey });
@@ -647,6 +664,7 @@ export class MapCanvas {
   }
   cancel(pointerId?: number): void {
     const g = this.gesture; if (!g || pointerId !== undefined && g.pointer !== pointerId) return; this.gesture = null; this.selectionBackdrop = null;
+    if (g.kind === 'pan') this.canvas.style.cursor = '';
     if (this.canvas.hasPointerCapture(g.pointer)) this.canvas.releasePointerCapture(g.pointer);
     if (g.kind === 'paint' && g.tile) {
       this.releaseTileOverlay(g.tile);

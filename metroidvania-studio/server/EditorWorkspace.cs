@@ -672,7 +672,9 @@ public sealed class EditorWorkspace
                 else Canvas.EndGesture(Cell(command));
                 placementStart = null; gestureOwner = null;
                 break;
-            case "cancel": Cancel(); break;
+            // Explicit cancellation also dismisses selection. Internal gesture cleanup
+            // keeps it intact when starting another stroke or recovering from failure.
+            case "cancel": Cancel(); Canvas.Deselect(); break;
             case "tileGesture": TileGesture(command, owner); break;
             case "objectGesture": ObjectGesture(command, owner); break;
             case "undo": Session.Undo(); break;

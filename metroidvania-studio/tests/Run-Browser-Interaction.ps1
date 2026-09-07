@@ -72,6 +72,8 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Browser interaction validation failed.' }
     }
     if (-not $SyncOnly -and -not $PerformanceOnly) {
+        & node (Join-Path $PSScriptRoot 'browser-room-context-menu.mjs')
+        if ($LASTEXITCODE -ne 0) { throw 'Room context menu validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-room-workflow.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Room workflow validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-studio-workflow.mjs')

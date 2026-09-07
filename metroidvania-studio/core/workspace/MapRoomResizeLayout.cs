@@ -22,15 +22,13 @@ namespace MetroidvaniaStudio
     }
 
     /// <summary>
-    /// Resizes a room and translates rooms beyond each changed boundary by that boundary's full delta,
-    /// including detached, diagonal and hidden rooms. New overlaps propagate that same translation to
-    /// intervening rooms, restoring their former gap. Unchanged boundaries do not pin unrelated rooms.
-    /// Existing overlaps remain permitted; newly overlapping pairs must be separated before a plan succeeds.
-    /// This planner owns no document state and never modifies the supplied rooms or their contents.
+    /// Moves only rooms sharing an original edge, following contact chains outward
+    /// in that edge's direction. Gaps and corner-only contacts never transmit movement.
+    /// A newly overlapping pair rejects the whole plan instead of moving an unrelated room.
+    /// Existing overlaps remain permitted. The supplied rooms and their contents are never modified.
     /// </summary>
     public static class MapRoomResizeLayout
     {
-        private const int MaximumAlternatives = 4096;
         // The planner runs synchronously inside editor transactions. Malformed or
         // machine-generated documents must not turn its pair scan into an unbounded
         // UI/server stall.
@@ -56,8 +54,9 @@ namespace MetroidvaniaStudio
             if (target < 0) throw new ArgumentException("The room to resize no longer exists: " + roomId, nameof(roomId));
             if (source[target].Locked) throw Locked(source[target].Id);
             var resized = new Box(newBounds);
-            Layout state = Seed(source, target, resized);
-            state = Resolve(source, target, resized, state);
+            long checks = 0;
+            Layout state = Seed(source, target, resized, ref checks);
+            ValidateOverlaps(source, target, resized, state, ref checks);
             var changes = new List<MapRoomResizeChange>();
             for (int i = 0; i < source.Length; i++)
             {
@@ -76,104 +75,59 @@ namespace MetroidvaniaStudio
             catch (InvalidOperationException exception) { plan = null; error = exception.Message; return false; }
         }
 
-        private static Layout Seed(RoomSnapshot[] rooms, int target, Box resized)
+        private static Layout Seed(RoomSnapshot[] rooms, int target, Box resized, ref long checks)
         {
             var state = new Layout(rooms.Length);
             Box before = rooms[target].Bounds;
+            FollowContacts(rooms, target, state.X, true, false, resized.Left - before.Left, ref checks);
+            FollowContacts(rooms, target, state.X, true, true, resized.Right - before.Right, ref checks);
+            FollowContacts(rooms, target, state.Y, false, false, resized.Bottom - before.Bottom, ref checks);
+            FollowContacts(rooms, target, state.Y, false, true, resized.Top - before.Top, ref checks);
             for (int i = 0; i < rooms.Length; i++)
-            {
-                if (i == target) { state.XFixed[i] = state.YFixed[i] = true; continue; }
-                Box room = rooms[i].Bounds;
-                long dx = room.Left >= before.Right ? resized.Right - before.Right
-                    : room.Right <= before.Left ? resized.Left - before.Left : 0;
-                long dy = room.Bottom >= before.Top ? resized.Top - before.Top
-                    : room.Top <= before.Bottom ? resized.Bottom - before.Bottom : 0;
-                state.X[i] = dx; state.Y[i] = dy;
-                state.XFixed[i] = dx != 0; state.YFixed[i] = dy != 0;
-                ValidateMove(rooms[i], room.Move(dx, dy));
-            }
+                if (i != target) ValidateMove(rooms[i], rooms[i].Bounds.Move(state.X[i], state.Y[i]));
             return state;
         }
 
-        private static Layout Resolve(RoomSnapshot[] rooms, int target, Box resized, Layout initial)
+        private static void FollowContacts(RoomSnapshot[] rooms, int target, long[] offsets,
+            bool xAxis, bool forward, long delta, ref long checks)
         {
-            // Axis assignments only become fixed, so each branch has at most two assignments per room.
-            // Ambiguous diagonal contacts try both original separating axes before reporting a conflict.
-            var pending = new Stack<Layout>(); pending.Push(initial);
-            Exception failure = null;
-            int alternatives = 0;
-            long collisionChecks = 0;
+            if (delta == 0) return;
+            var visited = new bool[rooms.Length]; visited[target] = true;
+            var pending = new Queue<int>(); pending.Enqueue(target);
             while (pending.Count > 0)
             {
-                if (++alternatives > MaximumAlternatives)
-                    throw new InvalidOperationException("This resize has too many conflicting layout alternatives. Resize one edge at a time.");
-                Layout state = pending.Pop();
-                while (true)
+                Box sender = rooms[pending.Dequeue()].Bounds;
+                for (int i = 0; i < rooms.Length; i++)
                 {
-                    List<Propagation> choice = null;
-                    bool collision = false;
-                    for (int a = 0; a < rooms.Length; a++) for (int b = a + 1; b < rooms.Length; b++)
-                    {
-                        if (++collisionChecks > MaximumCollisionChecks)
-                            throw new InvalidOperationException("This resize layout is too complex to resolve interactively. Resize a smaller room group or one edge at a time.");
-                        if (Overlaps(rooms[a].Bounds, rooms[b].Bounds)
-                            || !Overlaps(Current(rooms, target, resized, state, a), Current(rooms, target, resized, state, b))) continue;
-                        collision = true;
-                        var options = new List<Propagation>(2);
-                        AddOptions(options, rooms, target, resized, state, a, b, true, ref failure);
-                        AddOptions(options, rooms, target, resized, state, a, b, false, ref failure);
-                        // An unresolved pair may disappear after another room receives a perpendicular translation.
-                        if (options.Count > 0 && (choice == null || options.Count < choice.Count)) choice = options;
-                    }
-                    if (!collision) return state;
-                    if (choice == null) break;
-                    choice.Sort((a, b) =>
-                    {
-                        int order = Math.Abs(a.Delta).CompareTo(Math.Abs(b.Delta));
-                        if (order == 0) order = b.XAxis.CompareTo(a.XAxis);
-                        if (order == 0) order = a.Recipient.CompareTo(b.Recipient);
-                        return order;
-                    });
-                    for (int i = choice.Count - 1; i > 0; i--)
-                    {
-                        Layout alternative = state.Clone(); Apply(alternative, choice[i]); pending.Push(alternative);
-                    }
-                    Apply(state, choice[0]);
+                    CountCheck(ref checks);
+                    if (visited[i]) continue;
+                    Box recipient = rooms[i].Bounds;
+                    bool touches = xAxis
+                        ? (forward ? sender.Right == recipient.Left : sender.Left == recipient.Right)
+                            && sender.Bottom < recipient.Top && sender.Top > recipient.Bottom
+                        : (forward ? sender.Top == recipient.Bottom : sender.Bottom == recipient.Top)
+                            && sender.Left < recipient.Right && sender.Right > recipient.Left;
+                    if (!touches) continue;
+                    visited[i] = true; offsets[i] = delta; pending.Enqueue(i);
                 }
             }
-            if (failure != null) throw failure;
-            throw new InvalidOperationException("Resizing would make rooms overlap: incompatible boundary movements cannot preserve their gaps.");
         }
 
-        private static void AddOptions(List<Propagation> options, RoomSnapshot[] rooms, int target, Box resized,
-            Layout state, int a, int b, bool xAxis, ref Exception failure)
+        private static void ValidateOverlaps(RoomSnapshot[] rooms, int target, Box resized, Layout state, ref long checks)
         {
-            Box beforeA = rooms[a].Bounds, beforeB = rooms[b].Bounds;
-            bool separated = xAxis ? beforeA.Right <= beforeB.Left || beforeB.Right <= beforeA.Left
-                : beforeA.Top <= beforeB.Bottom || beforeB.Top <= beforeA.Bottom;
-            if (!separated) return;
-            bool[] fixedAxis = xAxis ? state.XFixed : state.YFixed;
-            if (fixedAxis[a] == fixedAxis[b]) return;
-            int sender = fixedAxis[a] ? a : b, recipient = fixedAxis[a] ? b : a;
-            if (recipient == target) return;
-            long delta = xAxis ? state.X[sender] : state.Y[sender];
-            if (sender == target)
+            for (int a = 0; a < rooms.Length; a++) for (int b = a + 1; b < rooms.Length; b++)
             {
-                Box recipientBefore = rooms[recipient].Bounds, targetBefore = rooms[target].Bounds;
-                delta = xAxis ? recipientBefore.Left >= targetBefore.Right ? resized.Right - targetBefore.Right : resized.Left - targetBefore.Left
-                    : recipientBefore.Bottom >= targetBefore.Top ? resized.Top - targetBefore.Top : resized.Bottom - targetBefore.Bottom;
+                CountCheck(ref checks);
+                if (!Overlaps(rooms[a].Bounds, rooms[b].Bounds)
+                    && Overlaps(Current(rooms, target, resized, state, a), Current(rooms, target, resized, state, b)))
+                    throw new InvalidOperationException("Resizing would make rooms overlap. Leave space for rooms that are not attached to the resized edge.");
             }
-            Box after = rooms[recipient].Bounds.Move(xAxis ? delta : state.X[recipient], xAxis ? state.Y[recipient] : delta);
-            try { ValidateMove(rooms[recipient], after); }
-            catch (ArgumentOutOfRangeException exception) { failure = failure ?? exception; return; }
-            catch (InvalidOperationException exception) { failure = failure ?? exception; return; }
-            options.Add(new Propagation(recipient, xAxis, delta));
         }
 
-        private static void Apply(Layout state, Propagation propagation)
+        private static void CountCheck(ref long checks)
         {
-            if (propagation.XAxis) { state.X[propagation.Recipient] = propagation.Delta; state.XFixed[propagation.Recipient] = true; }
-            else { state.Y[propagation.Recipient] = propagation.Delta; state.YFixed[propagation.Recipient] = true; }
+            if (++checks > MaximumCollisionChecks)
+                throw new InvalidOperationException("This resize layout is too complex to resolve interactively. Resize a smaller room group or one edge at a time.");
         }
 
         private static Box Current(RoomSnapshot[] rooms, int target, Box resized, Layout state, int index) =>
@@ -201,18 +155,8 @@ namespace MetroidvaniaStudio
 
         private sealed class Layout
         {
-            public long[] X, Y;
-            public bool[] XFixed, YFixed;
-            public Layout(int count) { X = new long[count]; Y = new long[count]; XFixed = new bool[count]; YFixed = new bool[count]; }
-            public Layout Clone() => new Layout(0) { X = (long[])X.Clone(), Y = (long[])Y.Clone(), XFixed = (bool[])XFixed.Clone(), YFixed = (bool[])YFixed.Clone() };
-        }
-
-        private readonly struct Propagation
-        {
-            public readonly int Recipient;
-            public readonly bool XAxis;
-            public readonly long Delta;
-            public Propagation(int recipient, bool xAxis, long delta) { Recipient = recipient; XAxis = xAxis; Delta = delta; }
+            public readonly long[] X, Y;
+            public Layout(int count) { X = new long[count]; Y = new long[count]; }
         }
 
         private readonly struct RoomSnapshot

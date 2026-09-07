@@ -84,6 +84,9 @@ namespace MetroidvaniaStudio
                 id = NewId(AllIds()), name = name ?? "room_" + number.ToString("00"),
                 x = worldBounds.x, y = worldBounds.y, width = worldBounds.width, height = worldBounds.height
             };
+            // Keep existing rooms fixed, including hidden and locked rooms.
+            var offset = MapRoomCollision.Resolve(room, Vector2Int.zero, session.Document.rooms);
+            room.x = checked(room.x + offset.x); room.y = checked(room.y + offset.y);
             session.Execute("Create room", document => document.rooms.Add(room));
             ReplaceSelection(new[] { room.id });
             return room.id;
@@ -197,8 +200,8 @@ namespace MetroidvaniaStudio
 
         /// <summary>
         /// Changes room bounds while keeping its contents at their previous world positions.
-        /// Rooms beyond changed edges and collision chains move with the full edge delta,
-        /// preserving their gaps and local contents. Without crop, edges stop at terrain.
+        /// Only rooms attached along the changed edge and its contact chain move with it.
+        /// Detached rooms stay fixed. Without crop, edges stop at terrain.
         /// Crop removes only target-room terrain.
         /// </summary>
         public void Resize(string id, RectInt worldBounds, bool crop = false)
