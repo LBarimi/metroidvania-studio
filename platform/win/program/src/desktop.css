@@ -1,0 +1,2 @@
+/* The native window already identifies the desktop application. */
+.topbar > .brand { display: none; }

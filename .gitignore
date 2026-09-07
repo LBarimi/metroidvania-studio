@@ -39,8 +39,7 @@ Thumbs.db
 # Local contributor instructions are not published
 AGENTS.md
 
-# Private desktop source and local launchers
-/platform/win/program/
+# Windows desktop sources are tracked; bin, obj and builds stay ignored.
 
 # Source npm command shim (generated build bin folders stay ignored)
 !/bin/
