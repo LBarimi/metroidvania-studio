@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
-import { mkdirSync, mkdtempSync, copyFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, copyFileSync, readFileSync, existsSync, rmSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
@@ -34,13 +34,22 @@ test('default launcher migrates a verified live legacy workspace and keeps engin
     const health=await(await fetch(url+'/api/health')).json();assert.equal(path.resolve(health.projectPath),storage);
     const after=await(await fetch(url+'/api/state?full=true')).json();assert.equal(after.document.name,'Migration progress');assert.equal(after.dirty,true);
     assert.deepEqual(after.document.rooms,before.document.rooms);
-    const folders=await(await fetch(url+'/api/workspace-folders')).json();assert.equal(folders.catalog,path.join(storage,'catalog.json'));
+    const folders=await(await fetch(url+'/api/workspace-folders')).json();assert.equal(folders.catalog,path.join(storage,'.studio/catalog.json'));
     const catalog=JSON.parse(readFileSync(folders.catalog,'utf8'));
     for(const material of catalog.materials)for(const sprite of material.sprites){
       assert.ok(sprite.asset.startsWith('Textures/'));assert.ok(existsSync(path.join(storage,sprite.asset)),'Exported engine resource exists at its portable path.');
     }
     assert.ok(existsSync(path.join(legacy,'Maps/.Recovery/Workspace.map.json')),'The legacy backup is preserved.');
-    await run('stop');active=false;await run('run');active=true;
+    await run('stop');active=false;
+    const savedCatalog=readFileSync(folders.catalog);
+    renameSync(folders.catalog,path.join(storage,'catalog.json'));
+    const settingsPath=path.join(storage,'.studio/workspace.json'),settings=JSON.parse(readFileSync(settingsPath,'utf8'));
+    settings.catalogPath='catalog.json';writeFileSync(settingsPath,JSON.stringify(settings));
+    await run('run');active=true;
+    const relocated=await(await fetch(url+'/api/workspace-folders')).json();
+    assert.equal(relocated.catalog,path.join(storage,'.studio/catalog.json'));
+    assert.deepEqual(readFileSync(relocated.catalog),savedCatalog);assert.equal(existsSync(path.join(storage,'catalog.json')),false);
+    const reopened=await(await fetch(url+'/api/state?full=true')).json();assert.deepEqual(reopened.catalog,after.catalog);assert.deepEqual(reopened.paletteGroups,after.paletteGroups);
     assert.equal((await(await fetch(url+'/api/state?full=true')).json()).document.name,'Migration progress');
     await run('stop');active=false;completed=true;
   }finally{

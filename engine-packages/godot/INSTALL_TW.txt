@@ -49,6 +49,6 @@ reference_resolution（預設320x180）、視埠繪製及整數倍縮放套用�
 在檔案 > 儲存資料夾中尋找Maps和Textures。
 預設儲存在啟動檔案旁或原始碼專案根目錄。
   房間JSON : Maps/AutoExport/<地圖資料夾>/<房間名稱>.json
-  目錄檔案 : catalog.json
-  資源目錄 : 包含Maps、Textures和catalog.json的資料夾
+  目錄檔案 : .studio/catalog.json
+  資源目錄 : 包含Maps和Textures的資料夾
 移至另一台電腦時請一起複製這三項。

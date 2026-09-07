@@ -45,10 +45,10 @@ public static class PortableWorkspace
             Collect(legacy, textures, root, "Textures", copies);
             Collect(legacy, "Scripts", root, "Scripts", copies);
             string sourceCatalog = Safe(legacy, catalog);
-            if (File.Exists(sourceCatalog)) copies.Add((sourceCatalog, Safe(root, "catalog.json")));
+            if (File.Exists(sourceCatalog)) copies.Add((sourceCatalog, Safe(root, ".studio/catalog.json")));
         }
         string settingsPath = Safe(root, ".studio/workspace.json");
-        const string settingsJson = "{\"mapsRoot\":\"Maps\",\"texturesRoot\":\"Textures\",\"catalogPath\":\"catalog.json\"}";
+        const string settingsJson = "{\"mapsRoot\":\"Maps\",\"texturesRoot\":\"Textures\",\"catalogPath\":\".studio/catalog.json\"}";
         if (File.Exists(settingsPath) && File.ReadAllText(settingsPath) != settingsJson)
             throw new IOException("Existing workspace settings were preserved. Use --project to open this folder without changing its storage layout.");
         // Validate every collision before copying. Interrupted copies can resume only when bytes match.
@@ -70,6 +70,7 @@ public static class PortableWorkspace
     public static void SeedResources(string root, string studioRoot)
     {
         if (!IsPortable(root)) return;
+        string catalog = InternalCatalog(root);
         var copies = new List<(string Source, string Destination)>();
         Collect(studioRoot, "samples/textures", root, "Textures", copies);
         foreach (var pair in copies)
@@ -77,10 +78,63 @@ public static class PortableWorkspace
             Directory.CreateDirectory(Path.GetDirectoryName(pair.Destination)!);
             if (!File.Exists(pair.Destination)) CopyAtomic(pair.Source, pair.Destination);
         }
-        string catalog = Safe(root, "catalog.json"), sample = Safe(studioRoot, "samples/catalog.json");
+        string sample = Safe(studioRoot, "samples/catalog.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(catalog)!);
         if (!File.Exists(catalog) && File.Exists(sample)) CopyAtomic(sample, catalog);
         if (!File.Exists(Safe(root, ".studio/portable-resources.json"))) WriteNew(Safe(root, ".studio/portable-resources.json"), "{\"version\":1}");
     }
+
+    // Called while the server owns the workspace lock, before ProjectFiles reads settings.
+    private static string InternalCatalog(string root)
+    {
+        const string internalName = ".studio/catalog.json";
+        string settingsPath = Safe(root, ".studio/workspace.json");
+        if (File.Exists(settingsPath) && new FileInfo(settingsPath).Length > 64 * 1024)
+            throw new InvalidDataException("Workspace settings exceed 64 KiB.");
+        byte[]? original = File.Exists(settingsPath) ? File.ReadAllBytes(settingsPath) : null;
+        var settings = original == null ? new System.Text.Json.Nodes.JsonObject()
+            : System.Text.Json.Nodes.JsonNode.Parse(original) as System.Text.Json.Nodes.JsonObject
+                ?? throw new InvalidDataException("Workspace settings must contain an object.");
+        var keys = settings.Select(p => p.Key).Where(k => k.Equals("catalogPath", StringComparison.OrdinalIgnoreCase)).ToArray();
+        if (keys.Length > 1) throw new InvalidDataException("Workspace settings contain duplicate catalog paths.");
+        string key = keys.FirstOrDefault() ?? "catalogPath";
+        string configured = (settings[key]?.GetValue<string>() ?? internalName).Replace('\\', '/');
+        string current = Safe(root, configured), rootCatalog = Safe(root, "catalog.json"), target = Safe(root, internalName);
+        // Explicit custom paths remain under the user's control.
+        if (!string.Equals(current, rootCatalog, Comparison) && !string.Equals(current, target, Comparison)) return current;
+        if (File.Exists(rootCatalog))
+        {
+            if (File.Exists(target) && !Equal(rootCatalog, target))
+                throw new IOException("The root and internal catalogs differ. Both were preserved; choose the catalog to keep before reopening.");
+            if (!File.Exists(target)) CopyAtomic(rootCatalog, target);
+        }
+        if (!string.Equals(current, target, Comparison))
+        {
+            settings[key] = internalName;
+            string temporary = settingsPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
+            try
+            {
+                WriteNew(temporary, settings.ToJsonString());
+                if (original == null ? File.Exists(settingsPath) : !File.Exists(settingsPath) || !File.ReadAllBytes(settingsPath).SequenceEqual(original))
+                    throw new IOException("Workspace settings changed during catalog migration. The files were preserved.");
+                File.Move(temporary, settingsPath, original != null);
+            }
+            finally { if (File.Exists(temporary)) File.Delete(temporary); }
+        }
+        if (File.Exists(rootCatalog))
+        {
+            string backup = Safe(root, ".studio/catalog-backup/catalog-" + Guid.NewGuid().ToString("N") + ".json");
+            Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
+            File.Move(rootCatalog, backup);
+            if (!Equal(backup, target))
+            {
+                File.Move(backup, rootCatalog);
+                throw new IOException("The catalog changed during migration. Its original contents were restored.");
+            }
+        }
+        return target;
+    }
+
 
     private static FileStream LockLegacy(string legacy)
     {

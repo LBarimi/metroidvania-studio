@@ -15,7 +15,7 @@ This directory contains the C# WebView2 application, desktop UI extensions, and 
 - The runtime-included build carries .NET with it; Microsoft WebView2 Runtime remains required.
 - Running either build does not require a repository checkout or Node.js.
 - Use `metroidvania-studio.exe --project <folder>` to select a workspace.
-- A local build shares `Maps`, `Textures` and `catalog.json` at the project root. A distributed application stores them beside the executable. Legacy default storage is copied once, preserving its original files.
+- A local build shares `Maps`, `Textures` and `.studio` at the project root. A distributed application stores them beside the executable. Palette settings are managed in `.studio/catalog.json`. Legacy default storage is copied once, preserving its original files.
 - A browser server is reused only when its workspace matches. Closing the application leaves a reused server running.
 - An owned server stops after pending edits and recovery/export writes finish.
 

@@ -5,6 +5,9 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("internal catalog migration preserves palettes, groups, textures and exports", InternalCatalogTests.Upgrade),
+    ("internal catalog migration resumes safely and preserves conflicting copies", InternalCatalogTests.Recovery),
+    ("internal catalog migration respects explicit custom locations", InternalCatalogTests.CustomPaths),
     ("palette groups persist order, moves and empty groups without changing maps or textures", () => Fixture(PaletteGroupTests.Ordering)),
     ("palette grouping preserves legacy data and rejects stale or invalid changes", () => Fixture(PaletteGroupTests.Validation)),
     ("readable texture library migration preserves sprites and original sources", TextureWorkflowTests.Library),

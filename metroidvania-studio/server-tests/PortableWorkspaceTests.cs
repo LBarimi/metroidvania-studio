@@ -21,10 +21,10 @@ internal static class PortableWorkspaceTests
             ["documents/.Recovery/Workspace.map.json"] = "recovery", ["images/palettes/source.png"] = "png", ["custom/catalog.json"] = "{\"asset\":\"Textures/palettes/source.png\"}", ["Scripts/build.lua"] = "script" };
         foreach (var pair in files) Put(legacy, pair.Key, pair.Value);
         PortableWorkspace.Prepare(root, legacy);
-        Check(new ProjectFiles(root).CatalogWritePath == Path.Combine(root, "catalog.json"), "Portable catalog is at the root.");
+        Check(new ProjectFiles(root).CatalogWritePath == Path.Combine(root, ".studio", "catalog.json"), "The portable catalog belongs to internal workspace metadata.");
         foreach (var pair in files)
         {
-            string destination = pair.Key.Replace("documents/", "Maps/").Replace("images/", "Textures/").Replace("custom/catalog.json", "catalog.json");
+            string destination = pair.Key.Replace("documents/", "Maps/").Replace("images/", "Textures/").Replace("custom/catalog.json", ".studio/catalog.json");
             Check(File.ReadAllText(Path.Combine(root, destination)) == pair.Value, "Migration keeps exact bytes: " + destination);
             Check(File.ReadAllText(Path.Combine(legacy, pair.Key)) == pair.Value, "Original storage remains available.");
         }
@@ -33,7 +33,7 @@ internal static class PortableWorkspaceTests
         string sample = Path.Combine(temp, "application"); Put(sample, "samples/textures/default.png", "default png"); Put(sample, "samples/catalog.json", "default catalog");
         PortableWorkspace.SeedResources(root, sample);
         Check(File.ReadAllText(Path.Combine(root, "Textures/default.png")) == "default png", "Bundled images travel with exported maps.");
-        Check(File.ReadAllText(Path.Combine(root, "catalog.json")) == files["custom/catalog.json"], "Default catalog never overwrites a migrated catalog.");
+        Check(File.ReadAllText(Path.Combine(root, ".studio", "catalog.json")) == files["custom/catalog.json"], "Default catalog never overwrites a migrated catalog.");
     });
     public static void Conflicts() => WithFolder(temp =>
     {

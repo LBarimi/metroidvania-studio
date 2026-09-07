@@ -21,7 +21,6 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 builder.Logging.ClearProviders(); builder.Logging.AddSimpleConsole(options => options.SingleLine = true);
 builder.Logging.SetMinimumLevel(LogLevel.Warning);
-var files = new ProjectFiles(project, studioRoot: studioRoot);
 string sessionDirectory = Path.Combine(project, ".studio"), sessionFile = Path.Combine(sessionDirectory, "server.lock");
 foreach (string candidate in new[] { sessionDirectory, sessionFile })
     if (File.Exists(candidate) || Directory.Exists(candidate))
@@ -29,6 +28,7 @@ foreach (string candidate in new[] { sessionDirectory, sessionFile })
 Directory.CreateDirectory(sessionDirectory);
 using var workspaceLock = new FileStream(sessionFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
 PortableWorkspace.SeedResources(project, studioRoot);
+var files = new ProjectFiles(project, studioRoot: studioRoot);
 TextureLibrary.Prepare(files, studioRoot);
 var workspace = new EditorWorkspace(files);
 using var nativeMaps = new NativeMapFiles(files);

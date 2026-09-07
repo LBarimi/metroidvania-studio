@@ -68,6 +68,6 @@ JSON に対応するカタログとテクスチャも必要です。asset が te
 ファイル > 保存フォルダーでMapsとTexturesの場所を確認できます。
 起動ファイルの隣、またはソースプロジェクトのルートに保存されます。
   部屋JSON : Maps/AutoExport/<マップフォルダー>/<部屋名>.json
-  カタログ : catalog.json
-  リソース : Maps・Textures・catalog.jsonを含むフォルダー
+  カタログ : .studio/catalog.json
+  リソース : Maps・Texturesを含むフォルダー
 別のコンピューターへ移すときは、この3つを一緒にコピーしてください。

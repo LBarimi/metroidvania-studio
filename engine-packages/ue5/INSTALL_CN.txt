@@ -56,6 +56,6 @@ Editor 目标，然后启用插件。
 在文件 > 存储文件夹中查找Maps和Textures。
 默认保存在启动文件旁或源码项目根目录。
   房间JSON : Maps/AutoExport/<地图文件夹>/<房间名>.json
-  目录文件 : catalog.json
-  资源目录 : 包含Maps、Textures和catalog.json的文件夹
+  目录文件 : .studio/catalog.json
+  资源目录 : 包含Maps和Textures的文件夹
 移动到另一台电脑时请一起复制这三项。
