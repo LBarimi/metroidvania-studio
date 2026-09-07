@@ -168,9 +168,7 @@ external.rotation,회전,Rotation,回転,旋转,旋轉,Поворот
 external.scale,배율,Scale,スケール,缩放,縮放,Масштаб
 external.flipH,좌우 반전,Flip horizontal,左右反転,水平翻转,水平翻轉,Отразить по горизонтали
 external.flipV,상하 반전,Flip vertical,上下反転,垂直翻转,垂直翻轉,Отразить по вертикали
-external.metadata,맵 설정,Map settings,マップ設定,地图设置,地圖設定,Настройки карты
 external.advanced,고급 JSON,Advanced JSON,詳細JSON,高级 JSON,進階 JSON,Расширенный JSON
-external.jsonHelp,원본 맵 속성·스타일그라운드·그룹을 JSON 형식으로 편집합니다.,"Edit map properties, stylegrounds and layer groups as JSON.",マップのプロパティ、背景演出、レイヤーグループをJSONで編集します。,以 JSON 编辑地图属性、背景效果和图层分组。,以 JSON 編輯地圖屬性、背景效果及圖層群組。,"Редактируйте свойства карты, фоновые эффекты и группы слоёв в JSON."
 external.invalidJson,올바른 JSON을 입력하세요.,Enter valid JSON.,有効なJSONを入力してください。,请输入有效的 JSON。,請輸入有效的 JSON。,Введите корректный JSON.
 external.bound,경계,Bounds,範囲,边界,邊界,Границы
 external.zoom,픽셀 배율,Pixel scale,ピクセル倍率,像素倍率,像素倍率,Масштаб пикселей

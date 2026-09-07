@@ -195,14 +195,6 @@ try {
   assert.deepEqual(afterMalformedOpen.document, beforeMalformedOpen.document, 'A failed Open must preserve the active document.');
   // OS file selection and native save receipts are covered by browser-native-files.mjs.
 
-  commandActions.length = 0; commandRequests.length = 0;
-  await page.locator('#edit-menu-button').click(); await page.locator('#metadata-action').click();
-  await page.locator('dialog textarea').fill('{'); await page.locator('dialog .accent').click();
-  await page.locator('dialog .modal-error').filter({ hasText: /.+/ }).waitFor();
-  assert.equal(commandRequests.length, 0, 'Malformed metadata JSON must be rejected before sending a command.');
-  assert.equal(await page.locator('dialog').count(), 1, 'Malformed metadata JSON must leave its dialog available for correction.');
-  await page.locator('dialog .dialog-title button').click();
-
   const roomX = page.locator('#inspector .fields input').first(), originalRoomX = await roomX.inputValue();
   const beforeBlankRoomInput = await state(); commandActions.length = 0; commandRequests.length = 0;
   await roomX.fill(''); await page.locator('#inspector button.accent').click();
@@ -291,7 +283,6 @@ try {
   assert.equal(await page.locator('#camera-preview').getAttribute('aria-pressed'), 'true', 'Game view must expose its active toggle state.');
   assert.equal(await page.locator('#undo').isDisabled(), true, 'Game view must disable authoring history buttons.');
   assert.equal(await page.locator('#redo').isDisabled(), true, 'Game view must disable authoring history buttons.');
-  assert.equal(await page.locator('#metadata-action').isDisabled(), true, 'Game view must disable metadata authoring.');
   assert.equal(await page.locator('#inspector-toggle').isDisabled(), true, 'Game view must disable its hidden inspector control.');
   assert.equal(await page.locator('#view-toolbar select').count(), 0, 'Game view must not show MiniMap-only outline controls.');
   assert.ok(previewCanvas.width > editCanvas.width + 300, 'Game view must reclaim the authoring side panels for a larger preview.');
@@ -733,7 +724,6 @@ try {
   await page.locator('#mini-canvas').waitFor({ state: 'visible' }); await page.waitForTimeout(150);
   assert.equal(await page.locator('#undo').isDisabled(), true, 'MiniMap must disable Undo.');
   assert.equal(await page.locator('#redo').isDisabled(), true, 'MiniMap must disable Redo.');
-  assert.equal(await page.locator('#metadata-action').isDisabled(), true, 'MiniMap must disable metadata editing.');
   assert.equal(await page.locator('#inspector-toggle').isDisabled(), true, 'MiniMap must disable inspector authoring controls.');
   for (const shortcut of ['u', 'Delete', 'Backspace', 'Control+z', 'Control+y', 'Control+c', 'Control+x', 'Control+v', 'Control+a'])
     await page.keyboard.press(shortcut);
@@ -746,7 +736,6 @@ try {
   await miniPage.locator('#room-list button').first().waitFor({ state: 'attached' });
   await miniPage.locator('#mini-canvas').waitFor({ state: 'visible' });
   assert.equal(await miniPage.locator('#undo').isDisabled(), true, 'Standalone MiniMap must disable Undo.');
-  assert.equal(await miniPage.locator('#metadata-action').isDisabled(), true, 'Standalone MiniMap must disable metadata editing.');
   const beforeStandaloneShortcuts = await state();
   for (const shortcut of ['Delete', 'Control+z', 'Control+c', 'Control+x', 'Control+v']) await miniPage.keyboard.press(shortcut);
   await miniPage.waitForTimeout(100);

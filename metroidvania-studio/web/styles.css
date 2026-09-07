@@ -735,7 +735,6 @@ dialog::backdrop { background: #050505b8; }
 .file-list { max-height: 220px; overflow: auto; display: grid; gap: 1px; }
 .file-list button { text-align: left; }
 .modal-error { color: #f1a0a6; white-space: pre-wrap; font-size: 11px; }
-.json-editor { min-height: 250px; }
 .subtle { color: var(--muted); font-size: 10px; }
 
 .key {

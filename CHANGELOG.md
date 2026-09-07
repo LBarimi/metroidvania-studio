@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Remove the raw map JSON settings dialog from Edit, while retaining camera settings and existing document metadata.
+
 - Store the workspace catalog inside `.studio`, migrate existing root catalogs with an internal backup, and preserve palette groups, texture references and custom catalog locations.
 
 - Organize palettes in named, collapsible groups, with existing palettes under Default. Reorder groups and palettes by dragging or settings controls, move palettes between groups, and preserve the layout without changing map tiles or textures.

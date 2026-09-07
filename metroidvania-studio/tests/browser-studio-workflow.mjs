@@ -126,7 +126,6 @@ try {
   assert.deepEqual(await page.locator('.top-actions > .menu > button').allTextContents(), ['File (F)', 'Edit (E)', 'Help (H)']);
   await page.locator('#map-canvas').focus(); await page.keyboard.press('Alt+e');
   assert.equal(await page.locator('#camera-settings-action').isVisible(), true);
-  assert.equal(await page.locator('#metadata-action').isVisible(), true);
   await page.locator('#redo').click(); await until(s => s.document.rooms.length === 1);
   await page.locator('#edit-menu-button').click(); await page.locator('#undo').click(); await until(s => JSON.stringify(s.document) === original);
   checks.push('Edit menu contains working Undo/Redo plus camera and map settings; top bar has exactly three menus');

@@ -354,11 +354,6 @@ async function cameraSettingsDialog(): Promise<void> {
     await run('cameraSettings', values, expectation);
   });
 }
-function metadataDialog(): void {
-  if (!state) return; let area: HTMLTextAreaElement;
-  const snapshot = state.document, expectation = expectedAt(state);
-  showModal(locale.t('metadata'), body => { body.append(text('p', locale.t('jsonHelp'))); area = document.createElement('textarea'); area.className = 'json-editor'; area.value = JSON.stringify({ properties: snapshot.properties, stylegrounds: snapshot.stylegrounds, layerGroups: snapshot.layerGroups }, null, 2); body.append(area); }, async () => { const values = JSON.parse(area.value); if (!values || typeof values !== 'object' || !Array.isArray(values.properties) || !Array.isArray(values.stylegrounds) || !Array.isArray(values.layerGroups)) throw new Error(locale.t('invalidJson')); await run('documentProperties', values, expectation); });
-}
 function roomAddDialog(at?: Point): void {
   const expectation = state ? expectedAt(state) : undefined;
   let name: HTMLInputElement; const inputs = new Map<string, HTMLInputElement>();
@@ -392,7 +387,6 @@ function drawChrome(): void {
   const actions = el('file-actions'); actions.replaceChildren();
   const undo = button(locale.t('undo') + '   Ctrl+Z', () => run('undo')), redo = button(locale.t('redo') + '   Ctrl+Y', () => run('redo')); undo.title = locale.t('undo') + ' · Ctrl+Z'; redo.title = locale.t('redo') + ' · Ctrl+Y'; undo.id = 'undo'; redo.id = 'redo';
   const cameraSettings = button(locale.t('cameraSettings'), cameraSettingsDialog, 'ghost'); cameraSettings.id = 'camera-settings-action';
-  const metadata = button('⚙ ' + locale.t('metadata'), metadataDialog, 'ghost'); metadata.id = 'metadata-action';
   const inspectorToggle = button('☷ ' + locale.t('inspector'), () => { inspectorHidden = !inspectorHidden; localStorage.setItem('mapstudio.inspectorHidden', String(inspectorHidden)); updateView(); }, 'ghost'); inspectorToggle.id = 'inspector-toggle';
   const scripts = button(locale.t('scripts.menu'), () => openScriptDialog({ t: key => locale.t(key),
     prepare: async () => { await settleFileSnapshot(); await api.refresh(false); if (!api.state) throw new Error(locale.t('loading')); return { instanceId: api.state.instanceId, documentRevision: api.state.documentRevision }; },
@@ -404,7 +398,7 @@ function drawChrome(): void {
     button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
     button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')), null, button(locale.t('storageFolders'), () => openWorkspaceFolders(locale)), scripts]));
-  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null, cameraSettings, metadata]),
+  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null, cameraSettings]),
     menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('sampleWorld'), openSampleWorld), null, button(locale.t('docs.title'), () => { window.open('/docs/index.html', '_blank', 'noopener'); }), button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }), null, button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
   const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
   updateView(); drawPanels(true); renderInspector(true);
@@ -414,7 +408,7 @@ function updateView(): void {
   const cameraPreview = !miniMode && map.cameraPreview;
   const viewOnly = miniMode || cameraPreview;
   const workspace = el('workspace'); workspace.classList.toggle('inspector-hidden', inspectorHidden); workspace.classList.toggle('minimap-mode', miniMode); workspace.classList.toggle('standalone', standalone); workspace.classList.toggle('camera-preview', cameraPreview);
-  el<HTMLButtonElement>('metadata-action').disabled = viewOnly; el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
+  el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
   el<HTMLCanvasElement>('map-canvas').hidden = miniMode; el<HTMLCanvasElement>('mini-canvas').hidden = !miniMode;
   map.setActive(!miniMode); mini.setActive(miniMode);
   const tabButtons = el('tabs').querySelectorAll('button'); tabButtons[0]?.classList.toggle('active', !miniMode); tabButtons[1]?.classList.toggle('active', miniMode);
@@ -463,7 +457,7 @@ function drawPanels(force = false): void {
   const s = state.selection;
   el('project-name').replaceChildren(text('span', state.dirty ? '●' : '', 'dirty-dot'), document.createTextNode(state.document.name)); el('project-name').title = state.file || state.document.name;
   const viewOnly = miniMode || map.cameraPreview;
-  el<HTMLButtonElement>('metadata-action').disabled = viewOnly; el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
+  el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
   el<HTMLButtonElement>('undo').disabled = viewOnly || !state.canUndo; el<HTMLButtonElement>('redo').disabled = viewOnly || !state.canRedo;
   const connection = el('connection'); connection.textContent = locale.t(api.online ? 'studioConnected' : 'serverOffline'); connection.classList.toggle('online', api.online);
   el('room-count').textContent = s.roomIds.length > 1 ? `${s.roomIds.length} / ${state.document.rooms.length}` : String(state.document.rooms.length);
