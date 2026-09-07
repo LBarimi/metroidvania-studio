@@ -21,6 +21,14 @@ test('all engine archives contain complete portable samples, manifests and canon
     const base=(engine==='ue4'||engine==='ue5')?'plugin/MetroidvaniaStudio/samples':'samples',catalog=JSON.parse(decoded.get(base+'/catalog.json'));
     for(const sprite of [...catalog.materials.flatMap(m=>m.sprites),...catalog.objects.map(o=>o.sprite).filter(Boolean)])assert.ok(decoded.has(base+'/'+sprite.asset),sprite.asset);
     assert.ok(decoded.has(base+'/maps/Coverage.json'));
+    const installed=engine==='godot'?'addons/metroidvania-studio'
+      :(engine==='ue4'||engine==='ue5')?'plugin/MetroidvaniaStudio':null;
+    for(const notice of ['LICENSE','THIRD-PARTY-NOTICES.md']) {
+      const expected=readFileSync(path.join(root,notice),'utf8').replaceAll('\r\n','\n');
+      assert.equal(decoded.get(notice)?.toString('utf8'),expected,engine+'/'+notice);
+      if(installed)assert.equal(decoded.get(installed+'/'+notice)?.toString('utf8'),expected,engine+' installed '+notice);
+      if(engine==='ue4'||engine==='ue5')assert.ok(decoded.get(installed+'/Config/FilterPlugin.ini').toString('utf8').split('\n').includes('/'+notice));
+    }
     for(const name of decoded.keys())assert.ok(!/(?:^|\/)(?:\.local|builds|Binaries|Intermediate|\.godot|\.git)(?:\/|$)/.test(name),name);
   }
 });

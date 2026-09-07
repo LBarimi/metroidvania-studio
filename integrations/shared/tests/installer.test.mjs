@@ -1,10 +1,11 @@
 import test, { after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, existsSync, readdirSync, realpathSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync, realpathSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { packageEntries } from '../../build-packages.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const parent = realpathSync(os.tmpdir());
@@ -25,10 +26,7 @@ function fixture(major, fail = false) {
   put(path.join(engine, 'Engine/Build/Build.version'), JSON.stringify({ MajorVersion: major, MinorVersion: major === 4 ? 27 : 8 }));
   put(project, JSON.stringify({ FileVersion: 3, EngineAssociation: major === 4 ? '4.27' : '5.8', CustomSetting: 'keep', Plugins: [{ Name: 'ExistingPlugin', Enabled: true }] }));
   put(path.join(plugin, 'previous.txt'), 'previous plugin');
-  put(path.join(packageRoot, 'package-manifest.json'), JSON.stringify({ engine: 'ue' + major }));
-  put(path.join(packageRoot, 'plugin/MetroidvaniaStudio/MetroidvaniaStudio.uplugin'), '{}');
-  for (const name of ['Install-Integration.ps1', 'Resolve-UnrealEngine.ps1'])
-    copyFileSync(path.join(root, 'integrations/shared', name), path.join(packageRoot, name));
+  for (const [name, bytes] of packageEntries('ue' + major)) put(path.join(packageRoot, name), bytes);
   put(path.join(tasks, 'RunUAT.bat'), '@echo off\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0fixture-build.ps1" %*\r\nexit /b %errorlevel%\r\n');
   put(path.join(tasks, 'fixture-build.ps1'), `
 param([Parameter(ValueFromRemainingArguments=$true)][string[]]$BuildArguments)
@@ -58,6 +56,8 @@ for (const major of [4, 5]) test('UE' + major + ' installer uses its binary, pre
   assert.equal(project.CustomSetting, 'keep');
   assert.deepEqual(project.Plugins, [{ Name: 'ExistingPlugin', Enabled: true }, { Name: 'MetroidvaniaStudio', Enabled: true }]);
   assert.ok(existsSync(path.join(f.plugin, 'Binaries/Win64/' + (major === 4 ? 'UE4Editor' : 'UnrealEditor') + '-MetroidvaniaStudio.dll')));
+  for (const notice of ['LICENSE', 'THIRD-PARTY-NOTICES.md'])
+    assert.equal(readFileSync(path.join(f.plugin, notice), 'utf8'), readFileSync(path.join(root, notice), 'utf8').replaceAll('\r\n', '\n'));
   const backups = path.join(f.project, '../.metroidvania-studio-backups');
   const first = path.join(backups, readdirSync(backups)[0]);
   assert.deepEqual(readFileSync(path.join(first, 'Studio.uproject')), original);
@@ -82,4 +82,18 @@ test('engine discovery prefers a matching major and rejects project version mism
   const script = path.join(old.folder, 'resolve.ps1');
   put(script, `param($Resolver)\n$ErrorActionPreference='Stop'\nSet-StrictMode -Version Latest\n. $Resolver\n$found=Resolve-StudioUnrealEngine -PackageEngine ue4 -Association 4.27\nif($found.Major -ne 4 -or $found.Root -ne $env:UNREAL_ENGINE4_PATH){throw 'Wrong engine.'}\ntry{Resolve-StudioUnrealEngine -ExplicitRoot $env:UNREAL_ENGINE4_PATH -PackageEngine ue4 -Association 5.8;throw 'Accepted wrong project.'}catch{if($_.Exception.Message -eq 'Accepted wrong project.'){throw}}\n`);
   execFileSync(powershell, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script, path.join(old.packageRoot, 'Resolve-UnrealEngine.ps1')], { windowsHide: true, env: { ...process.env, UNREAL_ENGINE_PATH: current.engine, UNREAL_ENGINE4_PATH: old.engine } });
+});
+
+test('Godot installation retains package notices in the installed addon', { skip: !windows }, () => {
+  const folder = path.join(temporary, 'case ' + (++serial)), packageRoot = path.join(folder, 'package');
+  const project = path.join(folder, 'project/project.godot');
+  put(project, 'config_version=5\n\n[application]\nconfig/name="Sample"\n');
+  for (const [name, bytes] of packageEntries('godot')) put(path.join(packageRoot, name), bytes);
+  const result = spawnSync(powershell, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+    path.join(packageRoot, 'Install-Integration.ps1'), '-ProjectFile', project], { encoding: 'utf8', windowsHide: true });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.ok(readFileSync(project, 'utf8').includes('res://addons/metroidvania-studio/plugin.cfg'));
+  for (const notice of ['LICENSE', 'THIRD-PARTY-NOTICES.md'])
+    assert.equal(readFileSync(path.join(project, '../addons/metroidvania-studio', notice), 'utf8'),
+      readFileSync(path.join(root, notice), 'utf8').replaceAll('\r\n', '\n'));
 });

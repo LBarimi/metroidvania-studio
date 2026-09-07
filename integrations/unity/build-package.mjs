@@ -53,6 +53,15 @@ export function buildPackage(destination) {
     const metadata = Buffer.from(`fileFormatVersion: 2\nguid: ${guid}\nTextScriptImporter:\n  externalObjects: {}\n  userData:\n  assetBundleName:\n  assetBundleVariant:\n`);
     entries.push(tarFile(`${guid}/pathname`, Buffer.from(relative)), tarFile(`${guid}/asset.meta`, metadata), tarFile(`${guid}/asset`, bytes));
   }
+  for (const [sourceName, name] of [['LICENSE', 'LICENSE.txt'], ['THIRD-PARTY-NOTICES.md', 'THIRD-PARTY-NOTICES.txt']]) {
+    const relative = `Assets/MetroidvaniaStudioIntegration/${name}`;
+    const bytes = Buffer.from(readFileSync(path.join(root, sourceName), 'utf8').replaceAll('\r\n', '\n'));
+    const guid = createHash('sha256').update(`metroidvania-studio:legal-notice:${relative}`).digest('hex').slice(0, 32);
+    if (guids.has(guid)) throw new Error('Duplicate legal notice GUID.');
+    guids.add(guid);
+    const metadata = Buffer.from(`fileFormatVersion: 2\nguid: ${guid}\nTextScriptImporter:\n  externalObjects: {}\n  userData:\n  assetBundleName:\n  assetBundleVariant:\n`);
+    entries.push(tarFile(`${guid}/pathname`, Buffer.from(relative)), tarFile(`${guid}/asset.meta`, metadata), tarFile(`${guid}/asset`, bytes));
+  }
   entries.push(Buffer.alloc(1024));
   const output = destination ? path.resolve(destination) : path.join(root, 'engine-packages/unity/metroidvania-studio.unitypackage');
   mkdirSync(path.dirname(output), { recursive: true }); writeFileSync(output, gzipSync(Buffer.concat(entries), { level: 9 }));

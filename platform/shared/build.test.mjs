@@ -27,8 +27,10 @@ function fixture() {
   put(path.join(checkout, 'samples/maps/Sample.map.json'), '{"rooms":[]}');
   put(path.join(checkout, 'platform/shared/launch.sh'), '#!/bin/sh');
   put(path.join(checkout, 'tools/build/package-inputs.json'), JSON.stringify([
-    'metroidvania-studio/dist', 'samples', 'platform/shared/launch.sh'
+    'metroidvania-studio/dist', 'samples', 'platform/shared/launch.sh', 'LICENSE', 'THIRD-PARTY-NOTICES.md'
   ]));
+  for (const notice of ['LICENSE', 'THIRD-PARTY-NOTICES.md'])
+    put(path.join(checkout, notice), readFileSync(path.join(root, notice)));
   return checkout;
 }
 function buildRunner(checkout, failure = '') {
@@ -67,6 +69,11 @@ test('successful build publishes complete immutable output and then latest point
   assert.equal(readFileSync(path.join(first, 'metroidvania-studio/server/MetroidvaniaStudio.Server.dll'), 'utf8'), 'Server');
   assert.equal(readFileSync(path.join(first, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll'), 'utf8'), 'Launcher');
   assert.ok(existsSync(path.join(first, 'platform/shared/launch.sh')));
+  const manifest = JSON.parse(readFileSync(path.join(root, 'tools/build/package-inputs.json')));
+  for (const notice of ['LICENSE', 'THIRD-PARTY-NOTICES.md']) {
+    assert.ok(manifest.includes(notice), notice + ' must be a required build input.');
+    assert.deepEqual(readFileSync(path.join(first, notice)), readFileSync(path.join(root, notice)));
+  }
   assert.ok(existsSync(path.join(first, 'engine-packages/unity/metroidvania-studio.unitypackage')));
   const second = buildStudio(options(checkout, runner));
   assert.notEqual(second, first);

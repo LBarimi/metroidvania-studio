@@ -30,7 +30,7 @@ export function packageEntries(engine) {
   if(!['godot','ue4','ue5','sdl'].includes(engine))throw new Error('Unsupported integration.');
   const entries=new Map();
   const add=(destination,source)=>{if(entries.has(destination))throw new Error('Duplicate archive entry.');let bytes=readFileSync(path.join(root,source));
-    if(/\.(?:md|txt|json|cfg|gd|uid|cs|cpp|h|ps1|bat|sh|uplugin)$/.test(source)||source.endsWith('CMakeLists.txt')) {
+    if(/\.(?:md|txt|json|cfg|gd|uid|cs|cpp|h|ps1|bat|sh|uplugin)$/.test(source)||source.endsWith('CMakeLists.txt')||['LICENSE','NOTICE'].includes(source)) {
       let text=bytes.toString('utf8').replaceAll('\r\n','\n');
       if(/\.(?:bat|ps1)$/.test(source))text=text.replaceAll('\n','\r\n');
       bytes=Buffer.from(text);
@@ -47,7 +47,7 @@ export function packageEntries(engine) {
     add(base+'/Source/MetroidvaniaStudio/MetroidvaniaStudio.Build.cs',`integrations/${engine}/source/MetroidvaniaStudio.Build.cs`);
     for(const folder of ['public','private'])tree(`integrations/shared/unreal/${folder}`,base+'/Source/MetroidvaniaStudio/'+(folder==='public'?'Public':'Private'));
     add(base+'/Source/MetroidvaniaStudio/Private/StudioDocument.h','integrations/shared/native/StudioDocument.h');
-    entries.set(base+'/Config/FilterPlugin.ini',Buffer.from('[FilterPlugin]\n/samples/...\n'));
+    entries.set(base+'/Config/FilterPlugin.ini',Buffer.from('[FilterPlugin]\n/samples/...\n/LICENSE\n/THIRD-PARTY-NOTICES.md\n'));
   }
   if(engine==='sdl') {
     tree('integrations/sdl/include','include');tree('integrations/sdl/src','src');
@@ -65,7 +65,13 @@ export function packageEntries(engine) {
   }
   entries.set(sampleRoot+'/catalog.json',Buffer.from(JSON.stringify(catalog,null,2)+'\n'));
   add('contract/FORMAT.md','metroidvania-studio/contracts/FORMAT.md');add('contract/map-format-v2.schema.json','metroidvania-studio/contracts/map-format-v2.schema.json');
-  for(const notice of ['LICENSE','NOTICE'])if(existsSync(path.join(root,notice)))add(notice,notice);
+  const installedRoot=engine==='godot'?'addons/metroidvania-studio'
+    :(engine==='ue4'||engine==='ue5')?'plugin/MetroidvaniaStudio':null;
+  for(const notice of ['LICENSE','THIRD-PARTY-NOTICES.md']) {
+    add(notice,notice);
+    if(installedRoot)add(installedRoot+'/'+notice,notice);
+  }
+  if(existsSync(path.join(root,'NOTICE')))add('NOTICE','NOTICE');
   const version=JSON.parse(readFileSync(path.join(root,'version.json'),'utf8')).version;
   entries.set('package-manifest.json',Buffer.from(JSON.stringify({formatVersion:1,packageVersion:version,mapFormatVersion:2,engine,files:[...entries].sort(([a],[b])=>a<b?-1:1).map(([name,bytes])=>({path:name,sha256:createHash('sha256').update(bytes).digest('hex')}))},null,2)+'\n'));
   return entries;

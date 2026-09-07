@@ -53,3 +53,8 @@ See **Help → Shortcuts** for the full control list. The interface follows your
 | SDL3 | [C++ source ZIP](engine-packages/sdl/metroidvania-studio.zip) | [Guide](engine-packages/sdl/INSTALL_EN.txt) |
 
 Each engine folder includes translated installation guides. Maps use a shared [JSON format](metroidvania-studio/contracts/FORMAT.md); engine packages handle importing and rendering, while gameplay stays in your game project.
+
+## License
+
+Project-owned code and assets use the [MIT License](LICENSE).
+See [Third-party notices](THIRD-PARTY-NOTICES.md) for external components and their terms.
