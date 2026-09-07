@@ -146,8 +146,8 @@ try {
   await page.waitForFunction(() => document.querySelector('dialog .modal-error')?.textContent.length > 0);
   assert.equal(JSON.stringify((await state()).document), before); await page.keyboard.press('Escape');
   await page.locator('#add-room').click(); await page.locator('dialog[open]').waitFor();
-  assert.equal(await page.locator('#room-add-width').inputValue(), '20');
-  assert.equal(await page.locator('#room-add-height').inputValue(), '12'); await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#room-add-width').inputValue(), '16');
+  assert.equal(await page.locator('#room-add-height').inputValue(), '10'); await page.keyboard.press('Escape');
   checks.push('keyboard menu activation works; invalid size preserves the document; ordinary Add retains its defaults');
 
   // Measure the actual hovered tile after panning and zooming, without relying on a fixed camera scale.

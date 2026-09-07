@@ -514,6 +514,10 @@ export class MapCanvas {
       expectation: { instanceId: this.state.instanceId, revision: this.state.revision }, tail: this.gestureTail, failed: false };
     const handle = current && this.canResizeRoom(current) ? this.roomHandle(screen, current) : null;
     if (previewPan) g.kind = 'pan';
+    else if (e.button === 0 && !hit && this.selectedRooms.size > 1) {
+      this.enqueue(g, 'cancel', {}, () => { this.roomSelectionId = null; });
+      this.gestureTail = g.tail; return;
+    }
     else if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
       if (hit) {
         this.enqueue(g, 'selectRoom', { id: hit.id, toggle: true }, state => { this.roomSelectionId = state.selection.roomIds?.length ? state.selection.roomId : null; });

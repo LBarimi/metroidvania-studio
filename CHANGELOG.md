@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Clear a multiple-room selection when clicking empty map space, without painting or creating a room.
+
 - Start blank maps and room creation dialogs with a 16 by 10 tile room.
 
 - Source Run scripts automatically rebuild outdated or incomplete web builds before launch, while preserving the running session if a build fails.

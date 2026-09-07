@@ -57,9 +57,32 @@ try {
  assert.equal(await page.locator('#room-list button[aria-pressed="true"]').count(),2);
  await click(14,3,'Control');await until(s=>s.selection.roomIds.length===1&&s.selection.roomId==='A');
  await click(14,3,'Meta');await until(s=>s.selection.roomIds.length===2);
- await click(-2,-2,'Control');
- assert.equal(JSON.stringify((await state()).document),snapshot);assert.equal((await state()).documentRevision,before.documentRevision);
- checks.push('Ctrl/Cmd-click toggles rooms in Brush without painting; empty modified clicks do not edit; both rows show selection');
+
+ for (const modifier of ['Control', undefined]) {
+  requests.length=0;
+  await click(-2,-2,modifier);await until(s=>s.selection.roomIds.length===0);
+  assert.equal(await page.locator('#room-list button.selected').count(),0);
+  assert.equal(JSON.stringify((await state()).document),snapshot);assert.equal((await state()).documentRevision,before.documentRevision);
+  assert.deepEqual(requests.map(r=>r.action),['cancel']);
+  await selectGroup();
+ }
+ checks.push('Ctrl/Cmd-click toggles rooms; ordinary and Ctrl-held empty clicks clear every selected row without painting or modifying the map');
+ await at((await command('options',{tool:0})).revision);await selectGroup();requests.length=0;
+ await click(-2,-2);await until(s=>s.selection.roomIds.length===0);
+ assert.deepEqual(requests.map(r=>r.action),['cancel']);assert.equal(JSON.stringify((await state()).document),snapshot);
+ await at((await command('options',{tool:3})).revision);await selectGroup();
+ checks.push('Empty clicks with the Rooms tool clear a group instead of creating a room');
+ const outside=await point(-2,-2);
+ for (const button of ['middle','right']) {
+  requests.length=0;
+  await page.mouse.move(outside.x,outside.y);await page.mouse.down({button});
+  await page.mouse.move(outside.x+64,outside.y+32,{steps:4});
+  await page.mouse.move(outside.x,outside.y,{steps:4});await page.mouse.up({button});await paint();
+  assert.equal((await state()).selection.roomIds.length,2);
+  assert.equal(JSON.stringify((await state()).document),snapshot);assert.deepEqual(requests,[]);
+  assert.equal(await page.locator('#room-context-menu').count(),0);
+ }
+ checks.push('Middle and right dragging across empty space keep the group selected and never open a context menu');
  await page.evaluate(async()=>{
   const {MapCanvas}=await import('/map-canvas.js');const original=MapCanvas.prototype.outline;
   MapCanvas.prototype.outline=function(rect,color,dashed){if(color==='#ffffff'&&dashed){window.__groupPreview ||= [];window.__groupPreview.push({...rect});}return original.call(this,rect,color,dashed);};
