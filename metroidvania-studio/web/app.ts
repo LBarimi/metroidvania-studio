@@ -763,5 +763,5 @@ window.addEventListener('pagehide', event => {
 });
 drawChrome();
 void locale.load().then(() => { languageVersion++; drawChrome(); }).catch(error => toast(error));
-void initializeWorkspaceFolders().catch(() => undefined);
+await initializeWorkspaceFolders().catch(() => undefined);
 try { await api.start(); } catch (error) { toast(locale.t('serverOffline')); }

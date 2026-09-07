@@ -6,7 +6,7 @@ Save or export the image to the same PNG file registered in the workspace catalo
 
 Tile positions, tile shapes and Undo history stay intact. Keep the atlas dimensions and sprite positions unchanged when redrawing a tileset. Changing the atlas layout also requires updating its sprite rectangles in the catalog.
 
-The default workspace keeps `catalog.json`, `Maps/` and `Textures/` beside the launcher or at the source project root. Open **File → Storage folders** to find their exact locations. Older or explicitly selected workspaces can still use `.studio/catalog.json`. Each sprite's `asset` identifies its image, for example `Textures/palettes/palette-id.png`. Newly added palettes use PNGs in the workspace's `Textures/palettes/` directory. Workspace settings may configure another texture root. Edit the registered workspace image; changing a separate copy will not update it. The bundled sample images are fallbacks until a matching workspace image is provided.
+The default workspace keeps `catalog.json`, `Maps/` and `Textures/` beside the launcher or at the source project root. Open **File → Storage folders** to find their exact locations. Older or explicitly selected workspaces can still use `.studio/catalog.json`. Each sprite's `asset` identifies its image, for example `Textures/palettes/stage-1/atlas-1.png`. Newly added palettes use PNGs in the workspace's `Textures/palettes/` directory. Workspace settings may configure another texture root. Edit the registered workspace image; changing a separate copy will not update it. The bundled sample images are fallbacks until a matching workspace image is provided.
 
 Checks run in the background and are based on unique image files, independent of painted tile count. Incomplete or locked saves are retried, and the browser retains the previous image while a replacement loads. A file whose timestamp and length were preserved is also checked periodically; these changes can take several additional seconds.
 
@@ -38,7 +38,7 @@ The Unity connection window already downloads catalog textures from the running 
 
 ## Storage and file dialogs
 
-Room JSON is generated automatically under `Maps/AutoExport/<map-folder>/`. A complete map saved with **File → Save as** uses the file you select. The file dialog starts in `Maps` in the Windows application. In browsers, use **File → Storage folders → Set file dialog folder** once to grant access to that directory; it is remembered for later open/save dialogs. Browser downloads without file picker support use the browser’s download folder.
+Room JSON is generated automatically under `Maps/AutoExport/<map-folder>/`. A complete map saved with **File → Save as** uses the file you select. On Windows, both the web version and application start the map file dialog in `Maps`. The web version opens a native Windows dialog through its local server. On other browser platforms, use **File → Storage folders → Set file dialog folder** once to remember that directory for open/save dialogs. Browser downloads without file picker support use the browser’s download folder.
 
 Legacy default data is copied once into the accessible layout, without deleting its original folder. Different files with the same target name stop migration instead of overwriting either copy. Explicit `--project` workspaces retain their configured paths. For release launchers, `--storage-root` changes the default portable storage location; `--project` selects an existing workspace without migration.
 

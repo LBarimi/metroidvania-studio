@@ -849,7 +849,7 @@ dialog::backdrop { background: #050505b8; }
 .tileset-dialog input, .tileset-dialog select { min-width: 0; max-width: 100%; }
 .tileset-dialog input[type="color"] { padding: 2px; width: 60px; height: 28px; }
 .tileset-fields { display: grid; grid-template-columns: 1fr 70px 1fr; gap: 12px; }
-.tileset-columns { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px; }
+.tileset-columns { display: grid; grid-template-columns: 1fr; gap: 14px; }
 .tileset-columns:has(.tileset-source[hidden]) { grid-template-columns: 1fr; }
 .tileset-source { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
 .tileset-source[hidden], .tileset-dialog [hidden] { display: none; }
@@ -857,10 +857,6 @@ dialog::backdrop { background: #050505b8; }
 .tileset-actions .check { flex-direction: row; align-items: center; font-size: 11px; }
 .tileset-actions input[type="checkbox"] { width: auto; }
 .tileset-path { box-sizing: border-box; width: 100%; font-size: 10px; color: #bbb; }
-.tileset-image-scroll { height: 280px; overflow: auto; border: 1px solid #454545; background-color: #161616; background-image: conic-gradient(#262626 25%, transparent 0 50%, #262626 0 75%, transparent 0); background-size: 16px 16px; }
-.tileset-image-scroll canvas { display: block; image-rendering: pixelated; max-width: none; cursor: crosshair; }
-.tileset-empty { padding: 24px 16px; color: #bbb; line-height: 1.6; }
-.tileset-image-scroll.drop-target { outline: 2px solid #59c8ff; }
 .tileset-slots { display: grid; grid-template-columns: repeat(8,minmax(0,1fr)); gap: 4px; max-height: 275px; overflow: auto; padding: 3px 0; }
 .tileset-slots.four-slots { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .tileset-slot { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px 2px; min-width: 0; height: auto; }
@@ -872,8 +868,11 @@ dialog::backdrop { background: #050505b8; }
 .tileset-example { display: block; max-width: 100%; image-rendering: pixelated; background: #111; margin-top: 5px; }
 .tileset-dialog .hint { line-height: 1.5; margin: 8px 0; }
 .tileset-dialog .modal-error { color: #ffa6a6; margin-top: 10px; white-space: pre-wrap; }
-@media (max-width: 780px) { .tileset-columns { grid-template-columns: 1fr; } .tileset-image-scroll { height: 180px; } .tileset-fields { grid-template-columns: 1fr 60px; } .tileset-fields label:last-child { grid-column: 1 / -1; } }
+@media (max-width: 780px) { .tileset-columns { grid-template-columns: 1fr; } .tileset-fields { grid-template-columns: 1fr 60px; } .tileset-fields label:last-child { grid-column: 1 / -1; } }
 
 .tileset-actions select { width: auto; }
 
 .storage-dialog{width:min(700px,92vw)}.storage-dialog .dialog-body{display:flex;flex-direction:column;gap:18px}.storage-dialog section{display:flex;flex-direction:column;gap:8px}.storage-dialog input{width:100%;min-width:0}.storage-dialog .dialog-title{display:flex;align-items:center;justify-content:space-between}
+
+.tileset-drop { padding: 10px 12px; border: 1px dashed #555; color: #bbb; font-size: 12px; }
+.tileset-drop.drop-target { border-color: #59c8ff; background: #213440; }

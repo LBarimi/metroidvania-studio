@@ -2,7 +2,7 @@ import type { Locale } from './locale.js';
 
 export type FolderKind = 'maps' | 'textures';
 type DirectoryHandle = { kind: 'directory'; name: string };
-type FolderInfo = { project: string; maps: string; textures: string; catalog: string; autoExport: string; currentExport: string };
+type FolderInfo = { project: string; maps: string; textures: string; catalog: string; autoExport: string; currentExport: string; nativeMapDialogs?: boolean };
 type DirectoryPicker = Window & { showDirectoryPicker?: (options: object) => Promise<DirectoryHandle>; chrome?: { webview?: {
   postMessage(message: string): void;
   addEventListener(type: string, listener: (event: { data: unknown; additionalObjects?: DirectoryHandle[] }) => void): void;
@@ -10,6 +10,7 @@ type DirectoryPicker = Window & { showDirectoryPicker?: (options: object) => Pro
 const host = window as DirectoryPicker;
 const directories: Partial<Record<FolderKind, DirectoryHandle>> = {};
 let info: FolderInfo | undefined, ready: Promise<void> | undefined;
+export const nativeMapDialogs = (): boolean => info?.nativeMapDialogs === true && !host.chrome?.webview;
 export const workspaceFolder = (kind: FolderKind): string => info?.[kind] || '';
 export const folderStartIn = (kind: FolderKind): { startIn?: DirectoryHandle } => directories[kind] ? { startIn: directories[kind] } : {};
 
@@ -84,7 +85,7 @@ export function openWorkspaceFolders(locale: Locale, focus: FolderKind = 'maps')
         const response = await fetch('/api/workspace-folders/open', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: kind }) });
         if (!response.ok) throw new Error((await response.json()).error);
       }), action('storageCopy', () => navigator.clipboard.writeText(info![kind])));
-      if (host.showDirectoryPicker && !host.chrome?.webview) {
+      if (host.showDirectoryPicker && !host.chrome?.webview && (!nativeMapDialogs() || kind === 'textures')) {
         const choose = action('storageRemember', async () => {
           // The picker must be invoked directly within this click's user activation.
           const handle = await host.showDirectoryPicker!({ id: 'studio-' + kind + '-folder', mode: 'read', ...folderStartIn(kind) });

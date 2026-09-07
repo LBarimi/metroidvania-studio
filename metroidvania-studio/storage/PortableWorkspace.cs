@@ -69,7 +69,7 @@ public static class PortableWorkspace
     // Called under the server workspace lock. Default resources must travel with exported JSON too.
     public static void SeedResources(string root, string studioRoot)
     {
-        if (!IsPortable(root) || File.Exists(Safe(root, ".studio/portable-resources.json"))) return;
+        if (!IsPortable(root)) return;
         var copies = new List<(string Source, string Destination)>();
         Collect(studioRoot, "samples/textures", root, "Textures", copies);
         foreach (var pair in copies)
@@ -79,7 +79,7 @@ public static class PortableWorkspace
         }
         string catalog = Safe(root, "catalog.json"), sample = Safe(studioRoot, "samples/catalog.json");
         if (!File.Exists(catalog) && File.Exists(sample)) CopyAtomic(sample, catalog);
-        WriteNew(Safe(root, ".studio/portable-resources.json"), "{\"version\":1}");
+        if (!File.Exists(Safe(root, ".studio/portable-resources.json"))) WriteNew(Safe(root, ".studio/portable-resources.json"), "{\"version\":1}");
     }
 
     private static FileStream LockLegacy(string legacy)

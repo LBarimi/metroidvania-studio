@@ -1,4 +1,4 @@
-import { folderStartIn } from './workspace-folders.js';
+import { folderStartIn, nativeMapDialogs } from './workspace-folders.js';
 
 export interface MapFileHandle {
   name: string;
@@ -18,7 +18,8 @@ export async function fileHash(file: Blob): Promise<string> {
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256', await file.arrayBuffer()))].map(b => b.toString(16).padStart(2, '0')).join('');
 }
 export async function pickMapFile(): Promise<{ file: File; handle?: MapFileHandle } | null> {
-  // Invoke before any network await, while the click still has user activation.
+  if (nativeMapDialogs()) { const handle = await pickNativeMap('open', ''); return handle ? { file: await handle.getFile(), handle } : null; }
+  // Browser-only hosts invoke the picker while the click still has user activation.
   if (picker.showOpenFilePicker) {
     const [handle] = await picker.showOpenFilePicker({ id: 'studio-map', types, multiple: false, ...folderStartIn('maps') });
     return handle ? { file: await handle.getFile(), handle } : null;
@@ -36,6 +37,7 @@ export async function pickMapSave(suggestedName: string, existing?: MapFileHandl
     if (await existing.requestPermission({ mode: 'readwrite' }) !== 'granted') throw new Error('@filePermissionDenied');
     return existing;
   }
+  if (nativeMapDialogs()) { const handle = await pickNativeMap('save', suggestedName); if (!handle) throw new DOMException('Canceled', 'AbortError'); return handle; }
   if (!picker.showSaveFilePicker) return null;
   return picker.showSaveFilePicker({ id: 'studio-map', types, suggestedName, ...folderStartIn('maps') });
 }
@@ -54,4 +56,26 @@ export function downloadMap(text: string, name: string): void {
   const url = URL.createObjectURL(new Blob([text], { type: 'application/json;charset=utf-8' }));
   const link = document.createElement('a'); link.href = url; link.download = name; link.click();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function nativeRequest(action: string, data: object): Promise<Response> {
+  const response = await fetch('/api/native-map/' + action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  if (!response.ok) throw new Error((await response.json()).error);
+  return response;
+}
+async function pickNativeMap(mode: 'open' | 'save', name: string): Promise<MapFileHandle | null> {
+  const selected = await (await nativeRequest('pick', { mode, name })).json() as { token: string; name: string } | null;
+  if (!selected) return null;
+  const { token } = selected;
+  const handle: MapFileHandle = {
+    name: selected.name,
+    getFile: async () => new File([await (await nativeRequest('read', { token })).blob()], selected.name, { type: 'application/json' }),
+    requestPermission: async () => 'granted',
+    createWritable: async () => {
+      const hash = await fileHash(await handle.getFile()); let text = '', aborted = false;
+      return { write: async data => { text = data; }, abort: async () => { aborted = true; },
+        close: async () => { if (!aborted) await nativeRequest('write', { token, document: JSON.parse(text), hash }); } };
+    }
+  };
+  return handle;
 }

@@ -27,7 +27,7 @@ try {
   };
   await open();await page.locator('#tileset-mode').selectOption('four');
   await page.locator('#tileset-apply').click();assert.match(await page.locator('#tileset-error').innerText(),/4개/);
-  await page.locator('#tileset-load-template').click();await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled && document.querySelector('#tileset-source').width===64);
+  await page.locator('#tileset-load-template').click();await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled && document.querySelectorAll('.tileset-slot:not(.unassigned)').length===4);
   assert.equal(await page.locator('.tileset-slot').count(),4);
   assert.deepEqual(await page.locator('.tileset-slot span').allTextContents(),['위쪽 표면','바깥 모서리 ↗','안쪽 모서리 ↖','내부 채움']);
   await page.locator('#tileset-slope-tab').click();assert.equal(await page.locator('.tileset-slot').count(),4);
@@ -81,7 +81,7 @@ try {
   await page.waitForFunction(()=>document.querySelector('#tileset-error').textContent.length>0);await page.keyboard.press('Escape');
   assert.deepEqual((await state()).catalog.materials.find(m=>m.id===id),saved);
   await open();await page.locator('#tileset-mode').selectOption('blob47');await page.locator('#tileset-load-template').click();
-  await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled&&document.querySelector('#tileset-source').width===128);
+  await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled&&document.querySelectorAll('.tileset-slot:not(.unassigned)').length===47);
   assert.equal(await page.locator('.tileset-slot').count(),47);await apply();saved=(await state()).catalog.materials.find(m=>m.id===id);await comparePreview(saved);
   const unchanged=await state();await page.locator('#default-tile-view').click();assert.equal(await page.locator('#default-tile-view').getAttribute('aria-pressed'),'true');
   await page.locator('#default-tile-view').click();assert.deepEqual((await state()).document,unchanged.document);
@@ -107,7 +107,7 @@ try {
   if(process.env.METROIDVANIA_STUDIO_TEST_TILESET){
     await open();await page.locator('#tileset-mode').selectOption('four');
     await page.locator('#tileset-file').setInputFiles({name:'reference.png',mimeType:'image/png',buffer:await readFile(process.env.METROIDVANIA_STUDIO_TEST_TILESET)});
-    await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled&&document.querySelector('#tileset-source').width===64);
+    await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled&&document.querySelectorAll('.tileset-slot:not(.unassigned)').length===4);
     if(process.env.METROIDVANIA_STUDIO_TEST_SCREENSHOT)await page.screenshot({path:process.env.METROIDVANIA_STUDIO_TEST_SCREENSHOT});
     await apply();await comparePreview((await state()).catalog.materials.find(m=>m.id===id));
   }

@@ -16,8 +16,8 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   let settings: TilesetSettings = saved ? structuredClone(saved) : { mode: 'blob47', source: material.sprites[0]?.asset || '', slots: Array(51).fill(null) };
   type Source = { image: HTMLImageElement; blob: Blob; name: string; png?: string };
   const sources = new Map<string, Source>();
-  let currentSource = settings.source, selected = 0, zoom = 4, generation = 0, disposed = false, locked = false, loading = false;
-  let candidate: { x: number; y: number; asset: string } | undefined, colorTimer = 0, previewKey = '';
+  let currentSource = settings.source, selected = 0, generation = 0, disposed = false, locked = false, loading = false;
+  let colorTimer = 0, previewKey = '';
   const dialog = element('dialog', 'tileset-dialog'); dialog.id = 'tileset-dialog';
   const heading = element('div', 'dialog-title', t('tilesetTitle'));
   heading.append(button('×', () => { if (!locked) dialog.close(); }, 'icon ghost'));
@@ -52,24 +52,9 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   tools.append(importButton, templateButton, downloadButton, button(t('storageFolders'), () => openWorkspaceFolders(locale, 'textures')), file);
   const sourcePath = element('input', 'tileset-path'); sourcePath.readOnly = true; sourcePath.setAttribute('aria-label', t('tilesetSource'));
   const sourceSelect = element('select'); sourceSelect.id = 'tileset-image'; sourceSelect.setAttribute('aria-label', t('tilesetSource'));
-  sourceSelect.onchange = () => { currentSource = sourceSelect.value; candidate = undefined; render(); };
-  const controls = element('div', 'tileset-actions'), auto = element('input'); auto.type = 'checkbox'; auto.checked = true;
-  const zoomSelect = element('select'); zoomSelect.setAttribute('aria-label', t('tilesetZoom'));
-  for (const value of [1,2,4,6,8]) { const o = element('option', '', '×' + value); o.value = String(value); zoomSelect.append(o); } zoomSelect.value = '4';
-  zoomSelect.onchange = () => { zoom = Number(zoomSelect.value); drawSource(); };
-  const autoLabel = label(t('tilesetNext'), auto); autoLabel.className = 'check';
-  const automatic = button(t('tilesetAutoAssign'), () => { autoAssign(); render(); }); automatic.id = 'tileset-auto-assign';
-  const assign = button(t('tilesetAssignSelected'), () => {
-    if (!candidate || locked || loading || settings.mode === 'template') return;
-    settings.slots[selected] = { ...candidate };
-    const firstSlope = settings.mode === 'four' ? 4 : 47;
-    if (auto.checked) selected = Math.min(selected + 1, slopes ? settings.slots.length - 1 : firstSlope - 1);
-    render();
-  }); assign.id = 'tileset-assign-selected';
-  controls.append(automatic, assign, zoomSelect, autoLabel);
-  const scroll = element('div', 'tileset-image-scroll'); scroll.tabIndex = 0;
-  const sourceCanvas = element('canvas'); sourceCanvas.id = 'tileset-source'; const empty = element('div', 'tileset-empty', t('tilesetDrop'));
-  scroll.append(sourceCanvas, empty); sourcePane.append(tools, sourceSelect, sourcePath, controls, scroll);
+  sourceSelect.onchange = () => { currentSource = sourceSelect.value; render(); };
+  const drop = element('div', 'tileset-drop', t('tilesetDrop')); drop.id = 'tileset-drop';
+  sourcePane.append(tools, sourceSelect, sourcePath, drop);
   const tabs = element('div', 'tileset-tabs'), slotGrid = element('div', 'tileset-slots'); slotGrid.id = 'tileset-slots';
   let slopes = false;
   const solidTab = button(t('tilesetSolidSlots'), () => { slopes = false; selected = 0; render(); }); solidTab.id = 'tileset-solid-tab';
@@ -94,19 +79,9 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   color.oninput = () => { window.clearTimeout(colorTimer); colorTimer = window.setTimeout(() => { if (!disposed) render(); }, 120); };
   color.onchange = () => { window.clearTimeout(colorTimer); render(); };
   file.onchange = () => { const next = Array.from(file.files || []); file.value = ''; if (next.length) void importFiles(next); };
-  scroll.addEventListener('dragover', e => { if (!locked) { e.preventDefault(); scroll.classList.add('drop-target'); } });
-  scroll.addEventListener('dragleave', () => scroll.classList.remove('drop-target'));
-  scroll.addEventListener('drop', e => { e.preventDefault(); scroll.classList.remove('drop-target'); if (!locked && e.dataTransfer?.files.length) void importFiles(Array.from(e.dataTransfer.files)); });
-  sourceCanvas.addEventListener('click', e => {
-    const image = sources.get(currentSource)?.image;
-    if (!image || locked || loading || settings.mode === 'template') return;
-    const bounds = sourceCanvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - bounds.left) / bounds.width * image.naturalWidth / 16) * 16;
-    const y = Math.floor((e.clientY - bounds.top) / bounds.height * image.naturalHeight / 16) * 16;
-    if (x < 0 || y < 0 || x + 16 > image.naturalWidth || y + 16 > image.naturalHeight) return;
-    candidate = { x, y, asset: currentSource };
-    assign.disabled = false; drawSource();
-  });
+  drop.addEventListener('dragover', e => { if (!locked) { e.preventDefault(); drop.classList.add('drop-target'); } });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drop-target'));
+  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('drop-target'); if (!locked && e.dataTransfer?.files.length) void importFiles(Array.from(e.dataTransfer.files)); });
   function autoAssign(keys = [currentSource], start = 0): void {
     if (settings.mode === 'template') return;
     let index = start;
@@ -169,19 +144,6 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
     } catch (e) { if (!disposed && token === generation) error.textContent = errorText(e); }
     finally { if (!disposed && token === generation) { loading = false; apply.disabled = false; } }
   }
-  function drawSource(): void {
-    const image = sources.get(currentSource)?.image;
-    sourceCanvas.hidden = !image; empty.hidden = !!image;
-    if (!image) return;
-    sourceCanvas.width = image.naturalWidth; sourceCanvas.height = image.naturalHeight;
-    sourceCanvas.style.width = image.naturalWidth * zoom + 'px'; sourceCanvas.style.height = image.naturalHeight * zoom + 'px';
-    const ctx = sourceCanvas.getContext('2d')!; ctx.imageSmoothingEnabled = false; ctx.drawImage(image, 0, 0);
-    ctx.strokeStyle = 'rgba(160,170,180,.45)'; ctx.lineWidth = 1 / zoom; ctx.beginPath();
-    for (let x = 0; x <= image.naturalWidth; x += 16) { ctx.moveTo(x,0); ctx.lineTo(x,image.naturalHeight); }
-    for (let y = 0; y <= image.naturalHeight; y += 16) { ctx.moveTo(0,y); ctx.lineTo(image.naturalWidth,y); } ctx.stroke();
-    const active = candidate?.asset === currentSource ? candidate : settings.slots[selected];
-    if (active && (active.asset || settings.source) === currentSource) { ctx.strokeStyle = '#59c8ff'; ctx.lineWidth = 2 / zoom; ctx.strokeRect(active.x + 1 / zoom, active.y + 1 / zoom, 16 - 2 / zoom, 16 - 2 / zoom); }
-  }
   function render(): void {
     sourceSelect.replaceChildren();
     for (const [key,value] of sources) { const o = element('option', '', value.name.split('/').pop() || value.name); o.value = key; sourceSelect.append(o); }
@@ -209,14 +171,12 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
       b.title = caption + (slot ? ' · ' + slot.x / 16 + ', ' + slot.y / 16 : ' · ' + t('tilesetUnassigned'));
       b.append(tile, element('span','',caption), element('small','',slot ? slot.x / 16 + ',' + slot.y / 16 : '—')); slotGrid.append(b);
     }
-    drawSource();
     const nextPreview = JSON.stringify([settings, color.value, generation, [...sources.keys()]]);
     if (nextPreview !== previewKey) {
       drawTilesetExample(example, composeTileset(new Map([...sources].map(([k,v]) => [k,v.image])),settings,color.value));
       previewKey = nextPreview;
     }
-    assign.disabled = !candidate || !sources.has(candidate.asset) || templateOnly;
-    downloadButton.disabled = !sources.has(currentSource); automatic.disabled = !sources.has(currentSource);
+    downloadButton.disabled = !sources.has(currentSource);
   }
   async function save(): Promise<void> {
     if (locked || loading) return; error.textContent = '';

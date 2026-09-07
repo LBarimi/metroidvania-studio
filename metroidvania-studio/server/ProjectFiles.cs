@@ -6,7 +6,7 @@ using MetroidvaniaStudio;
 namespace MetroidvaniaStudio.Server;
 
 /// <summary>Bounds all durable documents and assets to the selected workspace.</summary>
-public sealed class ProjectFiles
+public sealed partial class ProjectFiles
 {
     private static readonly UTF8Encoding StrictUtf8 = new(false, true);
     // Unix volumes can distinguish case-only names, including optional macOS volumes.
@@ -135,8 +135,16 @@ public sealed class ProjectFiles
     {
         if (!relative.StartsWith("Textures/", StringComparison.Ordinal)) throw new ArgumentException("Resources must use a Textures/ asset identifier.");
         string path = Resolve(texturesRelative, relative[9..]);
+        if (!File.Exists(path))
+        {
+            string retained = Resolve(".studio/texture-backup", relative[9..]);
+            if (File.Exists(retained)) path = retained;
+        }
         if (!File.Exists(path) && studioRoot != null)
+            {
             path = ResolveWithin(studioRoot, "samples/textures", relative[9..]);
+            if (!File.Exists(path)) path = ResolveWithin(studioRoot, "samples/legacy-textures", relative[9..]);
+        }
         if (!new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp" }.Contains(Path.GetExtension(path).ToLowerInvariant()))
             throw new ArgumentException("Only image resources can be read through the asset endpoint.");
         return path;

@@ -30,8 +30,8 @@ public sealed partial class Catalog
             if (string.Equals(catalogPath, files.CatalogWritePath, ProjectFiles.PathComparison)) expected = new(info.Length, info.LastWriteTimeUtc.Ticks, content.Fingerprint);
         }
         else if (loadedFromFile) throw new WorkspaceConflict("@tilesetChanged");
-        string directory = "Textures/palettes/" + Guid.NewGuid().ToString("N") + "/";
-        string asset = directory + "atlas-" + Guid.NewGuid().ToString("N") + ".png";
+        string directory = files.PaletteDirectory(name, current.GetProperty("sprites")[0].GetProperty("asset").GetString());
+        string asset = files.NextPaletteAsset(directory, "atlas");
         var additional = new Dictionary<string, byte[]>(StringComparer.Ordinal);
         PngRaster? source = null;
         var images = new Dictionary<string, PngRaster>(StringComparer.Ordinal);
@@ -54,7 +54,7 @@ public sealed partial class Catalog
                 {
                     if (encoded.Length > (PngRaster.MaximumBytes + 2L) / 3 * 4) throw new ArgumentException("@tilesetImageLimit");
                     try { png = Convert.FromBase64String(encoded); } catch (FormatException) { throw new ArgumentException("@tilesetInvalidPng"); }
-                    target = directory + "source-" + (additional.Count + 1) + ".png"; additional.Add(target, png); remap[input] = target;
+                    target = files.NextPaletteAsset(directory, "source", additional.Keys); additional.Add(target, png); remap[input] = target;
                 }
                 else
                 {

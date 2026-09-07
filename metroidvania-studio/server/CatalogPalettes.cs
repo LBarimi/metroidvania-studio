@@ -31,7 +31,7 @@ public sealed partial class Catalog
         }
         else if (loadedFromFile) throw new WorkspaceConflict("The palette catalog was removed. Wait for it to reload before adding a palette.");
 
-        string id = "palette-" + Guid.NewGuid().ToString("N"), asset = "Textures/palettes/" + id + ".png";
+        string id = "palette-" + Guid.NewGuid().ToString("N"), asset = files.NextPaletteAsset(files.PaletteDirectory(name), "atlas");
         PaletteAtlas.Result atlas = PaletteAtlas.Create(asset, color);
         var material = new MaterialData { id = id, name = name, color = color, themeId = id, sprites = atlas.Sprites };
         var nextNode = JsonNode.Parse(Data.GetRawText())!;

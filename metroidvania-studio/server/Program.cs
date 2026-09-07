@@ -29,7 +29,9 @@ foreach (string candidate in new[] { sessionDirectory, sessionFile })
 Directory.CreateDirectory(sessionDirectory);
 using var workspaceLock = new FileStream(sessionFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
 PortableWorkspace.SeedResources(project, studioRoot);
+TextureLibrary.Prepare(files, studioRoot);
 var workspace = new EditorWorkspace(files);
+using var nativeMaps = new NativeMapFiles(files);
 string webRoot = Path.GetFullPath(builder.Configuration["web-root"] ?? Path.Combine(studioRoot, "metroidvania-studio/dist"));
 var app = builder.Build();
 app.Use(async (context, next) =>
@@ -131,7 +133,7 @@ string CurrentExportDirectory()
     lock (workspace.Gate) return files.AutoExportPath(AutoRoomExporter.MapKey(workspace.Session.FilePath == null ? null : files.Relative(workspace.Session.FilePath)));
 }
 app.MapGet("/api/workspace-folders", () => Results.Json(new { project = files.ProjectPath, maps = files.MapsPath,
-    textures = files.TexturesPath, catalog = files.CatalogWritePath, autoExport = files.AutoExportDirectory, currentExport = CurrentExportDirectory() }));
+    textures = files.TexturesPath, catalog = files.CatalogWritePath, autoExport = files.AutoExportDirectory, currentExport = CurrentExportDirectory(), nativeMapDialogs = nativeMaps.Available }));
 app.MapPost("/api/workspace-folders/open", async (HttpRequest request) =>
 {
     using var body = await JsonDocument.ParseAsync(request.Body);
@@ -145,6 +147,24 @@ app.MapPost("/api/workspace-folders/open", async (HttpRequest request) =>
         : new ProcessStartInfo(OperatingSystem.IsMacOS() ? "open" : "xdg-open") { UseShellExecute = false };
     if (!OperatingSystem.IsWindows()) start.ArgumentList.Add(folder);
     using var process = Process.Start(start);
+    return Results.Ok();
+});
+app.MapPost("/api/native-map/pick", async (HttpRequest request) =>
+{
+    using var body = await JsonDocument.ParseAsync(request.Body);
+    var value = body.RootElement;
+    return Results.Json(await nativeMaps.Pick(value.GetProperty("mode").GetString()!, value.GetProperty("name").GetString()!, request.HttpContext.RequestAborted));
+});
+app.MapPost("/api/native-map/read", async (HttpRequest request) =>
+{
+    using var body = await JsonDocument.ParseAsync(request.Body);
+    return Results.Bytes(nativeMaps.Read(body.RootElement.GetProperty("token").GetString()!), "application/json");
+});
+app.MapPost("/api/native-map/write", async (HttpRequest request) =>
+{
+    using var body = await JsonDocument.ParseAsync(request.Body);
+    var value = body.RootElement;
+    nativeMaps.Write(value.GetProperty("token").GetString()!, value.GetProperty("document").GetRawText(), value.GetProperty("hash").GetString()!);
     return Results.Ok();
 });
 app.MapGet("/api/files", () => Results.Json(files.List()));

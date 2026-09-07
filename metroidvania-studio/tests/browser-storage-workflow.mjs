@@ -20,6 +20,7 @@ try {
     window.showOpenFilePicker = async options => { window.__openOptions = options; return []; };
     window.showSaveFilePicker = async options => { window.__saveOptions = options; return (await navigator.storage.getDirectory()).getFileHandle('chosen.png', {create:true}); };
   });
+  await page.route('**/api/workspace-folders', async route => { const response = await route.fetch(); const data = await response.json(); data.nativeMapDialogs = false; await route.fulfill({response,json:data}); });
   await page.goto(base); await page.locator('.palette-settings').first().waitFor(); await page.locator('#language').selectOption('EN');
   await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', {name:'Storage folders',exact:true}).click();
   assert.equal(await page.locator('#storage-maps').inputValue(), folders.maps);
@@ -40,13 +41,12 @@ try {
   assert.deepEqual(remembered,['Maps','Maps','Textures']);
   await page.locator('.palette-settings').first().click(); await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled);
   await page.locator('#tileset-mode').selectOption('four'); await page.locator('#tileset-load-template').click();
-  await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled&&document.querySelector('#tileset-source').width===64);
+  await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled&&document.querySelectorAll('.tileset-slot:not(.unassigned)').length===4);
   const before = await page.locator('#tileset-example').evaluate(c=>c.toDataURL()), slots=await page.locator('.tileset-slot small').allTextContents();
-  await page.locator('#tileset-source').click({position:{x:200,y:24}});
-  assert.deepEqual(await page.locator('.tileset-slot small').allTextContents(),slots,'Source click must not change any rule.');
-  assert.equal(await page.locator('#tileset-example').evaluate(c=>c.toDataURL()),before,'Source click must not change the composed preview.');
-  await page.locator('#tileset-assign-selected').click();
-  assert.equal(await page.locator('.tileset-slot small').first().innerText(),'3,0','Only explicit assignment changes the selected slot.');
+  assert.equal(await page.locator('#tileset-source, #tileset-auto-assign, #tileset-assign-selected').count(), 0);
+  await page.locator('.tileset-slot').nth(3).click();
+  assert.deepEqual(await page.locator('.tileset-slot small').allTextContents(),slots,'Slot selection must not change any rule.');
+  assert.equal(await page.locator('#tileset-example').evaluate(c=>c.toDataURL()),before,'Slot selection must preserve the composed preview.');
   const inputTiming = await page.evaluate(() => {
     const color=document.querySelector('#tileset-color'), slots=document.querySelector('#tileset-slots'), first=slots.firstChild;
     const start=performance.now();
@@ -61,5 +61,27 @@ try {
   await page.waitForFunction(()=>window.__saveOptions?.id==='studio-texture');
   assert.equal(await page.evaluate(()=>window.__saveOptions.startIn.name),'Textures');
   await page.keyboard.press('Escape'); assert.deepEqual(errors,[]);
-  console.log('PASS: visible storage paths, folder scope rejection, remembered map/PNG dialogs, non-destructive source selection, explicit assignment, color input '+inputTiming.elapsed.toFixed(2)+'ms / 200 events.');
+  await page.unroute('**/api/workspace-folders');
+  await page.route('**/api/workspace-folders', async route => { const response=await route.fetch(); const data=await response.json(); data.nativeMapDialogs=true; await route.fulfill({response,json:data}); });
+  let selectedText='', pickedMode='', cancel=false, writes=0;
+  await page.route('**/api/native-map/*', async route => {
+    const action=route.request().url().split('/').pop(), data=route.request().postDataJSON();
+    if(action==='pick'){pickedMode=data.mode;await route.fulfill({json:cancel?null:{token:'chosen-json',name:'chosen.map.json'}});return;}
+    assert.equal(data.token,'chosen-json','Only the OS-selected file grant is used.');
+    if(action==='read'){await route.fulfill({contentType:'application/json',body:selectedText});return;}
+    assert.equal(action,'write');assert.equal(typeof data.hash,'string');assert.ok(data.document.rooms);selectedText=JSON.stringify(data.document);writes++;await route.fulfill({json:{}});
+  });
+  await page.reload();await page.locator('.palette-settings').first().waitFor();
+  await page.evaluate(async()=>{
+    const files=await import('./file-access.js'), handle=await files.pickMapSave('world.map.json');
+    const document=(await(await fetch('/api/state?full=true')).json()).document;
+    await files.writeMapFile(handle,JSON.stringify(document),await files.fileHash(await handle.getFile()));
+  });
+  assert.equal(pickedMode,'save');assert.equal(writes,1);assert.ok(selectedText.length>0);
+  const name=await page.evaluate(async()=>{const files=await import('./file-access.js');const chosen=await files.pickMapFile();return chosen.file.name;});
+  assert.equal(pickedMode,'open');assert.equal(name,'chosen.map.json');
+  cancel=true;
+  assert.equal(await page.evaluate(async()=>{try{await(await import('./file-access.js')).pickMapSave('cancel.json');return false;}catch(e){return e.name==='AbortError';}}),true);
+  assert.equal(writes,1,'Cancel must not trigger a download or save.');assert.deepEqual(errors,[]);
+  console.log('PASS: visible storage paths, folder scope rejection, remembered map/PNG dialogs, compact import panel, non-destructive slot selection, color input '+inputTiming.elapsed.toFixed(2)+'ms / 200 events.');
 } finally { await browser.close(); }

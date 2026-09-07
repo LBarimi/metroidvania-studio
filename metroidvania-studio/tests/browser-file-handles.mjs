@@ -1,5 +1,6 @@
 // Replace only OS-dialog selection; exercise the browser's real file handles and atomic writable streams.
 export async function installFilePickers(page) {
+  await page.route('**/api/workspace-folders', async route => { const response = await route.fetch(); const data = await response.json(); data.nativeMapDialogs = false; await route.fulfill({response,json:data}); });
   await page.addInitScript(() => {
     const test = window.__filePickers = { saveName: 'saved.map.json', openName: 'opened.map.json', cancel: false, deny: false,
       failWrite: false, afterWriteName: '', saveCalls: 0, openCalls: 0, activeCalls: [], writes: 0,

@@ -5,6 +5,8 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("readable texture library migration preserves sprites and original sources", TextureWorkflowTests.Library),
+    ("native map dialog starts in Maps and restricts writes to selected JSON", TextureWorkflowTests.NativeFiles),
     ("portable storage migration preserves maps, original textures and recovery", PortableWorkspaceTests.Migration),
     ("portable storage rejects conflicts, active sessions and external paths", PortableWorkspaceTests.Conflicts),
     ("four-tile canonical rotations and complete mask coverage", TilesetTests.FourRotations),
@@ -405,7 +407,7 @@ static void PaletteStorageIsolation(EditorWorkspace w)
     string id = catalog.AddPalette("Local stage", "#123456");
     Check(File.ReadAllText(source) == original, "The installation catalog must remain read-only.");
     Check(File.Exists(Path.Combine(workspace, "content", "catalog.json")) &&
-        File.Exists(Path.Combine(workspace, "content", "textures", "palettes", id + ".png")), "Configured storage roots must be respected.");
+        File.Exists(Path.Combine(workspace, "content", "textures", "palettes", "local-stage", "atlas-1.png")), "Configured storage roots must be respected.");
     var restored = new Catalog(new ProjectFiles(workspace, studioRoot: install)); restored.Refresh();
     Check(restored.Materials.ContainsKey(id), "Workspace override must be used on restart.");
 }
