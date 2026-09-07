@@ -246,6 +246,78 @@ test('platform launcher preserves ownership, builds and pending edits', { timeou
       }
     });
 
+    await context.test('automatic ports isolate workspaces, reuse concurrent launches and preserve explicit overrides', async () => {
+      const original = await jsonRequest(port, '/api/health');
+      const commands = argumentsFor('run', ['--auto-port'], port, otherWorkspace);
+      const results = await Promise.all([invoke(commands), invoke(commands)]);
+      const ports = results.map(result => Number(/http:\/\/127\.0\.0\.1:(\d+)\//.exec(result.output)?.[1]));
+      for (const targetPort of ports.filter(Number.isInteger)) {
+        const health = await optionalHealth(targetPort);
+        if (health?.projectPath === otherWorkspace) owned.set(targetPort, health.instanceId);
+      }
+      for (const result of results) assert.equal(result.code, 0, result.output);
+      assert.equal(ports[0], ports[1], 'Concurrent launches must resolve the same workspace port.');
+      const autoPort = ports[0];
+      assert.notEqual(autoPort, port);
+      const active = await jsonRequest(autoPort, '/api/health');
+      assert.equal(path.resolve(active.projectPath), path.resolve(otherWorkspace));
+      await assertUnchanged(original);
+      // A newly available preferred port must not replace the remembered active port.
+      const freePreferred = await availablePort();
+      const reused = await invoke(argumentsFor('run', ['--auto-port'], freePreferred, otherWorkspace));
+      assert.equal(reused.code, 0, reused.output);
+      assert.ok(reused.output.includes(`http://127.0.0.1:${autoPort}/`));
+      assert.equal((await jsonRequest(autoPort, '/api/health')).instanceId, active.instanceId);
+      await expectFailure('run', ['--auto-port', '--port', String(port)], port, otherWorkspace);
+      const unrelatedStop = await invoke(argumentsFor('stop', ['--auto-port'], autoPort, path.join(fixture, 'never-opened')));
+      assert.equal(unrelatedStop.code, 0, unrelatedStop.output);
+      assert.equal((await jsonRequest(autoPort, '/api/health')).instanceId, active.instanceId);
+      const autoRecord = path.join(fixture, 'metroidvania-studio/.local', `server-${autoPort}.json`);
+      const savedRecord = readFileSync(autoRecord);
+      try {
+        writeJson(autoRecord, { ...readJson(autoRecord), instanceId: randomUUID() });
+        await expectFailure('run', ['--auto-port'], port, otherWorkspace);
+        await expectFailure('stop', ['--auto-port'], port, otherWorkspace);
+        assert.equal((await jsonRequest(autoPort, '/api/health')).instanceId, active.instanceId);
+      } finally { writeFileSync(autoRecord, savedRecord); }
+      const stopped = await invoke(argumentsFor('stop', ['--auto-port'], port, otherWorkspace));
+      assert.equal(stopped.code, 0, stopped.output);
+      await waitUntil(async () => !(await optionalHealth(autoPort)), 'Automatic stop did not use its remembered port.');
+      owned.delete(autoPort);
+      assert.equal(existsSync(autoRecord), false);
+      await assertUnchanged(original);
+
+      // Another application can take the remembered port after a clean stop.
+      let shutdownRequests = 0;
+      const listener = http.createServer((request, response) => {
+        if (request.url === '/api/shutdown') shutdownRequests++;
+        response.end('another local application');
+      });
+      await new Promise((resolve, reject) => {
+        listener.once('error', reject); listener.listen(autoPort, '127.0.0.1', resolve);
+      });
+      try {
+        const next = await invoke(commands);
+        const nextPort = Number(/http:\/\/127\.0\.0\.1:(\d+)\//.exec(next.output)?.[1]);
+        const health = Number.isInteger(nextPort) ? await optionalHealth(nextPort) : null;
+        if (health?.projectPath === otherWorkspace) owned.set(nextPort, health.instanceId);
+        assert.equal(next.code, 0, next.output);
+        assert.notEqual(nextPort, autoPort);
+        assert.notEqual(nextPort, port);
+        assert.equal(path.resolve(health.projectPath), path.resolve(otherWorkspace));
+        const stop = await invoke(argumentsFor('stop', ['--auto-port'], port, otherWorkspace));
+        assert.equal(stop.code, 0, stop.output);
+        await waitUntil(async () => !(await optionalHealth(nextPort)), 'Replacement automatic session did not stop.');
+        owned.delete(nextPort);
+        assert.equal(shutdownRequests, 0);
+        assert.equal(await (await fetch(`http://127.0.0.1:${autoPort}/`)).text(), 'another local application');
+      } finally {
+        listener.closeAllConnections();
+        await new Promise(resolve => listener.close(resolve));
+      }
+      await assertUnchanged(original);
+    });
+
     await context.test('failed recovery write refuses shutdown and leaves the session editable', async () => {
       const current = await jsonRequest(port, '/api/health');
       const recoveryPath = path.join(workspace, 'Maps/.Recovery/Workspace.map.json');
@@ -285,7 +357,7 @@ test('platform launcher preserves ownership, builds and pending edits', { timeou
       try {
         const health = await optionalHealth(targetPort);
         if (!health || health.instanceId !== instanceId) continue;
-        assert.equal(path.resolve(health.projectPath), path.resolve(workspace));
+        assert.ok([workspace, otherWorkspace].includes(path.resolve(health.projectPath)));
         await jsonRequest(targetPort, '/api/shutdown', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Metroidvania-Studio-Instance': instanceId },
           body: '{}',

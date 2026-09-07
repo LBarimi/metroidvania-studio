@@ -29,4 +29,4 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export DOTNET_NOLOGO=1
 action=run
 case "${1:-}" in --stop) action=stop; shift ;; --check) action=check; shift ;; esac
-exec "$dotnet" "$root/app/metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll" "$action" --studio-root "$root/app" --project "$workspace" "$@"
+exec "$dotnet" "$root/app/metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll" "$action" --studio-root "$root/app" --project "$workspace" --auto-port "$@"

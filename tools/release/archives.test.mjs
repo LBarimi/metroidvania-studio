@@ -80,6 +80,7 @@ test('root Unix runners select architecture and preserve arguments with spaces',
         execFileSync(shell, ['-c', 'PATH="$STUDIO_TEST_TOOLS:$PATH"; export PATH; exec /bin/sh "$@"', 'release-test', posix(script), ...(option ? [option] : []), '--project', 'workspace space & 한글', '--port', '19401', '--no-browser'], { env, windowsHide: true });
         const args = readFileSync(capture, 'utf8').trimEnd().split('\n');
         assert.equal(args[1], option === '--stop' ? 'stop' : option === '--check' ? 'check' : 'run');
+        assert.ok(args.indexOf('--auto-port') > 1 && args.indexOf('--auto-port') < args.indexOf('--port'));
         assert.deepEqual(args.slice(-5), ['--project', 'workspace space & 한글', '--port', '19401', '--no-browser']);
       }
     }

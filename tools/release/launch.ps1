@@ -20,5 +20,5 @@ if ($studioArguments.Count -gt 0 -and $studioArguments[0] -in @('--stop', '--che
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:DOTNET_NOLOGO = '1'
 $studioWorkspace = Join-Path $env:LOCALAPPDATA 'MetroidvaniaStudio/workspace'
-& $studioDotnet (Join-Path $studioPayload 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll') $studioAction --studio-root $studioPayload --project $studioWorkspace @studioArguments
+& $studioDotnet (Join-Path $studioPayload 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll') $studioAction --studio-root $studioPayload --project $studioWorkspace --auto-port @studioArguments
 exit $LASTEXITCODE

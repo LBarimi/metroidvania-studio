@@ -2,6 +2,8 @@
 
 ## 1.0.0
 
+- Fix release web launchers when another workspace occupies the default port; remember an available loopback port for reopening and stopping the same session.
+
 - First stable release with connected rooms, responsive tile painting, room transforms, and minimap editing.
 - Export engine-neutral JSON and import rooms through Unity, Godot, Unreal Engine 4/5, and SDL3 packages.
 - Add ready-to-run web, Windows, macOS, and Linux downloads with launch files at the archive root.

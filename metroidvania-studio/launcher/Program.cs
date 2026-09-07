@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace MetroidvaniaStudio.Launcher;
 
-internal static class Program
+internal static partial class Program
 {
     private static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
     private static readonly HttpClient Http = new(new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(2) };
@@ -15,7 +15,7 @@ internal static class Program
     private sealed record Health(string InstanceId, string ProjectPath, string? LaunchToken, int ProcessId, string? RuntimePath);
     private sealed record Session(int Pid, DateTime ProcessStartUtc, int Port, string InstanceId, string ProjectPath, string DllPath, string? LaunchToken);
     private sealed record BuildIndex(int FormatVersion, string Folder);
-    private sealed record Options(string Action, string Root, string Project, int Port, bool NoBrowser, bool Restart, bool Foreground, string? BuildDirectory)
+    private sealed record Options(string Action, string Root, string Project, int Port, bool NoBrowser, bool Restart, bool Foreground, string? BuildDirectory, bool AutoPort)
     {
         public string Local => Path.Combine(Root, "metroidvania-studio", ".local");
         public string Record => Path.Combine(Local, $"server-{Port}.json");
@@ -29,12 +29,16 @@ internal static class Program
             Options options = Parse(args);
             if (options.Action == "check") { Console.WriteLine("Build ready: " + ResolveBuild(options)); return 0; }
             Directory.CreateDirectory(options.Local);
+            // Validate the build before changing a port assignment or running session.
+            string build = options.Action == "run" ? ResolveBuild(options) : "";
+            var session = await AcquireSessionLock(options);
+            options = session.Options;
+            if (session.Lock == null) { Console.WriteLine("No matching background session is running."); return 0; }
             Process? foreground = null;
-            using (await Lock(options))
+            using (session.Lock)
             {
                 if (options.Action == "stop") { await Stop(options); return 0; }
-                // Check every new build input before saving/stopping a working old session.
-                string build = ResolveBuild(options), dll = Path.Combine(build, "metroidvania-studio/server/MetroidvaniaStudio.Server.dll");
+                string dll = Path.Combine(build, "metroidvania-studio/server/MetroidvaniaStudio.Server.dll");
                 Health? active = await ReadHealth(options);
                 if (active != null)
                 {
@@ -96,9 +100,9 @@ internal static class Program
 
     private static Options Parse(string[] args)
     {
-        if (args.Length == 0 || args[0] is not ("run" or "stop" or "check")) throw new ArgumentException("Usage: launcher run|stop|check --studio-root <folder> [--project <folder>] [--port <number>] [--no-browser] [--restart]");
+        if (args.Length == 0 || args[0] is not ("run" or "stop" or "check")) throw new ArgumentException("Usage: launcher run|stop|check --studio-root <folder> [--project <folder>] [--port <number> | --auto-port] [--no-browser] [--restart]");
         string? root = null, project = null, build = null; int port = 18765;
-        bool noBrowser = false, restart = false, foreground = false;
+        bool noBrowser = false, restart = false, foreground = false, autoPort = false;
         for (int i = 1; i < args.Length; i++)
         {
             string Value() { if (++i >= args.Length) throw new ArgumentException("Missing option value."); return args[i]; }
@@ -106,7 +110,8 @@ internal static class Program
             {
                 case "--studio-root": root = Value(); break;
                 case "--project": project = Value(); break;
-                case "--port": if (!int.TryParse(Value(), NumberStyles.None, CultureInfo.InvariantCulture, out port) || port < 1024 || port > 65535) throw new ArgumentException("Choose a port between 1024 and 65535."); break;
+                case "--port": if (!int.TryParse(Value(), NumberStyles.None, CultureInfo.InvariantCulture, out port) || port < 1024 || port > 65535) throw new ArgumentException("Choose a port between 1024 and 65535."); autoPort = false; break;
+                case "--auto-port": autoPort = true; break;
                 case "--build-directory": build = Value(); break;
                 case "--no-browser": noBrowser = true; break;
                 case "--restart": restart = true; break;
@@ -116,17 +121,18 @@ internal static class Program
         }
         if (string.IsNullOrWhiteSpace(root)) throw new ArgumentException("--studio-root is required.");
         root = Normalize(root);
-        return new Options(args[0], root, Normalize(string.IsNullOrWhiteSpace(project) ? Path.Combine(root, ".local/workspace") : project), port, noBrowser, restart, foreground, build == null ? null : Normalize(build));
+        return new Options(args[0], root, Normalize(string.IsNullOrWhiteSpace(project) ? Path.Combine(root, ".local/workspace") : project), port, noBrowser, restart, foreground, build == null ? null : Normalize(build), autoPort);
     }
     private static string Normalize(string value) => Path.TrimEndingDirectorySeparator(Path.GetFullPath(value));
     private static bool SamePath(string? left, string? right) => left != null && right != null && string.Equals(Normalize(left), Normalize(right), Paths);
-    private static async Task<FileStream> Lock(Options options)
+    private static Task<FileStream> Lock(Options options) => LockFile(Path.Combine(options.Local, $"server-{options.Port}.lock"));
+    private static async Task<FileStream> LockFile(string file)
     {
         var deadline = DateTime.UtcNow.AddSeconds(30);
         while (true)
         {
-            try { return new FileStream(Path.Combine(options.Local, $"server-{options.Port}.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); }
-            catch (IOException) { if (DateTime.UtcNow >= deadline) throw new IOException("Another launcher is working on this port. Retry when it finishes."); await Task.Delay(100); }
+            try { return new FileStream(file, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None); }
+            catch (IOException) { if (DateTime.UtcNow >= deadline) throw new IOException("Another launcher is working on this session. Retry when it finishes."); await Task.Delay(100); }
         }
     }
     private static string ResolveBuild(Options options)
