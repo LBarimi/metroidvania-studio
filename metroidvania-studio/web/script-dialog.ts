@@ -1,3 +1,4 @@
+import { scriptLibrary } from './script-library.js';
 type ScriptHost = {
   t: (key: string) => string;
   prepare: () => Promise<{ instanceId: string; documentRevision: number }>;
@@ -36,7 +37,8 @@ export function openScriptDialog(host: ScriptHost): void {
   const seedLabel = document.createElement('label'); seedLabel.textContent = host.t('scripts.seed');
   const seed = document.createElement('input'); seed.type = 'number'; seed.value = '1'; seed.step = '1'; seed.id = 'script-seed'; seedLabel.append(seed);
   const dryLabel = document.createElement('label'); const dry = document.createElement('input'); dry.type = 'checkbox'; dry.id = 'script-dry-run'; dryLabel.append(dry, document.createTextNode(host.t('scripts.dryRun')));
-  let job: Job | null = null, starting = false, closed = false, timer = 0;
+  let job: Job | null = null, starting = false, closed = false, timer = 0, libraryBusy = false;
+  let library: ReturnType<typeof scriptLibrary> | null = null;
   let pending: Submission | null = null, cancelWanted = false, recovering = false;
   const clientId = crypto.randomUUID();
   async function request<T>(url: string, body?: unknown): Promise<T> {
@@ -54,7 +56,8 @@ export function openScriptDialog(host: ScriptHost): void {
     return value as T;
   }
   function controls(): void {
-    const busy = starting || pending !== null || job?.phase === 'running';
+    const busy = libraryBusy || starting || pending !== null || job?.phase === 'running';
+    library?.setBusy(!!busy);
     run.disabled = !!busy; cancel.disabled = !busy; source.readOnly = !!busy;
     seed.disabled = dry.disabled = load.disabled = save.disabled = !!busy;
   }
@@ -141,7 +144,7 @@ export function openScriptDialog(host: ScriptHost): void {
     } finally { starting = false; controls(); }
   }
   const run = button('scripts.run', () => { void (async () => {
-    if (starting || pending || job?.phase === 'running') return;
+    if (libraryBusy || starting || pending || job?.phase === 'running') return;
     starting = true; cancelWanted = false; job = null; controls(); output.textContent = host.t('scripts.running');
     try {
       const bytes = new TextEncoder().encode(source.value);
@@ -167,7 +170,11 @@ export function openScriptDialog(host: ScriptHost): void {
     picker.onchange = () => { void (async () => { try {
       const file = picker.files?.[0]; if (!file) return;
       if (file.size > 65536) throw new Error(host.t('scripts.sourceLimit'));
-      source.value = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+      if (closed || libraryBusy || starting || pending || job?.phase === 'running') return;
+      const importedSource = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+      if (closed || libraryBusy || starting || pending || job?.phase === 'running') return;
+      source.value = importedSource;
+      library?.imported(file.name); source.dispatchEvent(new Event('input'));
     } catch (error) { output.textContent = String(error); } })(); }; picker.click();
   });
   const save = button('scripts.save', () => {
@@ -175,9 +182,11 @@ export function openScriptDialog(host: ScriptHost): void {
     const link = document.createElement('a'); link.href = url; link.download = 'map-script.lua'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
   const close = button('close', () => dialog.close());
+  library = scriptLibrary({ t: host.t, source, output, closed: () => closed, busy: value => { libraryBusy = value; controls(); } });
+  source.addEventListener('input', () => { try { localStorage.setItem('metroidvania-studio.lua', source.value); } catch { /* Keep editing when browser storage is full. */ } });
   toolbar.append(load, save, seedLabel, dryLabel);
   const footer = document.createElement('div'); footer.className = 'dialog-footer'; footer.append(cancel, run, close);
-  dialog.append(heading, hint, toolbar, source, output, footer);
+  dialog.append(heading, hint, library.root, toolbar, source, output, footer);
   dialog.addEventListener('keydown', event => {
     event.stopPropagation();
     if (event.key === 'Escape') { event.preventDefault(); dialog.close(); }
@@ -198,5 +207,5 @@ export function openScriptDialog(host: ScriptHost): void {
     else if (job?.phase === 'running') void cancelKnown();
     dialog.remove();
   });
-  document.body.append(dialog); dialog.show(); controls(); source.focus();
+  document.body.append(dialog); dialog.show(); controls(); source.focus(); void library.refresh();
 }

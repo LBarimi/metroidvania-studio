@@ -350,18 +350,18 @@ function drawChrome(): void {
   const cameraSettings = button(locale.t('cameraSettings'), cameraSettingsDialog, 'ghost'); cameraSettings.id = 'camera-settings-action';
   const metadata = button('⚙ ' + locale.t('metadata'), metadataDialog, 'ghost'); metadata.id = 'metadata-action';
   const inspectorToggle = button('☷ ' + locale.t('inspector'), () => { inspectorHidden = !inspectorHidden; localStorage.setItem('mapstudio.inspectorHidden', String(inspectorHidden)); updateView(); }, 'ghost'); inspectorToggle.id = 'inspector-toggle';
+  const scripts = button(locale.t('scripts.menu'), () => openScriptDialog({ t: key => locale.t(key),
+    prepare: async () => { await settleFileSnapshot(); await api.refresh(false); if (!api.state) throw new Error(locale.t('loading')); return { instanceId: api.state.instanceId, documentRevision: api.state.documentRevision }; },
+    refresh: () => api.refresh(false) })); scripts.id = 'scripts-action';
   actions.prepend(menu('file-menu', locale.t('file') + ' (F)', [
     button(locale.t('new'), () => fileDialog('new')), button(locale.t('addRoom'), roomAddDialog),
     button(locale.t('open'), () => fileDialog('open')), button(locale.t('import'), importDocument), button(locale.t('importRooms'), importRooms), null,
     button(locale.t('save') + '   Ctrl+S', save), button(locale.t('saveAs'), () => fileDialog('saveAs')), null,
     button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
-    button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed'))]));
-  const scripts = button(locale.t('scripts.title'), () => openScriptDialog({ t: key => locale.t(key),
-    prepare: async () => { await settleFileSnapshot(); await api.refresh(false); if (!api.state) throw new Error(locale.t('loading')); return { instanceId: api.state.instanceId, documentRevision: api.state.documentRevision }; },
-    refresh: () => api.refresh(false) })); scripts.id = 'scripts-action';
-  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null, cameraSettings, metadata, null, scripts]),
-    menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
+    button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')), null, scripts]));
+  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null, cameraSettings, metadata]),
+    menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('docs.title'), () => { window.open('/docs/', '_blank', 'noopener'); }), button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }), null, button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
   const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
   updateView(); drawPanels(true); renderInspector(true);
 }

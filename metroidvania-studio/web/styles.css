@@ -809,7 +809,7 @@ dialog::backdrop { background: #050505b8; }
 
 .standalone-app #edit-menu { display: none; }
 
-.script-dialog { position: fixed; inset: 0; box-sizing: border-box; overflow: auto; z-index: 120; width: min(660px, 88vw); max-height: 85vh; margin: auto; padding: 18px; box-shadow: 0 12px 60px #000b; }
+.script-dialog { position: fixed; inset: 0; box-sizing: border-box; overflow: auto; z-index: 120; width: min(900px, calc(100vw - 32px)); max-height: 85vh; margin: auto; padding: 18px; box-shadow: 0 12px 60px #000b; }
 .script-dialog[open] { display: flex; flex-direction: column; gap: 12px; }
 .script-dialog .dialog-title { font-size: 17px; }
 .script-dialog p { margin: 0; }
@@ -818,3 +818,12 @@ dialog::backdrop { background: #050505b8; }
 .script-options input[type="number"] { width: 85px; }
 #script-source { box-sizing: border-box; width: 100%; min-height: min(240px, 25dvh); height: 35vh; resize: vertical; white-space: pre; tab-size: 2; font: 13px/1.6 Consolas, monospace; color: #efefef; background: #171717; padding: 10px; }
 #script-output { box-sizing: border-box; min-height: 65px; max-height: 120px; margin: 0; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: #dedede; font: 12px/1.5 Consolas, monospace; }
+
+.script-library { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:12px; background:#1d2530; border:1px solid #414c5d; border-radius:5px; }
+.script-library select { flex:1; min-width:200px; }
+.script-library input { width:180px; }
+.script-library a { color:#9bcbff; font-size:12px; margin-left:auto; }
+.script-dialog .script-options { flex-wrap:wrap; }
+
+.script-options label:has(input[type="checkbox"]) { flex-direction:row; width:auto; }
+.script-options input[type="checkbox"] { width:auto; }

@@ -304,3 +304,17 @@ scripts.sourceLimit,스크립트는 비어 있지 않아야 하며 UTF-8 기준 
 scripts.seedInvalid,시드는 32비트 정수여야 합니다.,Seed must be a 32-bit integer.,シードは32ビット整数にしてください。,种子必须为32位整数。,種子必須為32位整數。,Зерно должно быть 32-битным целым числом.
 scripts.connectionUnknown,연결이 끊겼습니다. 스크립트가 시작됐는지 확인 중…,Connection interrupted. Checking whether the script started…,接続が切れました。スクリプトの開始を確認中…,连接中断。正在检查脚本是否已启动…,連線中斷。正在檢查指令碼是否已啟動…,Соединение прервано. Проверка запуска скрипта…
 scripts.cancelPending,취소하기 전에 스크립트 상태를 확인 중…,Checking the script status before cancellation…,キャンセル前にスクリプトの状態を確認中…,正在检查脚本状态以取消执行…,正在檢查指令碼狀態以取消執行…,Проверка состояния скрипта перед отменой…
+scripts.menu,스크립트,Scripts,スクリプト,脚本,指令碼,Скрипты
+scripts.library,내 스크립트,My scripts,マイスクリプト,我的脚本,我的指令碼,Мои скрипты
+scripts.examples,예제,Examples,サンプル,示例,範例,Примеры
+scripts.filename,파일 이름,Filename,ファイル名,文件名,檔案名稱,Имя файла
+scripts.draft,작성 중인 스크립트,Current draft,編集中のスクリプト,当前草稿,目前草稿,Текущий черновик
+scripts.new,새 스크립트,New script,新規スクリプト,新建脚本,新增指令碼,Новый скрипт
+scripts.saveLibrary,목록에 저장,Save to library,ライブラリに保存,保存到脚本库,儲存至指令碼庫,Сохранить в библиотеку
+scripts.refresh,목록 새로고침,Refresh list,一覧を更新,刷新列表,重新整理清單,Обновить список
+scripts.apiGuide,Lua API 가이드,Lua API guide,Lua API ガイド,Lua API 指南,Lua API 指南,Руководство Lua API
+scripts.discard,저장하지 않은 코드를 다른 스크립트로 바꿀까요?,Replace the unsaved code with another script?,未保存のコードを別のスクリプトに置き換えますか？,将未保存的代码替换为其他脚本吗？,將未儲存的程式碼替換為其他指令碼嗎？,Заменить несохранённый код другим скриптом?
+scripts.opened,스크립트를 열었습니다. 실행 버튼을 누르면 적용됩니다.,Script opened. Select Run to apply it.,スクリプトを開きました。実行すると適用されます。,脚本已打开。选择运行以应用。,已開啟指令碼。選擇執行以套用。,Скрипт открыт. Нажмите «Запустить» для применения.
+scripts.savedLibrary,작업 폴더의 Scripts에 저장했습니다.,Saved in the workspace Scripts folder.,作業フォルダーの Scripts に保存しました。,已保存到工作区 Scripts 文件夹。,已儲存至工作區的 Scripts 資料夾。,Сохранено в папке Scripts рабочего каталога.
+docs.title,가이드 문서,Documentation,ドキュメント,文档,說明文件,Документация
+docs.api,API 레퍼런스,API reference,API リファレンス,API 参考,API 參考,Справочник API

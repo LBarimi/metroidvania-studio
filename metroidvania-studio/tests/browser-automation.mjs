@@ -13,7 +13,7 @@ const document = async () => (await (await fetch(base + '/api/v1/document')).jso
 try {
   await page.goto(base); await page.locator('#room-list button').first().waitFor();
   const original = await document();
-  await page.locator('#edit-menu-button').click(); await page.locator('#scripts-action').click();
+  await page.locator('#file-menu-button').click(); await page.locator('#scripts-action').click();
   await page.locator('#script-source').fill('studio.rename { name = "Automated web" }\nprint("first batch done")');
   await page.locator('#script-run').click(); await page.waitForFunction(() => document.querySelector('#script-output').textContent.includes('first batch done'));
   assert.equal((await document()).document.name, 'Automated web');
@@ -41,7 +41,7 @@ try {
   assert.equal((await document()).document.name, 'Automated web');
   // An accepted POST can lose its response. Recover the same job identity and
   // create exactly one edit/history entry instead of submitting another run.
-  await page.locator('#edit-menu-button').click(); await page.locator('#scripts-action').click();
+  await page.locator('#file-menu-button').click(); await page.locator('#scripts-action').click();
   const beforeRecovery = await document();
   const submissions = []; const acceptedIds = [];
   let firstAccepted;
@@ -76,7 +76,7 @@ try {
   assert.deepEqual((await document()).document, recovered.document);
 
   // Closing an uncertain submission uses lookup/cancel, never a new POST.
-  await page.locator('#edit-menu-button').click(); await page.locator('#scripts-action').click();
+  await page.locator('#file-menu-button').click(); await page.locator('#scripts-action').click();
   let closeJob; let closePosts = 0; let closeAccepted;
   const closingAccepted = new Promise(resolve => { closeAccepted = resolve; });
   await page.route('**/api/v1/jobs', async route => {
