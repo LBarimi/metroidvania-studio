@@ -85,7 +85,12 @@ export async function prepareRelease(state, windowsPackage, { candidate = false,
     run(dotnet, ['publish', project, '--no-build', '--no-restore', ...properties, '--output', path.join(common, 'app/metroidvania-studio', component)]);
   }
   run(process.execPath, ['metroidvania-studio/build-web.mjs', path.join(common, 'app/metroidvania-studio/dist')]);
-  for (const relative of ['metroidvania-studio/localization', 'samples', 'docs']) cpSync(path.join(root, relative), path.join(common, 'app', relative), { recursive: true });
+  for (const relative of ['metroidvania-studio/localization', 'samples', 'docs',
+    'metroidvania-studio/contracts/FORMAT.md', 'metroidvania-studio/contracts/map-format-v2.schema.json']) {
+    const destination = path.join(common, 'app', relative);
+    mkdirSync(path.dirname(destination), { recursive: true });
+    cpSync(path.join(root, relative), destination, { recursive: true });
+  }
   for (const name of ['LICENSE', 'THIRD-PARTY-NOTICES.md']) cpSync(path.join(root, name), path.join(common, name));
   run(process.execPath, ['integrations/build-packages.mjs', '--output', path.join(common, 'engine-packages')]);
   const archives = await buildArchives({ common, output, version: state.version, commit: state.head, windowsPackage: path.resolve(windowsPackage) });

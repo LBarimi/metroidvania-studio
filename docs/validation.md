@@ -41,9 +41,11 @@ The first command produces `builds/npm/metroidvania-studio-1.1.0.tgz`. The secon
 
 ## 1.1.0 internal verification
 
-Windows checks passed for the existing core (41), existing server (82), editing API (30), Lua runtime (16), atomic web jobs (8), CLI/MCP process tests (14), actual live-server integration (1), and repository/build/package tooling (43).
+Windows checks passed for the existing core (41), existing server (82), editing API (30), Lua runtime (16), atomic web jobs (8), CLI/MCP process tests (14), actual live-server integration (1), and repository/build/package tooling (44).
 
 Headless browser tests passed, including lost-response recovery and room export compatibility. Dense brush processing P95 was approximately **0.2–0.3 ms** on the development machine; 262,144-tile cache tests retained exact pixels. These figures measure the tested drawing work, not universal end-to-end input latency.
+
+A fresh clone also built with empty NuGet and HTTP caches: the interpreter was compiled from its pinned upstream source, all four CLI dependencies were restored, and the web, launcher, server, CLI, and five engine packages built without a game project or engine installation. The package installed from that clone passed its CLI, Lua, and MCP tests.
 
 The locally installed npm package passed on Windows and native Linux under WSL. Linux checks also verified termination of a worker when its owning process exits. macOS shell wrappers and portable managed outputs were checked, but **native macOS execution still needs verification** before claiming a tested macOS 1.1.0 release.
 

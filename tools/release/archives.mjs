@@ -79,7 +79,10 @@ function tree(folder, entries, prefix = '') {
 }
 export function validateEntries(entries, kind, version) {
   for (const name of entries.keys()) { safePath(name); assert.ok(!forbidden.test(name), 'Development file in release: ' + name); }
-  for (const name of ['LICENSE', 'THIRD-PARTY-NOTICES.md', 'build-info.json', 'app/metroidvania-studio/dist/index.html', 'app/metroidvania-studio/dist/app.js', 'app/samples/catalog.json']) assert.ok(entries.has(name), 'Incomplete release: ' + name);
+  for (const name of ['LICENSE', 'THIRD-PARTY-NOTICES.md', 'build-info.json', 'app/metroidvania-studio/dist/index.html', 'app/metroidvania-studio/dist/app.js', 'app/samples/catalog.json',
+    'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.dll', 'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.deps.json',
+    'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.runtimeconfig.json', 'app/docs/index.md', 'app/docs/api/index.md',
+    'app/metroidvania-studio/contracts/FORMAT.md', 'app/metroidvania-studio/contracts/map-format-v2.schema.json']) assert.ok(entries.has(name), 'Incomplete release: ' + name);
   assert.equal(JSON.parse(entries.get('build-info.json')).version, version);
   const start = { web: 'metroidvania-studio.bat', win: 'metroidvania-studio.exe', mac: 'metroidvania-studio.command', linux: 'metroidvania-studio.sh' }[kind];
   assert.ok(start && entries.has(start), 'Root launch file is missing.');

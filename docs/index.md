@@ -7,7 +7,7 @@ Metroidvania Studio 1.1 adds Lua scripts, a headless CLI, a local MCP server, an
 | [Lua quick start](scripting/quick-start.md) | Generate or modify rooms with a script |
 | [CLI quick start](cli/quick-start.md) | Edit, validate, export, and preview maps without a browser |
 | [MCP setup](mcp/setup.md) | Give an agent local map editing tools |
-| [Editing API](api/README.md) | Apply structured, atomic operation batches |
+| [Editing API](api/index.md) | Apply structured, atomic operation batches |
 | [Live web API](api/live-api.md) | Work on the document currently open in the studio |
 | [Local npm package](distribution/local-package.md) | Build and test an installable package before publication |
 

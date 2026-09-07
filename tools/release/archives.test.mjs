@@ -14,6 +14,9 @@ const payload = kind => new Map([
   ['LICENSE', Buffer.from('license')], ['THIRD-PARTY-NOTICES.md', Buffer.from('notices')],
   ['build-info.json', Buffer.from('{"version":"1.0.0"}')],
   ...['app/metroidvania-studio/dist/index.html', 'app/metroidvania-studio/dist/app.js', 'app/samples/catalog.json',
+    'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.dll', 'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.deps.json',
+    'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.runtimeconfig.json', 'app/docs/index.md', 'app/docs/api/index.md',
+    'app/metroidvania-studio/contracts/FORMAT.md', 'app/metroidvania-studio/contracts/map-format-v2.schema.json',
     'app/metroidvania-studio/server/MetroidvaniaStudio.Server.dll', 'app/metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll',
     ...({ web: ['metroidvania-studio.bat', 'metroidvania-studio.command', 'metroidvania-studio.sh', 'app/launch.ps1'],
       mac: ['metroidvania-studio.command', 'app/runtime/osx-arm64/dotnet', 'app/runtime/osx-x64/dotnet'],
@@ -85,4 +88,17 @@ test('root Unix runners select architecture and preserve arguments with spaces',
       }
     }
   } finally { assert.equal(path.dirname(realpathSync(folder)), parent); rmSync(folder, { recursive: true, force: true }); }
+});
+
+
+test('every release rejects a missing automation worker or linked documentation', () => {
+  for (const kind of ['web', 'win', 'mac', 'linux']) {
+    for (const required of ['app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.dll',
+      'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.deps.json', 'app/metroidvania-studio/cli/MetroidvaniaStudio.Cli.runtimeconfig.json',
+      'app/docs/index.md', 'app/docs/api/index.md', 'app/metroidvania-studio/contracts/FORMAT.md',
+      'app/metroidvania-studio/contracts/map-format-v2.schema.json']) {
+      const files = payload(kind); files.delete(required);
+      assert.throws(() => validateEntries(files, kind, '1.0.0'), /Incomplete release/, `${kind}: ${required}`);
+    }
+  }
 });
