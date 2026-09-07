@@ -4,5 +4,5 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-  <ItemGroup><ProjectReference Include="../core/MetroidvaniaStudio.Core.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../core/MetroidvaniaStudio.Core.csproj" /><ProjectReference Include="../automation/MetroidvaniaStudio.Automation.csproj" /></ItemGroup>
 </Project>

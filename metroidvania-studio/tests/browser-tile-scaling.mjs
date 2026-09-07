@@ -5,7 +5,7 @@ import path from 'node:path';
 const { chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const base = process.env.METROIDVANIA_STUDIO_BASE_URL || 'http://127.0.0.1:18765';
 assert.ok(['127.0.0.1', 'localhost'].includes(new URL(base).hostname));
-const browser = await chromium.launch({ channel: 'msedge', headless: true });
+const browser = await chromium.launch({ channel: process.env.METROIDVANIA_STUDIO_BROWSER_CHANNEL || (process.platform === 'win32' ? 'msedge' : undefined), headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
   if (process.env.METROIDVANIA_STUDIO_TEST_WEB_ROOT) await page.route('**/*.js', async route => {

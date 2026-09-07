@@ -22,7 +22,7 @@ public sealed class ValidatedJsonConverter : JsonConverter<ValidatedJson>
         writer.WriteRawValue(value.Text, skipInputValidation: true);
 }
 
-public sealed class EditorWorkspace
+public sealed partial class EditorWorkspace
 {
     public const int MaximumTileGesturePoints = 16384;
     public const int MaximumTileGestureWork = 65_536;

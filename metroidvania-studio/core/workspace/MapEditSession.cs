@@ -80,6 +80,42 @@ namespace MetroidvaniaStudio
             }
         }
 
+        /// <summary>Validated, single-use content prepared outside the editing lock.</summary>
+        public sealed class PreparedSnapshot
+        {
+            internal readonly MapDocument document;
+            internal int consumed;
+            public string Json { get; }
+            internal PreparedSnapshot(MapDocument document, string json)
+            { this.document = document; Json = json; }
+        }
+
+        public static PreparedSnapshot PrepareSnapshot(string json)
+        {
+            MapDocument next = MapDocumentStore.Deserialize(json);
+            return new PreparedSnapshot(next, MapDocumentStore.Serialize(next));
+        }
+
+        /// <summary>Replaces content as one undoable edit while preserving the saved file identity.</summary>
+        public void ApplySnapshot(string label, string json) => ApplySnapshot(label, PrepareSnapshot(json));
+
+        public void ApplySnapshot(string label, PreparedSnapshot snapshot)
+        {
+            if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
+            if (IsEditing) throw new InvalidOperationException("Finish or cancel the current map edit first.");
+            if (System.Threading.Interlocked.Exchange(ref snapshot.consumed, 1) != 0)
+                throw new InvalidOperationException("A prepared snapshot can only be applied once.");
+            if (snapshot.Json == CurrentJson) return;
+            // CurrentJson is the validated committed state whenever no gesture is active.
+            // Both states are already validated, so committing needs no full JSON pass.
+            Revision before = CreateRevision(label, CurrentJson);
+            Document = snapshot.document;
+            CurrentJson = snapshot.Json;
+            Clear(redo, ref redoBytes);
+            Push(undo, ref undoBytes, before);
+            NotifyChanged(MapEditChangeKind.Commit);
+        }
+
         public void BeginEdit(string label)
         {
             if (IsEditing) throw new InvalidOperationException("Finish or cancel the current map edit first.");

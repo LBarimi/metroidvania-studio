@@ -287,3 +287,20 @@ external.exportHelp,선택한 폴더에 방 이름별 UTF-8 JSON을 저장합니
 external.exportUnchanged,변경된 방이 없습니다. 기존 JSON을 유지했습니다.,No rooms changed. Existing JSON files were kept.,変更された部屋はありません。既存のJSONを保持しました。,没有房间更改，已保留现有 JSON。,沒有房間變更，已保留現有 JSON。,Комнаты не изменились. Существующие JSON сохранены.
 external.exportedRooms,방 JSON {0}개를 저장했습니다.,Saved {0} room JSON files.,部屋JSONを{0}個保存しました。,已保存 {0} 个房间 JSON。,已儲存 {0} 個房間 JSON。,Сохранено файлов JSON комнат: {0}.
 external.cleared,{0}개 삭제 · {1}개 보호됨,Removed {0}; protected {1}.,{0}個削除 · {1}個保護,已删除 {0} 个；已保护 {1} 个。,已刪除 {0} 個；已保護 {1} 個。,Удалено: {0}; защищено: {1}.
+scripts.title,Lua 스크립트,Lua Scripts,Lua スクリプト,Lua 脚本,Lua 指令碼,Скрипты Lua
+scripts.source,Lua 코드,Lua source,Lua コード,Lua 代码,Lua 程式碼,Код Lua
+scripts.hint,결과는 한 번에 적용되며 실행 취소할 수 있습니다. 실행 중 맵이 바뀌면 결과를 적용하지 않습니다.,"Results apply as one undoable edit. If the map changes during execution, the result is not applied.",結果は一括適用され、元に戻せます。実行中にマップが変わると適用されません。,结果将作为一次可撤销的编辑应用。运行期间地图改变时不会应用结果。,結果會作為一次可復原的編輯套用。執行期間地圖改變時不會套用結果。,"Результат применяется одним отменяемым действием. Если карта изменится во время выполнения, результат не будет применён."
+scripts.seed,랜덤 시드,Random seed,乱数シード,随机种子,隨機種子,Случайное зерно
+scripts.dryRun,적용 없이 확인,Dry run,試行のみ,仅试运行,僅試執行,Без применения
+scripts.ready,실행할 스크립트를 입력하거나 불러오세요.,Enter or open a script to run.,スクリプトを入力または開いてください。,输入或打开要运行的脚本。,輸入或開啟要執行的指令碼。,Введите или откройте скрипт.
+scripts.run,실행,Run,実行,运行,執行,Запустить
+scripts.stop,실행 중지,Stop,停止,停止,停止,Остановить
+scripts.load,스크립트 열기,Open script,スクリプトを開く,打开脚本,開啟指令碼,Открыть скрипт
+scripts.save,스크립트 저장,Save script,スクリプトを保存,保存脚本,儲存指令碼,Сохранить скрипт
+scripts.running,실행 중…,Running…,実行中…,运行中…,執行中…,Выполняется…
+scripts.completed,실행 완료,Completed,完了,已完成,已完成,Выполнено
+scripts.operations,작업 수,Operations,操作数,操作数,操作數,Операции
+scripts.sourceLimit,스크립트는 비어 있지 않아야 하며 UTF-8 기준 64 KiB 이하여야 합니다.,Script source must contain 1–65536 UTF-8 bytes.,スクリプトは UTF-8 で 1～65536 バイトにしてください。,脚本必须包含 1–65536 个 UTF-8 字节。,指令碼必須包含 1–65536 個 UTF-8 位元組。,Скрипт должен занимать 1–65536 байт UTF-8.
+scripts.seedInvalid,시드는 32비트 정수여야 합니다.,Seed must be a 32-bit integer.,シードは32ビット整数にしてください。,种子必须为32位整数。,種子必須為32位整數。,Зерно должно быть 32-битным целым числом.
+scripts.connectionUnknown,연결이 끊겼습니다. 스크립트가 시작됐는지 확인 중…,Connection interrupted. Checking whether the script started…,接続が切れました。スクリプトの開始を確認中…,连接中断。正在检查脚本是否已启动…,連線中斷。正在檢查指令碼是否已啟動…,Соединение прервано. Проверка запуска скрипта…
+scripts.cancelPending,취소하기 전에 스크립트 상태를 확인 중…,Checking the script status before cancellation…,キャンセル前にスクリプトの状態を確認中…,正在检查脚本状态以取消执行…,正在檢查指令碼狀態以取消執行…,Проверка состояния скрипта перед отменой…

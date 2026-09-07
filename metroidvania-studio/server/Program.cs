@@ -115,6 +115,7 @@ app.MapPost("/api/command", async (HttpRequest request) =>
         return Results.Json(workspace.State(!compactDocument && (!executed || before != workspace.DocumentRevision), !executed, includeSelection));
     }
 });
+app.MapAutomation(workspace, studioRoot);
 app.MapGet("/api/files", () => Results.Json(files.List()));
 app.MapGet("/api/locale", () => Results.File(Path.Combine(studioRoot, "metroidvania-studio/localization/MetroidvaniaStudioLocale.csv"), "text/csv; charset=utf-8"));
 app.MapGet("/api/asset", (string path) =>
