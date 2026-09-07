@@ -1,6 +1,20 @@
-<img src="metroidvania-studio/web/studio-icon.svg" width="72" height="72" alt="MetroidvaniaStudio symbol">
-
 # MetroidvaniaStudio
+
+![Create connected rooms and paint terrain](media/readme/create-and-paint.gif)
+
+**Create and paint.** Add a room, lay down terrain, and draw platforms with the tile tools.
+
+![Resize a room while attached rooms move with it](media/readme/resize-connected-rooms.gif)
+
+**Shape the layout.** Resize rooms directly on the canvas while attached rooms move with the resized edge.
+
+![Open a room from the minimap, then scroll to zoom out in the map editor](media/readme/design-the-minimap.gif)
+
+**See the connections.** Double-click a room in the minimap to open it in the map editor, then scroll to zoom out and explore the surrounding world.
+
+![Navigate a world of 112 rooms and edit a single room](media/readme/edit-a-large-world.gif)
+
+**Work across a whole world.** Navigate 112 rooms with varied chambers, long corridors, vertical passages, and connected loops, then zoom in to edit.
 
 A web-based 2D world editor for metroidvania games. Create connected rooms, paint tilemaps, and design minimaps with JSON export for cross-engine workflows.
 
@@ -30,7 +44,7 @@ The matching macOS files use the same options. Paths with spaces must be quoted.
 
 Start/stop operations are serialized per launcher port. A startup token, process identity and server instance prevent accidental adoption or shutdown of another application. Only one server can write to a workspace at a time. Restart saves recovery and room exports before stopping; failed saves leave the server running. Missing or incomplete new builds never stop an existing working server.
 
-The platform validation workflow runs build, storage and launcher integration checks on Windows, Linux and macOS. It does not publish releases. The existing manual release workflow remains main-only and currently produces the Windows ZIP; local platform builds are separate from release publication.
+Build, storage, and launcher validation scripts are included in the source tree. Local builds do not publish releases; release preparation requires the main branch.
 
 ## Windows shortcuts
 
@@ -102,7 +116,7 @@ node metroidvania-studio/build-web.mjs --check-contracts
 node metroidvania-studio/build-web.mjs
 dotnet run --project metroidvania-studio/core-tests/MetroidvaniaStudio.Core.Tests.csproj
 dotnet run --project metroidvania-studio/server-tests/MetroidvaniaStudio.Server.Tests.csproj
-node --test tools/repository/check-text.test.mjs tools/repository/check-boundaries.test.mjs tools/release/release.test.mjs
+node --test tools/repository/content-text.test.mjs tools/repository/check-text.test.mjs tools/repository/check-boundaries.test.mjs tools/release/release.test.mjs
 ```
 
 Browser interaction tests use disposable workspaces and a headless browser. Install Playwright separately and pass its module path if it is not available in local module resolution:
@@ -129,25 +143,6 @@ Automation configuration is local and excluded from Git. Releases must still com
 
 License selection is pending.
 
-## 한국어 실행 안내
-
-소스에서 처음 빌드할 때는 Node.js 24 이상과 .NET SDK 10이 필요합니다. `platform/win/web` 폴더의 배치파일을 사용하세요.
-
-- `platform/win/web/build.bat`: 웹 화면과 서버를 `builds/<버전>-<빌드 ID>/`에 빌드합니다. 브라우저는 열지 않습니다.
-- `platform/win/web/run.bat`: 마지막으로 성공한 빌드를 바로 실행하고 브라우저를 엽니다. 빌드가 없으면 최초 한 번 자동 빌드합니다.
-
-소스를 수정했다면 Build를 실행한 뒤 Run을 실행하세요. 같은 빌드는 실행 중인 서버를 재사용하고, 새 빌드는 기존 세션을 저장한 뒤 전환합니다. 빌드 실패 시 이전 빌드는 유지됩니다. 빌드 결과는 Git에서 제외되며 로컬 빌드로 배포나 태그가 생성되지는 않습니다. 백그라운드 점검은 Run에 `-NoBrowser`를 전달하세요.
-
-기본 저장 위치는 스튜디오 폴더의 `.local/workspace`입니다. 다른 작업 폴더를 쓰려면 `-Project`, 포트를 바꾸려면 `-Port`를 지정하세요. 종료 스크립트는 저장을 마친 뒤 해당 서버만 종료합니다. 배포 압축 파일을 사용할 때는 ASP.NET Core Runtime 10만 필요하며, 업데이트 전에 작업 폴더를 보존하세요.
-
-## 플랫폼별 실행 안내
-
-루트 `platform` 폴더에서 운영체제에 맞는 폴더를 사용하세요. `win/web`은 웹용 `.bat`, `mac`은 `.command`, `linux`는 `.sh` 파일입니다. Build는 빌드만 수행하고, Run은 마지막 빌드를 실행한 뒤 웹브라우저를 엽니다. Stop은 저장을 마친 뒤 서버를 종료합니다. 맥과 리눅스에는 PowerShell 설치가 필요 없습니다.
-
-빌드할 때는 Node.js 24 이상, .NET SDK 10, Git이 필요합니다. 빌드가 완료된 뒤 실행할 때는 ASP.NET Core Runtime 10만 있으면 됩니다. 처음 실행하며 빌드까지 해야 하는 경우에는 빌드 도구가 필요합니다.
-
-리눅스·맥은 `--project`, `--port`, `--no-browser`, `--restart` 옵션을 사용합니다. Windows PowerShell 진입점은 기존 `-Project`, `-Port`, `-NoBrowser`, `-Restart` 옵션을 유지합니다. 같은 작업 폴더를 두 서버에서 동시에 편집하는 것은 차단합니다. 저장 실패 시 서버를 강제 종료하지 않습니다.
-
 Windows web entry points live under `platform/win/web/`; other Windows application formats can use separate sibling folders.
 
 ## Directory naming
@@ -167,9 +162,10 @@ Distributable installers live under `engine-packages`: Unity `.unitypackage`, Go
 | --- | --- | --- |
 | `engine-packages/unity/metroidvania-studio.unitypackage` | Open in Unity | [Unity guide](integrations/unity/README.md) |
 | `engine-packages/godot/metroidvania-studio.zip` | Extract, run `install.bat`, select `project.godot` | [Godot guide](integrations/godot/README.md) |
-| `engine-packages/ue/metroidvania-studio.zip` | Extract, run `install.bat`, select `.uproject`; engine-specific C++ build required | [Unreal guide](integrations/ue/README.md) |
+| `engine-packages/ue4/metroidvania-studio.zip` | Extract, run `install.bat`, select `.uproject` | [Unreal Engine 4 guide](integrations/ue4/README.md) |
+| `engine-packages/ue5/metroidvania-studio.zip` | Extract, run `install.bat`, select `.uproject`; engine-specific C++ build required | [Unreal guide](integrations/ue5/README.md) |
 | `engine-packages/sdl/metroidvania-studio.zip` | Extract, `build.bat`, then `run.bat` | [SDL guide](integrations/sdl/README.md) |
 
-Godot and Unreal imports embed textures with the room. SDL supplies collision geometry for a consuming application's physics system. These initial adapters load local JSON; they do not provide live synchronization or execute object/game behavior. Unreal Engine 4 is not yet supported.
+Godot and Unreal imports embed textures with the room. SDL supplies collision geometry for a consuming application's physics system. These initial adapters load local JSON; they do not provide live synchronization or execute object/game behavior. Separate packages are provided for Unreal Engine 4.27 and Unreal Engine 5.
 
 Regenerate all archives with `node integrations/build-packages.mjs`; verify them with `node integrations/build-packages.mjs --check`. Archive generation requires no engine SDK. Standard studio builds and release bundles include all four packages. Engine-native validation instructions are in `integrations/VALIDATION.md`.
