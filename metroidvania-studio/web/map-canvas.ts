@@ -356,7 +356,19 @@ export class MapCanvas {
     }
     this.indexedDocument = state.document;
   }
-  frameRoom(): void { const room = activeRoom(this.state); if (room) this.center = { x: room.x + room.width / 2, y: room.y + room.height / 2 }; this.requestDraw(); }
+  frameRoom(fit = false): void {
+    const room = activeRoom(this.state); if (!room) return;
+    this.center = { x: room.x + room.width / 2, y: room.y + room.height / 2 };
+    if (fit) {
+      const bounds = this.canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+      const scale = Math.max(MIN_PIXEL_SCALE, Math.min(4,
+        Math.max(1, bounds.width - 80) * dpr / (Math.max(1, room.width) * 16),
+        Math.max(1, bounds.height - 80) * dpr / (Math.max(1, room.height) * 16)));
+      this.pixelScale = scale >= 1 ? Math.floor(scale) : 1 / Math.ceil(1 / scale);
+      this.overview = false; this.onHover(this.hover);
+    }
+    this.requestDraw();
+  }
   fit(): void {
     const rooms = this.state?.document.rooms.filter(room => room.visible); if (!rooms?.length) return;
     this.leaveCameraPreview(false);

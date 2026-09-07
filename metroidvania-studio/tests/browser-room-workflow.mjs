@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 import { verifyRoomFocus } from './browser-room-focus.mjs';
+import { verifyMiniMap } from './browser-minimap.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -70,6 +71,8 @@ async function selectA() {
 try {
   await page.goto(base); await page.locator('#room-list button').first().waitFor(); await clientAt((await state()).revision);
   await verifyRoomFocus(page);
+  await verifyMiniMap(page);
+  checks.push('MiniMap walls and entrances scale together with zoom, remain uniform and do not change map data');
   checks.push('inactive terrain, entities, triggers, decals and cached LOD dim; focus restores colors and MiniMap walls remain uniform');
   // The shortcut must also escape an object/All layer where tile Brush cannot paint.
   await command('options', { layer: 3, tool: 1 }); await clientAt((await state()).revision);

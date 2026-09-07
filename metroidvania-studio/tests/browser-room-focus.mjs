@@ -68,7 +68,7 @@ export async function verifyRoomFocus(page) {
       `Inactive sample ${i}: ${JSON.stringify(result.first[1][i])} vs ${JSON.stringify(result.switched[0][i])}`);
     assert.ok(sameColor(result.noSelection[0][i], result.noSelection[1][i]));
   }
-  assert.deepEqual(result.miniCorner, [153, 153, 153, 255], 'MiniMap corners must not brighten from overlapping strokes.');
+  assert.deepEqual(result.miniCorner, [255, 255, 255, 255], 'MiniMap walls and corners stay white even when the room interior is inactive.');
   assert.deepEqual(result.miniWall, result.miniCorner);
   assert.deepEqual(result.miniFill, [119, 26, 32, 255]);
   assert.deepEqual(result.alphaAfterDraw, [1, 1]);

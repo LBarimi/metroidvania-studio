@@ -192,6 +192,9 @@ external.confirm,확인,Confirm,確認,确认,確認,Подтвердить
 external.continue,계속,Continue,続ける,继续,繼續,Продолжить
 external.required,필수 값을 입력하세요.,Enter the required values.,必須項目を入力してください。,请填写必填项。,請填寫必填項目。,Заполните обязательные поля.
 external.outline,외곽선,Outline,輪郭線,轮廓线,外框線,Контур
+external.outlineHelp,기준 배율(1타일 = 화면 5px)에서의 선 굵기입니다. 맵과 함께 확대·축소되며 입출구 표시에도 같은 굵기를 적용합니다.,Wall thickness at the reference scale (5 screen pixels per tile). Scales with map zoom and matches entrance strokes.,基準倍率（1タイル = 画面上の5px）での線幅です。マップのズームに合わせて変化し、出入口にも同じ太さを適用します。,基准缩放（每图块 5 屏幕像素）下的线宽。随地图缩放，出入口使用相同线宽。,基準縮放（每圖塊 5 螢幕像素）下的線寬。隨地圖縮放，出入口使用相同線寬。,Толщина линий при базовом масштабе (5 экранных пикселей на тайл). Меняется вместе с масштабом карты и одинакова для стен и входов.
+external.entranceLength,입출구 길이,Entrance length,出入口の長さ,出入口长度,出入口長度,Длина входа
+external.entranceLengthHelp,기준 배율(1타일 = 화면 5px)에서의 입출구 표시 길이입니다. 맵과 함께 확대·축소되며 좁은 연결부에서는 양끝을 같은 비율로 줄입니다.,Marker length at the reference scale (5 screen pixels per tile). Scales with map zoom; short connections limit both ends equally.,基準倍率（1タイル = 画面上の5px）での出入口の印の長さです。ズームに合わせて変化し、短い接続では両端を均等に制限します。,基准缩放（每图块 5 屏幕像素）下的出入口标记长度。随地图缩放，较短连接的两端等量缩短。,基準縮放（每圖塊 5 螢幕像素）下的出入口標記長度。隨地圖縮放，較短連接的兩端等量縮短。,Длина меток входов при базовом масштабе (5 экранных пикселей на тайл). Меняется вместе с масштабом карты; в коротких соединениях оба конца сокращаются одинаково.
 external.workspaceHint,16×16 타일 · 자동 타일 연결,16×16 tiles · Automatic tile connections,16×16タイル · 自動接続,16×16 图块 · 自动连接,16×16 圖塊 · 自動連接,Тайлы 16×16 · Автоматические соединения
 external.edit,편집,Edit,編集,编辑,編輯,Правка
 external.deleteRoom,방 삭제,Delete room,部屋を削除,删除房间,刪除房間,Удалить комнату
@@ -201,7 +204,7 @@ external.applyTransform,위치·크기 적용,Apply transform,位置・サイズ
 external.applyProperties,속성 적용,Apply properties,プロパティを適用,应用属性,套用屬性,Применить свойства
 external.mixed,혼합 값 — 입력하면 모두 적용,Mixed — edit to apply to all,値が混在 — 入力で一括適用,值不同 — 输入后应用到全部,值不同 — 輸入後套用至全部,Разные значения — ввод применит ко всем
 external.cameraSize,시야 크기,View size,表示サイズ,视野大小,視野大小,Размер обзора
-external.minimapHelp,가운데 드래그: 이동 · 휠: 확대 · 클릭: 방 선택,Middle drag: pan · Wheel: zoom · Click: select room,中ドラッグ: 移動 · ホイール: ズーム · クリック: 部屋選択,中键拖动：平移 · 滚轮：缩放 · 点击：选择房间,中鍵拖曳：平移 · 滾輪：縮放 · 點擊：選取房間,Средняя кнопка: панорама · Колесо: масштаб · Щелчок: выбор комнаты
+external.minimapHelp,가운데 드래그: 이동 · 휠: 확대 · 클릭: 방 선택 · 더블클릭: 방 편집,Middle drag: pan · Wheel: zoom · Click: select room · Double-click: edit room,中ドラッグ: 移動 · ホイール: ズーム · クリック: 部屋選択 · ダブルクリック: 部屋を編集,中键拖动：平移 · 滚轮：缩放 · 点击：选择房间 · 双击：编辑房间,中鍵拖曳：平移 · 滾輪：縮放 · 點擊：選取房間 · 按兩下：編輯房間,Средняя кнопка: панорама · Колесо: масштаб · Щелчок: выбор комнаты · Двойной щелчок: редактировать
 external.overview,전체 지도 배율,Overview scale,マップ全体の倍率,全图倍率,全圖倍率,Масштаб обзора
 external.editView,편집 화면,Edit view,編集表示,编辑视图,編輯檢視,Вид редактора
 external.visibleArea,표시 영역,Visible area,表示範囲,可见区域,可見範圍,Видимая область

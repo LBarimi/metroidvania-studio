@@ -8,7 +8,7 @@ import { activeRoom, colorCss, tileLayer, TOOLS, LAYERS, SHAPES, MAX_BRUSH_SIZE 
 import type { State, Room, Point, SpriteRect, Property, MapObject, CommandExpectation, CommandValues, Definition, Material } from './types.js';
 
 const api = new EditorApi(), locale = new Locale();
-const standalone = new URLSearchParams(location.search).get('view') === 'minimap';
+let standalone = new URLSearchParams(location.search).get('view') === 'minimap';
 let miniMode = standalone, inspectorHidden = localStorage.getItem('mapstudio.inspectorHidden') === 'true';
 let lastNotice = '';
 let clipboardScope: 'room' | 'content' = 'content';
@@ -62,7 +62,19 @@ const map = new MapCanvas(el('map-canvas'), api.command, point => drawStatus(poi
   const brush = el('brush-options').querySelector<HTMLInputElement>('input[type="number"]');
   if (brush) brush.value = String(size);
 }, (point, client) => roomContextMenu(point, client));
-const mini = new MiniMap(el('mini-canvas'), id => { void run('selectRoom', { id }).then(() => { map.frameRoom(); }).catch(() => undefined); });
+const mini = new MiniMap(el('mini-canvas'),
+  id => { void run('selectRoom', { id }).catch(() => undefined); },
+  id => { void editMiniRoom(id).catch(error => toast(error)); });
+async function editMiniRoom(id: string): Promise<void> {
+  const selected = await run('selectRoom', { id });
+  if (!miniMode || selected.selection.roomId !== id || state?.selection.roomId !== id) return;
+  if (standalone) {
+    standalone = false;
+    const url = new URL(location.href); url.searchParams.delete('view'); history.replaceState(null, '', url);
+  }
+  miniMode = false; map.gameView(false); map.selectRoomTarget(id); updateView();
+  map.frameRoom(true); el('map-canvas').focus();
+}
 function expectedAt(value: State): CommandExpectation { return { instanceId: value.instanceId, revision: value.revision }; }
 async function run(action: string, values: CommandValues = {}, expectation?: CommandExpectation): Promise<State> { await map.settled(); return api.command(action, values, expectation); }
 async function settleFileSnapshot(): Promise<void> { await map.settled(); await api.settled(); }
@@ -350,6 +362,7 @@ function drawChrome(): void {
   updateView(); drawPanels(true); renderInspector(true);
 }
 function updateView(): void {
+  app.classList.toggle('standalone-app', standalone);
   const cameraPreview = !miniMode && map.cameraPreview;
   const viewOnly = miniMode || cameraPreview;
   const workspace = el('workspace'); workspace.classList.toggle('inspector-hidden', inspectorHidden); workspace.classList.toggle('minimap-mode', miniMode); workspace.classList.toggle('standalone', standalone); workspace.classList.toggle('camera-preview', cameraPreview);
@@ -366,7 +379,15 @@ function updateView(): void {
   if (!miniMode && !map.cameraPreview) toolbar.append(check(locale.t('grid'), map.showGrid, checked => { map.showGrid = checked; map.requestDraw(); })[0]);
   if (miniMode || !map.cameraPreview) toolbar.append(check(locale.t('names'), miniMode ? mini.showNames : map.showNames, checked => { if (miniMode) { mini.showNames = checked; mini.requestDraw(); } else { map.showNames = checked; map.requestDraw(); } })[0]);
 
-  if (miniMode) { const width = select(Array.from({ length: 20 }, (_, i) => [String(i + 1), locale.t('outline') + ' ' + (i + 1)] as [string, string]), String(mini.outlineWidth)); width.style.width = '100px'; width.addEventListener('change', () => { mini.outlineWidth = Number(width.value); mini.requestDraw(); }); toolbar.append(width); }
+  if (miniMode) {
+    const width = select(Array.from({ length: 20 }, (_, i) => [String(i + 1), locale.t('outline') + ' ' + (i + 1)] as [string, string]), String(mini.outlineWidth));
+    width.id = 'minimap-outline-width'; width.style.width = 'auto'; width.setAttribute('aria-label', locale.t('outline')); width.title = locale.t('outlineHelp');
+    width.addEventListener('change', () => { mini.outlineWidth = Number(width.value); mini.requestDraw(); });
+    const entrance = select(Array.from({ length: 40 }, (_, i) => [String(i + 1), locale.t('entranceLength') + ' ' + (i + 1)] as [string, string]), String(mini.entranceLength));
+    entrance.id = 'minimap-entrance-length'; entrance.style.width = 'auto'; entrance.setAttribute('aria-label', locale.t('entranceLength')); entrance.title = locale.t('entranceLengthHelp');
+    entrance.addEventListener('change', () => { mini.entranceLength = Number(entrance.value); mini.requestDraw(); });
+    toolbar.append(width, entrance);
+  }
   const undo = el<HTMLButtonElement>('undo'), redo = el<HTMLButtonElement>('redo'); undo.disabled = viewOnly || !state?.canUndo; redo.disabled = viewOnly || !state?.canRedo;
   map.requestDraw(); mini.requestDraw(); drawStatus();
 }

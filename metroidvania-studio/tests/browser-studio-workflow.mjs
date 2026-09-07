@@ -35,7 +35,8 @@ await command('open', { path: 'RoomWorkflow.json', discard: true });
 await command('selectRoom', { id: 'A' });
 await command('options', { tool: 3, layer: 0, brushSize: 1, shape: 0, material: 'terrain', groupId: '', hiddenLayers: [], lockedLayers: [] });
 const browser = await chromium.launch({ channel: 'msedge', headless: true });
-const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'ko-KR' });
+const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'ko-KR' });
+const page = await context.newPage();
 const errors = [], checks = [], requests = [];
 page.on('pageerror', error => errors.push(error.message));
 page.on('request', request => { if (request.url().endsWith('/api/command')) requests.push(JSON.parse(request.postData())); });
@@ -182,6 +183,8 @@ try {
   await until(s => s.document.rooms.length === 3 && s.selection.roomId === 'imported-C');
   await fileMenu('Save selected rooms as JSON…'); await page.locator('dialog input').fill('SelectedRoom'); await page.locator('dialog .accent').click(); await page.locator('dialog').waitFor({ state: 'detached' });
   checks.push('File menu saves all/changed/selected rooms and imports room JSON alongside existing rooms');
+  const { verifyMiniMapNavigation } = await import('./browser-minimap-navigation.mjs');
+  checks.push(await verifyMiniMapNavigation(page));
   assert.deepEqual(errors, []); console.log(JSON.stringify({ checks, languages, errors }, null, 2));
 } catch (error) {
   await page.screenshot({ path: path.join(repository, '.local/logs/Studio-Workflow-Failure.png') });
