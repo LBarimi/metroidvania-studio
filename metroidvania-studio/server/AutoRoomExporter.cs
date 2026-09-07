@@ -23,19 +23,33 @@ public sealed class AutoRoomExporter : IDisposable
     private string phase = "queued", publishedMapKey = "";
     private string? statusError;
     private Dictionary<string, PublishedRoom> publishedRooms = new(StringComparer.Ordinal);
+    private Dictionary<string, long> measuredRoomBytes = new(StringComparer.Ordinal);
+    private long? measuredTotalBytes;
+    private long measuredVersion = -1;
     private sealed record PublishedRoom(string Path, string Hash);
-    private sealed record ExportResult(string? Error, Dictionary<string, PublishedRoom> Rooms);
+    private sealed record ExportResult(string? Error, Dictionary<string, PublishedRoom> Rooms, Dictionary<string, long> RoomBytes, long TotalBytes);
 
     public long StatusRevision { get { lock (gate) return statusRevision; } }
 
-    // Only the selected room's identity crosses the wire. Large maps never add
-    // per-room arrays, hashing or disk work to state polling and pointer input.
-    public EditorExportStatus Status(string? roomId)
+    // Only selected identities and aggregate byte counts cross the wire.
+    // State polling never serializes rooms, hashes tiles or reads their files.
+    public EditorExportStatus Status(string? roomId, IReadOnlyCollection<string>? selectedIds = null)
     {
         lock (gate)
         {
             publishedRooms.TryGetValue(roomId ?? "", out PublishedRoom? room);
-            return new EditorExportStatus(phase, version, statusError, roomId, room?.Path, room?.Hash);
+            long? selectedBytes = 0;
+            if (selectedIds != null)
+            {
+                foreach (string id in selectedIds)
+                {
+                    if (!measuredRoomBytes.TryGetValue(id, out long bytes)) { selectedBytes = null; break; }
+                    selectedBytes += bytes;
+                }
+            }
+            else if (roomId != null) selectedBytes = measuredRoomBytes.TryGetValue(roomId, out long bytes) ? bytes : null;
+            return new EditorExportStatus(phase, version, statusError, roomId, room?.Path, room?.Hash,
+                selectedBytes, measuredTotalBytes, measuredVersion != version);
         }
     }
     private static readonly UTF8Encoding Utf8 = new(false, true);
@@ -73,7 +87,11 @@ public sealed class AutoRoomExporter : IDisposable
             if (stopped) return;
             pending = new Snapshot(documentJson, savedPath, ++version);
             string key = MapKey(savedPath);
-            if (key != publishedMapKey) { publishedRooms = new(StringComparer.Ordinal); publishedMapKey = key; }
+            if (key != publishedMapKey)
+            {
+                publishedRooms = new(StringComparer.Ordinal); publishedMapKey = key;
+                measuredRoomBytes = new(StringComparer.Ordinal); measuredTotalBytes = null; measuredVersion = -1;
+            }
             phase = "queued"; statusError = null; statusRevision++;
             due = Environment.TickCount64 + (flushing ? 0 : IdleMilliseconds);
             worker ??= Task.Run(Run);
@@ -132,7 +150,11 @@ public sealed class AutoRoomExporter : IDisposable
             {
                 // A newer queue may arrive between IO completion and publication.
                 if (stopped || snapshot.Version != version) continue;
-                if (result != null) publishedRooms = result.Rooms;
+                if (result != null)
+                {
+                    publishedRooms = result.Rooms; measuredRoomBytes = result.RoomBytes;
+                    measuredTotalBytes = result.TotalBytes; measuredVersion = snapshot.Version;
+                }
                 phase = error == null ? "saved" : "error"; statusError = error; statusRevision++;
             }
             report(error == null ? null : "Room JSON auto-export needs attention: " + error);
@@ -249,11 +271,15 @@ public sealed class AutoRoomExporter : IDisposable
         ExportResult Completed(string? error)
         {
             var rooms = new Dictionary<string, PublishedRoom>(StringComparer.Ordinal);
+            var sizes = new Dictionary<string, long>(StringComparer.Ordinal);
             foreach (Entry entry in next.Entries)
-                if (!entry.Pending && !entry.Obsolete && roomIds.TryGetValue(entry.FileName, out string? id))
-                    rooms[id] = new PublishedRoom(files.MapsLabel + "/AutoExport/" + key + "/" + entry.FileName,
+                if (!entry.Obsolete && roomIds.TryGetValue(entry.FileName, out string? id))
+                {
+                    sizes[id] = entry.Length;
+                    if (!entry.Pending) rooms[id] = new PublishedRoom(files.MapsLabel + "/AutoExport/" + key + "/" + entry.FileName,
                         Convert.ToBase64String(Convert.FromHexString(entry.Hash)));
-            return new ExportResult(error, rooms);
+                }
+            return new ExportResult(error, rooms, sizes, totalBytes);
         }
     }
 

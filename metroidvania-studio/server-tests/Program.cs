@@ -17,6 +17,7 @@ var tests = new (string name, Action run)[]
     ("browser JSON import validates before replacing the document", () => Fixture(JsonImport)),
     ("graceful shutdown persists changes and rejects new commands", () => Fixture(GracefulShutdown)),
     ("failed shutdown keeps the workspace available", () => Fixture(FailedShutdown)),
+    ("room JSON sizes match UTF-8 exports, selected groups and document changes", () => Fixture(RoomJsonSizes)),
     ("sync status distinguishes publication from named-map saving and preserves gestures", () => Fixture(SyncPublication)),
     ("sync status follows map and selected-room source identities", () => Fixture(SyncSourceIdentity)),
     ("automatic room export debounces one second and publishes latest state", () => Fixture(AutoExportDebounce)),
@@ -139,6 +140,47 @@ static string AutoDirectory(EditorWorkspace w) => Path.Combine(w.Files.MapsPath,
     w.Session.FilePath == null ? null : w.Files.Relative(w.Session.FilePath)));
 static string[] AutoFiles(EditorWorkspace w) => Directory.Exists(AutoDirectory(w))
     ? Directory.GetFiles(AutoDirectory(w), "*.json") : [];
+
+static void RoomJsonSizes(EditorWorkspace w)
+{
+    Dictionary<string, long> DiskSizes() => AutoFiles(w).ToDictionary(
+        file => MapDocumentStore.Load(file).rooms.Single().id, file => new FileInfo(file).Length);
+    void CheckSizes()
+    {
+        var files = DiskSizes(); var status = w.State().export;
+        Check(!status.sizesPending && status.totalBytes == files.Values.Sum(), "Total size must equal all current UTF-8 room files, including shared metadata.");
+        Check(status.selectedBytes == w.Canvas.RoomEditor.SelectedIds.Sum(id => files[id]), "Selected size must equal only the selected room files.");
+    }
+    Check(w.State().export.totalBytes == null && w.State().export.sizesPending, "Unmeasured sizes must not be reported as zero.");
+    w.FlushAutoExports(); CheckSizes();
+    string first = w.Canvas.Room.id;
+    Send(w, "documentProperties", ("properties", new[] { new { key = "note", value = "한글 🌿 room" } }));
+    Send(w, "begin", ("x", 2), ("y", 2)); Send(w, "end", ("x", 3), ("y", 2));
+    Send(w, "roomAdd", ("x", 60), ("y", 0), ("name", "second"));
+    w.FlushAutoExports(); CheckSizes();
+    var sizes = DiskSizes();
+    Check(sizes.Count == 2 && sizes[first] != sizes[w.Canvas.Room.id], "Different content must produce independently measured room sizes.");
+    long documentRevision = w.DocumentRevision;
+    Send(w, "selectRoom", ("id", first), ("toggle", true)); CheckSizes();
+    Check(w.State().export.selectedBytes == w.State().export.totalBytes && w.DocumentRevision == documentRevision,
+        "Selection changes must sum cached sizes without editing or queuing a new export.");
+    Send(w, "cancel"); CheckSizes();
+    Check(w.State().export.selectedBytes == 0, "Clearing the room selection must show zero even when an active paint room remains.");
+    Send(w, "selectRoom", ("id", first));
+    long? oldTotal = w.State().export.totalBytes;
+    Send(w, "begin", ("x", 5), ("y", 2)); Send(w, "end", ("x", 6), ("y", 2));
+    Check(w.State().export.sizesPending && w.State().export.totalBytes == oldTotal,
+        "Painting must retain the last calculation until the existing background export finishes.");
+    w.FlushAutoExports(); CheckSizes();
+    Check(w.State().export.totalBytes > oldTotal, "New tiles must appear in the next size calculation.");
+    foreach (string id in w.Session.Document.rooms.Select(room => room.id).ToArray()) Send(w, "roomDelete", ("id", id));
+    w.FlushAutoExports(); CheckSizes();
+    Check(w.State().export.totalBytes == 0 && w.State().export.selectedBytes == 0, "Deleted exports must not remain in an empty map's totals.");
+    Send(w, "undo"); w.FlushAutoExports(); CheckSizes();
+    Send(w, "save", ("path", "sizes.map.json"));
+    Check(w.State().export.totalBytes == null && w.State().export.sizesPending, "Changing the export destination must invalidate previous measurements.");
+    w.FlushAutoExports(); CheckSizes();
+}
 
 static void SyncPublication(EditorWorkspace w)
 {

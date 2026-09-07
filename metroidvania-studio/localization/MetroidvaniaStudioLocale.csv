@@ -1,4 +1,8 @@
 Key,KR,EN,JA,ZH_CN,ZH_TW,RU
+statusSelectedSize,선택한 방 {0},Selected rooms {0},選択した部屋 {0},所选房间 {0},所選房間 {0},Выбранные комнаты {0}
+statusTotalSize,전체 방 {0},All rooms {0},全部屋 {0},全部房间 {0},全部房間 {0},Все комнаты {0}
+statusSizeHint,방별 UTF-8 JSON 내보내기 용량의 합계입니다. 1 KB = 1024바이트이며 텍스처는 제외됩니다.,Combined size of the selected or all room JSON exports in UTF-8. 1 KB = 1024 bytes. Textures are excluded.,部屋ごとのUTF-8 JSON出力サイズの合計です。1 KB = 1024バイト。テクスチャは含みません。,按房间导出的UTF-8 JSON大小之和。1 KB = 1024字节。不含纹理。,按房間匯出的UTF-8 JSON大小總和。1 KB = 1024位元組。不含紋理。,Сумма размеров JSON-комнат в UTF-8. 1 KB = 1024 байта. Без текстур.
+statusSizePending,편집을 멈추면 갱신됩니다. 표시된 용량은 마지막 계산값입니다.,Updates after editing pauses. Displayed sizes are the last calculated values.,編集を止めると更新されます。表示は前回の計算値です。,停止编辑后更新。当前显示上次计算的结果。,停止編輯後更新。目前顯示上次計算的結果。,Обновляется после паузы в редактировании. Показан последний расчёт.
 sampleWorld,샘플 월드 열기,Open sample world,サンプルワールドを開く,打开示例世界,開啟範例世界,Открыть пример мира
 sampleUnavailable,설치 폴더에서 샘플 월드를 찾을 수 없습니다.,The sample world is missing from this installation.,インストールフォルダーにサンプルがありません。,安装目录中缺少示例世界。,安裝目錄中缺少範例世界。,Пример мира отсутствует в этой установке.
 sampleCatalogMismatch,샘플에 필요한 기본 팔레트가 없습니다. 기본 작업공간에서 열어주세요.,This sample needs the default palettes and object definitions. Open it in a default workspace.,このサンプルには標準パレットとオブジェクト定義が必要です。,此示例需要默认调色板和对象定义。请在默认工作区中打开。,此範例需要預設調色盤與物件定義。請在預設工作區中開啟。,Для примера нужны стандартные палитры и определения объектов. Откройте его в стандартном рабочем пространстве.

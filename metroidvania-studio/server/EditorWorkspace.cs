@@ -425,7 +425,7 @@ public sealed partial class EditorWorkspace
             instanceId = InstanceId, file = browserFile?.Name ?? (Session.FilePath == null ? null : Files.Relative(Session.FilePath)), browserFileId = browserFile?.Id,
             dirty = HasUnsavedChanges, canUndo = Session.CanUndo, canRedo = Session.CanRedo, notice = Notice,
             workspace = new EditorWorkspaceInfo(Path.GetFileName(Files.ProjectPath), Files.MapsLabel),
-            export = autoExporter.Status(Canvas.ActiveRoomId), selection = selection,
+            export = autoExporter.Status(Canvas.ActiveRoomId, Canvas.RoomEditor.SelectedIds), selection = selection,
             document = includeDocument ? new ValidatedJson(documentJson) : null,
             connections = includeDocument ? connectionData : null, catalog = includeCatalog ? Catalog.Data : null
         };

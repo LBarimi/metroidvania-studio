@@ -634,6 +634,9 @@ hr {
 }
 
 .statusbar .status-state { color: #b8b8b8; }
+#status-room-sizes { color: #b8b8b8; cursor: help; }
+#status-room-sizes[data-pending="true"] { color: #858585; }
+.statusbar #status-camera { min-width: 0; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; }
 .statusbar .working { color: #e0b761; }
 .statusbar { gap: 10px; overflow: hidden; white-space: nowrap; }
 .statusbar > span { flex-shrink: 0; }

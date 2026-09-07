@@ -58,6 +58,9 @@ export interface EditorExportStatus {
   path: string | null;
   phase: string;
   roomId: string | null;
+  selectedBytes: number | null;
+  sizesPending: boolean;
+  totalBytes: number | null;
   version: number;
 }
 

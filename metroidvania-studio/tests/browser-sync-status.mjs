@@ -70,14 +70,39 @@ try {
   await page.unroute('**/api/state*'); await recovered204; await json('syncExportSaved');
   checks.push('offline status survives pointer redraws and a 204 response restores connectivity');
 
+  const sizesLabel = page.locator('#status-room-sizes');
+  const kb = value => (value / 1024).toFixed(2) + ' KB';
+  async function expectSizes(selected, total) {
+    await page.waitForFunction(({ selected, total }) => {
+      const label = document.querySelector('#status-room-sizes');
+      return label?.dataset.pending === 'false' && label.textContent === '선택한 방 ' + selected + ' · 전체 방 ' + total;
+    }, { selected: kb(selected), total: kb(total) });
+  }
+  const firstBytes = (await readFile(exportFile)).length;
+  await expectSizes(firstBytes, firstBytes);
+  await command('roomAdd', { x: 100, y: 0, name: 'Size fixture' });
+  const secondState = await exported();
+  const secondBytes = (await readFile(path.resolve(root, secondState.export.path))).length;
+  const totalBytes = firstBytes + secondBytes;
+  await expectSizes(secondBytes, totalBytes);
+  await command('selectRoom', { id: first, toggle: true });
+  await expectSizes(totalBytes, totalBytes);
+  await command('cancel'); await expectSizes(0, totalBytes);
+  await command('selectRoom', { id: first }); await expectSizes(firstBytes, totalBytes);
+  checks.push('UTF-8 room file sizes use two decimals and follow individual, grouped and cleared selections');
+
   await page.locator('#language').selectOption('EN');
   await page.waitForFunction(() => document.querySelector('#status-export')?.textContent === 'JSON exported');
   assert.equal(await page.locator('#status-export').textContent(), 'JSON exported');
+  assert.equal(await sizesLabel.textContent(), 'Selected rooms ' + kb(firstBytes) + ' · All rooms ' + kb(totalBytes));
+  assert.match(await sizesLabel.getAttribute('title'), /UTF-8.*1024/);
   await page.locator('#language').selectOption('KR');
   const evidence = path.join(repository, '.local/logs/metroidvania-studio-sync'); await mkdir(evidence, { recursive: true });
   await page.screenshot({ path: path.join(evidence, 'web-status.png') });
   await page.setViewportSize({ width: 800, height: 650 });
   const bounds = await page.locator('#status-export').boundingBox(); assert.ok(bounds.x + bounds.width <= 800);
+  const sizesBounds = await sizesLabel.boundingBox(); assert.ok(sizesBounds.x >= 0 && sizesBounds.x + sizesBounds.width <= 800);
+  await page.screenshot({ path: path.join(evidence, 'web-status-compact.png') });
   checks.push('KR/EN labels and the compact status bar remain usable');
   assert.deepEqual(errors, []);
   await writeFile(path.join(evidence, 'browser-report.json'), JSON.stringify({ checks, errors }, null, 2));

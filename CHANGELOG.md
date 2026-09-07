@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Show selected-room and total room JSON sizes in the status bar with two decimal places, reusing background export byte counts.
+
 - Clear a multiple-room selection when clicking empty map space, without painting or creating a room.
 
 - Start blank maps and room creation dialogs with a 16 by 10 tile room.
