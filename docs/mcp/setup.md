@@ -2,24 +2,32 @@
 
 Metroidvania Studio exposes a local stdio MCP server for map inspection, batch edits, Lua scripts, JSON exports, and headless layout previews. The client starts a child process and communicates through its standard input and output. No port, HTTP endpoint, remote service, API key, or AI model is required by this server.
 
-Build the CLI using the [CLI guide](../cli/quick-start.md), then configure a client to run:
+Install the CLI with Node.js 24+ and the .NET 10 runtime:
+
+```sh
+npm install --global metroidvania-studio
+```
+
+Alternatively, build from source using the [CLI guide](../cli/quick-start.md). Configure a client to run:
 
 ```sh
 metroidvania-studio mcp --workspace workspace
 ```
 
-A typical client configuration looks like this:
+For clients that launch npm packages through `npx`, pin the version in the configuration:
 
 ```json
 {
   "mcpServers": {
     "metroidvania-studio": {
-      "command": "metroidvania-studio",
-      "args": ["mcp", "--workspace", "workspace"]
+      "command": "npx",
+      "args": ["-y", "metroidvania-studio@1.1.0", "mcp", "--workspace", "workspace"]
     }
   }
 }
 ```
+
+`npx` may download the package on first use. Clients that cannot launch Windows command shims can use `node` with the installed wrapper path, as shown in the [local package guide](../distribution/local-package.md).
 
 Set the client's working directory so `workspace` resolves to the intended folder, or configure the workspace path explicitly in your own client settings. The directory must already exist. When running a source build directly, set `command` to `dotnet` and put the built `MetroidvaniaStudio.Cli.dll` path first in `args`.
 

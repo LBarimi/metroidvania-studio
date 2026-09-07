@@ -1,6 +1,6 @@
 # Local npm package
 
-The npm package is prepared locally. It has not been published to npm or the MCP Registry.
+Use this workflow to build and test the npm package from source without publishing it. For a registry install, run `npm install --global metroidvania-studio`.
 
 To build the package from the source repository, use Node.js 24+, npm, and the .NET 10 SDK:
 
@@ -46,4 +46,4 @@ After local installation, configure a client to start the wrapper. Replace the r
 
 Use `--read-only` when the client should only inspect maps. The MCP server uses stdio and accesses the selected local workspace. The wrapper does not download runtimes, install packages, or contact a registry during execution.
 
-The root `server.json` is publication metadata, not a running remote server or an automatic publishing configuration. Its npm identifier, version, and `name` must match the staged package. The root `package.json` deliberately remains `private: true`; only the package built under `builds/npm` is prepared for future publication.
+The root `server.json` is publication metadata, not a running remote server or an automatic publishing configuration. Its npm identifier, version, and `name` must match the staged package. The root `package.json` deliberately remains `private: true`; only the package built under `builds/npm` is the distributable package.

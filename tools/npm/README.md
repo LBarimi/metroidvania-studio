@@ -5,6 +5,7 @@ Create connected 2D worlds with Lua scripting, a headless CLI, and a local MCP s
 This package contains the command-line and MCP tools. It requires **Node.js 24+** and the **.NET 10 runtime**. A .NET SDK, an engine installation, and a browser are not needed to run it.
 
 ```sh
+npm install --global metroidvania-studio
 metroidvania-studio version
 mkdir maps
 metroidvania-studio --workspace ./maps init --map world.map.json
@@ -18,6 +19,7 @@ MCP uses standard input/output. The installed program does not download tools, a
 Use `METROIDVANIA_STUDIO_DOTNET` to select an existing .NET host when it is not found automatically.
 
 - [CLI guide](docs/cli/quick-start.md)
+- [MCP setup](docs/mcp/setup.md)
 - [Lua scripting](docs/scripting/quick-start.md)
 - [Editing API](docs/api/index.md)
 - [Local installation](docs/distribution/local-package.md)

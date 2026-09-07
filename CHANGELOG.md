@@ -5,8 +5,9 @@
 - Add a versioned editing API shared by Lua scripts, headless commands, and local MCP tools.
 - Run Lua scripts from the web editor with dry runs, cancellation, bounded workers, and one-step Undo.
 - Protect live edits with document revision checks and preserve existing version-2 JSON and automatic room exports.
-- Add local npm package preparation, MCP metadata, API references, and script examples.
-- Publication is pending review.
+- Add an installable npm CLI and local stdio MCP server for map creation, inspection, batch edits, Lua scripts, exports, and layout previews.
+- Include API references, script examples, and setup guides with release downloads and npm packages.
+- Keep script execution bounded and workspace-scoped, with cancellation and recovery from interrupted live requests.
 
 ## 1.0.0
 

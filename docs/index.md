@@ -9,7 +9,7 @@ Metroidvania Studio 1.1 adds Lua scripts, a headless CLI, a local MCP server, an
 | [MCP setup](mcp/setup.md) | Give an agent local map editing tools |
 | [Editing API](api/index.md) | Apply structured, atomic operation batches |
 | [Live web API](api/live-api.md) | Work on the document currently open in the studio |
-| [Local npm package](distribution/local-package.md) | Build and test an installable package before publication |
+| [Local npm package](distribution/local-package.md) | Build and test an installable package from source |
 
 ## In the web editor
 
@@ -31,4 +31,4 @@ Automation API version **1**, studio version **1.1.0**, and map format version *
 
 See [validation commands and platform coverage](validation.md) to run the checks locally.
 
-This branch prepares npm and MCP distribution. Building or installing the local package does not publish it.
+Install the CLI and MCP tools with `npm install --global metroidvania-studio`. Running the package requires Node.js 24+ and the .NET 10 runtime. Building or installing a local package does not publish it.

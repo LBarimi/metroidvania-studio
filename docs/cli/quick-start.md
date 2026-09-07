@@ -2,7 +2,14 @@
 
 The command line creates and edits map JSON without a browser, display, game engine, or running web server. It uses the same versioned operations and Lua API as the editor.
 
-Build once from the repository root with Node.js 24+ and the .NET 10 SDK:
+Install with Node.js 24+ and the .NET 10 runtime:
+
+```sh
+npm install --global metroidvania-studio
+metroidvania-studio help
+```
+
+Alternatively, build once from the repository root with Node.js 24+ and the .NET 10 SDK:
 
 ```sh
 node tools/scripting/build-runtime.mjs
@@ -15,7 +22,7 @@ Run the resulting DLL with the .NET 10 runtime:
 dotnet metroidvania-studio/cli/bin/Release/net10.0/MetroidvaniaStudio.Cli.dll help
 ```
 
-The examples below use `metroidvania-studio` as shorthand for that command. A locally installed CLI package provides this command directly. The package does not need an engine installation or an AI account.
+The examples below use `metroidvania-studio` as shorthand for that command. An installed npm package provides this command directly. The package does not need an engine installation or an AI account.
 
 Create a workspace directory, then a new map:
 

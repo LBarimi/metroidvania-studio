@@ -48,7 +48,13 @@ See **Help → Shortcuts** for the full control list. The interface follows your
 
 Use **Edit → Lua Scripts** to generate rooms or repeat editing tasks. Run the same operations headlessly through the **CLI**, or connect an **AI agent** through the local **MCP server**. Dry runs, atomic updates, and revision checks keep scripted edits reviewable.
 
-Start with the [automation guides](docs/index.md), [Lua examples](docs/examples/connected-rooms.lua), or [MCP setup](docs/mcp/setup.md). The 1.1.0 npm and MCP packages are being prepared; local packaging is available for testing.
+Install the CLI and MCP tools with **Node.js 24+** and the **.NET 10 runtime**:
+
+```sh
+npm install --global metroidvania-studio
+```
+
+Start with the [automation guides](docs/index.md), [Lua examples](docs/examples/connected-rooms.lua), or [MCP setup](docs/mcp/setup.md).
 
 ## Engine Packages
 

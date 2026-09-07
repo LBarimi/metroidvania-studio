@@ -39,7 +39,7 @@ npm run test:package
 
 The first command produces `builds/npm/metroidvania-studio-1.1.0.tgz`. The second installs that local archive in a fresh folder, then exercises CLI, Lua, and MCP. Package validation checks its file inventory, document links, metadata, and retained dependency notices. No post-install download or engine installation is needed.
 
-## 1.1.0 internal verification
+## 1.1.0 verification
 
 Windows checks passed for the existing core (41), existing server (82), editing API (30), Lua runtime (16), atomic web jobs (8), CLI/MCP process tests (14), actual live-server integration (1), and repository/build/package tooling (44).
 
@@ -49,4 +49,4 @@ A fresh clone also built with empty NuGet and HTTP caches: the interpreter was c
 
 The locally installed npm package passed on Windows and native Linux under WSL. Linux checks also verified termination of a worker when its owning process exits. macOS shell wrappers and portable managed outputs were checked, but **native macOS execution still needs verification** before claiming a tested macOS 1.1.0 release.
 
-npm and MCP publication, release tags, and public 1.1.0 release assets remain pending review.
+Release packaging checks the approved `main` commit, archive contents, version metadata, licenses, and checksums before publication. See the [publication checklist](distribution/publication.md).
