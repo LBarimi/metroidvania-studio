@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using MetroidvaniaStudio.Storage;
 using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
@@ -17,6 +18,7 @@ internal static partial class Program
     private sealed record BuildIndex(int FormatVersion, string Folder);
     private sealed record Options(string Action, string Root, string Project, int Port, bool NoBrowser, bool Restart, bool Foreground, string? BuildDirectory, bool AutoPort)
     {
+        public string? LegacyWorkspace { get; init; }
         public string Local => Path.Combine(Root, "metroidvania-studio", ".local");
         public string Record => Path.Combine(Local, $"server-{Port}.json");
         public string Url => $"http://127.0.0.1:{Port}/";
@@ -31,6 +33,20 @@ internal static partial class Program
             Directory.CreateDirectory(options.Local);
             // Validate the build before changing a port assignment or running session.
             string build = options.Action == "run" ? ResolveBuild(options) : "";
+            if (options.LegacyWorkspace != null)
+            {
+                // Only the verified legacy session owned by this launcher may be stopped.
+                if (Directory.Exists(options.LegacyWorkspace))
+                {
+                    using (await Lock(options))
+                    {
+                        var old = options with { Project = options.LegacyWorkspace };
+                        var record = ReadSession(old);
+                        if (record != null && SamePath(record.ProjectPath, old.Project)) await Stop(old);
+                    }
+                }
+                if (options.Action == "run") PortableWorkspace.Prepare(options.Project, options.LegacyWorkspace);
+            }
             var session = await AcquireSessionLock(options);
             options = session.Options;
             if (session.Lock == null) { Console.WriteLine("No matching background session is running."); return 0; }
@@ -101,7 +117,7 @@ internal static partial class Program
     private static Options Parse(string[] args)
     {
         if (args.Length == 0 || args[0] is not ("run" or "stop" or "check")) throw new ArgumentException("Usage: launcher run|stop|check --studio-root <folder> [--project <folder>] [--port <number> | --auto-port] [--no-browser] [--restart]");
-        string? root = null, project = null, build = null; int port = 18765;
+        string? root = null, project = null, build = null, storageRoot = null; int port = 18765;
         bool noBrowser = false, restart = false, foreground = false, autoPort = false;
         for (int i = 1; i < args.Length; i++)
         {
@@ -110,6 +126,7 @@ internal static partial class Program
             {
                 case "--studio-root": root = Value(); break;
                 case "--project": project = Value(); break;
+                case "--storage-root": storageRoot = Value(); break;
                 case "--port": if (!int.TryParse(Value(), NumberStyles.None, CultureInfo.InvariantCulture, out port) || port < 1024 || port > 65535) throw new ArgumentException("Choose a port between 1024 and 65535."); autoPort = false; break;
                 case "--auto-port": autoPort = true; break;
                 case "--build-directory": build = Value(); break;
@@ -121,7 +138,8 @@ internal static partial class Program
         }
         if (string.IsNullOrWhiteSpace(root)) throw new ArgumentException("--studio-root is required.");
         root = Normalize(root);
-        return new Options(args[0], root, Normalize(string.IsNullOrWhiteSpace(project) ? Path.Combine(root, ".local/workspace") : project), port, noBrowser, restart, foreground, build == null ? null : Normalize(build), autoPort);
+        return new Options(args[0], root, Normalize(string.IsNullOrWhiteSpace(project) ? storageRoot ?? root : project), port, noBrowser, restart, foreground, build == null ? null : Normalize(build), autoPort)
+        { LegacyWorkspace = string.IsNullOrWhiteSpace(project) ? storageRoot == null ? Path.Combine(root, ".local/workspace") : PortableWorkspace.LegacyUserWorkspace : null };
     }
     private static string Normalize(string value) => Path.TrimEndingDirectorySeparator(Path.GetFullPath(value));
     private static bool SamePath(string? left, string? right) => left != null && right != null && string.Equals(Normalize(left), Normalize(right), Paths);

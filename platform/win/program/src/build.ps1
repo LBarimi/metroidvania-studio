@@ -73,7 +73,7 @@ try {
             }
         }
     }
-    [IO.File]::WriteAllText((Join-Path $stage 'desktop-settings.json'), "{`n  `"workspaceRelativePath`": `"../../../.local/workspace`"`n}`n", [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText((Join-Path $stage 'desktop-settings.json'), "{`n  `"workspaceRelativePath`": `"../../..`"`n}`n", [Text.UTF8Encoding]::new($false))
     [IO.File]::WriteAllText((Join-Path $stage 'build-info.json'), (@{ version=$version; builtAt=[DateTime]::UtcNow.ToString('O'); target='win-x64'; mode='local-program'; runtimeIncluded=[bool]$IncludeRuntime } | ConvertTo-Json), [Text.UTF8Encoding]::new($false))
     $runtimeText = if ($IncludeRuntime) {
         'This build includes .NET 10. Microsoft WebView2 Runtime must be installed.'

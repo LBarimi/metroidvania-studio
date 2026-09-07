@@ -49,3 +49,11 @@ filtering at an integer scale. Extra window space stays black; a window smaller
 than the reference resolution crops the image at 1x. Game HUD widgets can be
 placed above this image. The camera is intended for axis-aligned 2D views.
 White room boundaries appear in the level editor only; Game View hides them.
+
+Your studio files
+Use File > Storage folders in the studio to find Maps and Textures.
+Default locations beside the launcher or at the source project root:
+  Room JSON     : Maps/AutoExport/<map-folder>/<room-name>.json
+  Catalog JSON  : catalog.json
+  Resource root : the folder containing Maps, Textures and catalog.json
+Keep these three together when copying the world to another computer.

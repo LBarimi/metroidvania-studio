@@ -25,7 +25,7 @@ for(const file of ['metroidvania-studio.exe','metroidvania-studio-cli.cmd','Metr
 for(const file of ['LICENSE','THIRD-PARTY-NOTICES.md','NOTICE'])if(existsSync(path.join(program,file)))add(file);
 for(const folder of ['app/metroidvania-studio/dist','app/metroidvania-studio/cli','app/metroidvania-studio/contracts','app/docs','app/metroidvania-studio/localization','app/samples','app/notices'])tree(folder);
 entries.set('desktop-settings.json',Buffer.from('{}\n'));
-entries.set('INSTALL_EN.txt',Buffer.from('1. Install .NET 10 Desktop Runtime (x64), ASP.NET Core Runtime 10 (x64), and Microsoft Edge WebView2 Runtime.\n2. Extract the entire archive to a writable folder.\n3. Double-click metroidvania-studio.exe. Keep the app folder beside it.\n\nMaps are saved in %LOCALAPPDATA%/MetroidvaniaStudio/workspace.\nKeep that workspace when updating the program.\n'));
+entries.set('INSTALL_EN.txt',Buffer.from('1. Install .NET 10 Desktop Runtime (x64), ASP.NET Core Runtime 10 (x64), and Microsoft Edge WebView2 Runtime.\n2. Extract the entire archive to a writable folder.\n3. Double-click metroidvania-studio.exe. Keep the app folder beside it.\n\nMaps, Textures and catalog.json are stored beside the executable.\nKeep these files when updating the program.\n'));
 for(const name of entries.keys())assert.ok(!/(^|\/)(?:\.local|src|obj|bin|logs|workspace|desktop-self-test\.js)(\/|$)|\.(?:cs|csproj|pdb|ps1|map)$/i.test(name),name);
 const bytes=zip(entries),name='builds/win/program/metroidvania-studio-win-x64.zip';
 assert.deepEqual(inspectFiles([{name,bytes}],loadMatcher()),[]);

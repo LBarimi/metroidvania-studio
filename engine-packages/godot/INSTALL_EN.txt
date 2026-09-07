@@ -40,3 +40,11 @@ The supplied RoomCamera uses the exported PPU (default 16) and aligns the view
 to source pixels without changing the camera node's position. Use view_offset
 for a framing offset. Smoothing is disabled for this camera.
 White room boundaries appear only in the 2D editor, never in the running game.
+
+Your studio files
+Use File > Storage folders in the studio to find Maps and Textures.
+Default locations beside the launcher or at the source project root:
+  Room JSON     : Maps/AutoExport/<map-folder>/<room-name>.json
+  Catalog JSON  : catalog.json
+  Resource root : the folder containing Maps, Textures and catalog.json
+Keep these three together when copying the world to another computer.

@@ -4,6 +4,15 @@ const brand = document.querySelector('.topbar > .brand');
 assert(brand && getComputedStyle(brand).display === 'none', 'Desktop branding should be hidden.');
 assert(document.querySelector('#file-menu-button').getBoundingClientRect().left < 16, 'File menu should start at the left edge.');
 assert(typeof window.showOpenFilePicker === 'function' && typeof window.showSaveFilePicker === 'function', 'Native map file pickers must be available.');
+const folders = await import('./workspace-folders.js');
+await folders.initializeWorkspaceFolders();
+const folderDeadline = Date.now() + 8000;
+while (!folders.folderStartIn('maps').startIn && Date.now() < folderDeadline) await new Promise(resolve => setTimeout(resolve, 50));
+assert(folders.folderStartIn('maps').startIn?.name === 'Maps', 'Desktop map dialogs start in the workspace Maps folder.');
+assert(folders.folderStartIn('textures').startIn?.name === 'Textures', 'Desktop PNG dialogs start in the workspace Textures folder.');
+const probeCanvas = document.createElement('canvas'); probeCanvas.width = probeCanvas.height = 16;
+const blob = await new Promise(resolve => probeCanvas.toBlob(resolve)); const blobUrl = URL.createObjectURL(blob);
+try { const probeImage = new Image(); probeImage.src = blobUrl; await probeImage.decode(); } finally { URL.revokeObjectURL(blobUrl); }
 const { api, map } = window.metroidvaniaDesktop.test;
 const material = api.state.catalog.materials[0].id;
 const room = { id: 'desktop-room', name: 'Desktop room', x: 0, y: 0, width: 160, height: 90,

@@ -1,5 +1,6 @@
 import type { Command, Material } from './types.js';
 import type { Locale } from './locale.js';
+import { folderStartIn, openWorkspaceFolders, workspaceFolder } from './workspace-folders.js';
 import { composeTileset, defaultTile, drawTilesetExample, TILESET_MASKS } from './tileset-preview.js';
 import type { TilesetMode, TilesetSettings } from './tileset-preview.js';
 
@@ -16,6 +17,7 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   type Source = { image: HTMLImageElement; blob: Blob; name: string; png?: string };
   const sources = new Map<string, Source>();
   let currentSource = settings.source, selected = 0, zoom = 4, generation = 0, disposed = false, locked = false, loading = false;
+  let candidate: { x: number; y: number; asset: string } | undefined, colorTimer = 0, previewKey = '';
   const dialog = element('dialog', 'tileset-dialog'); dialog.id = 'tileset-dialog';
   const heading = element('div', 'dialog-title', t('tilesetTitle'));
   heading.append(button('×', () => { if (!locked) dialog.close(); }, 'icon ghost'));
@@ -28,23 +30,43 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   const fields = element('div', 'tileset-fields'); fields.append(label(t('name'), name), label(t('theme'), color), label(t('tilesetMethod'), mode));
   const hint = element('p', 'hint'), columns = element('div', 'tileset-columns'), sourcePane = element('section', 'tileset-source'), slotsPane = element('section', 'tileset-target');
   const tools = element('div', 'tileset-actions'), file = element('input'); file.type = 'file'; file.multiple = true; file.accept = 'image/png,.png'; file.hidden = true; file.id = 'tileset-file';
-  const importButton = button(t('tilesetImport'), () => file.click()); importButton.id = 'tileset-import';
+  const importButton = button(t('tilesetImport'), () => {
+    const picker = window as Window & { showOpenFilePicker?: (options: object) => Promise<{ getFile(): Promise<File> }[]> };
+    if (!picker.showOpenFilePicker) { file.click(); return; }
+    void picker.showOpenFilePicker({ id: 'studio-texture', multiple: true, types: [{ description: 'PNG', accept: { 'image/png': ['.png'] } }], ...folderStartIn('textures') })
+      .then(async handles => { if (handles.length && !disposed) await importFiles(await Promise.all(handles.map(h => h.getFile()))); })
+      .catch(e => { if (e?.name !== 'AbortError') error.textContent = errorText(e); });
+  }); importButton.id = 'tileset-import';
   const templateButton = button(t('tilesetLoadTemplate'), () => void template()); templateButton.id = 'tileset-load-template';
   const downloadButton = button(t('tilesetDownload'), () => {
     const source = sources.get(currentSource); if (!source) return;
+    const picker = window as Window & { showSaveFilePicker?: (options: object) => Promise<{ createWritable(): Promise<{ write(data: Blob): Promise<void>; close(): Promise<void>; abort(): Promise<void> }> }> };
+    if (picker.showSaveFilePicker) {
+      void picker.showSaveFilePicker({ id: 'studio-texture', suggestedName: source.name.split('/').pop() || 'tileset.png', types: [{ description: 'PNG', accept: { 'image/png': ['.png'] } }], ...folderStartIn('textures') })
+        .then(async handle => { const writer = await handle.createWritable(); try { await writer.write(source.blob); await writer.close(); } catch (e) { try { await writer.abort(); } catch {} throw e; } })
+        .catch(e => { if (e?.name !== 'AbortError') error.textContent = errorText(e); });
+      return;
+    }
     const url = URL.createObjectURL(source.blob), link = element('a'); link.href = url; link.download = source.name.split('/').pop() || 'tileset.png'; link.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
-  tools.append(importButton, templateButton, downloadButton, file);
+  tools.append(importButton, templateButton, downloadButton, button(t('storageFolders'), () => openWorkspaceFolders(locale, 'textures')), file);
   const sourcePath = element('input', 'tileset-path'); sourcePath.readOnly = true; sourcePath.setAttribute('aria-label', t('tilesetSource'));
   const sourceSelect = element('select'); sourceSelect.id = 'tileset-image'; sourceSelect.setAttribute('aria-label', t('tilesetSource'));
-  sourceSelect.onchange = () => { currentSource = sourceSelect.value; render(); };
+  sourceSelect.onchange = () => { currentSource = sourceSelect.value; candidate = undefined; render(); };
   const controls = element('div', 'tileset-actions'), auto = element('input'); auto.type = 'checkbox'; auto.checked = true;
   const zoomSelect = element('select'); zoomSelect.setAttribute('aria-label', t('tilesetZoom'));
   for (const value of [1,2,4,6,8]) { const o = element('option', '', '×' + value); o.value = String(value); zoomSelect.append(o); } zoomSelect.value = '4';
   zoomSelect.onchange = () => { zoom = Number(zoomSelect.value); drawSource(); };
   const autoLabel = label(t('tilesetNext'), auto); autoLabel.className = 'check';
   const automatic = button(t('tilesetAutoAssign'), () => { autoAssign(); render(); }); automatic.id = 'tileset-auto-assign';
-  controls.append(automatic, zoomSelect, autoLabel);
+  const assign = button(t('tilesetAssignSelected'), () => {
+    if (!candidate || locked || loading || settings.mode === 'template') return;
+    settings.slots[selected] = { ...candidate };
+    const firstSlope = settings.mode === 'four' ? 4 : 47;
+    if (auto.checked) selected = Math.min(selected + 1, slopes ? settings.slots.length - 1 : firstSlope - 1);
+    render();
+  }); assign.id = 'tileset-assign-selected';
+  controls.append(automatic, assign, zoomSelect, autoLabel);
   const scroll = element('div', 'tileset-image-scroll'); scroll.tabIndex = 0;
   const sourceCanvas = element('canvas'); sourceCanvas.id = 'tileset-source'; const empty = element('div', 'tileset-empty', t('tilesetDrop'));
   scroll.append(sourceCanvas, empty); sourcePane.append(tools, sourceSelect, sourcePath, controls, scroll);
@@ -61,14 +83,16 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   const apply = button(t('apply'), () => void save(), 'accent'); apply.id = 'tileset-apply';
   footer.append(button(t('cancel'), () => dialog.close()), apply);
   body.append(fields, hint, columns, error); dialog.append(heading, body, footer); document.body.append(dialog); dialog.showModal();
-  dialog.addEventListener('close', () => { disposed = true; generation++; dialog.remove(); });
+  dialog.addEventListener('close', () => { disposed = true; generation++; window.clearTimeout(colorTimer); dialog.remove(); });
   dialog.addEventListener('cancel', e => { if (locked) e.preventDefault(); });
   mode.onchange = () => {
     generation++; loading = false; apply.disabled = false;
     settings.mode = mode.value as TilesetMode; settings.slots = Array(settings.mode === 'four' ? 8 : settings.mode === 'blob47' ? 51 : 0).fill(null);
     selected = 0; slopes = false; render();
   };
-  color.oninput = render;
+  // Native color picking emits many input events. Keep its pointer path free of atlas/DOM work.
+  color.oninput = () => { window.clearTimeout(colorTimer); colorTimer = window.setTimeout(() => { if (!disposed) render(); }, 120); };
+  color.onchange = () => { window.clearTimeout(colorTimer); render(); };
   file.onchange = () => { const next = Array.from(file.files || []); file.value = ''; if (next.length) void importFiles(next); };
   scroll.addEventListener('dragover', e => { if (!locked) { e.preventDefault(); scroll.classList.add('drop-target'); } });
   scroll.addEventListener('dragleave', () => scroll.classList.remove('drop-target'));
@@ -80,10 +104,8 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
     const x = Math.floor((e.clientX - bounds.left) / bounds.width * image.naturalWidth / 16) * 16;
     const y = Math.floor((e.clientY - bounds.top) / bounds.height * image.naturalHeight / 16) * 16;
     if (x < 0 || y < 0 || x + 16 > image.naturalWidth || y + 16 > image.naturalHeight) return;
-    settings.slots[selected] = { x, y, asset: currentSource };
-    const firstSlope = settings.mode === 'four' ? 4 : 47;
-    if (auto.checked) selected = Math.min(selected + 1, slopes ? settings.slots.length - 1 : firstSlope - 1);
-    render();
+    candidate = { x, y, asset: currentSource };
+    assign.disabled = false; drawSource();
   });
   function autoAssign(keys = [currentSource], start = 0): void {
     if (settings.mode === 'template') return;
@@ -157,13 +179,15 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
     ctx.strokeStyle = 'rgba(160,170,180,.45)'; ctx.lineWidth = 1 / zoom; ctx.beginPath();
     for (let x = 0; x <= image.naturalWidth; x += 16) { ctx.moveTo(x,0); ctx.lineTo(x,image.naturalHeight); }
     for (let y = 0; y <= image.naturalHeight; y += 16) { ctx.moveTo(0,y); ctx.lineTo(image.naturalWidth,y); } ctx.stroke();
-    const active = settings.slots[selected];
+    const active = candidate?.asset === currentSource ? candidate : settings.slots[selected];
     if (active && (active.asset || settings.source) === currentSource) { ctx.strokeStyle = '#59c8ff'; ctx.lineWidth = 2 / zoom; ctx.strokeRect(active.x + 1 / zoom, active.y + 1 / zoom, 16 - 2 / zoom, 16 - 2 / zoom); }
   }
   function render(): void {
     sourceSelect.replaceChildren();
     for (const [key,value] of sources) { const o = element('option', '', value.name.split('/').pop() || value.name); o.value = key; sourceSelect.append(o); }
     sourceSelect.value = currentSource; sourcePath.value = sources.get(currentSource)?.name || '';
+    if (sourcePath.value.startsWith('Textures/') && workspaceFolder('textures')) sourcePath.value = workspaceFolder('textures').replace(/\\/g, '/') + '/' + sourcePath.value.slice(9);
+    sourcePath.title = sourcePath.value;
     const templateOnly = settings.mode === 'template', firstSlope = settings.mode === 'four' ? 4 : 47;
     hint.textContent = t(templateOnly ? 'tilesetTemplateHelp' : settings.mode === 'four' ? 'tilesetFourHelp' : 'tileset47Help');
     sourcePane.hidden = templateOnly; tabs.hidden = templateOnly; slotGrid.hidden = templateOnly;
@@ -185,7 +209,13 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
       b.title = caption + (slot ? ' · ' + slot.x / 16 + ', ' + slot.y / 16 : ' · ' + t('tilesetUnassigned'));
       b.append(tile, element('span','',caption), element('small','',slot ? slot.x / 16 + ',' + slot.y / 16 : '—')); slotGrid.append(b);
     }
-    drawSource(); drawTilesetExample(example, composeTileset(new Map([...sources].map(([k,v]) => [k,v.image])),settings,color.value));
+    drawSource();
+    const nextPreview = JSON.stringify([settings, color.value, generation, [...sources.keys()]]);
+    if (nextPreview !== previewKey) {
+      drawTilesetExample(example, composeTileset(new Map([...sources].map(([k,v]) => [k,v.image])),settings,color.value));
+      previewKey = nextPreview;
+    }
+    assign.disabled = !candidate || !sources.has(candidate.asset) || templateOnly;
     downloadButton.disabled = !sources.has(currentSource); automatic.disabled = !sources.has(currentSource);
   }
   async function save(): Promise<void> {

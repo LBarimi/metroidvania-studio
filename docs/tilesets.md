@@ -4,7 +4,7 @@ Open **…** beside a palette in the left sidebar. The same settings apply to it
 
 ## Four source tiles
 
-Choose **4-tile autotiling**, then import a PNG strip or four separate PNGs. Each source tile is **16×16 pixels**. Select a destination slot and click a tile in the source image to change its assignment.
+Choose **4-tile autotiling**, then import a PNG strip or four separate PNGs. Each source tile is **16×16 pixels**. Select a destination slot, click a source tile to preview it, then press **Assign selected tile**. Clicking alone never changes a rule.
 
 | Slot | Source orientation |
 | --- | --- |
@@ -27,7 +27,7 @@ Missing slots use the palette's default color and white edges. Switching the met
 
 ## Original images and engine resources
 
-Imports copy source PNGs into the workspace's `Textures/palettes/` directory. The **Source image** field displays that workspace resource path after saving and reopening the dialog. Edit this copy to receive live updates; the initially selected external file is not watched.
+Imports copy source PNGs into `Textures/palettes/` beside the launcher or at the source project root. **Storage folders** opens that location or copies its path. In a browser, select the folder once with **Set file dialog folder** to remember it for PNG open/save dialogs; the Windows application sets it automatically. The **Source image** field displays that workspace resource path after saving and reopening the dialog. Edit this copy to receive live updates; the initially selected external file is not watched.
 
 The studio builds a generated atlas when you apply settings or save an original image. Incomplete image writes retain the previous atlas until a complete replacement is available. Composition runs on image changes, not on paint gestures.
 

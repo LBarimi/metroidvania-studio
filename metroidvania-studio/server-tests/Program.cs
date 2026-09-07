@@ -5,6 +5,8 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("portable storage migration preserves maps, original textures and recovery", PortableWorkspaceTests.Migration),
+    ("portable storage rejects conflicts, active sessions and external paths", PortableWorkspaceTests.Conflicts),
     ("four-tile canonical rotations and complete mask coverage", TilesetTests.FourRotations),
     ("47-slot templates, slope orientation and missing-slot fallback", TilesetTests.FullAtlas),
     ("PNG formats, row filters, transparency and Adam7", TilesetTests.PngFormats),

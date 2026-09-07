@@ -34,7 +34,7 @@ To build from source, install **Node.js 24+**, **.NET SDK 10**, and **Git**.
 
 **Run** checks your local build against the current version and source files. It builds automatically when needed, then opens the studio in your browser. An up-to-date build starts immediately. Prebuilt web copies require **ASP.NET Core Runtime 10**.
 
-Release downloads keep maps in your user data folder. Source builds use `.local/workspace/Maps`. Room JSON exports update automatically in `Maps/AutoExport` inside the workspace. Keep your workspace when updating the studio.
+Maps, `Textures` and `catalog.json` are stored beside the launcher or at the source project root. Find them through **File → Storage folders**. Room JSON updates automatically in `Maps/AutoExport`. Keep these files when updating the studio.
 
 ## Try the Sample World
 

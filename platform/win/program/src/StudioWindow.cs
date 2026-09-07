@@ -81,7 +81,22 @@ internal sealed class StudioWindow : Form
                 if (mime == null || !File.Exists(file)) return;
                 e.Response = environment.CreateWebResourceResponse(new MemoryStream(File.ReadAllBytes(file)), 200, "OK",
                     "Content-Type: " + mime + "; charset=utf-8\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\n" +
-                    "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none\r\n");
+                    "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none\r\n");
+            };
+            web.CoreWebView2.WebMessageReceived += (_, e) =>
+            {
+                if (!LocalPage(e.Source) || new Uri(e.Source).AbsolutePath != "/") return;
+                try
+                {
+                    if (e.TryGetWebMessageAsString() != "studio-workspace-folders") return;
+                    var folders = new MetroidvaniaStudio.Server.ProjectFiles(options.Workspace);
+                    Directory.CreateDirectory(folders.TexturesPath);
+                    var maps = environment.CreateWebFileSystemDirectoryHandle(folders.MapsPath, CoreWebView2FileSystemHandlePermission.ReadOnly);
+                    var textures = environment.CreateWebFileSystemDirectoryHandle(folders.TexturesPath, CoreWebView2FileSystemHandlePermission.ReadOnly);
+                    web.CoreWebView2.PostWebMessageAsJson("\"studio-workspace-folders\"", [maps, textures]);
+                }
+                catch (Exception error) when (error is NotImplementedException or COMException or IOException or UnauthorizedAccessException or ArgumentException)
+                { /* Older browser runtimes retain their file picker's last directory. */ }
             };
             var settings = web.CoreWebView2.Settings;
             settings.AreDefaultContextMenusEnabled = false;

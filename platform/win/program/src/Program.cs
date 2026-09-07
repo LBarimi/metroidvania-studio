@@ -1,4 +1,5 @@
 using System.Reflection;
+using MetroidvaniaStudio.Storage;
 using System.Text.Json;
 using Microsoft.Web.WebView2.Core;
 
@@ -85,6 +86,7 @@ internal sealed record DesktopOptions(string Workspace, string UserData, string?
             userData = Path.Combine(testRoot, "webview");
         }
         string dataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MetroidvaniaStudio");
+        bool defaultStorage = project == null, configuredStorage = false;
         if (project == null)
         {
             string settingsFile = Path.Combine(AppContext.BaseDirectory, "desktop-settings.json");
@@ -94,11 +96,14 @@ internal sealed record DesktopOptions(string Workspace, string UserData, string?
                 if (settings.RootElement.TryGetProperty("workspaceRelativePath", out var configured))
                 {
                     string candidate = Path.GetFullPath(configured.GetString()!, AppContext.BaseDirectory);
-                    if (Directory.Exists(candidate)) project = candidate;
+                    if (Directory.Exists(candidate)) { project = candidate; configuredStorage = true; }
                 }
             }
         }
-        project ??= Path.Combine(dataRoot, "workspace");
+        project ??= AppContext.BaseDirectory;
+        if (defaultStorage && !check && !inspectExisting)
+            project = PortableWorkspace.Prepare(project, configuredStorage
+                ? Path.Combine(project, ".local/workspace") : PortableWorkspace.LegacyUserWorkspace);
         return new(Path.TrimEndingDirectorySeparator(Path.GetFullPath(project)),
             Path.GetFullPath(userData ?? Path.Combine(dataRoot, "webview")), result, selfTest, check, inspectExisting);
     }

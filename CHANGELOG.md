@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Keep default Maps, Textures and catalog.json beside the application or at the project root; preserve legacy data when migrating. Add storage folder shortcuts, remembered browser file dialogs and automatic desktop dialog locations.
+- Keep palette source selection separate from rule assignment, defer expensive color previews until pointer input settles, and allow PNG open/save dialogs to remember the texture folder.
+
 - Configure tile palettes from the sidebar: four-source autotiling, 47-slot assignment, separate slope tiles, atlas or individual PNG imports, connection previews and a default tile view. Keep original images in the workspace and rebuild compatible sprite atlases after external saves.
 
 - Save and export map JSON without indentation across the browser, desktop and CLI. Keep automatic room exports and size readouts consistent with manual exports, with culture-independent numeric round trips.

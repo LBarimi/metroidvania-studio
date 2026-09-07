@@ -3,8 +3,8 @@ set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 target='@STUDIO_TARGET@'
 case "$(uname -s)" in
-  Darwin) os=osx; workspace="${HOME}/Library/Application Support/MetroidvaniaStudio/workspace" ;;
-  Linux) os=linux; workspace="${XDG_DATA_HOME:-${HOME}/.local/share}/metroidvania-studio/workspace" ;;
+  Darwin) os=osx ;;
+  Linux) os=linux ;;
   *) echo 'Use the Windows launch file on Windows.' >&2; exit 1 ;;
 esac
 case "$target:$os" in web:*|mac:osx|linux:linux) ;; *) echo 'Download the package for this operating system.' >&2; exit 1 ;; esac
@@ -29,4 +29,4 @@ export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export DOTNET_NOLOGO=1
 action=run
 case "${1:-}" in --stop) action=stop; shift ;; --check) action=check; shift ;; esac
-exec "$dotnet" "$root/app/metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll" "$action" --studio-root "$root/app" --project "$workspace" --auto-port "$@"
+exec "$dotnet" "$root/app/metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll" "$action" --studio-root "$root/app" --storage-root "$root" --auto-port "$@"

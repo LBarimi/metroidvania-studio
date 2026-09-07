@@ -44,3 +44,11 @@ reference_resolution（預設320x180）、視埠繪製及整數倍縮放套用�
 若要自行管理顯示設定，請關閉此選項。RoomCamera 使用匯出的PPU（預設16），
 僅將視圖對齊像素，不改變攝影機節點的位置。請用 view_offset 調整取景偏移。
 此攝影機停用平滑。白色房間邊界只在2D編輯器顯示，不會出現在執行中的遊戲。
+
+工作室檔案位置
+在檔案 > 儲存資料夾中尋找Maps和Textures。
+預設儲存在啟動檔案旁或原始碼專案根目錄。
+  房間JSON : Maps/AutoExport/<地圖資料夾>/<房間名稱>.json
+  目錄檔案 : catalog.json
+  資源目錄 : 包含Maps、Textures和catalog.json的資料夾
+移至另一台電腦時請一起複製這三項。

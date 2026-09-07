@@ -5,4 +5,5 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../core/MetroidvaniaStudio.Core.csproj" /><ProjectReference Include="../automation/MetroidvaniaStudio.Automation.csproj" /></ItemGroup>
+  <ItemGroup><Compile Include="../storage/PortableWorkspace.cs" Link="Storage/PortableWorkspace.cs" /></ItemGroup>
 </Project>

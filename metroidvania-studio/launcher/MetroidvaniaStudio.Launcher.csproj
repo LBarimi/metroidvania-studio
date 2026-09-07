@@ -6,4 +6,5 @@
     <Nullable>enable</Nullable>
     <AssemblyName>MetroidvaniaStudio.Launcher</AssemblyName>
   </PropertyGroup>
+  <ItemGroup><Compile Include="../storage/PortableWorkspace.cs" Link="Storage/PortableWorkspace.cs" /></ItemGroup>
 </Project>

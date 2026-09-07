@@ -2,6 +2,7 @@ import { openPaletteDialog } from './palette-dialog.js';
 import { AssetImages } from './asset-images.js';
 import { pickMapFile, pickMapSave, fileHash, writeMapFile, downloadMap, canceledFileDialog } from './file-access.js';
 import type { MapFileHandle } from './file-access.js';
+import { initializeWorkspaceFolders, openWorkspaceFolders } from './workspace-folders.js';
 import { openScriptDialog } from './script-dialog.js';
 import { EditorApi, EditorApiError, localJson } from './api.js';
 import { Locale, LANGUAGES } from './locale.js';
@@ -399,7 +400,7 @@ function drawChrome(): void {
     button(locale.t('addRoom'), roomAddDialog), button(locale.t('importRooms'), importRooms), null,
     button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
-    button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')), null, scripts]));
+    button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')), null, button(locale.t('storageFolders'), () => openWorkspaceFolders(locale)), scripts]));
   actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null, cameraSettings, metadata]),
     menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('sampleWorld'), openSampleWorld), null, button(locale.t('docs.title'), () => { window.open('/docs/index.html', '_blank', 'noopener'); }), button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }), null, button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
   const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
@@ -762,4 +763,5 @@ window.addEventListener('pagehide', event => {
 });
 drawChrome();
 void locale.load().then(() => { languageVersion++; drawChrome(); }).catch(error => toast(error));
+void initializeWorkspaceFolders().catch(() => undefined);
 try { await api.start(); } catch (error) { toast(locale.t('serverOffline')); }

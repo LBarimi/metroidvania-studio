@@ -1,4 +1,6 @@
 using System.Net;
+using System.Diagnostics;
+using MetroidvaniaStudio.Storage;
 using System.Text.Json;
 using MetroidvaniaStudio.Server;
 using Microsoft.AspNetCore.Http.Features;
@@ -7,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 const int MaximumRequestBodySize = 32 * 1024 * 1024;
 const int KestrelRequestBodyAllowance = MaximumRequestBodySize + 64 * 1024;
 string studioRoot = Path.GetFullPath(builder.Configuration["studio-root"] ?? Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-string project = Path.GetFullPath(builder.Configuration["project"] ?? Path.Combine(studioRoot, ".local/workspace"));
+string project = Path.GetFullPath(builder.Configuration["project"] ?? PortableWorkspace.Prepare(studioRoot, Path.Combine(studioRoot, ".local/workspace")));
 int port = int.Parse(builder.Configuration["port"] ?? "18765");
 if (port < 1024 || port > 65535) throw new ArgumentException("Choose a user port between 1024 and 65535.");
 builder.WebHost.ConfigureKestrel(options =>
@@ -26,6 +28,7 @@ foreach (string candidate in new[] { sessionDirectory, sessionFile })
         if ((File.GetAttributes(candidate) & FileAttributes.ReparsePoint) != 0) throw new IOException("Workspace session files cannot be symbolic links.");
 Directory.CreateDirectory(sessionDirectory);
 using var workspaceLock = new FileStream(sessionFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+PortableWorkspace.SeedResources(project, studioRoot);
 var workspace = new EditorWorkspace(files);
 string webRoot = Path.GetFullPath(builder.Configuration["web-root"] ?? Path.Combine(studioRoot, "metroidvania-studio/dist"));
 var app = builder.Build();
@@ -122,6 +125,27 @@ app.MapGet("/api/palette-template", (string mode, string color) =>
 {
     if (color.Length != 7 || color[0] != '#' || !color[1..].All(char.IsAsciiHexDigit)) throw new ArgumentException("@paletteInvalidColor");
     return Results.File(TilesetComposer.Template(mode, color), "image/png", "tileset-" + mode + ".png");
+});
+string CurrentExportDirectory()
+{
+    lock (workspace.Gate) return files.AutoExportPath(AutoRoomExporter.MapKey(workspace.Session.FilePath == null ? null : files.Relative(workspace.Session.FilePath)));
+}
+app.MapGet("/api/workspace-folders", () => Results.Json(new { project = files.ProjectPath, maps = files.MapsPath,
+    textures = files.TexturesPath, catalog = files.CatalogWritePath, autoExport = files.AutoExportDirectory, currentExport = CurrentExportDirectory() }));
+app.MapPost("/api/workspace-folders/open", async (HttpRequest request) =>
+{
+    using var body = await JsonDocument.ParseAsync(request.Body);
+    string folder = body.RootElement.GetProperty("folder").GetString() switch
+    {
+        "maps" => files.MapsPath, "textures" => files.TexturesPath, "exports" => CurrentExportDirectory(),
+        _ => throw new ArgumentException("Choose Maps or Textures.")
+    };
+    Directory.CreateDirectory(folder);
+    var start = OperatingSystem.IsWindows() ? new ProcessStartInfo(folder) { UseShellExecute = true }
+        : new ProcessStartInfo(OperatingSystem.IsMacOS() ? "open" : "xdg-open") { UseShellExecute = false };
+    if (!OperatingSystem.IsWindows()) start.ArgumentList.Add(folder);
+    using var process = Process.Start(start);
+    return Results.Ok();
 });
 app.MapGet("/api/files", () => Results.Json(files.List()));
 app.MapGet("/api/locale", () => Results.File(Path.Combine(studioRoot, "metroidvania-studio/localization/MetroidvaniaStudioLocale.csv"), "text/csv; charset=utf-8"));

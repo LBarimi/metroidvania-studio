@@ -18,6 +18,10 @@ test-results/
 Thumbs.db
 # Private engine/workspace connections
 **/.studio/
+/Maps/
+/Textures/
+/catalog.json
+/Scripts/
 **/Library/
 **/Temp/
 **/logs/

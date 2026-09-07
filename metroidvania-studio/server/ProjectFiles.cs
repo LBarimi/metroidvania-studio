@@ -83,6 +83,8 @@ public sealed class ProjectFiles
     private readonly string? studioRoot;
     public string ProjectPath { get; }
     public string MapsPath { get; }
+    public string AutoExportDirectory => Resolve(mapsRelative, "AutoExport");
+    public string TexturesPath => Resolve("", texturesRelative);
     public string MapsLabel => mapsRelative.Replace('\\', '/');
     public string CatalogWritePath => Resolve("", catalogRelative);
     public string CatalogPath

@@ -68,6 +68,7 @@ try {
   await run('metroidvania-studio/tests/browser-tilesets.mjs');
   await run('metroidvania-studio/tests/browser-texture-reload.mjs');
   await run('metroidvania-studio/tests/browser-native-files.mjs');
+  await run('metroidvania-studio/tests/browser-storage-workflow.mjs');
   await run('metroidvania-studio/tests/browser-authoring.mjs');
   await run('metroidvania-studio/tests/browser-automation.mjs');
   if (args.includes('--performance')) {

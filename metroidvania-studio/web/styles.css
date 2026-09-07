@@ -875,3 +875,5 @@ dialog::backdrop { background: #050505b8; }
 @media (max-width: 780px) { .tileset-columns { grid-template-columns: 1fr; } .tileset-image-scroll { height: 180px; } .tileset-fields { grid-template-columns: 1fr 60px; } .tileset-fields label:last-child { grid-column: 1 / -1; } }
 
 .tileset-actions select { width: auto; }
+
+.storage-dialog{width:min(700px,92vw)}.storage-dialog .dialog-body{display:flex;flex-direction:column;gap:18px}.storage-dialog section{display:flex;flex-direction:column;gap:8px}.storage-dialog input{width:100%;min-width:0}.storage-dialog .dialog-title{display:flex;align-items:center;justify-content:space-between}

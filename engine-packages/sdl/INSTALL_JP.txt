@@ -63,3 +63,11 @@ JSON に対応するカタログとテクスチャも必要です。asset が te
 5. 慣れたら include/StudioSdlRoom.h の SdlRoom を直接利用できます。
    衝突情報はサンプルの Data().primitives、または SdlRoom の data.primitives で取得します。
    物理やゲーム動作は自分のプロジェクトで実装します。
+
+スタジオのファイル
+ファイル > 保存フォルダーでMapsとTexturesの場所を確認できます。
+起動ファイルの隣、またはソースプロジェクトのルートに保存されます。
+  部屋JSON : Maps/AutoExport/<マップフォルダー>/<部屋名>.json
+  カタログ : catalog.json
+  リソース : Maps・Textures・catalog.jsonを含むフォルダー
+別のコンピューターへ移すときは、この3つを一緒にコピーしてください。

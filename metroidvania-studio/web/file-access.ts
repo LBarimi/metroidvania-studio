@@ -1,3 +1,5 @@
+import { folderStartIn } from './workspace-folders.js';
+
 export interface MapFileHandle {
   name: string;
   getFile(): Promise<File>;
@@ -18,7 +20,7 @@ export async function fileHash(file: Blob): Promise<string> {
 export async function pickMapFile(): Promise<{ file: File; handle?: MapFileHandle } | null> {
   // Invoke before any network await, while the click still has user activation.
   if (picker.showOpenFilePicker) {
-    const [handle] = await picker.showOpenFilePicker({ id: 'studio-map', types, multiple: false });
+    const [handle] = await picker.showOpenFilePicker({ id: 'studio-map', types, multiple: false, ...folderStartIn('maps') });
     return handle ? { file: await handle.getFile(), handle } : null;
   }
   return new Promise(resolve => {
@@ -35,7 +37,7 @@ export async function pickMapSave(suggestedName: string, existing?: MapFileHandl
     return existing;
   }
   if (!picker.showSaveFilePicker) return null;
-  return picker.showSaveFilePicker({ id: 'studio-map', types, suggestedName });
+  return picker.showSaveFilePicker({ id: 'studio-map', types, suggestedName, ...folderStartIn('maps') });
 }
 export async function writeMapFile(handle: MapFileHandle, text: string, expectedHash: string): Promise<string> {
   const writtenHash = await fileHash(new Blob([text]));

@@ -59,3 +59,11 @@ src-sample 不能单独构建，还需要包中的 include、src、CMakeLists.tx
 5. 熟悉后也可以直接使用 include/StudioSdlRoom.h 中的 SdlRoom。
    碰撞信息位于示例的 Data().primitives，直接使用 SdlRoom 时则为 data.primitives。
    物理和游戏行为由自己的项目实现。
+
+工作室文件位置
+在文件 > 存储文件夹中查找Maps和Textures。
+默认保存在启动文件旁或源码项目根目录。
+  房间JSON : Maps/AutoExport/<地图文件夹>/<房间名>.json
+  目录文件 : catalog.json
+  资源目录 : 包含Maps、Textures和catalog.json的文件夹
+移动到另一台电脑时请一起复制这三项。

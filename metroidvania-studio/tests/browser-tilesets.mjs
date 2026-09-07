@@ -11,6 +11,7 @@ async function command(action,values={}) {
   const s=await state(); const response=await fetch(base+'/api/command',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action,...values,clientId:'tileset-test',commandId:crypto.randomUUID(),expectedRevision:s.revision,expectedInstanceId:s.instanceId})});
   assert.ok(response.ok,await response.text());
 }
+await command('options',{layer:0,groupId:''});
 await command('paletteAdd',{name:'Tileset workflow',color:'#315f84'});
 const initial=await state(),id=initial.selection.material;
 const browser=await chromium.launch({channel:process.platform==='win32'?'msedge':undefined,headless:true});
