@@ -1,0 +1,42 @@
+[
+  {
+    "license": "Apache-2.0 with retained MIT contributions",
+    "version": "2.2.0",
+    "files": [
+      "mcp-sdk-license.txt",
+      "mcp-sdk-third-party-notices.txt"
+    ],
+    "package": "ModelContextProtocol.Core",
+    "source": "https://github.com/modelcontextprotocol/csharp-sdk/tree/6fa3825973949a9c4f0cd8af344e15a8db09dc35"
+  },
+  {
+    "license": "MIT",
+    "version": "10.8.3",
+    "files": [
+      "microsoft-extensions-ai-license.txt",
+      "microsoft-extensions-ai-third-party-notices.txt"
+    ],
+    "package": "Microsoft.Extensions.AI.Abstractions",
+    "source": "https://github.com/dotnet/extensions/tree/ccb356f31db9d894807c4fd0c97c2f41553d1524"
+  },
+  {
+    "license": "MIT",
+    "version": "10.0.10",
+    "files": [
+      "microsoft-extensions-license.txt",
+      "microsoft-extensions-third-party-notices.txt"
+    ],
+    "package": "Microsoft.Extensions.Logging.Abstractions",
+    "source": "https://github.com/dotnet/dotnet/tree/f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+  },
+  {
+    "license": "MIT",
+    "version": "10.0.10",
+    "files": [
+      "microsoft-extensions-license.txt",
+      "microsoft-extensions-third-party-notices.txt"
+    ],
+    "package": "Microsoft.Extensions.DependencyInjection.Abstractions",
+    "source": "https://github.com/dotnet/dotnet/tree/f7d90799ce4ef09a0bb257852a57248d2a8fb8dd"
+  }
+]

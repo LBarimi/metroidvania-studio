@@ -23,6 +23,6 @@
 *.uid text eol=lf
 
 # Keep retained upstream license bytes unchanged.
-metroidvania-studio/scripting/licenses/* -text
-metroidvania-studio/cli/licenses/* -text
+metroidvania-studio/scripting/licenses/* -text -whitespace
+metroidvania-studio/cli/licenses/* -text -whitespace
 *.lua text eol=lf
