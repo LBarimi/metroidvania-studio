@@ -6,7 +6,7 @@ using MetroidvaniaStudio.Primitives;
 
 namespace MetroidvaniaStudio.Server;
 
-public sealed class Catalog(ProjectFiles files)
+public sealed partial class Catalog(ProjectFiles files)
 {
     public const long MaximumCatalogBytes = 32L * 1024 * 1024;
     public const int MaximumInitialObjectNodes = 4096;

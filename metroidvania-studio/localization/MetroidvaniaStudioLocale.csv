@@ -1,4 +1,10 @@
 Key,KR,EN,JA,ZH_CN,ZH_TW,RU
+paletteAdd,팔레트 추가,Add palette,パレットを追加,添加调色板,新增調色盤,Добавить палитру
+paletteDefaultName,팔레트 {0},Palette {0},パレット {0},调色板 {0},調色盤 {0},Палитра {0}
+paletteAddHelp,이름과 색상을 정하면 이 작업공간에 팔레트가 저장됩니다.,Choose a name and color to save a palette in this workspace.,名前と色を指定するとこのワークスペースに保存されます。,设置名称和颜色后保存到当前工作区。,設定名稱和顏色後儲存至目前工作區。,Выберите имя и цвет для сохранения палитры в этом рабочем пространстве.
+paletteInvalidName,이름을 1~80자로 입력해주세요.,Enter a name with 1 to 80 characters.,名前を1～80文字で入力してください。,请输入1至80个字符的名称。,請輸入1至80個字元的名稱。,Введите имя длиной от 1 до 80 символов.
+paletteInvalidColor,색상을 #RRGGBB 형식으로 입력해주세요.,Enter a color in #RRGGBB format.,色を#RRGGBB形式で入力してください。,请以#RRGGBB格式输入颜色。,請以#RRGGBB格式輸入顏色。,Введите цвет в формате #RRGGBB.
+paletteDuplicateName,같은 이름의 팔레트가 있습니다.,A palette with that name already exists.,同じ名前のパレットがあります。,已存在同名调色板。,已有相同名稱的調色盤。,Палитра с таким именем уже существует.
 shortcutRoomMultiSelect,방 선택 추가·해제,Toggle room selection,部屋の選択を追加・解除,添加或取消房间选择,新增或取消房間選取,Добавить или убрать комнату из выбора
 shortcutRoomGroupMove,선택한 방 함께 이동,Move selected rooms together,選択した部屋をまとめて移動,一起移动所选房间,一起移動所選房間,Переместить выбранные комнаты вместе
 keyLeftClick,좌클릭,Left click,左クリック,左键点击,左鍵點擊,Левая кнопка мыши

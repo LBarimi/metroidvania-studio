@@ -5,6 +5,9 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("palettes persist and paint with independent history", () => Fixture(PalettePersistence)),
+    ("palette additions preserve external catalog changes", () => Fixture(PaletteExternalConflict)),
+    ("palette storage respects workspace overrides and installation isolation", () => Fixture(PaletteStorageIsolation)),
     ("standalone workspace loads samples without an engine installation", StandaloneWorkspace),
     ("workspace path settings preserve storage boundaries", WorkspaceConfiguration),
     ("browser JSON import validates before replacing the document", () => Fixture(JsonImport)),
@@ -158,6 +161,66 @@ static void SyncPublication(EditorWorkspace w)
     Check(document.GetProperty("formatVersion").GetInt32() == 2 && !document.TryGetProperty("version", out _),
         "The shared document contract must retain the actual serialized formatVersion field.");
 }
+
+static void PalettePersistence(EditorWorkspace w)
+{
+    string map = Snapshot(w); long docRevision = w.DocumentRevision, catalogRevision = w.CatalogRevision;
+    Send(w, "paletteAdd", ("name", "  Violet stage  "), ("color", "#9655cf"));
+    string id = w.Canvas.Material;
+    Check(id.StartsWith("palette-") && w.Catalog.Materials.ContainsKey(id), "The created palette must become a usable brush.");
+    Check(Snapshot(w) == map && w.DocumentRevision == docRevision && w.CatalogRevision == catalogRevision + 1,
+        "Adding a workspace palette must not edit the map or invalidate its history.");
+    var material = w.Catalog.Data.GetProperty("materials")[0];
+    Check(material.GetProperty("name").GetString() == "Violet stage" && material.GetProperty("color").GetString() == "#9655CF", "Input is normalized.");
+    var sprites = material.GetProperty("sprites");
+    Check(sprites.GetArrayLength() == 51 && sprites.EnumerateArray().Select(s => s.GetProperty("shape").GetInt32()).Distinct().Count() == 5,
+        "The template includes all 47 blob masks and four slopes.");
+    byte[] texture = File.ReadAllBytes(w.Files.Asset(sprites[0].GetProperty("asset").GetString()!));
+    Check(texture.Take(8).SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }), "The texture is a PNG resource.");
+    var restored = new Catalog(new ProjectFiles(w.Files.ProjectPath)); restored.Refresh();
+    Check(restored.Materials.ContainsKey(id) && restored.Data.GetRawText() == w.Catalog.Data.GetRawText(), "Palette data survives a fresh catalog load.");
+    string stored = File.ReadAllText(w.Files.CatalogPath);
+    foreach (var invalid in new[] { ("", "#9655CF"), ("Other", "red"), ("violet stage", "#9655CF"), ("line\nbreak", "#9655CF") })
+        Throws<ArgumentException>(() => Send(w, "paletteAdd", ("name", invalid.Item1), ("color", invalid.Item2)));
+    Check(File.ReadAllText(w.Files.CatalogPath) == stored && w.Canvas.Material == id, "Invalid additions cannot change the catalog or brush.");
+    Send(w, "options", ("tool", 3), ("layer", 0));
+    Send(w, "begin", ("x", 2), ("y", 2)); Send(w, "end", ("x", 2), ("y", 2));
+    Check(w.Canvas.Room!.foreground.Any(c => c.material == id), "The new material paints immediately.");
+    Check(w.Canvas.Room.properties.Any(p => p.key == "mapMaker.minimapColor" && p.value == "#9655CF"), "Painting uses the palette for minimap color.");
+    Send(w, "undo"); Check(Snapshot(w) == map && w.Catalog.Materials.ContainsKey(id), "Paint Undo leaves reusable workspace palettes intact.");
+    Send(w, "paletteAdd", ("name", "Second stage"), ("color", "#113355"));
+    Check(w.Catalog.Materials.Count == 2, "Multiple user palettes coexist.");
+}
+
+static void PaletteExternalConflict(EditorWorkspace w)
+{
+    Send(w, "paletteAdd", ("name", "First"), ("color", "#446688"));
+    var changed = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(w.Files.CatalogPath))!;
+    changed["externalField"] = "preserve";
+    string external = changed.ToJsonString(); File.WriteAllText(w.Files.CatalogPath, external);
+    Throws<WorkspaceConflict>(() => Send(w, "paletteAdd", ("name", "Second"), ("color", "#886644")));
+    Check(File.ReadAllText(w.Files.CatalogPath) == external && w.Catalog.Materials.Count == 1, "An unseen external edit must not be overwritten.");
+    w.Tick(); Send(w, "paletteAdd", ("name", "Second"), ("color", "#886644"));
+    Check(w.Catalog.Data.GetProperty("externalField").GetString() == "preserve", "Opaque catalog fields must survive editing.");
+}
+
+static void PaletteStorageIsolation(EditorWorkspace w)
+{
+    string install = Path.Combine(w.Files.ProjectPath, "install"), workspace = Path.Combine(w.Files.ProjectPath, "configured");
+    Directory.CreateDirectory(Path.Combine(install, "samples")); Directory.CreateDirectory(Path.Combine(workspace, ".studio"));
+    File.WriteAllText(Path.Combine(workspace, ".studio", "workspace.json"), """{"catalogPath":"content/catalog.json","texturesRoot":"content/textures"}""");
+    string source = Path.Combine(install, "samples", "catalog.json"), original = w.Catalog.Data.GetRawText();
+    File.WriteAllText(source, original);
+    var files = new ProjectFiles(workspace, studioRoot: install);
+    var catalog = new Catalog(files); catalog.Refresh();
+    string id = catalog.AddPalette("Local stage", "#123456");
+    Check(File.ReadAllText(source) == original, "The installation catalog must remain read-only.");
+    Check(File.Exists(Path.Combine(workspace, "content", "catalog.json")) &&
+        File.Exists(Path.Combine(workspace, "content", "textures", "palettes", id + ".png")), "Configured storage roots must be respected.");
+    var restored = new Catalog(new ProjectFiles(workspace, studioRoot: install)); restored.Refresh();
+    Check(restored.Materials.ContainsKey(id), "Workspace override must be used on restart.");
+}
+
 
 static void SyncSourceIdentity(EditorWorkspace w)
 {

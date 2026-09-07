@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add workspace palettes with custom names and colors, generated auto-tiles and slopes, and persistent catalog storage.
+
 - Fix the documentation redirect loop when opening the guide from Help.
 
 - Use open and closed eye icons for layer visibility.

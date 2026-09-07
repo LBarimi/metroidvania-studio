@@ -650,6 +650,14 @@ public sealed partial class EditorWorkspace
         switch (action)
         {
             case "options": Options(command); break;
+            case "paletteAdd":
+                string paletteId = Catalog.AddPalette(S(command, "name"), S(command, "color"));
+                CatalogRevision++; SetCatalogHealthNotice(null);
+                Canvas.Material = paletteId;
+                if (Canvas.Tool is MetroidvaniaStudioTool.Rooms or MetroidvaniaStudioTool.Selection)
+                    Canvas.Tool = MetroidvaniaStudioTool.Brush;
+                Canvas.Deselect();
+                break;
             case "selectRoom":
                 string selectedRoom = S(command, "id");
                 RequireRoom(selectedRoom);

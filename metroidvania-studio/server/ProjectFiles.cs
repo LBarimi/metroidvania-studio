@@ -84,6 +84,7 @@ public sealed class ProjectFiles
     public string ProjectPath { get; }
     public string MapsPath { get; }
     public string MapsLabel => mapsRelative.Replace('\\', '/');
+    public string CatalogWritePath => Resolve("", catalogRelative);
     public string CatalogPath
     {
         get
@@ -137,6 +138,29 @@ public sealed class ProjectFiles
             throw new ArgumentException("Only image resources can be read through the asset endpoint.");
         return path;
     }
+    internal void PublishPalette(string asset, byte[] png, string catalog, DiskFingerprint? expected)
+    {
+        string destination = CatalogWritePath;
+        string texture = Resolve(texturesRelative, asset["Textures/".Length..]);
+        Directory.CreateDirectory(Path.GetDirectoryName(texture)!);
+        // Resolve again after creating directories so linked paths cannot escape the workspace.
+        texture = Resolve(texturesRelative, asset["Textures/".Length..]);
+        using (var stream = new FileStream(texture, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
+        { stream.Write(png); stream.Flush(true); }
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        destination = CatalogWritePath;
+        string staged = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            using (var stream = new FileStream(staged, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
+            { stream.Write(new UTF8Encoding(false, true).GetBytes(catalog)); stream.Flush(true); }
+            beforeMapPublish?.Invoke(destination);
+            if (expected.HasValue) PublishIfUnchanged(staged, destination, expected.Value, FingerprintUtf8(catalog));
+            else File.Move(staged, destination);
+        }
+        finally { DeleteBestEffort(staged); }
+    }
+
     public string Relative(string absolute) => Path.GetRelativePath(MapsPath, absolute).Replace('\\', '/');
     public string[] List() => Directory.EnumerateFiles(MapsPath, "*.json", new EnumerationOptions
         { RecurseSubdirectories = true, AttributesToSkip = FileAttributes.ReparsePoint, MatchCasing = MatchCasing.CaseInsensitive })

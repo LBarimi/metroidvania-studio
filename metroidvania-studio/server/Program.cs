@@ -101,7 +101,7 @@ app.MapPost("/api/command", async (HttpRequest request) =>
     string requestFingerprint = EditorWorkspace.FingerprintCommand(command.RootElement);
     lock (workspace.Gate)
     {
-        long before = workspace.DocumentRevision;
+        long before = workspace.DocumentRevision, catalogBefore = workspace.CatalogRevision;
         string? roomBefore = workspace.Canvas.ActiveRoomId;
         bool executed = workspace.Command(command.RootElement, requestFingerprint);
         bool compactDocument = executed && command.RootElement.TryGetProperty("action", out JsonElement action)
@@ -112,7 +112,7 @@ app.MapPost("/api/command", async (HttpRequest request) =>
         // A duplicate acknowledges a response that may have been lost before the
         // client received any revision tokens. Send a complete resync so catalog
         // changes between the first execution and retry cannot be hidden forever.
-        return Results.Json(workspace.State(!compactDocument && (!executed || before != workspace.DocumentRevision), !executed, includeSelection));
+        return Results.Json(workspace.State(!compactDocument && (!executed || before != workspace.DocumentRevision), !executed || catalogBefore != workspace.CatalogRevision, includeSelection));
     }
 });
 app.MapAutomation(workspace, studioRoot);

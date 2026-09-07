@@ -22,7 +22,7 @@ let pendingStatusPoint: Point | null = null;
 const app = document.getElementById('app')!;
 app.className = 'app' + (standalone ? ' standalone-app' : '');
 // This template contains only application-owned markup. Project text is always assigned with textContent/value.
-app.innerHTML = `<header class="topbar"><div class="brand"><img class="brand-mark" src="studio-icon.svg" alt=""><span class="brand-text">Metroidvania Studio</span></div><div class="top-actions" id="file-actions"></div><div class="spacer"></div><div class="project-name" id="project-name"></div><span class="connection" id="connection"></span><select class="language" id="language" aria-label="Language"><option value="KR">한국어</option><option value="EN">English</option></select></header><nav class="tabbar" id="tabs"></nav><main class="workspace" id="workspace"><aside class="sidebar"><section class="section"><div class="section-title"><span data-label="rooms"></span><span class="count" id="room-count"></span><button id="add-room" class="icon">+</button></div><input id="room-search" class="room-search"><div class="room-list" id="room-list"></div></section><section class="section"><div class="section-title" data-label="tools"></div><div class="tool-grid" id="tools"></div></section><section class="section"><div class="section-title" data-label="layers"></div><div id="layers"></div><select id="group-select"></select><div class="row" id="group-actions"></div></section><section class="section"><div class="section-title" data-label="palette"></div><div id="brush-options"></div><input id="palette-search" class="room-search"><div class="palette-list" id="palette"></div></section></aside><section class="content"><div class="view-toolbar" id="view-toolbar"></div><div class="canvas-wrap"><canvas class="map-canvas" id="map-canvas"></canvas><canvas class="mini-canvas" id="mini-canvas" hidden></canvas><div class="canvas-help" id="canvas-help"></div></div></section><aside class="inspector" id="inspector"></aside></main><footer class="statusbar"><span class="status-state" id="status-state"></span><span class="sync-status" id="status-export" aria-live="polite"></span><span id="status-coordinates"></span><span id="status-layer"></span><div class="spacer"></div><span id="status-camera"></span><span id="status-revision"></span></footer><div class="error-banner" id="toast" hidden role="status"></div>`;
+app.innerHTML = `<header class="topbar"><div class="brand"><img class="brand-mark" src="studio-icon.svg" alt=""><span class="brand-text">Metroidvania Studio</span></div><div class="top-actions" id="file-actions"></div><div class="spacer"></div><div class="project-name" id="project-name"></div><span class="connection" id="connection"></span><select class="language" id="language" aria-label="Language"><option value="KR">한국어</option><option value="EN">English</option></select></header><nav class="tabbar" id="tabs"></nav><main class="workspace" id="workspace"><aside class="sidebar"><section class="section"><div class="section-title"><span data-label="rooms"></span><span class="count" id="room-count"></span><button id="add-room" class="icon">+</button></div><input id="room-search" class="room-search"><div class="room-list" id="room-list"></div></section><section class="section"><div class="section-title" data-label="tools"></div><div class="tool-grid" id="tools"></div></section><section class="section"><div class="section-title" data-label="layers"></div><div id="layers"></div><select id="group-select"></select><div class="row" id="group-actions"></div></section><section class="section"><div class="section-title"><span data-label="palette"></span><button id="add-palette" class="icon">+</button></div><div id="brush-options"></div><input id="palette-search" class="room-search"><div class="palette-list" id="palette"></div></section></aside><section class="content"><div class="view-toolbar" id="view-toolbar"></div><div class="canvas-wrap"><canvas class="map-canvas" id="map-canvas"></canvas><canvas class="mini-canvas" id="mini-canvas" hidden></canvas><div class="canvas-help" id="canvas-help"></div></div></section><aside class="inspector" id="inspector"></aside></main><footer class="statusbar"><span class="status-state" id="status-state"></span><span class="sync-status" id="status-export" aria-live="polite"></span><span id="status-coordinates"></span><span id="status-layer"></span><div class="spacer"></div><span id="status-camera"></span><span id="status-revision"></span></footer><div class="error-banner" id="toast" hidden role="status"></div>`;
 function el<T extends HTMLElement = HTMLElement>(id: string): T { return document.getElementById(id) as T; }
 function text(tag: string, value: string, className = ''): HTMLElement { const node = document.createElement(tag); node.textContent = value; node.className = className; return node; }
 function button(label: string, action: () => void | Promise<unknown>, className = ''): HTMLButtonElement { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.className = className; b.addEventListener('click', () => { Promise.resolve().then(action).catch(error => toast(error)); }); return b; }
@@ -346,6 +346,7 @@ function drawChrome(): void {
   }
   document.documentElement.lang = locale.htmlLanguage; el<HTMLSelectElement>('language').replaceChildren(...LANGUAGES.map(([key, label]) => new Option(label, key))); el<HTMLSelectElement>('language').value = locale.language; el('language').setAttribute('aria-label', locale.t('language'));
   for (const node of document.querySelectorAll<HTMLElement>('[data-label]')) node.textContent = locale.t(node.dataset.label!);
+  el<HTMLButtonElement>('add-palette').title = locale.t('paletteAdd'); el('add-palette').setAttribute('aria-label', locale.t('paletteAdd'));
   el<HTMLInputElement>('room-search').placeholder = locale.t('search'); el<HTMLInputElement>('palette-search').placeholder = locale.t('search'); el<HTMLButtonElement>('add-room').title = locale.t('addRoom');
   const actions = el('file-actions'); actions.replaceChildren();
   const undo = button(locale.t('undo') + '   Ctrl+Z', () => run('undo')), redo = button(locale.t('redo') + '   Ctrl+Y', () => run('redo')); undo.title = locale.t('undo') + ' · Ctrl+Z'; redo.title = locale.t('redo') + ' · Ctrl+Y'; undo.id = 'undo'; redo.id = 'redo';
@@ -453,6 +454,7 @@ function drawPalette(): void {
   const catalogToken = `${state.instanceId}:${state.catalogRevision}`;
   if (thumbnailCatalogToken !== catalogToken) { thumbnailCatalogToken = catalogToken; thumbnails.clear(); }
   const s = state.selection, options = el('brush-options'), palette = el('palette'); options.replaceChildren(); palette.replaceChildren();
+  el<HTMLButtonElement>('add-palette').hidden = !tileLayer(s.layer);
   if (tileLayer(s.layer)) {
     const shapes = text('div', '', 'shape-row'); ['■', '◣', '◢', '◤', '◥'].forEach((symbol, i) => { const b = button(symbol, () => option({ shape: i })); b.classList.toggle('active', s.shape === i); b.title = locale.enum('TileShape', SHAPES[i], i); shapes.append(b); }); options.append(shapes);
     const [brushLabel, brush] = labelInput(locale.t('brush'), map.brushSize, 'number'); brush.min = '1'; brush.max = String(MAX_BRUSH_SIZE); brush.step = '1'; brush.title = locale.t('brushWheelHelp'); brush.addEventListener('change', () => { void option({ brushSize: Number(brush.value) }).catch(() => undefined); }); options.append(row(brushLabel, check(locale.t('filled'), s.filled, filled => { void option({ filled }).catch(() => undefined); })[0]));
@@ -462,6 +464,29 @@ function drawPalette(): void {
     for (const def of state.catalog.objects.filter(d => (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
   }
   if (!palette.childElementCount) palette.append(text('div', locale.t('noMaterials'), 'empty'));
+}
+function addPaletteDialog(): void {
+  if (!state || !tileLayer(state.selection.layer)) return;
+  const [nameLabel, name] = labelInput(locale.t('name'), locale.t('paletteDefaultName').replace('{0}', String(state.catalog.materials.length + 1)));
+  name.id = 'palette-name'; name.maxLength = 80;
+  const [colorLabel, color] = labelInput(locale.t('theme'), '#9655CF');
+  color.id = 'palette-color-hex'; color.maxLength = 7; colorLabel.htmlFor = color.id; color.remove();
+  const picker = document.createElement('input'); picker.type = 'color'; picker.id = 'palette-color-picker';
+  picker.value = color.value; picker.setAttribute('aria-label', locale.t('theme'));
+  color.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(color.value.trim())) picker.value = color.value.trim(); });
+  const pick = () => { color.value = picker.value.toUpperCase(); };
+  picker.addEventListener('input', pick); picker.addEventListener('change', pick);
+  const fields = text('div', '', 'room-color-field'), inputs = text('div', '', 'room-color-inputs');
+  inputs.append(color, picker); fields.append(colorLabel, inputs);
+  showModal(locale.t('paletteAdd'), body => body.append(nameLabel, fields, text('p', locale.t('paletteAddHelp'), 'hint')), async () => {
+    const value = name.value.trim(), hex = color.value.trim();
+    if (!value || value.length > 80 || /[\u0000-\u001f\u007f]/.test(value)) throw new Error(locale.t('paletteInvalidName'));
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) throw new Error(locale.t('paletteInvalidColor'));
+    if (state!.catalog.materials.some(m => m.name.toLocaleLowerCase() === value.toLocaleLowerCase())) throw new Error(locale.t('paletteDuplicateName'));
+    await run('paletteAdd', { name: value, color: hex });
+    paletteSearch = ''; el<HTMLInputElement>('palette-search').value = ''; drawPanels(true);
+  }, 'paletteAdd');
+  name.focus(); name.select();
 }
 const thumbnails = new Map<string, HTMLImageElement>();
 let thumbnailCatalogToken = '';
@@ -624,6 +649,7 @@ function stateChanged(): void {
 api.addEventListener('state', stateChanged); api.addEventListener('busy', () => drawStatus()); api.addEventListener('error', event => toast((event as CustomEvent).detail));
 api.addEventListener('connection', () => drawStatus()); api.addEventListener('offline', () => drawStatus());
 locale.addEventListener('change', () => { languageVersion++; drawChrome(); }); el('language').addEventListener('change', () => locale.set(el<HTMLSelectElement>('language').value as Language));
+el('add-palette').addEventListener('click', addPaletteDialog);
 el('add-room').addEventListener('click', () => roomAddDialog()); el('room-search').addEventListener('input', () => { roomSearch = el<HTMLInputElement>('room-search').value; drawPanels(); }); el('palette-search').addEventListener('input', () => { paletteSearch = el<HTMLInputElement>('palette-search').value; drawPalette(); }); el('group-select').addEventListener('change', () => { void option({ groupId: el<HTMLSelectElement>('group-select').value }).catch(() => undefined); });
 el('inspector').addEventListener('focusout', () => { window.setTimeout(() => renderInspector(), 0); });
 const toolKeys = ['r', 'p', 'v', 'b', 'u', 'g', 'l', 'c', 'e'];
