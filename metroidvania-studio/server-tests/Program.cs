@@ -5,6 +5,11 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("four-tile canonical rotations and complete mask coverage", TilesetTests.FourRotations),
+    ("47-slot templates, slope orientation and missing-slot fallback", TilesetTests.FullAtlas),
+    ("PNG formats, row filters, transparency and Adam7", TilesetTests.PngFormats),
+    ("tileset atlas and separate PNG storage, conflicts and persistence", () => Fixture(TilesetTests.Storage)),
+    ("multiple source hot reload, partial writes and restart", () => Fixture(TilesetTests.HotReload)),
     ("sample world startup, topology and recovery preserve user data", () => Fixture(SampleWorldWorkflow)),
     ("texture saves refresh resources without invalidating map edits", () => Fixture(TextureReload)),
     ("browser files preserve save state, undo and recovery", () => Fixture(BrowserFileLifecycle)),

@@ -835,3 +835,43 @@ dialog::backdrop { background: #050505b8; }
 
 .script-options label:has(input[type="checkbox"]) { flex-direction:row; width:auto; }
 .script-options input[type="checkbox"] { width:auto; }
+
+.palette-entry { display: flex; gap: 3px; min-width: 0; }
+.palette-entry .palette-item { flex: 1; min-width: 0; }
+.palette-settings { flex: 0 0 25px; padding: 0; font-size: 18px; }
+.tileset-dialog { position: fixed; inset: 0; margin: auto; padding: 16px; width: min(1040px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); box-sizing: border-box; overflow: hidden; color: #eee; background: #202020; border: 1px solid #555; box-shadow: 0 12px 60px #000b; }
+.tileset-dialog[open] { display: flex; flex-direction: column; gap: 14px; }
+.tileset-dialog::backdrop { background: #0009; }
+.tileset-dialog .dialog-title { display: flex; align-items: center; justify-content: space-between; font-size: 17px; }
+.tileset-dialog .dialog-body { overflow: auto; min-height: 0; }
+.tileset-dialog .dialog-footer { display: flex; gap: 8px; justify-content: flex-end; }
+.tileset-dialog label { display: flex; flex-direction: column; gap: 5px; }
+.tileset-dialog input, .tileset-dialog select { min-width: 0; max-width: 100%; }
+.tileset-dialog input[type="color"] { padding: 2px; width: 60px; height: 28px; }
+.tileset-fields { display: grid; grid-template-columns: 1fr 70px 1fr; gap: 12px; }
+.tileset-columns { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px; }
+.tileset-columns:has(.tileset-source[hidden]) { grid-template-columns: 1fr; }
+.tileset-source { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.tileset-source[hidden], .tileset-dialog [hidden] { display: none; }
+.tileset-actions, .tileset-tabs { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.tileset-actions .check { flex-direction: row; align-items: center; font-size: 11px; }
+.tileset-actions input[type="checkbox"] { width: auto; }
+.tileset-path { box-sizing: border-box; width: 100%; font-size: 10px; color: #bbb; }
+.tileset-image-scroll { height: 280px; overflow: auto; border: 1px solid #454545; background-color: #161616; background-image: conic-gradient(#262626 25%, transparent 0 50%, #262626 0 75%, transparent 0); background-size: 16px 16px; }
+.tileset-image-scroll canvas { display: block; image-rendering: pixelated; max-width: none; cursor: crosshair; }
+.tileset-empty { padding: 24px 16px; color: #bbb; line-height: 1.6; }
+.tileset-image-scroll.drop-target { outline: 2px solid #59c8ff; }
+.tileset-slots { display: grid; grid-template-columns: repeat(8,minmax(0,1fr)); gap: 4px; max-height: 275px; overflow: auto; padding: 3px 0; }
+.tileset-slots.four-slots { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.tileset-slot { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px 2px; min-width: 0; height: auto; }
+.tileset-slot canvas { width: 32px; height: 32px; image-rendering: pixelated; background: #151515; }
+.tileset-slot span { font-size: 10px; white-space: normal; overflow-wrap: anywhere; }
+.tileset-slot small { font-size: 9px; color: #aaa; }
+.tileset-slot.unassigned { border-style: dashed; }
+.tileset-slot.active { outline: 1px solid #59c8ff; outline-offset: -1px; }
+.tileset-example { display: block; max-width: 100%; image-rendering: pixelated; background: #111; margin-top: 5px; }
+.tileset-dialog .hint { line-height: 1.5; margin: 8px 0; }
+.tileset-dialog .modal-error { color: #ffa6a6; margin-top: 10px; white-space: pre-wrap; }
+@media (max-width: 780px) { .tileset-columns { grid-template-columns: 1fr; } .tileset-image-scroll { height: 180px; } .tileset-fields { grid-template-columns: 1fr 60px; } .tileset-fields label:last-child { grid-column: 1 / -1; } }
+
+.tileset-actions select { width: auto; }

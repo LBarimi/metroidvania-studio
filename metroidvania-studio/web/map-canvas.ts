@@ -1,3 +1,4 @@
+import { defaultTile } from './tileset-preview.js';
 import { AssetImages } from './asset-images.js';
 import { resolveRoomGroupMove } from './room-layout.js';
 import { activeRoom, colorCss, tileLayer, MAX_BRUSH_SIZE, roomOpacity } from './types.js';
@@ -1322,6 +1323,8 @@ export class MapCanvas {
     const overlay = this.tileOverlay;
     return !!overlay && overlay.roomId === room.id && overlay.layer === layer && count + overlay.cells.size > MAX_EXACT_VISIBLE_CELLS;
   }
+  showDefaultTiles = false;
+  setDefaultTiles(value: boolean): void { this.showDefaultTiles = value; this.clearExactTileChunks(); this.requestDraw(); }
   private clearExactTileChunks(): void {
     for (const cached of this.exactTileChunks.values()) cached.canvas.width = cached.canvas.height = 1;
     this.exactTileChunks.clear();
@@ -1364,6 +1367,7 @@ export class MapCanvas {
     const info = this.materials.get(tile.material);
     const sprite = tile.shape === 0 ? info?.solidMasks.get(normalizeMask(mask)) || info?.fallbackShapes.get(0) : info?.strictShapes.get(tile.shape) || info?.fallbackShapes.get(tile.shape);
     const rect = target || this.screenRect({ x: room.x + tile.x, y: room.y + tile.y, width: 1, height: 1 });
+    if (this.showDefaultTiles) { ctx.drawImage(defaultTile(normalizeMask(mask), tile.shape, info?.color || '#cb5574'), rect.x, rect.y, rect.width, rect.height); return; }
     if (sprite && this.sprite(sprite, rect, ctx)) return;
     ctx.fillStyle = info?.color || '#cb5574';
     const points = SHAPE_POINTS[tile.shape];

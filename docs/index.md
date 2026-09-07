@@ -20,6 +20,8 @@ Use **File → Open map** to choose a JSON map from your computer. **Save map** 
 
 Chrome, Edge, and the Windows program support the file picker workflow. In browsers without a writable file picker, saving starts a JSON download using the browser's download settings. A download does not mark the document saved because the editor cannot confirm its completion.
 
+See [Tile palettes](tilesets.md) for 4-tile and 47-tile setup, PNG imports and the default tile preview.
+
 See [Texture editing and engine resources](textures.md) for external image updates and portable resource files.
 
 ## In the web editor

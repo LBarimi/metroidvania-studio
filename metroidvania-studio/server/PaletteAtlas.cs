@@ -54,7 +54,7 @@ public static class PaletteAtlas
         Chunk(png, "IDAT", compressed.ToArray()); Chunk(png, "IEND", []);
         return new Result(png.ToArray(), sprites);
     }
-    private static void Chunk(Stream output, string type, byte[] data)
+    internal static void Chunk(Stream output, string type, byte[] data)
     {
         byte[] label = Encoding.ASCII.GetBytes(type);
         Span<byte> value = stackalloc byte[4]; BinaryPrimitives.WriteInt32BigEndian(value, data.Length);

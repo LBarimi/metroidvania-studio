@@ -28,6 +28,8 @@ node metroidvania-studio/tests/run-automation.mjs --performance
 
 This command creates a disposable workspace, builds temporary web files, starts a server on an available loopback port, and closes its own processes afterward. It never uses the working map workspace.
 
+Palette checks also cover four-source and 47-slot assignments, individual PNGs, browser/server pixel equivalence, persistence, and original-image hot reload.
+
 Checks cover Lua execution, dry runs, failures, cancellation, exactly-once retry after a lost response, Undo/Redo, and JSON batches. Performance checks cover immediate brush drawing, dense tile caches, and pixel equivalence. Failures retain bounded server diagnostics in the temporary test directory.
 
 ## Local installable package

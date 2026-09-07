@@ -42,7 +42,7 @@ app.Use(async (context, next) =>
     { context.Response.StatusCode = 415; return; }
     context.Response.Headers["X-Content-Type-Options"] = "nosniff";
     context.Response.Headers["Referrer-Policy"] = "no-referrer";
-    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'";
+    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'";
     context.Response.Headers.CacheControl = "no-store";
     if (context.Request.Method == "POST" && context.Request.ContentLength > MaximumRequestBodySize)
     {
@@ -118,6 +118,11 @@ app.MapPost("/api/command", async (HttpRequest request) =>
 app.MapAutomation(workspace, studioRoot);
 app.MapScriptLibrary(new ScriptLibrary(files.ProjectPath, studioRoot));
 app.MapDocumentation(webRoot);
+app.MapGet("/api/palette-template", (string mode, string color) =>
+{
+    if (color.Length != 7 || color[0] != '#' || !color[1..].All(char.IsAsciiHexDigit)) throw new ArgumentException("@paletteInvalidColor");
+    return Results.File(TilesetComposer.Template(mode, color), "image/png", "tileset-" + mode + ".png");
+});
 app.MapGet("/api/files", () => Results.Json(files.List()));
 app.MapGet("/api/locale", () => Results.File(Path.Combine(studioRoot, "metroidvania-studio/localization/MetroidvaniaStudioLocale.csv"), "text/csv; charset=utf-8"));
 app.MapGet("/api/asset", (string path, HttpContext context) =>

@@ -672,6 +672,13 @@ public sealed partial class EditorWorkspace
                     Canvas.Tool = MetroidvaniaStudioTool.Brush;
                 Canvas.Deselect();
                 break;
+            case "paletteConfigure":
+                Catalog.ConfigurePalette(S(command, "id"), S(command, "name"), S(command, "color"),
+                    JsonSerializer.Deserialize<PaletteTileset>(command.GetProperty("settings"), Catalog.Json)!,
+                    command.TryGetProperty("png", out var palettePng) ? palettePng.GetString() : null, command.GetProperty("expectedMaterial"),
+                    command.TryGetProperty("uploads", out var paletteUploads) ? JsonSerializer.Deserialize<Dictionary<string, string>>(paletteUploads, Catalog.Json) : null);
+                CatalogRevision++; SetCatalogHealthNotice(null);
+                break;
             case "selectRoom":
                 string selectedRoom = S(command, "id");
                 RequireRoom(selectedRoom);

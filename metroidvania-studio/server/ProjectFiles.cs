@@ -139,28 +139,51 @@ public sealed class ProjectFiles
             throw new ArgumentException("Only image resources can be read through the asset endpoint.");
         return path;
     }
-    internal void PublishPalette(string asset, byte[] png, string catalog, DiskFingerprint? expected)
+    internal void PublishPalette(string asset, byte[] png, string catalog, DiskFingerprint? expected,
+        IReadOnlyDictionary<string, byte[]>? additional = null)
     {
-        string destination = CatalogWritePath;
-        string texture = Resolve(texturesRelative, asset["Textures/".Length..]);
-        Directory.CreateDirectory(Path.GetDirectoryName(texture)!);
-        // Resolve again after creating directories so linked paths cannot escape the workspace.
-        texture = Resolve(texturesRelative, asset["Textures/".Length..]);
-        using (var stream = new FileStream(texture, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
-        { stream.Write(png); stream.Flush(true); }
-        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-        destination = CatalogWritePath;
-        string staged = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        string? staged = null;
         try
         {
+            void CreateTexture(string name, byte[] bytes)
+            {
+                if (!name.StartsWith("Textures/palettes/", StringComparison.Ordinal)) throw new ArgumentException("Expected a palette texture.");
+                string path = Resolve(texturesRelative, name[9..]); Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                path = Resolve(texturesRelative, name[9..]);
+                using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
+                { stream.Write(bytes); stream.Flush(true); }
+            }
+            if (additional != null) foreach (var pair in additional) CreateTexture(pair.Key, pair.Value);
+            CreateTexture(asset, png);
+            string destination = CatalogWritePath; Directory.CreateDirectory(Path.GetDirectoryName(destination)!); destination = CatalogWritePath;
+            staged = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
             using (var stream = new FileStream(staged, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
             { stream.Write(new UTF8Encoding(false, true).GetBytes(catalog)); stream.Flush(true); }
             beforeMapPublish?.Invoke(destination);
             if (expected.HasValue) PublishIfUnchanged(staged, destination, expected.Value, FingerprintUtf8(catalog));
             else File.Move(staged, destination);
         }
+        finally { if (staged != null) DeleteBestEffort(staged); }
+    }
+
+    internal void PublishDerivedTexture(string asset, byte[] png, string expectedHash)
+    {
+        if (!asset.StartsWith("Textures/palettes/", StringComparison.Ordinal) || !Path.GetFileName(asset).StartsWith("atlas-", StringComparison.Ordinal)
+            || !asset.EndsWith(".png", StringComparison.Ordinal)) throw new ArgumentException("Expected a generated palette atlas.");
+        string destination = Resolve(texturesRelative, asset[9..]);
+        DiskFingerprint? current = Fingerprint(destination);
+        DiskFingerprint desired = new(png.LongLength, 0, Convert.ToHexString(SHA256.HashData(png)));
+        if (current?.Hash == desired.Hash) return;
+        if (current?.Hash != expectedHash) throw new IOException("An externally edited atlas was preserved.");
+        string staged = destination + "." + Guid.NewGuid().ToString("N") + ".tmp";
+        try
+        {
+            using (var stream = new FileStream(staged, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { stream.Write(png); stream.Flush(true); }
+            PublishIfUnchanged(staged, destination, current.Value, desired);
+        }
         finally { DeleteBestEffort(staged); }
     }
+
 
     public string Relative(string absolute) => Path.GetRelativePath(MapsPath, absolute).Replace('\\', '/');
     public string[] List() => Directory.EnumerateFiles(MapsPath, "*.json", new EnumerationOptions

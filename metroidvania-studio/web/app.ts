@@ -1,3 +1,4 @@
+import { openPaletteDialog } from './palette-dialog.js';
 import { AssetImages } from './asset-images.js';
 import { pickMapFile, pickMapSave, fileHash, writeMapFile, downloadMap, canceledFileDialog } from './file-access.js';
 import type { MapFileHandle } from './file-access.js';
@@ -416,6 +417,9 @@ function updateView(): void {
   const toolbar = el('view-toolbar'); toolbar.replaceChildren(button('⊞ ' + locale.t('fit'), () => { if (miniMode) mini.fit(); else if (map.cameraPreview) { map.gameView(false); updateView(); requestAnimationFrame(() => map.fit()); } else map.fit(); }), button('⌾ ' + locale.t('frameRoom'), () => miniMode ? mini.frameRoom() : map.frameRoom()));
   if (!miniMode) {
     const camera = button(locale.t('camera'), () => { map.gameView(); updateView(); }, map.cameraPreview ? 'active' : ''); camera.id = 'camera-preview'; camera.setAttribute('aria-pressed', String(map.cameraPreview)); camera.title = locale.t('cameraHelp');
+    const defaults = button(locale.t('tilesetDefaultView'), () => { map.setDefaultTiles(!map.showDefaultTiles); updateView(); }, map.showDefaultTiles ? 'active' : '');
+    defaults.id = 'default-tile-view'; defaults.setAttribute('aria-pressed', String(map.showDefaultTiles));
+    toolbar.append(defaults);
     toolbar.append(camera, button('−', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, -1), 'icon'), text('span', '', 'zoom-readout'), button('+', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, 1), 'icon'));
   }
   toolbar.append(text('div', '', 'spacer'));
@@ -500,7 +504,10 @@ function drawPalette(): void {
     const shapes = text('div', '', 'shape-row'); ['■', '◣', '◢', '◤', '◥'].forEach((symbol, i) => { const b = button(symbol, () => option({ shape: i })); b.classList.toggle('active', s.shape === i); b.title = locale.enum('TileShape', SHAPES[i], i); shapes.append(b); }); options.append(shapes);
     const [brushLabel, brush] = labelInput(locale.t('brush'), map.brushSize, 'number'); brush.min = '1'; brush.max = String(MAX_BRUSH_SIZE); brush.step = '1'; brush.title = locale.t('brushWheelHelp'); brush.addEventListener('change', () => { void option({ brushSize: Number(brush.value) }).catch(() => undefined); }); options.append(row(brushLabel, check(locale.t('filled'), s.filled, filled => { void option({ filled }).catch(() => undefined); })[0]));
     options.append(button(locale.t('clearLayer'), () => confirmRun(locale.t('confirmClear'), 'clearLayer'), 'danger'));
-    for (const material of state.catalog.materials.filter(m => materialName(m).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ material: material.id, tool: s.tool === 0 || s.tool === 2 ? 3 : s.tool }), 'palette-item'); b.classList.toggle('active', material.id === s.material); b.append(thumbnail(material.sprites.find(p => p.shape === s.shape && (s.shape !== 0 || p.mask === 0)), colorCss(material.color)), text('span', materialName(material))); palette.append(b); }
+    for (const material of state.catalog.materials.filter(m => materialName(m).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ material: material.id, tool: s.tool === 0 || s.tool === 2 ? 3 : s.tool }), 'palette-item'); b.classList.toggle('active', material.id === s.material); b.append(thumbnail(material.sprites.find(p => p.shape === s.shape && (s.shape !== 0 || p.mask === 0)), colorCss(material.color)), text('span', materialName(material)));
+      const entry = text('div', '', 'palette-entry'), settings = button('…', () => openPaletteDialog(material, locale, run), 'palette-settings');
+      settings.dataset.materialId = material.id; settings.title = locale.t('tilesetTitle'); settings.setAttribute('aria-label', locale.t('tilesetTitle') + ' · ' + materialName(material));
+      entry.append(b, settings); palette.append(entry); }
   } else {
     for (const def of state.catalog.objects.filter(d => (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
   }

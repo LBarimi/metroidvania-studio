@@ -42,7 +42,14 @@ public sealed partial class Catalog
     {
         var assets = new HashSet<string>(StringComparer.Ordinal);
         foreach (var material in source.GetProperty("materials").EnumerateArray())
+        {
             foreach (var sprite in material.GetProperty("sprites").EnumerateArray()) Add(sprite);
+            if (material.TryGetProperty("editorTileset", out var settings) && settings.ValueKind == JsonValueKind.Object
+                && settings.TryGetProperty("source", out var original) && original.ValueKind == JsonValueKind.String && original.GetString() is { Length: > 0 } asset)
+                assets.Add(asset);
+            if (settings.ValueKind == JsonValueKind.Object && settings.TryGetProperty("slots", out var slots) && slots.ValueKind == JsonValueKind.Array)
+                foreach (var slot in slots.EnumerateArray()) if (slot.ValueKind == JsonValueKind.Object) Add(slot);
+        }
         foreach (var item in source.GetProperty("objects").EnumerateArray())
             if (item.TryGetProperty("sprite", out var sprite) && sprite.ValueKind == JsonValueKind.Object) Add(sprite);
         void Add(JsonElement sprite)
@@ -79,6 +86,7 @@ public sealed partial class Catalog
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or ArgumentException) { }
         }
+        RefreshDerivedTilesets(source, previous, result);
         return new TextureProbe(source, result);
     }
 
@@ -93,7 +101,7 @@ public sealed partial class Catalog
         return bytes;
     }
 
-    private static bool CompleteImage(byte[] bytes, string extension)
+    internal static bool CompleteImage(byte[] bytes, string extension)
     {
         ReadOnlySpan<byte> data = bytes;
         switch (extension.ToLowerInvariant())
