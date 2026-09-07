@@ -29,8 +29,8 @@ test('runtime detection rejects older and preview-only runtimes', () => {
   for (const version of ['9.0.11', '10.0.0-preview.1', '11.0.0'])
     assert.throws(() => findDotnet({}, 'linux', () => ({ status: 0, stdout: `Microsoft.NETCore.App ${version} [runtime]` })), /.NET 10 runtime/);
 });
-test('npm and MCP metadata remain private at the source root and synchronized', () => {
-  const manifest = json(path.join(root, 'package.json')), metadata = json(path.join(root, 'server.json'));
+test('source npm and MCP metadata remain synchronized', () => {
+  const manifest = json(path.join(root, 'package.json')), metadata = json(path.join(root, 'tools/mcp/server.json'));
   assert.equal(manifest.private, true); validateMetadata(manifest, metadata);
   assert.throws(() => validateMetadata({ ...manifest, mcpName: 'different' }, metadata), /match/);
 });
@@ -54,6 +54,9 @@ test('installed local package runs CLI, Lua and MCP without a source checkout', 
   const wrapper = path.join(packageRoot, 'bin/metroidvania-studio.mjs');
   const manifest = json(path.join(packageRoot, 'package.json'));
   assert.equal(manifest.private, false); assert.equal(manifest.scripts, undefined); assert.equal(manifest.dependencies, undefined);
+  const packagedMetadata = json(path.join(packageRoot, 'server.json'));
+  assert.deepEqual(packagedMetadata, json(path.join(root, 'tools/mcp/server.json')));
+  validateMetadata(manifest, packagedMetadata);
   assert.ok(existsSync(path.join(packageRoot, 'app/licenses/moonsharp-license.txt')));
   assert.ok(!existsSync(path.join(packageRoot, 'media')) && !existsSync(path.join(packageRoot, 'publish')));
   const cli = args => {

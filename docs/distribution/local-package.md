@@ -46,4 +46,4 @@ After local installation, configure a client to start the wrapper. Replace the r
 
 Use `--read-only` when the client should only inspect maps. The MCP server uses stdio and accesses the selected local workspace. The wrapper does not download runtimes, install packages, or contact a registry during execution.
 
-The root `server.json` is publication metadata, not a running remote server or an automatic publishing configuration. Its npm identifier, version, and `name` must match the staged package. The root `package.json` deliberately remains `private: true`; only the package built under `builds/npm` is the distributable package.
+MCP Registry publication metadata is maintained in `tools/mcp/server.json`. Its npm identifier, version, and `name` must match the staged package. The package build copies it to `server.json` inside the npm package. The root `package.json` deliberately remains `private: true`; only the package built under `builds/npm` is the distributable package.

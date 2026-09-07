@@ -59,13 +59,13 @@ export function auditPackage(directory) {
     'app/MoonSharp.Interpreter.dll', 'app/ModelContextProtocol.Core.dll', 'app/licenses/moonsharp-license.txt',
     'app/licenses/mcp-sdk-license.txt', 'app/licenses/mcp-sdk-third-party-notices.txt', 'app/licenses/microsoft-extensions-ai-license.txt',
     'app/licenses/microsoft-extensions-ai-third-party-notices.txt', 'app/licenses/microsoft-extensions-license.txt',
-    'app/licenses/microsoft-extensions-third-party-notices.txt', 'app/licenses/dependencies.json', 'metroidvania-studio/contracts/FORMAT.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md'])
+    'app/licenses/microsoft-extensions-third-party-notices.txt', 'app/licenses/dependencies.json', 'metroidvania-studio/contracts/FORMAT.md', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'server.json'])
     if (!entries.some(file => file.name === name)) throw new Error('Missing package component: ' + name);
   return entries;
 }
 export function pack() {
   if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Node.js 24 or later is required.');
-  const manifest = json(path.join(root, 'package.json')), metadata = json(path.join(root, 'server.json'));
+  const manifest = json(path.join(root, 'package.json')), metadata = json(path.join(root, 'tools/mcp/server.json'));
   if (manifest.private !== true) throw new Error('The source manifest must stay private.');
   if (json(path.join(root, 'version.json')).version !== manifest.version) throw new Error('The source and package versions must match.');
   validateMetadata(manifest, metadata);
@@ -85,7 +85,8 @@ export function pack() {
   // Only explicit package paths are staged; publish intermediates stay outside the npm files allowlist.
   copy(path.join(root, 'bin/metroidvania-studio.mjs'), path.join(stage, 'bin/metroidvania-studio.mjs'));
   chmodSync(path.join(stage, 'bin/metroidvania-studio.mjs'), 0o755);
-  for (const name of ['LICENSE', 'THIRD-PARTY-NOTICES.md', 'server.json']) copy(path.join(root, name), path.join(stage, name));
+  for (const name of ['LICENSE', 'THIRD-PARTY-NOTICES.md']) copy(path.join(root, name), path.join(stage, name));
+  copy(path.join(root, 'tools/mcp/server.json'), path.join(stage, 'server.json'));
   copy(path.join(root, 'tools/npm/README.md'), path.join(stage, 'README.md'));
   for (const file of files(path.join(root, 'docs'))) copy(file.full, path.join(stage, 'docs', file.name));
   for (const name of ['FORMAT.md', 'map-format-v2.schema.json']) copy(path.join(root, 'metroidvania-studio/contracts', name), path.join(stage, 'metroidvania-studio/contracts', name));
