@@ -39,6 +39,9 @@ Thumbs.db
 # Local contributor instructions are not published
 AGENTS.md
 
+# Private desktop source and local launchers
+/platform/win/program/
+
 # Source npm command shim (generated build bin folders stay ignored)
 !/bin/
 !/bin/metroidvania-studio.mjs

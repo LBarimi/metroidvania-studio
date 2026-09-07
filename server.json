@@ -3,21 +3,35 @@
   "name": "io.github.LBarimi/metroidvania-studio",
   "title": "Metroidvania Studio",
   "description": "Create and edit connected 2D maps with a local, workspace-scoped MCP server and Lua scripts.",
-  "repository": { "url": "https://github.com/LBarimi/metroidvania-studio", "source": "github" },
-  "version": "1.1.0",
+  "repository": {
+    "url": "https://github.com/LBarimi/metroidvania-studio",
+    "source": "github"
+  },
+  "version": "1.2.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "metroidvania-studio",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "runtimeHint": "npx",
-      "transport": { "type": "stdio" },
+      "transport": {
+        "type": "stdio"
+      },
       "packageArguments": [
-        { "type": "positional", "value": "mcp" },
         {
-          "type": "named", "name": "--workspace", "value": "{workspace}",
+          "type": "positional",
+          "value": "mcp"
+        },
+        {
+          "type": "named",
+          "name": "--workspace",
+          "value": "{workspace}",
           "variables": {
-            "workspace": { "description": "Local folder containing the maps and scripts this server may access.", "isRequired": true, "format": "string" }
+            "workspace": {
+              "description": "Local folder containing the maps and scripts this server may access.",
+              "isRequired": true,
+              "format": "string"
+            }
           }
         }
       ]

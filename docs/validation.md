@@ -37,7 +37,13 @@ npm run pack:local
 npm run test:package
 ```
 
-The first command produces `builds/npm/metroidvania-studio-1.1.0.tgz`. The second installs that local archive in a fresh folder, then exercises CLI, Lua, and MCP. Package validation checks its file inventory, document links, metadata, and retained dependency notices. No post-install download or engine installation is needed.
+The first command produces `builds/npm/metroidvania-studio-1.2.0.tgz`. The second installs that local archive in a fresh folder, then exercises CLI, Lua, and MCP. Package validation checks its file inventory, document links, metadata, and retained dependency notices. No post-install download or engine installation is needed.
+
+## 1.2.0 verification
+
+The 1.2.0 checks passed for script-library storage, revision conflicts, input validation, explicit script execution, and searchable documentation over HTTP and from local files. Existing Lua cancellation, recovery, Undo/Redo, room exports, and dense-tile rendering checks also passed.
+
+Release downloads were extracted and their command-line launchers exercised with the included runtimes on Windows and Linux. The local npm archive passed fresh-install CLI, Lua, and MCP checks. Native macOS execution has not been verified.
 
 ## 1.1.0 verification
 

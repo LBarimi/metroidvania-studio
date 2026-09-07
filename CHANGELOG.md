@@ -1,5 +1,12 @@
 # Changes
 
+## 1.2.0
+
+- Browse saved Lua scripts and examples from File → Scripts, with workspace storage and conflict checks.
+- Add searchable offline documentation, API references, and Help menu links.
+- Include headless command-line launchers at the root of release downloads.
+- Bring CLI and MCP setup directly below the introduction in the README.
+
 ## 1.1.0
 
 - Add a versioned editing API shared by Lua scripts, headless commands, and local MCP tools.
