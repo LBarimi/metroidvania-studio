@@ -12,7 +12,7 @@ A web-based 2D world editor for metroidvania games. Create connected rooms, pain
 
 ## Resize, Rotate & Connect Rooms
 
-![Resize and rotate an ice cavern, then connect grassland and volcanic rooms](media/readme/resize-rotate-and-connect.gif)
+![Resize, rotate, and connect three ice cavern rooms](media/readme/resize-rotate-and-connect.gif)
 
 ## Design Your Minimap
 
