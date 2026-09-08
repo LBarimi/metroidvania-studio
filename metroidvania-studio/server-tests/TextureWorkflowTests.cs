@@ -73,6 +73,15 @@ internal static class TextureWorkflowTests
             var active = new Catalog(files); active.Refresh(); string id=active.AddPalette("Stage 2!", "#223344");
             Check(active.Material(id).GetProperty("sprites")[0].GetProperty("asset").GetString()=="Textures/palettes/stage-2-2/atlas-1.png","Slug collisions must not overwrite a palette.");
         }
-        finally { Directory.Delete(root,true); }
+        finally
+        {
+            // Match the server fixtures: Windows file replacement may finish its
+            // temporary-file cleanup just after the synchronous write returns.
+            for (int attempt = 0; ; attempt++)
+            {
+                try { Directory.Delete(root, true); break; }
+                catch (IOException) when (attempt < 5) { Thread.Sleep((attempt + 1) * 10); }
+            }
+        }
     }
 }
