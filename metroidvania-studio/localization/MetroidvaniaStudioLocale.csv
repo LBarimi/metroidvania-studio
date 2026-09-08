@@ -1,4 +1,7 @@
 Key,KR,EN,JA,ZH_CN,ZH_TW,RU
+previewPixelPerfectHelp,카메라를 원본 픽셀 단위로 이동합니다. 해제하면 자유롭게 이동합니다.,Snap camera movement to source pixels. Uncheck for smooth movement.,カメラを元画像のピクセル単位で移動します。オフにすると滑らかに移動します。,将相机移动吸附到源像素。取消勾选可平滑移动。,將相機移動吸附至原始像素。取消勾選可平滑移動。,Привязывать камеру к пикселям исходного изображения. Снимите флажок для плавного движения.
+alwaysShowGameCamera,게임 카메라 항상 표시,Always show game camera,ゲームカメラを常に表示,始终显示游戏相机,一律顯示遊戲攝影機,Всегда показывать игровую камеру
+alwaysShowGameCameraHelp,다른 도구로 편집하는 동안에도 게임 시야의 흰색 박스를 표시합니다.,Keep the white game camera frame visible while using other tools.,ほかのツールで編集中もゲームカメラの白い枠を表示します。,使用其他工具时仍显示游戏相机白框。,使用其他工具時仍顯示遊戲攝影機白框。,Показывать белую рамку игровой камеры при работе другими инструментами.
 statusSelectedSize,선택한 방 {0},Selected rooms {0},選択した部屋 {0},所选房间 {0},所選房間 {0},Выбранные комнаты {0}
 statusTotalSize,전체 방 {0},All rooms {0},全部屋 {0},全部房间 {0},全部房間 {0},Все комнаты {0}
 statusSizeHint,방별 UTF-8 JSON 내보내기 용량의 합계입니다. 1 KB = 1024바이트이며 텍스처는 제외됩니다.,Combined size of the selected or all room JSON exports in UTF-8. 1 KB = 1024 bytes. Textures are excluded.,部屋ごとのUTF-8 JSON出力サイズの合計です。1 KB = 1024バイト。テクスチャは含みません。,按房间导出的UTF-8 JSON大小之和。1 KB = 1024字节。不含纹理。,按房間匯出的UTF-8 JSON大小總和。1 KB = 1024位元組。不含紋理。,Сумма размеров JSON-комнат в UTF-8. 1 KB = 1024 байта. Без текстур.

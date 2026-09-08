@@ -8,6 +8,14 @@ export class GameCamera {
   private width = 20;
   private height = 11.25;
   private position: Point = { x: 0, y: 0 };
+  private snapping = true;
+  get pixelPerfect(): boolean { return this.snapping; }
+  setPixelPerfect(enabled: boolean): boolean {
+    if (this.snapping === enabled) return false;
+    this.snapping = enabled;
+    if (this.room) this.position = this.clamp(this.position);
+    this.revision++; return true;
+  }
   get center(): Point { return { ...this.position }; }
   get frame(): Rect | null {
     return this.room ? { x: this.position.x - this.width / 2, y: this.position.y - this.height / 2, width: this.width, height: this.height } : null;
@@ -52,7 +60,8 @@ export class GameCamera {
       if (length <= frame) return start + length / 2;
       // Snap the frame origin, rather than its center, to source pixels. This
       // also keeps odd reference resolutions aligned to the tile pixel grid.
-      const origin = Math.round((center - frame / 2) * 16) / 16;
+      const rawOrigin = center - frame / 2;
+      const origin = this.snapping ? Math.round(rawOrigin * 16) / 16 : rawOrigin;
       return Math.max(start, Math.min(start + length - frame, origin)) + frame / 2;
     };
     return { x: axis(center.x, room.x, room.width, this.width), y: axis(center.y, room.y, room.height, this.height) };

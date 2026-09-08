@@ -1,5 +1,13 @@
 # Changes
 
+## 1.3.2
+
+- Keep room movement and resize handles available with every tool, including Game camera, while preserving room locks and pending-write protection.
+- Add an Always show game camera toolbar toggle to retain the camera frame while editing with other tools.
+- Track each live tile change so Game Preview keeps up throughout held brush strokes. Redraw only changed regions, share existing rendering caches and refresh fully when the camera or view changes.
+
+- Add a Pixel Perfect checkbox to Game Preview. Toggle source-pixel snapping for both camera controls while retaining room bounds, and remember the setting locally without changing map data.
+
 ## 1.3.1
 
 - Add tile palette import and Game Preview demonstrations to the README.

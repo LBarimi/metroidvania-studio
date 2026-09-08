@@ -407,6 +407,13 @@ function updateView(): void {
   const toolbar = el('view-toolbar'); toolbar.replaceChildren(button('⊞ ' + locale.t('fit'), () => { if (miniMode) mini.fit(); else if (map.cameraPreview) { map.gameView(false); updateView(); requestAnimationFrame(() => map.fit()); } else map.fit(); }), button('⌾ ' + locale.t('frameRoom'), () => miniMode ? mini.frameRoom() : map.frameRoom()));
   cameraControls = undefined;
   if (!miniMode) {
+    const cameraFrame = button(locale.t('alwaysShowGameCamera'), () => {
+      map.setAlwaysShowGameCamera(!map.alwaysShowGameCamera);
+      cameraFrame.classList.toggle('active', map.alwaysShowGameCamera);
+      cameraFrame.setAttribute('aria-pressed', String(map.alwaysShowGameCamera));
+    }, map.alwaysShowGameCamera ? 'active' : '');
+    cameraFrame.id = 'always-show-game-camera'; cameraFrame.title = locale.t('alwaysShowGameCameraHelp');
+    cameraFrame.setAttribute('aria-pressed', String(map.alwaysShowGameCamera)); toolbar.append(cameraFrame);
     const defaults = button(locale.t('tilesetDefaultView'), () => { map.setDefaultTiles(!map.showDefaultTiles); updateView(); }, map.showDefaultTiles ? 'active' : '');
     defaults.id = 'default-tile-view'; defaults.setAttribute('aria-pressed', String(map.showDefaultTiles));
     toolbar.append(defaults);
