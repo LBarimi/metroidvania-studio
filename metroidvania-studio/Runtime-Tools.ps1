@@ -56,8 +56,8 @@ function Invoke-StudioLauncher {
 
 function Merge-StudioOptions {
     param([hashtable]$Options, [string[]]$Arguments, [string[]]$Allowed)
-    $names = @{ '--project'='Project'; '--port'='Port'; '--no-browser'='NoBrowser'; '--restart'='Restart'; '--foreground'='Foreground'; '--build-directory'='BuildDirectory'; '--check'='CheckOnly' }
-    $switches = @('NoBrowser','Restart','Foreground','CheckOnly')
+    $names = @{ '--project'='Project'; '--port'='Port'; '--no-browser'='NoBrowser'; '--restart'='Restart'; '--foreground'='Foreground'; '--build-directory'='BuildDirectory'; '--check'='CheckOnly'; '--rebuild'='Rebuild' }
+    $switches = @('NoBrowser','Restart','Foreground','CheckOnly','Rebuild')
     for ($index = 0; $index -lt $Arguments.Count; $index++) {
         $name = $names[$Arguments[$index]]
         if (!$name -or $Allowed -notcontains $name) { throw "Unknown argument: $($Arguments[$index])" }

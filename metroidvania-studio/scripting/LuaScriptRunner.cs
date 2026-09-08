@@ -177,7 +177,11 @@ public static partial class LuaScriptRunner
             {
                 if (!data.ContainsKey("id"))
                 {
-                    do { createdId = "script-" + (++idSequence); } while (!ids.Add(createdId));
+                    if (operation == "object.add")
+                        createdId = MapObjectIds.Derive("script-object\0" + data.GetValueOrDefault("roomId") + "\0"
+                            + (++idSequence).ToString(System.Globalization.CultureInfo.InvariantCulture), ids);
+                    else
+                        do { createdId = "script-" + (++idSequence); } while (!ids.Add(createdId));
                     data["id"] = createdId;
                 }
                 else if (data["id"] is string explicitId)

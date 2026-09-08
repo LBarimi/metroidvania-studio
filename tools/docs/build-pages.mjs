@@ -14,7 +14,7 @@ buildDocs(output, { siteUrl: 'https://lbarimi.github.io/metroidvania-studio/' })
 function validOutput(name) {
   return /^(?:[a-z0-9-]+\.(?:html|css|js|svg|xml)|\.nojekyll|assets\/[a-z0-9.-]+\.(?:json|lua))$/.test(name);
 }
-const previous = existsSync(manifest) ? readFileSync(manifest, 'utf8').split('\n').filter(Boolean) : [];
+const previous = existsSync(manifest) ? readFileSync(manifest, 'utf8').split(/\r?\n/).filter(Boolean) : [];
 const files = readdirSync(output, { recursive: true }).filter(name => lstatSync(path.join(output, name)).isFile()).map(name => name.replaceAll('\\', '/')).sort();
 if ([...previous, ...files].some(name => !validOutput(name))) throw new Error('Unexpected generated documentation path.');
 

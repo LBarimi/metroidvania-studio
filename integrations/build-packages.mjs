@@ -47,16 +47,19 @@ export function packageEntries(engine) {
     add(base+'/Source/MetroidvaniaStudio/MetroidvaniaStudio.Build.cs',`integrations/${engine}/source/MetroidvaniaStudio.Build.cs`);
     for(const folder of ['public','private'])tree(`integrations/shared/unreal/${folder}`,base+'/Source/MetroidvaniaStudio/'+(folder==='public'?'Public':'Private'));
     add(base+'/Source/MetroidvaniaStudio/Private/StudioDocument.h','integrations/shared/native/StudioDocument.h');
+    for(const name of ['StudioTriggerEvent.generated.h','StudioTriggerManager.h'])add(base+'/Source/MetroidvaniaStudio/Private/'+name,'integrations/shared/native/'+name);
     entries.set(base+'/Config/FilterPlugin.ini',Buffer.from('[FilterPlugin]\n/samples/...\n/LICENSE\n/THIRD-PARTY-NOTICES.md\n'));
   }
   if(engine==='sdl') {
     tree('integrations/sdl/include','include');tree('integrations/sdl/src','src');
     tree('integrations/sdl/src-sample','src-sample');
     add('include/StudioDocument.h','integrations/shared/native/StudioDocument.h');
+    for(const name of ['StudioTriggerEvent.generated.h','StudioTriggerManager.h'])add('include/'+name,'integrations/shared/native/'+name);
     for(const file of ['CMakeLists.txt','Build-Sdl.ps1','build.bat','run.bat','build.sh','run.sh','THIRD-PARTY-NOTICES.txt'])add(file,'integrations/sdl/'+file);
   } else for(const file of ['install.bat','Install-Integration.ps1','Resolve-UnrealEngine.ps1'])add(file,'integrations/shared/'+file);
   const sampleRoot=(engine==='ue4'||engine==='ue5')?'plugin/MetroidvaniaStudio/samples':'samples';tree('samples',sampleRoot);
   add(sampleRoot+'/maps/Coverage.json','integrations/shared/tests/fixtures/Coverage.json');
+  add(sampleRoot+'/maps/TriggerEvents.json','integrations/shared/tests/fixtures/TriggerEvents.json');
   // Catalog paths are case-sensitive on supported Unix filesystems.
   const catalog=JSON.parse(entries.get(sampleRoot+'/catalog.json').toString('utf8').replace(/^\uFEFF/,''));
   const sampleFiles=new Map(files('samples').map(name=>[name.slice(8).toLowerCase(),name.slice(8)]));
@@ -64,6 +67,8 @@ export function packageEntries(engine) {
     const actual=sampleFiles.get(sprite.asset.toLowerCase());if(!actual)throw new Error('Missing public sample texture.');sprite.asset=actual;
   }
   entries.set(sampleRoot+'/catalog.json',Buffer.from(JSON.stringify(catalog,null,2)+'\n'));
+  add('TRIGGERS.md','docs/objects-and-triggers.md');
+  add('contract/trigger-events.json','metroidvania-studio/contracts/trigger-events.json');
   add('contract/FORMAT.md','metroidvania-studio/contracts/FORMAT.md');add('contract/map-format-v2.schema.json','metroidvania-studio/contracts/map-format-v2.schema.json');
   const installedRoot=engine==='godot'?'addons/metroidvania-studio'
     :(engine==='ue4'||engine==='ue5')?'plugin/MetroidvaniaStudio':null;

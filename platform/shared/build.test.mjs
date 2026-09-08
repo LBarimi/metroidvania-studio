@@ -4,7 +4,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSy
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { acquireBuildLock, buildStudio, checkedInputs } from './build.mjs';
+import { acquireBuildLock, buildStudio, checkedInputs, runCommand } from './build.mjs';
 import { currentBuild, sourceState } from './build-state.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -83,7 +83,11 @@ test('successful build publishes complete immutable output and then latest point
     assert.deepEqual(readFileSync(path.join(first, notice)), readFileSync(path.join(root, notice)));
   }
   assert.ok(existsSync(path.join(first, 'engine-packages/unity/metroidvania-studio.unitypackage')));
-  const second = buildStudio(options(checkout, runner));
+  assert.equal(calls.filter(call => call.args[0] === 'build').length, 0);
+  assert.equal(calls.filter(call => call.args[0] === 'publish').length, 3);
+  assert.ok(calls.filter(call => call.args[0] === 'publish').every(call => !call.args.includes('--no-build') && !call.args.includes('--no-restore')));
+  const second = buildStudio({ ...options(checkout, runner), rebuild: true });
+  assert.equal(calls.filter(call => call.args[0] === 'build').length, 3);
   assert.notEqual(second, first);
   assert.ok(existsSync(path.join(first, 'metroidvania-studio/dist/index.html')));
   assert.equal(JSON.parse(readFileSync(path.join(checkout, '.local/toolchain.json')))['dotnet.exe'], options(checkout, runner).dotnet);
@@ -97,7 +101,7 @@ for (const failure of ['Launcher', 'missing-Launcher', 'Cli', 'missing-Cli', 'mi
   const previous = process.env.METROIDVANIA_STUDIO_DOTNET;
   process.env.METROIDVANIA_STUDIO_DOTNET = 'preserved-tool-selection';
   try {
-    assert.throws(() => buildStudio(options(checkout, buildRunner(checkout, failure).runner)), /failure|Incomplete build|Incomplete engine package/);
+    assert.throws(() => buildStudio({ ...options(checkout, buildRunner(checkout, failure).runner), rebuild: true }), /failure|Incomplete build|Incomplete engine package/);
     assert.deepEqual(readFileSync(latest), bytes);
     assert.ok(existsSync(path.join(good, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.dll')));
     assert.equal(process.env.METROIDVANIA_STUDIO_DOTNET, 'preserved-tool-selection');
@@ -108,7 +112,7 @@ for (const failure of ['Launcher', 'missing-Launcher', 'Cli', 'missing-Cli', 'mi
   }
 });
 
-test('ensure skips compilation for matching content, including timestamp-only and local workspace changes', () => {
+test('default build and ensure reuse matching content, including timestamp-only and local workspace changes', () => {
   const checkout = fixture(), { runner } = buildRunner(checkout), output = buildStudio(options(checkout, runner));
   assert.equal(currentBuild(checkout).current, true);
   const source = path.join(checkout, 'metroidvania-studio/server/MetroidvaniaStudio.Server.csproj');
@@ -116,6 +120,7 @@ test('ensure skips compilation for matching content, including timestamp-only an
   for (const relative of ['.local/workspace/Maps/draft.json', 'metroidvania-studio/.local/log.txt',
     'metroidvania-studio/server/obj/generated.cs', 'metroidvania-studio/web/contracts.generated.ts']) put(path.join(checkout, relative), 'local or generated');
   const noBuild = () => { throw new Error('Current builds must not invoke compilers or SDK checks.'); };
+  assert.equal(buildStudio(options(checkout, noBuild)), output);
   assert.equal(buildStudio({ ...options(checkout, noBuild), ensureCurrent: true }), output);
 });
 
@@ -162,9 +167,46 @@ test('editing source during a build cannot mark the partial result current', () 
     if (args[0].endsWith('build-packages.mjs')) put(path.join(checkout, 'metroidvania-studio/web/late.ts'), 'changed during build');
     return result;
   };
+  put(path.join(checkout, 'metroidvania-studio/web/early.ts'), 'saved change');
   assert.throws(() => buildStudio(options(checkout, changingRunner)), /changed during the build/);
   assert.deepEqual(readFileSync(pointer), before);
 });
+
+test('incremental publish updates shared code, removes deleted types and preserves the last good bundle on compiler failure',
+  { skip: !process.env.METROIDVANIA_STUDIO_TEST_DOTNET }, () => {
+    const checkout = fixture(), dotnet = process.env.METROIDVANIA_STUDIO_TEST_DOTNET;
+    const properties = '<TargetFramework>net10.0</TargetFramework><NuGetAudit>false</NuGetAudit>';
+    put(path.join(checkout, 'metroidvania-studio/core/Core.csproj'), `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>${properties}</PropertyGroup></Project>`);
+    const common = path.join(checkout, 'metroidvania-studio/core/BuildValue.cs');
+    const extra = path.join(checkout, 'metroidvania-studio/core/ExtraValue.cs');
+    put(common, 'public static class BuildValue { public static string Text => "first"; }');
+    put(extra, 'public class ExtraValue {}');
+    for (const name of ['Server', 'Launcher', 'Cli']) {
+      const folder = path.join(checkout, 'metroidvania-studio', name.toLowerCase());
+      put(path.join(folder, `MetroidvaniaStudio.${name}.csproj`), `<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup>${properties}<OutputType>Exe</OutputType><AssemblyName>MetroidvaniaStudio.${name}</AssemblyName></PropertyGroup><ItemGroup><ProjectReference Include="../core/Core.csproj" /></ItemGroup></Project>`);
+      put(path.join(folder, 'Program.cs'), 'System.Console.Write(BuildValue.Text + "|" + (typeof(BuildValue).Assembly.GetType("ExtraValue") != null) + "|" + typeof(BuildValue).Assembly.GetName().Version);');
+    }
+    const fixtureRunner = buildRunner(checkout).runner;
+    const runner = (command, args, settings) => ['publish', 'build', '--list-sdks'].includes(args[0])
+      ? runCommand(dotnet, args, { ...settings, capture: true }) : fixtureRunner(command, args, settings);
+    const build = (extra = {}) => buildStudio({ studioRoot: checkout, dotnet, runner, ...extra });
+    const inspect = (output, expected) => {
+      for (const name of ['Server', 'Launcher', 'Cli'])
+        assert.equal(runCommand(dotnet, [path.join(output, 'metroidvania-studio', name.toLowerCase(), `MetroidvaniaStudio.${name}.dll`)], { capture: true }), expected);
+    };
+    const first = build(); inspect(first, 'first|True|0.1.0.0');
+    put(common, 'public static class BuildValue { public static string Text => "second"; }');
+    unlinkSync(extra);
+    put(path.join(checkout, 'version.json'), '{"version":"0.1.1"}');
+    const second = build(); inspect(second, 'second|False|0.1.1.0'); inspect(first, 'first|True|0.1.0.0');
+    assert.equal(build(), second);
+    put(common, 'invalid source');
+    assert.throws(() => build());
+    assert.equal(JSON.parse(readFileSync(path.join(checkout, 'builds/latest.json'))).folder, path.basename(second));
+    inspect(second, 'second|False|0.1.1.0');
+    put(common, 'public static class BuildValue { public static string Text => "second"; }');
+    const rebuilt = build({ rebuild: true }); assert.notEqual(rebuilt, second); inspect(rebuilt, 'second|False|0.1.1.0');
+  });
 
 test('check only is read-only and validates SDK and Git without build output', () => {
   const checkout = fixture(), { runner, calls } = buildRunner(checkout);

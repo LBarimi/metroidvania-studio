@@ -8,6 +8,7 @@ class UProceduralMeshComponent;
 class UCameraComponent;
 class UMetroidvaniaStudioRoomOutline;
 class UMaterialInterface;
+class UMetroidvaniaStudioTriggerManager;
 
 USTRUCT()
 struct FMetroidvaniaStudioImage
@@ -34,6 +35,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Metroidvania Studio") FIntPoint ReferenceResolution = FIntPoint(320,180);
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Metroidvania Studio") UCameraComponent* RoomCamera;
     UPROPERTY(BlueprintReadOnly, Category="Metroidvania Studio") FString MapDocumentJson;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Metroidvania Studio") UMetroidvaniaStudioTriggerManager* TriggerManager;
     UPROPERTY() FString CatalogJson;
     UPROPERTY() TMap<FString,FMetroidvaniaStudioImage> Images;
     UPROPERTY() UMaterialInterface* TileMaterial;

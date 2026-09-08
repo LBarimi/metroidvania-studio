@@ -47,3 +47,7 @@ Runtime APIs are in `MetroidvaniaStudio.Integration`. Import tools are in the ed
 JSON 파일만 가져올 때는 맵 JSON과 함께 리소스 카탈로그 및 텍스처 폴더를 선택해야 합니다. 가져온 리소스는 Unity 프로젝트에 저장되므로 이후에는 웹 스튜디오를 끄더라도 씬을 사용할 수 있습니다.
 
 Imported room boundaries are drawn in white in Scene view when Gizmos are enabled. They are not included in Game view or player builds.
+
+## Objects and trigger events
+
+See `TRIGGERS.md` in the package for event requests, one-shot portals, stable IDs and runtime examples. The game decides when to request an event; the integration does not wire collision callbacks.

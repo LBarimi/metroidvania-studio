@@ -10,6 +10,10 @@ Metroidvania Studio is a web-based level editor for metroidvania games. Create c
 
 ![Add a second room, paint rock tiles, then pan back and connect the first room](media/readme/create-and-paint.gif)
 
+## Configure Tile Palettes
+
+![Import a grassland PNG into a color palette and update an existing room](media/readme/configure-tile-palettes.gif)
+
 ## Resize, Rotate & Connect Rooms
 
 ![Resize, rotate, and connect three ice cavern rooms](media/readme/resize-rotate-and-connect.gif)
@@ -17,6 +21,10 @@ Metroidvania Studio is a web-based level editor for metroidvania games. Create c
 ## Design Your Minimap
 
 ![Explore a world of five terrain themes, double-click an ice cavern to edit it, then zoom out](media/readme/design-the-minimap.gif)
+
+## Explore with Game Preview
+
+![Drag the game camera inside a room, inspect the live view, and maximize or collapse Game Preview](media/readme/explore-game-preview.gif)
 
 ## Get Started
 
@@ -56,7 +64,9 @@ Paint a room, **Ctrl-click** two rooms to move them together, or switch to the m
 - **Erase:** right-drag inside the active room.
 - **Pan and zoom:** middle-drag to pan, mouse wheel to zoom, **Ctrl + wheel** to change brush size. Right-drag on empty space also pans.
 - **Arrange rooms:** right-click empty space to add a room, drag a room's title strip to move it, or drag its outer handles to resize. Rotation is available in the inspector.
-- **Save and exchange maps:** use **File** for saving and JSON import/export. Use **Edit** for Undo/Redo. Set PPU and resolution beside **Game view** (defaults: **16** and **320×180**).
+- **Save and exchange maps:** use **File** for saving and JSON import/export. Use **Edit** for Undo/Redo. Set PPU and resolution in the top toolbar (defaults: **16** and **320×180**).
+
+- **Preview:** choose **Game camera** and drag its white frame. **Game Preview** follows immediately; expand, maximize, or collapse it as needed.
 
 See **Help → Shortcuts** for the full control list. The interface follows your browser language and can be changed from the language picker.
 

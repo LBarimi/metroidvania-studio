@@ -64,14 +64,14 @@ export function checkedInputs(studioRoot) {
     return relative;
   });
 }
-export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.METROIDVANIA_STUDIO_DOTNET || 'dotnet', runner = runCommand, checkOnly = false, ensureCurrent = false } = {}) {
+export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.METROIDVANIA_STUDIO_DOTNET || 'dotnet', runner = runCommand, checkOnly = false, ensureCurrent = true, rebuild = false } = {}) {
   studioRoot = path.resolve(studioRoot);
   if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Node.js 24 or later is required for building.');
   const serverProject = path.join(studioRoot, 'metroidvania-studio/server/MetroidvaniaStudio.Server.csproj');
   const launcherProject = path.join(studioRoot, 'metroidvania-studio/launcher/MetroidvaniaStudio.Launcher.csproj');
   const cliProject = path.join(studioRoot, 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.csproj');
   if (!existsSync(serverProject) || !existsSync(launcherProject) || !existsSync(cliProject)) throw new Error('Building requires a source checkout. Use the run script for a prebuilt application.');
-  if (ensureCurrent && !checkOnly) {
+  if (ensureCurrent && !rebuild && !checkOnly) {
     const status = currentBuild(studioRoot);
     if (status.current) { console.log('Local build is up to date.'); return status.output; }
     console.log(status.reason + ' Building before launch...');
@@ -81,6 +81,7 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
   if (!/^git version /m.test(runner('git', ['--version'], { cwd: studioRoot, capture: true }) || '')) throw new Error('Git is required for source validation.');
   if (checkOnly) { console.log('Build tools are ready: Node.js 24+, .NET SDK 10 and Git.'); return null; }
   const releaseLock = acquireBuildLock(path.join(studioRoot, '.local'));
+  const started = performance.now();
   const previousDotnet = process.env.METROIDVANIA_STUDIO_DOTNET;
   process.env.METROIDVANIA_STUDIO_DOTNET = dotnet;
   try {
@@ -99,8 +100,10 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
       console.log(`Building ${name.toLowerCase()}...`);
       const properties = ['--configuration', 'Release', '--self-contained', 'false', '-p:UseAppHost=false',
         '-p:UseSharedCompilation=false', '-p:DebugType=None', '-p:DebugSymbols=false', `-p:PathMap=${studioRoot}=/_/src`, `-p:Version=${version}`];
-      runner(dotnet, ['build', project, '--no-incremental', ...properties, '--nologo'], { cwd: studioRoot });
-      runner(dotnet, ['publish', project, '--no-build', '--no-restore', ...properties, '--output', path.join(output, `metroidvania-studio/${name.toLowerCase()}`), '--nologo'], { cwd: studioRoot });
+      // Publish already performs an incremental build and restore. Keep shared
+      // project outputs for subsequent targets instead of compiling them again.
+      if (rebuild) runner(dotnet, ['build', project, '--no-incremental', ...properties, '--nologo'], { cwd: studioRoot });
+      runner(dotnet, ['publish', project, ...(rebuild ? ['--no-build', '--no-restore'] : []), ...properties, '--output', path.join(output, `metroidvania-studio/${name.toLowerCase()}`), '--nologo'], { cwd: studioRoot });
     }
     for (const relative of inputs) {
       if (relative === 'metroidvania-studio/dist') continue;
@@ -132,7 +135,7 @@ export function buildStudio({ studioRoot = defaultRoot, dotnet = process.env.MET
     writeAtomic(path.join(studioRoot, '.local/toolchain.json'), toolchain);
     // A failed build never replaces the last successful output or its pointer.
     writeAtomic(path.join(buildsRoot, 'latest.json'), { formatVersion: 1, folder, version });
-    console.log(`Build ready: ${output}`);
+    console.log(`Build ready (${((performance.now() - started) / 1000).toFixed(1)}s): ${output}`);
     return output;
   } finally {
     if (previousDotnet === undefined) delete process.env.METROIDVANIA_STUDIO_DOTNET; else process.env.METROIDVANIA_STUDIO_DOTNET = previousDotnet;
@@ -144,8 +147,9 @@ export function main(args = process.argv.slice(2)) {
   for (let index = 0; index < args.length; index++) {
     if (args[index] === '--check') options.checkOnly = true;
     else if (args[index] === '--ensure') options.ensureCurrent = true;
+    else if (args[index] === '--rebuild') options.rebuild = true;
     else if (['--studio-root', '--dotnet'].includes(args[index]) && args[index + 1]) options[args[index++] === '--studio-root' ? 'studioRoot' : 'dotnet'] = args[index];
-    else throw new Error('Usage: build.mjs [--studio-root <folder>] [--dotnet <executable>] [--check] [--ensure]');
+    else throw new Error('Usage: build.mjs [--studio-root <folder>] [--dotnet <executable>] [--check] [--ensure] [--rebuild]');
   }
   return buildStudio(options);
 }

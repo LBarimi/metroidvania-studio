@@ -43,9 +43,11 @@ export function buildPackage(destination) {
   }
   visit(source);
   const guides = new Map();
-  for (const language of ['KR', 'EN', 'JP', 'CN', 'TW']) {
-    const name = `INSTALL_${language}.txt`, relative = `Assets/MetroidvaniaStudioIntegration/${name}`;
-    const bytes = Buffer.from(readFileSync(path.join(root, 'engine-packages/unity', name), 'utf8').replaceAll('\r\n', '\n'));
+  const guideSources = ['KR', 'EN', 'JP', 'CN', 'TW'].map(language => [`INSTALL_${language}.txt`, `engine-packages/unity/INSTALL_${language}.txt`]);
+  guideSources.push(['TRIGGERS.md', 'docs/objects-and-triggers.md']);
+  for (const [name, sourcePath] of guideSources) {
+    const relative = `Assets/MetroidvaniaStudioIntegration/${name}`;
+    const bytes = Buffer.from(readFileSync(path.join(root, sourcePath), 'utf8').replaceAll('\r\n', '\n'));
     // Text guides live beside the archive; stable import metadata is generated only inside it.
     const guid = createHash('sha256').update(`metroidvania-studio:install-guide:${relative}`).digest('hex').slice(0, 32);
     if (guids.has(guid)) throw new Error('Duplicate install guide GUID.');

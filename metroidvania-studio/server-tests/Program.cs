@@ -5,6 +5,8 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("room merge and split preserve selection, autosaved JSON and Undo/Redo", () => Fixture(RoomRestructureTests.Workflow)),
+    ("built-in object upgrade preserves custom fields and legacy definitions", BuiltInObjectTests.Upgrade),
     ("internal catalog migration preserves palettes, groups, textures and exports", InternalCatalogTests.Upgrade),
     ("internal catalog migration resumes safely and preserves conflicting copies", InternalCatalogTests.Recovery),
     ("internal catalog migration respects explicit custom locations", InternalCatalogTests.CustomPaths),
@@ -109,6 +111,7 @@ var tests = new (string name, Action run)[]
     ("batched tile gesture targets its requested room", () => Fixture(TileGestureRoomSwitch)),
     ("batched object erase follows curves and stays in its requested room", () => Fixture(ObjectGestureErase)),
     ("batched object placement creates one rectangle and one undo", () => Fixture(ObjectGesturePlacement)),
+    ("portal strokes snap, clip, undo and retain runtime identity", () => Fixture(PortalGesturePlacement)),
     ("node placement keeps its dragged endpoint", () => Fixture(ObjectGestureNodePlacement)),
     ("invalid batched object gesture is atomic", () => Fixture(ObjectGestureInvalid)),
     ("object gesture intersection work is bounded atomically", () => Fixture(ObjectGestureWorkBoundary))
@@ -1998,6 +2001,42 @@ static void ObjectGesturePlacement(EditorWorkspace w)
         Points((w.Canvas.Room.width - .8f, w.Canvas.Room.height - .8f)));
     Check(w.Canvas.Room.objects.Count == 0 && !w.Session.CanUndo,
         "Minimum-size clamping must reject an edge placement whose final object would leave the room.");
+}
+static void PortalGesturePlacement(EditorWorkspace w)
+{
+    string studio = AppContext.BaseDirectory;
+    while (!File.Exists(Path.Combine(studio, "samples", "catalog.json"))) studio = Path.GetDirectoryName(studio)!;
+    Directory.CreateDirectory(Path.GetDirectoryName(w.Files.CatalogPath)!);
+    File.Copy(Path.Combine(studio, "samples", "catalog.json"), w.Files.CatalogPath, true);
+    Check(w.Catalog.Refresh(), "Portal catalog loads.");
+    Send(w, "options", ("tool", (int)MetroidvaniaStudioTool.Placement), ("layer", (int)MapLayer.Entities), ("objectDefinition", "Portal"));
+    var room = w.Canvas.Room;
+    ObjectGesture(w, room.id, false, Points((2.2f, 3.8f), (5.9f, 6.1f)));
+    var portal = room.objects.Single();
+    Check(portal.x == 2 && portal.y == 3 && portal.width == 4 && portal.height == 4, "A stroke spans whole inclusive tile cells.");
+    string id = portal.id;
+    var exported = MapDocumentStore.Deserialize(Snapshot(w));
+    var saved = exported.rooms.Single(r => r.id == room.id).objects.Single();
+    Check(saved.id == id && saved.width == 4 && saved.height == 4, "Export retains the region and its single identity.");
+    var manager = new StudioTriggerManager();
+    manager.RegisterRoom(exported.rooms.Single(r => r.id == room.id));
+    Check(manager.TryRequest(id, out var info) && info.Once && info.ObjectId == id && !manager.TryRequest(id, out _), "Portal regions use the existing one-shot runtime contract.");
+    Send(w, "undo");
+    Check(w.Canvas.Room.objects.Count == 0, "One undo removes the entire portal stroke.");
+    Send(w, "redo");
+    Check(w.Canvas.Room.objects.Single().id == id, "Redo keeps the portal identity.");
+    Send(w, "undo");
+    ObjectGesture(w, room.id, false, Points((5.9f, 6.1f), (2.2f, 3.8f)));
+    portal = w.Canvas.Room.objects.Single();
+    Check(portal.x == 2 && portal.y == 3 && portal.width == 4 && portal.height == 4, "Reverse drags cover the same cells.");
+    Send(w, "undo");
+    ObjectGesture(w, room.id, false, Points((2.8f, 3.2f)));
+    portal = w.Canvas.Room.objects.Single();
+    Check(portal.x == 2 && portal.y == 3 && portal.width == 1 && portal.height == 1, "A click places one snapped portal cell.");
+    Send(w, "undo");
+    ObjectGesture(w, room.id, false, Points((room.width - 1.2f, 3.2f), (room.width + 4.5f, -2.1f)));
+    portal = w.Canvas.Room.objects.Single();
+    Check(portal.x == room.width - 2 && portal.y == 0 && portal.width == 2 && portal.height == 4, "A stroke is clipped to the starting room.");
 }
 static void ObjectGestureNodePlacement(EditorWorkspace w)
 {

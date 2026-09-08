@@ -37,6 +37,15 @@ Test("batch creates, paints, and reports explicit identities", () =>
     Check(result.Changed && result.OperationCount == 2 && result.CreatedIds.SequenceEqual(new[] { "b" }));
     Check(Read(result).rooms[1].foreground.Count == 16);
 });
+Test("generated object IDs are numeric while explicit IDs remain unchanged", () =>
+{
+    var result = Apply(Doc(), new { op = "object.add", roomId = "a", definitionId = "Portal", layer = "entities", x = 2, y = 2 },
+        new { op = "object.add", roomId = "a", id = "explicit-object", definitionId = "Portal", layer = "entities", x = 4, y = 2 });
+    var objects = First(result).objects;
+    Check(objects[0].id.All(char.IsAsciiDigit) && objects[0].id.Length <= 16 && objects[1].id == "explicit-object");
+    var duplicate = Apply(result.DocumentJson, new { op = "room.duplicate", roomId = "a", id = "b", x = 32, y = 0 });
+    Check(Read(duplicate).rooms[1].objects.All(o => o.id.All(char.IsAsciiDigit) && o.id.Length <= 16));
+});
 Test("no-op batch and repaint report no change", () =>
 {
     Check(!Apply(Doc()).Changed);

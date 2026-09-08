@@ -9,6 +9,7 @@ assets/examples--connected-rooms.lua
 assets/examples--region-properties.lua
 assets/examples--seeded-platforms.lua
 assets/metroidvania-studio--contracts--map-format-v2.schema.json
+building.html
 cli--commands.html
 cli--quick-start.html
 cli--release-downloads.html
@@ -16,12 +17,15 @@ distribution--local-package.html
 distribution--publication.html
 docs.css
 docs.js
+game-preview.html
 index.html
 mcp--setup.html
 mcp--tools.html
 metroidvania-studio--contracts--format.html
 minimap.html
+objects-and-triggers.html
 room-layout.html
+room-restructuring.html
 sample-world.html
 scripting--api-reference.html
 scripting--execution-limits.html

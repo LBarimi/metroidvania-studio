@@ -77,6 +77,7 @@ namespace MetroidvaniaStudio
                 x = position.x, y = position.y, width = dimensions.x, height = dimensions.y };
             foreach (MapFieldDefinition field in fields)
                 item.properties.Add(new MapProperty { key = field.key, value = NormalizeValue(field, field.defaultValue) });
+            if (!item.properties.Exists(property => property.key == "desc")) item.properties.Add(new MapProperty { key = "desc", value = "" });
             for (int i = 0; i < minimumNodes; i++) item.nodes.Add(position + new Vector2(i + 1, 0));
             ValidateObject(item);
             return item;
@@ -107,7 +108,13 @@ namespace MetroidvaniaStudio
             }
             foreach (MapFieldDefinition field in fields)
             {
-                if (values.TryGetValue(field.key, out string value)) NormalizeValue(field, value);
+                if (values.TryGetValue(field.key, out string value))
+                {
+                    // Existing free-text events remain editable; choosing a new event uses the strict field validator.
+                    bool legacyEvent = field.key == "event" && field.kind == MapFieldKind.Choice && field.choices.Length == 201
+                        && field.choices[0] == "None" && (id.Equals("Area", StringComparison.OrdinalIgnoreCase) || id.Equals("Portal", StringComparison.OrdinalIgnoreCase));
+                    if (!legacyEvent) NormalizeValue(field, value);
+                }
                 else Require(!field.required, "Required object field '" + field.key + "' is missing.");
             }
         }

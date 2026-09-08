@@ -39,7 +39,7 @@ npm run pack:local
 npm run test:package
 ```
 
-The first command produces `builds/npm/metroidvania-studio-1.3.0.tgz`. The second installs that local archive in a fresh folder, then exercises CLI, Lua, and MCP. Package validation checks its file inventory, document links, metadata, and retained dependency notices. No post-install download or engine installation is needed.
+The first command produces `builds/npm/metroidvania-studio-1.3.1.tgz`. The second installs that local archive in a fresh folder, then exercises CLI, Lua, and MCP. Package validation checks its file inventory, document links, metadata, and retained dependency notices. No post-install download or engine installation is needed.
 
 ## 1.2.0 verification
 

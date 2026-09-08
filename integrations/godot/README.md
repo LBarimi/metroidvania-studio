@@ -19,3 +19,7 @@ Runtime API: preload `res://addons/metroidvania-studio/room-loader.gd`, instanti
 JSON alone does not contain texture pixels. Select the directory relative to which catalog sprite `asset` paths resolve. Names and path casing must match on Linux/macOS. The bundled `samples` directory provides a portable test map and catalog. All import operations are local.
 
 Backups are under the target project's `.metroidvania-studio-backups`. To uninstall, disable the plugin and remove `addons/metroidvania-studio`; restore the backed-up project file if needed. Do not remove the addon while imported scenes still reference its runtime script.
+
+## Objects and trigger events
+
+See `TRIGGERS.md` in the package for event requests, one-shot portals, stable IDs and runtime examples. The game decides when to request an event; the integration does not wire collision callbacks.

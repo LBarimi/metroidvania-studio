@@ -2,6 +2,7 @@ param(
     [int]$Port = 18766,
     [string]$PlaywrightModule = '',
     [switch]$CameraOnly,
+    [switch]$ObjectsOnly,
     [switch]$PerformanceOnly,
     [switch]$RoomOnly,
     [switch]$SyncOnly
@@ -62,6 +63,11 @@ try {
     $env:METROIDVANIA_STUDIO_BASE_URL = "http://127.0.0.1:$Port"
     $env:METROIDVANIA_STUDIO_TEST_PROJECT_ROOT = $scratchRoot
     $env:METROIDVANIA_STUDIO_TEST_ISOLATED = '1'
+    if ($ObjectsOnly) {
+        & node (Join-Path $PSScriptRoot 'browser-object-triggers.mjs')
+        if ($LASTEXITCODE -ne 0) { throw 'Object and trigger validation failed.' }
+        return
+    }
     if (-not $RoomOnly -and -not $SyncOnly -and -not $PerformanceOnly) {
         & node (Join-Path $PSScriptRoot 'browser-camera-settings.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Camera settings validation failed.' }
@@ -76,6 +82,8 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Room context menu validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-room-workflow.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Room workflow validation failed.' }
+        & node (Join-Path $PSScriptRoot 'browser-object-triggers.mjs')
+        if ($LASTEXITCODE -ne 0) { throw 'Object and trigger validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-multi-room.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Multi-room selection validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-studio-workflow.mjs')

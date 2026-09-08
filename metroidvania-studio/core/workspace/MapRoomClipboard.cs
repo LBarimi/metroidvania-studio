@@ -38,7 +38,7 @@ namespace MetroidvaniaStudio
                 string stem = source.name + "_copy", name = stem;
                 for (int suffix = 2; names.Contains(name); suffix++) name = stem + "_" + suffix;
                 names.Add(name); copy.name = name;
-                foreach (var item in copy.objects) item.id = NewId(ids);
+                foreach (var item in copy.objects) item.id = MapObjectIds.Create(ids);
                 copies.Add(copy);
             }
             // Group IDs keep their meaning even when a clipboard crosses documents.

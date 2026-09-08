@@ -26,7 +26,7 @@ test('Unity imports canonical legal text with stable metadata inside its package
       entries.set(name, tar.subarray(offset + 512, offset + 512 + size));
       offset += 512 + Math.ceil(size / 512) * 512;
     }
-    for (const [source, imported] of [['LICENSE', 'LICENSE.txt'], ['THIRD-PARTY-NOTICES.md', 'THIRD-PARTY-NOTICES.txt']]) {
+    for (const [source, imported] of [['LICENSE', 'LICENSE.txt'], ['THIRD-PARTY-NOTICES.md', 'THIRD-PARTY-NOTICES.txt'], ['docs/objects-and-triggers.md', 'TRIGGERS.md']]) {
       const matches = [...entries].filter(([name, bytes]) => name.endsWith('/pathname') && bytes.toString('utf8') === 'Assets/MetroidvaniaStudioIntegration/' + imported);
       assert.equal(matches.length, 1, imported);
       const guid = matches[0][0].split('/')[0];

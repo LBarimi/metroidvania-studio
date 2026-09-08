@@ -115,7 +115,7 @@ namespace MetroidvaniaStudio
                 names.Add(name);
                 copy.name = name;
                 copy.x = (int)x;
-                foreach (MapObject item in copy.objects) item.id = NewId(ids);
+                foreach (MapObject item in copy.objects) item.id = MapObjectIds.Create(ids);
                 copies.Add(copy);
             }
             session.Execute("Duplicate rooms", document => document.rooms.AddRange(copies));

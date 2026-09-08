@@ -1,5 +1,27 @@
 # Changes
 
+## 1.3.1
+
+- Add tile palette import and Game Preview demonstrations to the README.
+
+- Reuse current source web builds and compile changed .NET projects incrementally. Keep a full rebuild option and preserve the previous successful bundle on failure.
+
+- Add a Game camera tool on every layer, with a draggable white frame and crosshair synchronized with Game Preview. Clamp movement to the active room, preserve source-pixel alignment, and lock undersized axes without changing map data.
+
+- Replace the Game view toolbar button with a collapsible Game Preview window. Maximize or restore it, pan its camera independently, and see live edits with the selected room, PPU and resolution. Share tile caches and pause hidden previews.
+
+- Merge selected rooms from Edit or the inspector, preserving world positions, both tile layers, object IDs and compatible room properties in one Undo step.
+- Split a selected rectangle into a new room and partition the remaining area without overlapping rooms. Preserve complete objects, triggers, nodes and room backdrops; reject cuts through an object and conflicting merge metadata.
+
+- Allow room movement and resizing from foreground, background, object, trigger and decal layers.
+- Draw magenta portal regions on the tile grid with click-and-drag, clipped to the active room, while preserving existing portal IDs and event settings.
+- Add magenta one-shot portals and respawn points. Show Spawn, Portal, Path and Respawn point in the object palette while retaining legacy placed objects.
+- Add a Once checkbox (checked by default for new triggers), 200 numbered trigger events, and descriptions displayed at the center of placed objects and trigger regions.
+- Hide placement IDs in the inspector and generate compact decimal IDs for new objects and copies. Keep string IDs in JSON for compatibility, retaining existing and explicit script IDs.
+- Include explicit trigger request managers for Unity, Unreal Engine 4/5, Godot and SDL, with shared event numbers, room coordinates, ID and description payloads, and one-shot reset controls.
+- Preserve legacy event text and customized object definitions during catalog upgrades.
+- Fix property forms rejecting unchanged objects after a repeated selection, while continuing to reject stale edits to changed objects.
+
 ## 1.3.0
 
 - Add a tile palette editor with four-source and 47-state autotiling, separate slopes, atlas or individual PNG imports, connection previews and a default tile view.

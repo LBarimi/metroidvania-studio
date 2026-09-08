@@ -6,6 +6,7 @@
 #include "Engine/World.h"
 #include "MetroidvaniaStudioRoom.h"
 #include "StudioDocument.h"
+#include "MetroidvaniaStudioTriggerManager.h"
 #include "MetroidvaniaStudioPixelCamera.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStudioImportTest,"MetroidvaniaStudio.Import.Room",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
@@ -39,6 +40,31 @@ bool FStudioPixelAlignmentTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Odd resolution aligns viewport edges"), FMath::IsNearlyEqual(static_cast<double>(FMath::Frac(FMath::Abs(Odd.X / 3.125))), 0.5));
     TestTrue(TEXT("Uneven window uses centered integer scaling"), UMetroidvaniaStudioPixelView::PixelRect(FIntPoint(1000,700), FIntPoint(320,180)) == FIntRect(20,80,980,620));
     TestTrue(TEXT("Small window crops without fractional downscaling"), UMetroidvaniaStudioPixelView::PixelRect(FIntPoint(200,100), FIntPoint(320,180)) == FIntRect(-60,-40,260,140));
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStudioTriggerTest, "MetroidvaniaStudio.Runtime.TriggerRequests", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FStudioTriggerTest::RunTest(const FString& Parameters)
+{
+    const auto Plugin = IPluginManager::Get().FindPlugin(TEXT("MetroidvaniaStudio"));
+    FString Json;
+    TestTrue(TEXT("Read trigger fixture"), FFileHelper::LoadFileToString(Json, *FPaths::Combine(Plugin->GetBaseDir(), TEXT("samples/maps/TriggerEvents.json"))));
+    auto* Manager = NewObject<UMetroidvaniaStudioTriggerManager>();
+    TestTrue(TEXT("Register room"), Manager->RegisterRoom(Json, TEXT("trigger-room")));
+    FStudioTriggerInfo Info;
+    TestTrue(TEXT("Query preserves once"), Manager->GetTrigger(TEXT("once"), Info));
+    TestEqual(TEXT("Authored room origin"), Info.RoomPosition, FIntPoint(-7, 3));
+    TestTrue(TEXT("Enum 200"), Info.Event == EStudioTriggerEvent::Trigger200);
+    TestEqual(TEXT("Description"), Info.Description, FString(TEXT("Open gate")));
+    TestTrue(TEXT("First request"), Manager->RequestTrigger(TEXT("once")));
+    TestFalse(TEXT("Second request"), Manager->RequestTrigger(TEXT("once")));
+    TestTrue(TEXT("Repeat"), Manager->RequestTrigger(TEXT("repeat")) && Manager->RequestTrigger(TEXT("repeat")));
+    TestTrue(TEXT("Portal first"), Manager->RequestTrigger(TEXT("portal")));
+    TestFalse(TEXT("Portal repeat"), Manager->RequestTrigger(TEXT("portal")));
+    TestFalse(TEXT("Legacy event unassigned"), Manager->RequestTrigger(TEXT("legacy")));
+    TestTrue(TEXT("Register again"), Manager->RegisterRoom(Json, TEXT("trigger-room")));
+    TestFalse(TEXT("Reload keeps consumed event"), Manager->RequestTrigger(TEXT("once")));
+    TestTrue(TEXT("Reset once"), Manager->ResetOnce(TEXT("once")) && Manager->RequestTrigger(TEXT("once")));
+    Manager->Clear(); TestFalse(TEXT("Clear"), Manager->RequestTrigger(TEXT("once")));
     return true;
 }
 #endif

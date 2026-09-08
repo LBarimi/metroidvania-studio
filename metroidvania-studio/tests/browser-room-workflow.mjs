@@ -210,6 +210,23 @@ try {
   await page.keyboard.press('Control+z'); await until(s => JSON.stringify(s.document) === original);
   checks.push('all eight room handles resize in Brush mode; edge cells remain paintable and neighbors propagate');
 
+  for (const layer of [0, 1, 2, 3, 4, 5, 6]) {
+    await command('options', { layer, tool: layer < 2 ? 3 : 1 }); await clientAt((await state()).revision);
+    const handle = await point(0, 4); handle.x -= 9;
+    await page.mouse.move(handle.x, handle.y); await page.mouse.down();
+    await page.mouse.move(handle.x - 32, handle.y, { steps: 5 }); await page.mouse.up();
+    await until(s => s.document.rooms[0].width === 11);
+    assert.equal((await state()).selection.layer, layer);
+    await page.keyboard.press('Control+z'); await until(s => JSON.stringify(s.document) === original);
+    const title = await point(0, 8); title.x += 32; title.y -= 26;
+    await page.mouse.move(title.x, title.y); await page.mouse.down();
+    await page.mouse.move(title.x - 32, title.y, { steps: 5 }); await page.mouse.up();
+    await until(s => s.document.rooms[0].x === -1);
+    assert.equal((await state()).selection.layer, layer);
+    await page.keyboard.press('Control+z'); await until(s => JSON.stringify(s.document) === original);
+  }
+  checks.push('room title movement and resize handles work on all seven layer choices without placing content');
+  await command('options', { tool: 3, layer: 0 }); await clientAt((await state()).revision);
   const separated = JSON.parse(original);
   separated.rooms[1].x = 15; separated.rooms[1].locked = true;
   await command('import', { document: separated, discard: true }); await selectA();

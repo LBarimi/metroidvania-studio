@@ -21,6 +21,12 @@ test('all engine archives contain complete portable samples, manifests and canon
     const base=(engine==='ue4'||engine==='ue5')?'plugin/MetroidvaniaStudio/samples':'samples',catalog=JSON.parse(decoded.get(base+'/catalog.json'));
     for(const sprite of [...catalog.materials.flatMap(m=>m.sprites),...catalog.objects.map(o=>o.sprite).filter(Boolean)])assert.ok(decoded.has(base+'/'+sprite.asset),sprite.asset);
     assert.ok(decoded.has(base+'/maps/Coverage.json'));
+    assert.ok(decoded.has(base+'/maps/TriggerEvents.json'));
+    assert.equal(decoded.get('TRIGGERS.md').toString('utf8'),readFileSync(path.join(root,'docs/objects-and-triggers.md'),'utf8').replaceAll('\r\n','\n'));
+    assert.equal(JSON.parse(decoded.get('contract/trigger-events.json')).eventCount,200);
+    const nativePrefix=engine==='sdl'?'include/':'plugin/MetroidvaniaStudio/Source/MetroidvaniaStudio/Private/';
+    if(engine==='godot')assert.ok(decoded.has('addons/metroidvania-studio/trigger-manager.gd'));
+    else for(const name of ['StudioTriggerManager.h','StudioTriggerEvent.generated.h'])assert.ok(decoded.has(nativePrefix+name));
     const installed=engine==='godot'?'addons/metroidvania-studio'
       :(engine==='ue4'||engine==='ue5')?'plugin/MetroidvaniaStudio':null;
     for(const notice of ['LICENSE','THIRD-PARTY-NOTICES.md']) {

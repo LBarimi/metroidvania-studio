@@ -41,13 +41,13 @@ async function settings(ppu, width, height) {
 try {
   await page.goto(base); await page.locator('#room-list button').first().waitFor(); await page.locator('#language').selectOption('EN');
   assert.deepEqual(profile(initial), [16, 320, 180]); await applied(16, 320, 180);
-  assert.equal(await page.locator('#camera-preview + .camera-controls').count(), 1);
+  assert.equal(await page.locator('#camera-preview').count(), 0);
+  assert.equal(await page.locator('#view-toolbar .camera-controls').count(), 1);
   assert.deepEqual(await page.locator('#camera-ppu option').evaluateAll(options => options.map(o => Number(o.value))), [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 48, 64, 96, 100, 128]);
   assert.deepEqual(await page.locator('#camera-resolution optgroup').evaluateAll(groups => groups.map(g => g.label)), ['16:9', '4:3', '16:10', '3:2']);
   await page.locator('#edit-menu-button').click();
-  assert.equal(await page.locator('#edit-menu [role="menuitem"]').count(), 2);
   assert.equal(await page.locator('#camera-settings-action').count(), 0); await page.keyboard.press('Escape');
-  checks.push('PPU and resolution presets sit beside Game view; Edit only contains Undo/Redo');
+  checks.push('PPU and resolution presets remain in the toolbar; camera settings are absent from Edit');
 
   // Delay the first response so a second selection really arrives while the writer is busy.
   let release, started; const gate = new Promise(resolve => release = resolve), ready = new Promise(resolve => started = resolve);
@@ -68,16 +68,16 @@ try {
   assert.deepEqual((await getState()).document.rooms, initial.document.rooms);
   checks.push('Rapid mixed selections preserve both fields and Undo/Redo updates the dropdowns without touching rooms');
 
-  await page.locator('#camera-preview').click();
-  await page.waitForFunction(() => document.querySelector('#map-canvas')?.dataset.cameraResolution === '640x360');
+  await page.locator('#preview-maximize').click();
+  await page.waitForFunction(() => document.querySelector('#game-preview-canvas')?.dataset.cameraResolution === '640x360');
   await page.waitForTimeout(100);
-  const before = await page.locator('#map-canvas').evaluate(canvas => canvas.toDataURL());
+  const before = await page.locator('#game-preview-canvas').evaluate(canvas => canvas.toDataURL());
   await settings(64, 640, 360); await page.waitForTimeout(100);
-  assert.equal(before, await page.locator('#map-canvas').evaluate(canvas => canvas.toDataURL()), 'PPU changes units without cropping fixed 16px source tiles.');
+  assert.equal(before, await page.locator('#game-preview-canvas').evaluate(canvas => canvas.toDataURL()), 'PPU changes units without cropping fixed 16px source tiles.');
   assert.equal((await getState()).camera.orthographicSize, 2.8125);
   await settings(64, 320, 240);
-  await page.waitForFunction(() => document.querySelector('#map-canvas')?.dataset.cameraResolution === '320x240');
-  const frame = await page.locator('#map-canvas').evaluate(canvas => {
+  await page.waitForFunction(() => document.querySelector('#game-preview-canvas')?.dataset.cameraResolution === '320x240');
+  const frame = await page.locator('#game-preview-canvas').evaluate(canvas => {
     const scale = Number(canvas.dataset.cameraScale), left = Math.floor((canvas.width - 320 * scale) / 2), top = Math.floor((canvas.height - 240 * scale) / 2);
     const ctx = canvas.getContext('2d'); return { scale, outside: [...ctx.getImageData(left - 1, top - 1, 1, 1).data], inside: [...ctx.getImageData(left + 1, top + 1, 1, 1).data] };
   });

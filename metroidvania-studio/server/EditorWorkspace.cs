@@ -738,6 +738,12 @@ public sealed partial class EditorWorkspace
             case "roomFlip": Canvas.RoomEditor.FlipSelected(B(command, "horizontal", true)); break;
             case "roomRotate": Canvas.RoomEditor.RotateSelected(B(command, "clockwise", true)); break;
             case "roomDeleteSelected": Canvas.RoomEditor.DeleteSelected(); break;
+            case "roomMerge": Canvas.SelectRoom(Canvas.RoomEditor.MergeSelected()); break;
+            case "roomSplit":
+                if (Canvas.Tool != MetroidvaniaStudioTool.Selection || !Canvas.Selection.HasValue || Canvas.Room == null)
+                    throw new InvalidOperationException("@roomSplitNeedArea");
+                Canvas.SelectRoom(Canvas.RoomEditor.SplitArea(Canvas.Room.id, Canvas.Selection.Value));
+                break;
             case "selectArea": Canvas.SelectArea(new RectInt(I(command, "x"), I(command, "y"), I(command, "width"), I(command, "height"))); break;
             case "moveSelection": Canvas.MoveSelection(new Vector2Int(I(command, "dx"), I(command, "dy"))); break;
             case "roomProperties":
@@ -1066,6 +1072,13 @@ public sealed partial class EditorWorkspace
         if (room == null || !room.visible || room.locked || !Canvas.CanEditMember(Canvas.Layer, Canvas.ActiveGroupId)) return;
         var start = placementStart!.Value;
         var definition = Catalog.Objects.GetValueOrDefault(Canvas.ObjectDefinition) ?? throw new InvalidOperationException("Object definition is missing from the resource catalog.");
+        if (definition.placement == MapPlacementKind.Rectangle && definition.id.Equals("Portal", StringComparison.OrdinalIgnoreCase))
+        {
+            if (start.x < 0 || start.y < 0 || start.x >= room.width || start.y >= room.height) return;
+            // A portal stroke stays inside the room where the drag started.
+            start = new Vector2(MathEx.Clamp(MathEx.Floor(start.x), 0, room.width - 1), MathEx.Clamp(MathEx.Floor(start.y), 0, room.height - 1));
+            end = new Vector2(MathEx.Clamp(MathEx.Floor(end.x), 0, room.width - 1), MathEx.Clamp(MathEx.Floor(end.y), 0, room.height - 1));
+        }
         var at = definition.placement == MapPlacementKind.Rectangle
             ? new Vector2(MathEx.Floor(MathEx.Min(start.x, end.x)), MathEx.Floor(MathEx.Min(start.y, end.y)))
             : start;

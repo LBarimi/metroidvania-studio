@@ -36,14 +36,14 @@ namespace MetroidvaniaStudio.Integration
                             throw new InvalidOperationException("Invalid or duplicate tile cell.");
                 }
                 foreach (var item in room.objects)
-                    if (item == null || item.nodes == null || item.nodes.Count > 4096 || !Finite(item.x) || !Finite(item.y) || !Finite(item.width) || !Finite(item.height)
+                    if (item == null || string.IsNullOrWhiteSpace(item.id) || !ids.Add(item.id) || item.properties == null || item.nodes == null || item.nodes.Count > 4096 || !Finite(item.x) || !Finite(item.y) || !Finite(item.width) || !Finite(item.height)
                         || !Finite(item.rotation) || !Finite(item.scaleX) || !Finite(item.scaleY) || item.width <= 0 || item.height <= 0)
                         throw new InvalidOperationException("Invalid object geometry.");
             }
         }
         private static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
         private static long Key(int x, int y) => ((long)x << 32) | (uint)y;
-        public static GameObject Build(MapDocument document, string roomId, StudioResourceLibrary library)
+        public static GameObject Build(MapDocument document, string roomId, StudioResourceLibrary library, StudioTriggerManager triggerManager = null)
         {
             Validate(document);
             if (!library) throw new ArgumentNullException(nameof(library));
@@ -84,6 +84,7 @@ namespace MetroidvaniaStudio.Integration
                     }
                     if (data.layer == MapLayer.Triggers) { var trigger = item.AddComponent<BoxCollider2D>(); trigger.isTrigger = true; trigger.size = new Vector2(data.width * unit, data.height * unit); }
                 }
+                marker.InitializeTriggers(room, triggerManager ?? new StudioTriggerManager());
                 root.SetActive(true); return root;
             }
             catch { if (Application.isPlaying) UnityEngine.Object.Destroy(root); else UnityEngine.Object.DestroyImmediate(root); throw; }

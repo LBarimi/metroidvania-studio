@@ -1,3 +1,4 @@
+import { GamePreview } from './game-preview.js';
 import { renderPaletteGroups, paletteGroupName, expandPaletteGroup } from './palette-groups.js';
 import type { EditorPaletteGroup } from './types.js';
 import { openPaletteDialog } from './palette-dialog.js';
@@ -74,6 +75,8 @@ const map = new MapCanvas(el('map-canvas'), api.command, point => drawStatus(poi
   const brush = el('brush-options').querySelector<HTMLInputElement>('input[type="number"]');
   if (brush) brush.value = String(size);
 }, (point, client) => roomContextMenu(point, client));
+const preview = new GamePreview(map, key => locale.t(key), () => el('map-canvas').focus());
+el('map-canvas').parentElement!.append(preview.element);
 const mini = new MiniMap(el('mini-canvas'),
   id => { void run('selectRoom', { id }).catch(() => undefined); },
   id => { void editMiniRoom(id).catch(error => toast(error)); });
@@ -93,6 +96,7 @@ async function settleFileSnapshot(): Promise<void> { await map.settled(); await 
 async function option(values: CommandValues): Promise<void> {
   map.cancel(); await run('options', () => {
     const next = { ...(typeof values === 'function' ? values() : values) } as Record<string, unknown>;
+    if (typeof next.tool === 'number' && map.gameCameraTool) { map.setGameCameraTool(false); drawPanels(true); }
     if (typeof next.layer === 'number' && next.tool === undefined) {
       const current = state?.selection.tool ?? 3;
       next.tool = tileLayer(next.layer) ? current === 1 ? 3 : current : current === 0 || current === 2 ? current : next.layer === 6 ? 2 : 1;
@@ -385,7 +389,8 @@ function drawChrome(): void {
     button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
     button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')), null, button(locale.t('storageFolders'), () => openWorkspaceFolders(locale)), scripts]));
-  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo]),
+  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null,
+    roomRestructureButton('merge', 'room-merge-action'), roomRestructureButton('split', 'room-split-action')]),
     menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('sampleWorld'), openSampleWorld), null, button(locale.t('docs.title'), () => { window.open('/docs/index.html', '_blank', 'noopener'); }), button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }), null, button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
   const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
   updateView(); drawPanels(true); renderInspector(true);
@@ -397,12 +402,11 @@ function updateView(): void {
   const workspace = el('workspace'); workspace.classList.toggle('inspector-hidden', inspectorHidden); workspace.classList.toggle('minimap-mode', miniMode); workspace.classList.toggle('standalone', standalone); workspace.classList.toggle('camera-preview', cameraPreview);
   el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
   el<HTMLCanvasElement>('map-canvas').hidden = miniMode; el<HTMLCanvasElement>('mini-canvas').hidden = !miniMode;
-  map.setActive(!miniMode); mini.setActive(miniMode);
+  map.setActive(!miniMode); mini.setActive(miniMode); preview.setVisible(!miniMode); preview.updateLabels();
   const tabButtons = el('tabs').querySelectorAll('button'); tabButtons[0]?.classList.toggle('active', !miniMode); tabButtons[1]?.classList.toggle('active', miniMode);
   const toolbar = el('view-toolbar'); toolbar.replaceChildren(button('⊞ ' + locale.t('fit'), () => { if (miniMode) mini.fit(); else if (map.cameraPreview) { map.gameView(false); updateView(); requestAnimationFrame(() => map.fit()); } else map.fit(); }), button('⌾ ' + locale.t('frameRoom'), () => miniMode ? mini.frameRoom() : map.frameRoom()));
   cameraControls = undefined;
   if (!miniMode) {
-    const camera = button(locale.t('camera'), () => { map.gameView(); updateView(); }, map.cameraPreview ? 'active' : ''); camera.id = 'camera-preview'; camera.setAttribute('aria-pressed', String(map.cameraPreview)); camera.title = locale.t('cameraHelp');
     const defaults = button(locale.t('tilesetDefaultView'), () => { map.setDefaultTiles(!map.showDefaultTiles); updateView(); }, map.showDefaultTiles ? 'active' : '');
     defaults.id = 'default-tile-view'; defaults.setAttribute('aria-pressed', String(map.showDefaultTiles));
     toolbar.append(defaults);
@@ -411,7 +415,7 @@ function updateView(): void {
       return { ppu: current.ppu, referenceWidth: current.referenceWidth, referenceHeight: current.referenceHeight, ...values };
     }), toast);
     cameraControls.update(map.cameraProfile);
-    toolbar.append(camera, cameraControls.element, button('−', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, -1), 'icon'), text('span', '', 'zoom-readout'), button('+', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, 1), 'icon'));
+    toolbar.append(cameraControls.element, button('−', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, -1), 'icon'), text('span', '', 'zoom-readout'), button('+', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, 1), 'icon'));
   }
   toolbar.append(text('div', '', 'spacer'));
   if (!miniMode && !map.cameraPreview) toolbar.append(check(locale.t('grid'), map.showGrid, checked => { map.showGrid = checked; map.requestDraw(); })[0]);
@@ -446,11 +450,13 @@ function queuePanels(): void {
 function toolAvailable(tool: number, layer: number): boolean { return tileLayer(layer) ? tool !== 1 : layer === 6 ? [0, 2].includes(tool) : [0, 1, 2].includes(tool); }
 function drawPanels(force = false): void {
   if (!state) return;
-  const key = panelKey(state); if (!force && key === lastPanelKey) { drawStatus(); renderInspector(); return; } lastPanelKey = key;
+  const key = panelKey(state) + ':' + map.gameCameraTool; if (!force && key === lastPanelKey) { drawStatus(); renderInspector(); return; } lastPanelKey = key;
   const s = state.selection;
   el('project-name').replaceChildren(text('span', state.dirty ? '●' : '', 'dirty-dot'), document.createTextNode(state.document.name)); el('project-name').title = state.file || state.document.name;
   const viewOnly = miniMode || map.cameraPreview;
   el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
+  el<HTMLButtonElement>('room-merge-action').disabled = !canRestructureRoom('merge');
+  el<HTMLButtonElement>('room-split-action').disabled = !canRestructureRoom('split');
   el<HTMLButtonElement>('undo').disabled = viewOnly || !state.canUndo; el<HTMLButtonElement>('redo').disabled = viewOnly || !state.canRedo;
   const connection = el('connection'); connection.textContent = locale.t(api.online ? 'studioConnected' : 'serverOffline'); connection.classList.toggle('online', api.online);
   el('room-count').textContent = s.roomIds.length > 1 ? `${s.roomIds.length} / ${state.document.rooms.length}` : String(state.document.rooms.length);
@@ -474,7 +480,13 @@ function drawPanels(force = false): void {
   }
   if (!rooms.childElementCount) rooms.append(text('div', locale.t('noRooms'), 'empty'));
   const tools = el('tools'); tools.replaceChildren(); const icons = ['▱', '+', '⬚', '▰', '□', '▨', '╱', '○', '⬭'];
-  TOOLS.forEach((name, index) => { if (!toolAvailable(index, s.layer)) return; const b = button('', () => option({ tool: index }), 'tool-button'); b.append(text('span', icons[index], 'symbol'), text('span', index === 2 ? locale.t(tileLayer(s.layer) ? 'tileSelection' : 'objectSelection') : locale.enum('MetroidvaniaStudioTool', name, index))); b.classList.toggle('active', s.tool === index); b.dataset.tool = String(index); b.title = locale.t(index === 2 ? 'selectionHelp' : index === 1 ? 'placementHelp' : index === 0 ? 'roomHelp' : 'help'); tools.append(b); });
+  TOOLS.forEach((name, index) => { if (!toolAvailable(index, s.layer)) return; const b = button('', () => option({ tool: index }), 'tool-button'); b.append(text('span', icons[index], 'symbol'), text('span', index === 2 ? locale.t(tileLayer(s.layer) ? 'tileSelection' : 'objectSelection') : locale.enum('MetroidvaniaStudioTool', name, index))); b.classList.toggle('active', !map.gameCameraTool && s.tool === index); b.dataset.tool = String(index); b.title = locale.t(index === 2 ? 'selectionHelp' : index === 1 ? 'placementHelp' : index === 0 ? 'roomHelp' : 'help'); tools.append(b); });
+  const cameraTool = button('', async () => {
+    await map.settled(); map.setGameCameraTool(true); preview.reveal(); drawPanels(true); el('map-canvas').focus();
+  }, 'tool-button');
+  cameraTool.id = 'game-camera-tool'; cameraTool.append(text('span', '⊡', 'symbol'), text('span', locale.t('gameCameraTool')));
+  cameraTool.classList.toggle('active', map.gameCameraTool); cameraTool.setAttribute('aria-pressed', String(map.gameCameraTool));
+  cameraTool.title = locale.t('gameCameraHelp'); tools.append(cameraTool);
   const layers = el('layers'); layers.replaceChildren(); LAYERS.forEach((name, index) => { const div = text('div', '', 'layer-row'), b = button(locale.enum('MapLayer', name, index), () => option({ layer: index, groupId: '', ...(!tileLayer(index) && index !== 6 ? { objectDefinition: state!.catalog.objects.find(o => o.layer === index || [4, 5].includes(o.layer) && [4, 5].includes(index))?.id || '' } : {}) }), 'layer-select'); b.classList.toggle('active', index === s.layer); div.append(b); if (index !== 6) { const visible = button('', () => option(() => { const hidden = state!.selection.hiddenLayers; return { hiddenLayers: hidden.includes(index) ? hidden.filter(layer => layer !== index) : [...hidden, index] }; }), 'icon ghost layer-visibility'); const shown = !s.hiddenLayers.includes(index), eye = document.createElement('img'); eye.src = shown ? 'layer-eye-open.svg' : 'layer-eye-closed.svg'; eye.alt = ''; eye.draggable = false; eye.setAttribute('aria-hidden', 'true'); visible.append(eye); visible.title = locale.enum('MapLayer', name, index) + ' · ' + locale.t('visible'); visible.setAttribute('aria-label', visible.title); visible.setAttribute('aria-pressed', String(shown)); const locked = button(s.lockedLayers.includes(index) ? '▣' : '▫', () => option(() => { const locked = state!.selection.lockedLayers; return { lockedLayers: locked.includes(index) ? locked.filter(layer => layer !== index) : [...locked, index] }; }), 'icon ghost'); locked.title = locale.t('locked'); div.append(visible, locked); } layers.append(div); });
   const groupSelect = el<HTMLSelectElement>('group-select'); const group = select([['', locale.t('ungrouped')], ...state.document.layerGroups.filter(g => g.layer === s.layer).map(g => [g.id, (g.locked ? '▣ ' : '') + (!g.visible ? '○ ' : '') + g.name] as [string, string])], s.groupId); groupSelect.replaceChildren(...group.children); groupSelect.value = s.groupId;
   const groupActions = el('group-actions'); groupActions.replaceChildren(button('+ ' + locale.t('group'), addGroup)); const selectedGroup = state.document.layerGroups.find(g => g.id === s.groupId); if (selectedGroup) for (const key of ['visible', 'locked'] as const) groupActions.append(button(locale.t(key), () => run('documentProperties', () => ({ layerGroups: state!.document.layerGroups.map(group => group.id === selectedGroup.id ? { ...group, [key]: !group[key] } : group) })), selectedGroup[key] ? 'active' : ''));
@@ -504,7 +516,7 @@ function drawPalette(): void {
       groupSettings: editPaletteGroup, report: toast
     });
   } else {
-    for (const def of state.catalog.objects.filter(d => (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
+    for (const def of [...state.catalog.objects].sort((a, b) => { const order = ['Spawn', 'Portal', 'Path', 'Respawn']; return (order.includes(a.id) ? order.indexOf(a.id) : 99) - (order.includes(b.id) ? order.indexOf(b.id) : 99); }).filter(d => !(d.name === d.id && ['Marker', 'Object'].includes(d.id)) && (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
   }
   if (!palette.childElementCount) palette.append(text('div', locale.t('noMaterials'), 'empty'));
 }
@@ -598,6 +610,42 @@ async function editSelection(action: string, values: object = {}, inspector = fa
   if (scope === 'room') map.selectRoomTarget(action === 'delete' || action === 'cut' ? null : next.selection.roomId);
   renderInspector(true);
 }
+function canRestructureRoom(action: 'merge' | 'split'): boolean {
+  if (!state || miniMode || map.cameraPreview) return false;
+  const selection = state.selection, room = activeRoom(state);
+  if (action === 'merge') return selection.roomIds.length >= 2
+    && !state.document.rooms.some(candidate => selection.roomIds.includes(candidate.id) && candidate.locked);
+  const area = selection.area;
+  return !!room && !room.locked && selection.tool === 2 && !!area && area.width > 0 && area.height > 0
+    && (area.width !== room.width || area.height !== room.height);
+}
+function roomRestructureButton(action: 'merge' | 'split', id: string): HTMLButtonElement {
+  const control = button(locale.t(action === 'merge' ? 'roomMerge' : 'roomSplit'), () => restructureRoom(action));
+  control.id = id; control.disabled = !canRestructureRoom(action);
+  control.title = locale.t(action === 'merge' ? 'roomMergeHint' : 'roomSplitHint');
+  return control;
+}
+async function restructureRoom(action: 'merge' | 'split'): Promise<void> {
+  await settleFileSnapshot();
+  if (!state || !canRestructureRoom(action)) return;
+  const snapshot = state, room = activeRoom(snapshot)!, expectation = expectedAt(snapshot);
+  const key = action === 'merge' ? 'roomMerge' : 'roomSplit';
+  const dialog = showModal(locale.t(key), body => {
+    body.append(text('p', locale.t(key + 'Hint')));
+    if (action === 'merge') {
+      body.append(text('p', snapshot.document.rooms.filter(candidate => snapshot.selection.roomIds.includes(candidate.id)).map(candidate => candidate.name).join(' + ')));
+      body.append(text('p', locale.t('roomMergePrimary').replace('{0}', room.name)));
+    } else {
+      const area = snapshot.selection.area!;
+      body.append(text('p', `${room.name} · ${area.width} × ${area.height}`));
+      body.append(text('p', locale.t('roomSplitContents')));
+    }
+  }, async () => {
+    const next = await run(action === 'merge' ? 'roomMerge' : 'roomSplit', {}, expectation);
+    map.selectRoomTarget(next.selection.roomId); map.frameRoom(true); mini.fit(); renderInspector(true);
+  }, key);
+  dialog.id = 'room-restructure-dialog';
+}
 function renderInspector(force = false): void {
   if (!state) return; const inspector = el('inspector');
   if (updateInspectorSelection(state.selection.objects)) force = true;
@@ -607,7 +655,7 @@ function renderInspector(force = false): void {
   const room = activeRoom(state), selected = selectedObjects(room, state.selection.objects);
   const contentKey = selected.length ? ['objects', inspectorObjectVersion] : room
     ? ['room', room.id, room.name, room.x, room.y, room.width, room.height, room.visible, room.locked, room.properties] : null;
-  const selection = state.selection, inspectorSelection = [selection.roomId, selection.tool, selection.layer, selection.shape,
+  const selection = state.selection, inspectorSelection = [selection.roomId, selection.roomIds, selection.tool, selection.layer, selection.shape,
     selection.material, selection.brushSize, selection.filled, selection.objectDefinition, selection.groupId,
     selection.hiddenLayers, selection.lockedLayers, selection.area, selection.nodes, inspectorSelectionVersion];
   const key = JSON.stringify([state.instanceId, state.catalogRevision, inspectorSelection, contentKey, languageVersion]); if (!force && lastInspectorKey === key) return; lastInspectorKey = key;
@@ -618,6 +666,8 @@ function renderInspector(force = false): void {
   // an unrelated compact tile edit cannot leave otherwise valid actions stale.
   if (state.selection.area) { const area = state.selection.area; const summary = section(locale.t('selectionSummary')); summary.id = 'selection-summary'; summary.append(text('div', `${area.width} × ${area.height} · ${locale.enum('MapLayer', LAYERS[state.selection.layer], state.selection.layer)}`), text('p', locale.t('selectionHelp'))); inspector.append(summary); }
   const actions = section(locale.t(!state.selection.area && !selected.length ? 'roomActions' : 'selectionActions')); actions.dataset.scope = !state.selection.area && !selected.length ? 'room' : 'content';
+  if (state.selection.roomIds.length > 1) actions.append(roomRestructureButton('merge', 'room-merge-selection'));
+  if (state.selection.area && state.selection.tool === 2) actions.append(roomRestructureButton('split', 'room-split-selection'));
   actions.append(row(button(locale.t('copy'), () => editSelection('copy', {}, true)), button(locale.t('paste'), () => editSelection('paste', {}, true))),
     row(button(locale.t('flipH'), () => editSelection('flip', { horizontal: true }, true)), button(locale.t('flipV'), () => editSelection('flip', { horizontal: false }, true))),
     row(button('↻ ' + locale.t('rotation'), () => editSelection('rotate', { clockwise: true }, true)), button(locale.t('delete'), () => editSelection('delete', {}, true), 'danger')));
@@ -658,20 +708,50 @@ function roomInspector(inspector: HTMLElement, expectation: CommandExpectation):
 }
 function objectInspector(inspector: HTMLElement, selected: MapObject[], expectation: CommandExpectation): void {
   const object = selected[0], def = state!.catalog.objects.find(d => definitionKey(d.id) === definitionKey(object.definition)), content = section(locale.t('objectProperties')); content.append(text('div', selected.length > 1 ? `${selected.length} ${locale.t('selected')}` : (def ? definitionName(def) : object.definition), 'object-chip'));
+  const originalObjects = JSON.stringify(selected);
+  const currentExpectation = (): CommandExpectation => {
+    // Unrelated selections may advance the revision while the form stays unchanged.
+    // A changed object or workspace must still reject this form's stale edits.
+    const current = state && selectedObjects(activeRoom(state), state.selection.objects);
+    return state && state.instanceId === expectation.instanceId && JSON.stringify(current) === originalObjects ? expectedAt(state) : expectation;
+  };
   if (selected.length === 1) {
-    const fields = text('div', '', 'fields'), inputs = new Map<string, HTMLInputElement>(); for (const key of ['x', 'y', 'width', 'height', 'rotation', 'scaleX', 'scaleY'] as const) { const caption = key === 'x' || key === 'y' ? key.toUpperCase() : key.startsWith('scale') ? locale.t('scale') + ' ' + key.slice(-1) : locale.t(key); const [label, input] = labelInput(caption, object[key] ?? 1, 'number'); input.step = key === 'rotation' ? '1' : '.0625'; fields.append(label); inputs.set(key, input); } content.append(fields, button(locale.t('applyTransform'), () => run('objectTransform', numberValues(inputs), expectation)));
+    const fields = text('div', '', 'fields'), inputs = new Map<string, HTMLInputElement>(); for (const key of ['x', 'y', 'width', 'height', 'rotation', 'scaleX', 'scaleY'] as const) { const caption = key === 'x' || key === 'y' ? key.toUpperCase() : key.startsWith('scale') ? locale.t('scale') + ' ' + key.slice(-1) : locale.t(key); const [label, input] = labelInput(caption, object[key] ?? 1, 'number'); input.step = key === 'rotation' ? '1' : '.0625'; fields.append(label); inputs.set(key, input); } content.append(fields, button(locale.t('applyTransform'), () => run('objectTransform', numberValues(inputs), currentExpectation())));
   }
-  const values = propObject(object.properties), fieldInputs = new Map<string, HTMLInputElement | HTMLSelectElement>();
-  const keys = new Set([...(def?.properties || []).map(p => p.key), ...object.properties.map(p => p.key)]);
+  const fieldInputs = new Map<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>();
+  const keys = new Set([...(def?.properties || []).map(p => p.key), ...object.properties.map(p => p.key), 'desc']);
   for (const key of keys) {
-    if (!selected.every(o => definitionKey(o.definition) === definitionKey(object.definition) || o.properties.some(p => p.key === key))) continue;
-    const field = def?.properties.find(p => p.key === key), label = document.createElement('label'); label.append(text('span', field && def?.name === def?.id && ['label', 'name', 'player', 'tint'].includes(key) ? locale.t('builtin.field.' + key) : field?.label || key));
-    const mixed = selected.some(o => propObject(o.properties)[key] !== values[key]); let input: HTMLInputElement | HTMLSelectElement;
-    if (field?.choices?.length) input = select(field.choices.map(value => [value, value]), values[key] ?? field.defaultValue ?? '');
-    else { input = document.createElement('input'); input.value = values[key] ?? field?.defaultValue ?? ''; if (mixed) { input.value = ''; input.placeholder = locale.t('mixed'); } }
-    input.dataset.modified = 'false'; input.addEventListener('input', () => input.dataset.modified = 'true'); input.addEventListener('change', () => input.dataset.modified = 'true'); label.append(input); content.append(label); fieldInputs.set(key, input);
+    if (key !== 'desc' && !selected.every(o => definitionKey(o.definition) === definitionKey(object.definition) || o.properties.some(p => p.key === key))) continue;
+    const field = def?.properties.find(p => p.key === key), label = document.createElement('label');
+    const localized = ['desc', 'event', 'once'].includes(key) || def?.name === def?.id && ['label', 'name', 'player', 'tint'].includes(key);
+    label.append(text('span', localized ? locale.t('builtin.field.' + key) : field?.label || key));
+    const fieldValue = (item: MapObject): string => {
+      const stored = propObject(item.properties)[key];
+      if (key === 'once' && stored === undefined) return definitionKey(item.definition) === 'portal' ? 'true' : 'false';
+      if (key === 'event' && field?.choices?.includes('None') && !stored?.trim()) return 'None';
+      return stored ?? field?.defaultValue ?? '';
+    };
+    const value = fieldValue(object), mixed = selected.some(o => fieldValue(o) !== value);
+    let input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    if (field?.kind === 3) {
+      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = value.trim().toLowerCase() === 'true'; checkbox.indeterminate = mixed;
+      if (key === 'once' && definitionKey(object.definition) === 'portal') { checkbox.checked = true; checkbox.disabled = true; }
+      checkbox.addEventListener('change', () => checkbox.indeterminate = false); input = checkbox;
+    } else if (key === 'desc') { const area = document.createElement('textarea'); area.rows = 2; area.maxLength = 2048; area.value = mixed ? '' : value; if (mixed) area.placeholder = locale.t('mixed'); input = area; }
+    else if (field?.choices?.length) {
+      const choices = field.choices.map(value => [value, value] as [string, string]);
+      if (value && !field.choices.includes(value)) choices.unshift([value, locale.t('legacyEvent') + ': ' + value]);
+      if (mixed) choices.unshift(['', locale.t('mixed')]); input = select(choices, mixed ? '' : value);
+    } else { input = document.createElement('input'); input.value = mixed ? '' : value; if (mixed) input.placeholder = locale.t('mixed'); }
+    input.dataset.property = key; input.dataset.modified = 'false';
+    input.addEventListener('input', () => input.dataset.modified = 'true'); input.addEventListener('change', () => input.dataset.modified = 'true');
+    label.append(input); content.append(label); fieldInputs.set(key, input);
   }
-  content.append(button(locale.t('applyProperties'), async () => { const values = Object.fromEntries([...fieldInputs].filter(([, input]) => selected.length === 1 || input.dataset.modified === 'true').map(([key, input]) => [key, input.value])); await run('objectProperties', { values }, expectation); renderInspector(true); }, 'accent')); inspector.append(content);
+  content.append(button(locale.t('applyProperties'), async () => {
+    const edits = Object.fromEntries([...fieldInputs].filter(([, input]) => input.dataset.modified === 'true').map(([key, input]) =>
+      [key, input instanceof HTMLInputElement && input.type === 'checkbox' ? String(input.checked) : input.value]));
+    await run('objectProperties', { values: edits }, currentExpectation()); renderInspector(true);
+  }, 'accent')); inspector.append(content);
   if (selected.length === 1) {
     const nodes = section(locale.t('nodes')); object.nodes.forEach((node, index) => { const x = document.createElement('input'), y = document.createElement('input'); x.type = y.type = 'number'; x.step = y.step = '.0625'; x.value = String(node.x); y.value = String(node.y); x.setAttribute('aria-label', `${locale.t('nodes')} ${index + 1} X`); y.setAttribute('aria-label', `${locale.t('nodes')} ${index + 1} Y`); const div = text('div', '', 'node-row'); div.append(button(String(index + 1), () => run('nodeSelect', { id: object.id, index, additive: false }, expectation), state!.selection.nodes?.some(n => n.id === object.id && n.index === index) ? 'active' : ''), x, y, button('✓', async () => { const next = { x: numberValue(x), y: numberValue(y) }; const selectedState = await run('nodeSelect', { id: object.id, index, additive: false }, expectation); await run('nodeMove', next, expectedAt(selectedState)); })); nodes.append(div); });
     const room = activeRoom(state)!; nodes.append(button('+ ' + locale.t('addNode'), () => run('nodeAdd', { x: map.hover.x - room.x, y: map.hover.y - room.y }, expectation)), button(locale.t('deleteNode'), () => run('nodeDelete', {}, expectation), 'danger')); inspector.append(nodes);
@@ -720,7 +800,7 @@ function renderStatus(point: Point): void {
   if (state) { if (revision.dataset.instanceId !== state.instanceId) revision.dataset.instanceId = state.instanceId; }
   else if (revision.dataset.instanceId !== undefined) delete revision.dataset.instanceId;
   const zoom = el('view-toolbar').querySelector('.zoom-readout'); if (zoom && zoom.textContent !== `×${scale}`) zoom.textContent = `×${scale}`;
-  statusText('canvas-help', locale.t(miniMode ? 'minimapHelp' : map.cameraPreview ? 'cameraHelp' : state?.selection.tool === 0 ? 'roomHelp' : tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'selectionHelp' : state?.selection.tool === 1 ? 'placementHelp' : !tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'objectHelp' : 'help'));
+  statusText('canvas-help', locale.t(miniMode ? 'minimapHelp' : map.gameCameraTool ? (map.gameCamera.clipped ? 'gameCameraSmallRoom' : 'gameCameraHelp') : map.cameraPreview ? 'cameraHelp' : state?.selection.tool === 0 ? 'roomHelp' : tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'selectionHelp' : state?.selection.tool === 1 ? 'placementHelp' : !tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'objectHelp' : 'help'));
 }
 function stateChanged(): void {
   state = api.state; if (!state) return;
@@ -743,11 +823,14 @@ function authoringShortcut(key: string, mod: boolean): boolean {
 }
 document.addEventListener('keydown', event => {
   if (event.defaultPrevented || document.querySelector('dialog[open]')) return;
+  if (event.key === 'Escape' && preview.maximized) { event.preventDefault(); preview.setMaximized(false); el('map-canvas').focus(); return; }
   if (event.altKey && !event.ctrlKey && ['f', 'e', 'h'].includes(event.key.toLowerCase())) { event.preventDefault(); el<HTMLButtonElement>(event.key.toLowerCase() === 'f' ? 'file-menu-button' : event.key.toLowerCase() === 'e' ? 'edit-menu-button' : 'help-menu-button').click(); return; }
   if (document.querySelector('.menu-popup:not([hidden])')) return;
   const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || (event.target as HTMLElement)?.isContentEditable;
   if (typing && !(event.key.toLowerCase() === 's' && (event.ctrlKey || event.metaKey))) return;
   const key = event.key.toLowerCase(), mod = event.ctrlKey || event.metaKey;
+  if (map.gameCameraTool && key === 'escape') { event.preventDefault(); map.setGameCameraTool(false); drawPanels(true); return; }
+  if (map.gameCameraTool && authoringShortcut(key, mod) && (mod || !toolKeys.includes(key))) { event.preventDefault(); return; }
   const recognized = authoringShortcut(key, mod) || mod && key === 's' || !mod && key === 'f';
   if (((miniMode || map.cameraPreview) && authoringShortcut(key, mod)) || ((map.interacting || mini.interacting) && key !== 'escape' && recognized)) { event.preventDefault(); return; }
   let action: (() => unknown) | undefined;
@@ -778,7 +861,7 @@ window.addEventListener('pagehide', event => {
   // A persisted page remains live in the back-forward cache. For a real unload,
   // stop polling and rendering without aborting an edit request already in flight.
   if (event.persisted) return;
-  cancelAnimationFrame(uiRaf); cancelAnimationFrame(statusRaf); api.stop(false); map.dispose(); mini.dispose();
+  cancelAnimationFrame(uiRaf); cancelAnimationFrame(statusRaf); api.stop(false); preview.dispose(); map.dispose(); mini.dispose();
 });
 drawChrome();
 void locale.load().then(() => { languageVersion++; drawChrome(); }).catch(error => toast(error));

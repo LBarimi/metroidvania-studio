@@ -1,4 +1,5 @@
 #include "MetroidvaniaStudioRoom.h"
+#include "MetroidvaniaStudioTriggerManager.h"
 #include "Runtime/Launch/Resources/Version.h"
 #include "Camera/CameraComponent.h"
 #include "MetroidvaniaStudioPixelCamera.h"
@@ -21,6 +22,7 @@ FVector Point(const MetroidvaniaStudio::Point& P, double Scale, double Depth=0) 
 AMetroidvaniaStudioRoom::AMetroidvaniaStudioRoom()
 {
     PrimaryActorTick.bCanEverTick = false;
+    TriggerManager = CreateDefaultSubobject<UMetroidvaniaStudioTriggerManager>(TEXT("TriggerManager"));
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RoomRoot"));
     RoomCamera = CreateDefaultSubobject<UMetroidvaniaStudioPixelCamera>(TEXT("RoomCamera"));
     RoomCamera->SetupAttachment(RootComponent);
@@ -44,6 +46,7 @@ void AMetroidvaniaStudioRoom::DestroyGenerated()
 }
 void AMetroidvaniaStudioRoom::ClearRoom()
 {
+    TriggerManager->Clear();
     Modify(); DestroyGenerated(); MapDocumentJson.Empty(); CatalogJson.Empty(); Images.Empty(); LastError.Empty(); RoomName.Empty();
 }
 bool AMetroidvaniaStudioRoom::ImportRoom()
@@ -149,6 +152,7 @@ bool AMetroidvaniaStudioRoom::RebuildRoom()
             RoomOutline->SetRelativeLocation(FVector(Room.width*8*Scale, 0, Room.height*8*Scale));
         }
 #endif
+        MetroidvaniaStudio::Require(TriggerManager->RegisterRoom(MapDocumentJson, FromUtf8(Room.id)), ToUtf8(TriggerManager->LastError));
         LastError.Empty();bBuilt=true;return true;
     } catch(const std::exception& Error){LastError=FromUtf8(Error.what());UE_LOG(LogTemp,Error,TEXT("MetroidvaniaStudio: %s"),*LastError);return false;}
 }

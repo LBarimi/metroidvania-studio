@@ -5,6 +5,14 @@ using MetroidvaniaStudio.Primitives;
 
 var tests = new (string name, Action run)[]
 {
+    ("room merge retains world contents and primary identity with exact Undo", RoomRestructureTests.Merge),
+    ("room merge rejects overlap and conflicting metadata atomically", RoomRestructureTests.MergeValidation),
+    ("room split partitions center, corners and strips with exact coverage and Undo", RoomRestructureTests.Split),
+    ("room split preserves complete objects, nodes, backdrop filters and fallback cuts", RoomRestructureTests.SplitObjects),
+    ("room split rejects invalid selections, crossing paths and room limits", RoomRestructureTests.SplitValidation),
+    ("numeric object ID generation and collision resolution", ObjectIdentityTests.Generation),
+    ("numeric object IDs survive placement, all clipboard paths and JSON", ObjectIdentityTests.Editing),
+    ("explicit trigger requests, stable events, one-shot portals and reload state", TriggerTests.Requests),
     ("v2 fields and Unicode round trip", RoundTrip),
     ("compact UTF-8 saves and exports preserve numbers across cultures", CompactCultureRoundTrip),
     ("published v2 wire field compatibility", WireCompatibility),

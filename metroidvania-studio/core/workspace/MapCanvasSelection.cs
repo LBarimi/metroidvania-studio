@@ -355,7 +355,7 @@ namespace MetroidvaniaStudio
                 MapObjectDefinition definition = ResolveObjectDefinition?.Invoke(item.definition);
                 if (definition != null && !definition.SupportsLayer(layer)) continue;
                 var copy = CopyObject(item);
-                do { copy.id = Guid.NewGuid().ToString("N"); } while (!ids.Add(copy.id));
+                copy.id = MapObjectIds.Create(ids);
                 copy.layer = layer; copy.groupId = group; OffsetObject(copy, at);
                 if (!(ObjectVisibilityFilter?.Invoke(copy) ?? true)) continue;
                 MapObjectEditing.Corners(copy); definition?.ValidateObject(copy); objects.Add(copy);

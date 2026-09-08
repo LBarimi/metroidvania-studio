@@ -491,12 +491,17 @@ inline Room LoadRoom(const std::string &mapText, const std::string &catalogText,
     Require(result.document.Get("tileSize").Integer() == 16, "Unsupported tile size.");
     const auto &rooms = result.document.Get("rooms").Items();
     Require(!rooms.empty() && rooms.size() <= 1024, "Invalid room count.");
-    std::set<std::string> roomIds;
+    std::set<std::string> roomIds, placedIds;
     const Json *room = nullptr;
     for (const auto &item : rooms)
     {
         auto id = item.Get("id").Text();
         Require(!id.empty() && roomIds.insert(id).second, "Duplicate or empty room ID.");
+        for (const auto &object : item.Get("objects").Items())
+        {
+            const auto objectId = object.Get("id").Text();
+            Require(!objectId.empty() && placedIds.insert(objectId).second, "Duplicate or empty placed object ID.");
+        }
         if (id == selected || (selected.empty() && !room))
             room = &item;
     }

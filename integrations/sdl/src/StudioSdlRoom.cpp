@@ -69,6 +69,8 @@ void SdlRoom::Load(const std::filesystem::path &map, const std::filesystem::path
         batch.screen = batch.base;
         next.batches.push_back(std::move(batch));
     }
+    triggers.RegisterRoom(next.data);
+    if (data.id != next.data.id) triggers.UnregisterRoom(data.id);
     data = std::move(next.data);
     textures = std::move(next.textures);
     batches = std::move(next.batches);
