@@ -2,6 +2,8 @@
 
 ## 1.3.1
 
+- Add tile palette import and Game Preview demonstrations to the README.
+
 - Reuse current source web builds and compile changed .NET projects incrementally. Keep a full rebuild option and preserve the previous successful bundle on failure.
 
 - Add a Game camera tool on every layer, with a draggable white frame and crosshair synchronized with Game Preview. Clamp movement to the active room, preserve source-pixel alignment, and lock undersized axes without changing map data.
