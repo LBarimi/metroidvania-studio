@@ -1,5 +1,5 @@
 import { activeRoom } from './types.js';
-import type { Point } from './types.js';
+import type { Point, Rect } from './types.js';
 import type { MapCanvas } from './map-canvas.js';
 
 /** A view of the shared renderer; owns no map data, tile indexes or editing commands. */
@@ -25,6 +25,8 @@ export class GamePreview {
   private collapsed = localStorage.getItem('metroidvaniaStudio.previewCollapsed') === 'true';
   maximized = false;
   private stamp = '';
+  private damage: Rect | undefined;
+  private fullRedraw = true;
   private roomStamp = '';
   private scale = 16;
   private pan: { id: number; x: number; y: number; center: Point } | null = null;
@@ -83,7 +85,7 @@ export class GamePreview {
       else if (event.key !== 'Tab' && !((event.target instanceof HTMLButtonElement || event.target === this.pixelPerfect) && ['Enter', ' '].includes(event.key))) event.preventDefault();
       event.stopPropagation();
     }, options);
-    source.onPreviewChange = () => this.requestDraw();
+    source.onPreviewChange = damage => this.requestDraw(false, damage);
     this.updateLabels(); this.applyLayout();
   }
   updateLabels(): void {
@@ -128,11 +130,18 @@ export class GamePreview {
     const pan = this.pan; this.pan = null; this.canvas.classList.remove('panning');
     if (pan && this.canvas.hasPointerCapture(pan.id)) this.canvas.releasePointerCapture(pan.id);
   }
-  requestDraw(force = false): void {
+  requestDraw(force = false, damage?: Rect): void {
     if (!this.visible) return;
     const stamp = this.source.previewVersion;
     if (!force && stamp === this.stamp) return;
     this.stamp = stamp;
+    if (force || !damage) this.fullRedraw = true;
+    else if (!this.fullRedraw) {
+      const previous = this.damage;
+      const x = Math.min(previous?.x ?? damage.x, damage.x), y = Math.min(previous?.y ?? damage.y, damage.y);
+      this.damage = { x, y, width: Math.max(previous ? previous.x + previous.width : -Infinity, damage.x + damage.width) - x,
+        height: Math.max(previous ? previous.y + previous.height : -Infinity, damage.y + damage.height) - y };
+    }
     // Keep pointer input free of DOM writes and layout. Coalesce live edits into one
     // secondary pass after the editor has drawn its immediate brush damage.
     if (this.raf) return;
@@ -149,7 +158,9 @@ export class GamePreview {
       const aspect = profile ? `${profile.referenceWidth} / ${profile.referenceHeight}` : '16 / 9';
       if (this.element.style.getPropertyValue('--preview-aspect') !== aspect) this.element.style.setProperty('--preview-aspect', aspect);
       if (this.collapsed) return;
-      const result = this.source.renderGamePreview(this.canvas, this.source.gameCamera.center);
+      const damage = this.fullRedraw ? undefined : this.damage;
+      this.damage = undefined; this.fullRedraw = false;
+      const result = this.source.renderGamePreview(this.canvas, this.source.gameCamera.center, damage);
       if (!result) return;
       this.scale = result.tileScale;
       const camera = this.source.cameraProfile;

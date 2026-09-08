@@ -143,10 +143,14 @@ export class MapCanvas {
   overview = false;
   cameraPreview = false;
   gameCameraTool = false;
+  alwaysShowGameCamera = localStorage.getItem('metroidvaniaStudio.alwaysShowGameCamera') === 'true';
+  private get gameCameraVisible(): boolean { return this.gameCameraTool || this.alwaysShowGameCamera; }
   readonly gameCamera = new GameCamera();
-  onPreviewChange: (() => void) | null = null;
+  onPreviewChange: ((damage?: Rect) => void) | null = null;
+  private previewViews = new WeakMap<HTMLCanvasElement, { stamp: string; lod: Map<string, boolean> }>();
   private previewRevision = 0;
-  get previewVersion(): string { return this.previewRevision + ':' + this.gameCamera.revision + ':' + (this.tileOverlay?.size.version ?? -1); }
+  private previewTileRevision = 0;
+  get previewVersion(): string { return this.previewRevision + ':' + this.gameCamera.revision + ':' + (this.tileOverlay?.size.version ?? -1) + ':' + this.previewTileRevision; }
   showGrid = true;
   showNames = true;
   snapRooms = true;
@@ -256,13 +260,17 @@ export class MapCanvas {
     this.cancel(); this.roomSelectionId = null; this.gameCameraTool = enabled;
     this.canvas.style.cursor = ''; this.requestDraw();
   }
-  moveGameCamera(center: Point): void { if (this.gameCamera.move(center)) this.gameCameraTool ? this.requestDraw() : this.onPreviewChange?.(); }
+  setAlwaysShowGameCamera(enabled: boolean): void {
+    this.alwaysShowGameCamera = enabled;
+    localStorage.setItem('metroidvaniaStudio.alwaysShowGameCamera', String(enabled)); this.requestDraw();
+  }
+  moveGameCamera(center: Point): void { if (this.gameCamera.move(center)) this.gameCameraVisible ? this.requestDraw() : this.onPreviewChange?.(); }
   setGameCameraPixelPerfect(enabled: boolean): void {
     if (!this.gameCamera.setPixelPerfect(enabled)) return;
     if (this.gesture?.kind === 'game-camera') this.cancel();
-    this.gameCameraTool ? this.requestDraw() : this.onPreviewChange?.();
+    this.gameCameraVisible ? this.requestDraw() : this.onPreviewChange?.();
   }
-  centerGameCamera(): void { if (this.gameCamera.recenter()) this.gameCameraTool ? this.requestDraw() : this.onPreviewChange?.(); }
+  centerGameCamera(): void { if (this.gameCamera.recenter()) this.gameCameraVisible ? this.requestDraw() : this.onPreviewChange?.(); }
   get interacting(): boolean { return this.gesture !== null; }
   get hasPendingWork(): boolean { return this.gesture !== null || this.gestureCommandsPending > 0 || this.brushSizeTask !== null; }
   get brushSize(): number { return this.brushSizeTarget ?? this.state?.selection.brushSize ?? 1; }
@@ -540,7 +548,8 @@ export class MapCanvas {
     // Every authoring gesture captures a revision and document references at
     // pointer-down. Starting one behind another writer would show a full local
     // drag and then discard it as stale; only view panning is safe while busy.
-    const blocked = !previewPan && !this.gameCameraTool && (this.tileCommitPending || this.objectCommitsPending > 0 || this.brushSizeTask !== null || this.writerPending());
+    const busy = this.tileCommitPending || this.objectCommitsPending > 0 || this.brushSizeTask !== null || this.writerPending();
+    const blocked = !previewPan && !this.gameCameraTool && busy;
     if (blocked) { e.preventDefault(); this.onError('writerBusy'); return; }
     e.preventDefault(); this.canvas.focus();
     const screen = this.point(e), world = this.toWorld(screen), previousHover = this.hover;
@@ -549,16 +558,6 @@ export class MapCanvas {
     const room = current || hit || { x: 0, y: 0 } as Room;
     const g: Gesture = { kind: 'pan', pointer: e.pointerId, start: world, last: world, screen, center: { ...this.center }, room,
       expectation: { instanceId: this.state.instanceId, revision: this.state.revision }, tail: this.gestureTail, failed: false };
-    if (this.gameCameraTool && !previewPan) {
-      const frame = this.gameCamera.visibleFrame;
-      if (e.button === 0 && frame && contains(frame, world)) {
-        g.kind = 'game-camera'; g.center = this.gameCamera.center;
-        this.gesture = g; this.canvas.setPointerCapture(e.pointerId); this.canvas.style.cursor = 'grabbing'; this.requestDraw();
-      } else if (e.button === 0 && hit && hit.id !== current?.id) {
-        this.enqueue(g, 'selectRoom', { id: hit.id }); this.gestureTail = g.tail;
-      }
-      return;
-    }
     const handle = current && this.canResizeRoom(current) ? this.roomHandle(screen, current) : null;
     if (previewPan) g.kind = 'pan';
     else if (e.button === 0 && !hit && this.selectedRooms.size > 1) {
@@ -588,6 +587,10 @@ export class MapCanvas {
       // Editing, erasing and picking require a new pointer-down in the active room.
       this.enqueue(g, 'selectRoom', { id: hit.id }, () => { this.roomSelectionId = hit.id; });
       this.gestureTail = g.tail; return;
+    } else if (this.gameCameraTool) {
+      const frame = this.gameCamera.visibleFrame;
+      if (e.button !== 0 || !frame || !contains(frame, world)) return;
+      g.kind = 'game-camera'; g.center = this.gameCamera.center; this.canvas.style.cursor = 'grabbing';
     } else if (selection.tool === 0 && e.button === 0) {
       if (hit) { g.kind = 'room-move'; g.room = hit; this.roomSelectionId = hit.id; }
       else g.kind = 'room-create';
@@ -625,6 +628,8 @@ export class MapCanvas {
       else if (erase || selection.tool === 1) this.beginObjectGesture(g, local, erase, selection);
       else return;
     }
+    // Room handles author map data even when the camera tool is selected.
+    if (busy && (g.kind === 'room-move' || g.kind === 'room-resize')) { this.onError('writerBusy'); return; }
     if (g.kind === 'room-move') {
       g.rooms = this.selectedRooms.size > 1 && this.selectedRooms.has(g.room.id)
         ? this.state.document.rooms.filter(room => this.selectedRooms.has(room.id)) : [g.room];
@@ -646,7 +651,7 @@ export class MapCanvas {
   }
   private move(e: PointerEvent): void {
     const g = this.gesture;
-    if (this.gameCameraTool && (!g || g.kind === 'game-camera')) {
+    if (g?.kind === 'game-camera') {
       this.hover = this.toWorld(this.point(e)); this.onHover(this.hover);
       if (g && g.pointer === e.pointerId) {
         e.preventDefault(); this.moveGameCamera({ x: g.center.x + this.hover.x - g.start.x, y: g.center.y + this.hover.y - g.start.y });
@@ -672,9 +677,12 @@ export class MapCanvas {
     const handle = !this.cameraPreview && !g && active && this.canResizeRoom(active) ? this.roomHandle(screen, active) : null;
     const groupMove = !this.cameraPreview && this.selectedRooms.size > 1 && this.selectedRooms.has(this.roomAt(this.hover)?.id || '');
     const moveHandle = !this.cameraPreview && !g && active && this.canResizeRoom(active) && this.roomMoveHandle(screen, active);
+    const frame = this.gameCameraTool && this.gameCamera.visibleFrame;
+    const cameraMove = frame && contains(frame, this.hover);
     const cursor = handle ? !handle.x ? 'ns-resize' : !handle.y ? 'ew-resize'
-      : handle.x === handle.y ? 'nesw-resize' : 'nwse-resize' : (moveHandle || groupMove) && !g ? 'grab' : g?.kind === 'room-move' || g?.kind === 'pan' ? 'grabbing' : '';
+      : handle.x === handle.y ? 'nesw-resize' : 'nwse-resize' : (moveHandle || groupMove || cameraMove) && !g ? 'grab' : g?.kind === 'room-move' || g?.kind === 'pan' ? 'grabbing' : '';
     if (this.canvas.style.cursor !== cursor) this.canvas.style.cursor = cursor;
+    if (this.gameCameraTool && !g) return;
     if (g && g.pointer === e.pointerId) {
       e.preventDefault(); g.last = this.hover;
       if (g.kind === 'paint' && g.tile) for (const sample of samples) {
@@ -1069,6 +1077,9 @@ export class MapCanvas {
     had: boolean, x: number, y: number, value: Cell | null, point: Point): void {
     if (!row) { row = new Map(); index.rows.set(y, row); }
     tile.cells.set(tileCellKey(x, y), value); row.set(x, value);
+    // Export versions stay fixed throughout a held stroke. Track its live edits
+    // separately so Preview observes every sample, including equal-size replacements.
+    this.previewTileRevision++;
     this.markAffectedChunks(index, x, y);
     if (!had) {
       const key = chunkKey(x, y); let points = index.chunks.get(key); if (!points) { points = []; index.chunks.set(key, points); } points.push(point);
@@ -1113,7 +1124,7 @@ export class MapCanvas {
     } return null;
   }
   private canResizeRoom(room: Room): boolean {
-    return !this.gameCameraTool && this.selectedRooms.size <= 1 && room.visible && !room.locked;
+    return this.selectedRooms.size <= 1 && room.visible && !room.locked;
   }
   private roomHandlePoint(room: Room, x: number, y: number): Point {
     const point = this.toScreen({ x: room.x + (x + 1) * room.width / 2, y: room.y + (y + 1) * room.height / 2 });
@@ -1158,18 +1169,18 @@ export class MapCanvas {
   }
   requestDraw(): void { this.onPreviewChange?.(); if (this.active && !this.raf) this.raf = requestAnimationFrame(() => { this.raf = 0; this.draw(); }); }
   private drawBrushDamage(points: Point[]): void {
-    this.onPreviewChange?.();
     // A brush must reach the canvas during the input event, not in the next
     // animation frame behind panel/status updates. Limit work to the stroke,
     // old/new cursor and the neighbours whose autotile masks can change.
     if (!this.active || this.canvas.hidden) return;
-    if (this.raf) { cancelAnimationFrame(this.raf); this.raf = 0; this.draw(); return; }
     const radius = this.brushSize + 1;
     let left = Infinity, bottom = Infinity, right = -Infinity, top = -Infinity;
     for (const point of points) {
       left = Math.min(left, point.x - radius); right = Math.max(right, point.x + radius);
       bottom = Math.min(bottom, point.y - radius); top = Math.max(top, point.y + radius);
     }
+    this.onPreviewChange?.({ x: left, y: bottom, width: right - left, height: top - bottom });
+    if (this.raf) { cancelAnimationFrame(this.raf); this.raf = 0; this.draw(); return; }
     const screen = this.screenRect({ x: left, y: bottom, width: right - left, height: top - bottom });
     const x = Math.max(0, Math.floor(screen.x) - 2), y = Math.max(0, Math.floor(screen.y) - 2);
     const width = Math.min(this.width, Math.ceil(screen.x + screen.width) + 2) - x;
@@ -1198,7 +1209,7 @@ export class MapCanvas {
   /** Render synchronously into another viewport using the same indexes, images and live stroke.
    * The scoped render state is restored even if a texture fails. No editing state or camera
    * position escapes this pass, and the caller schedules it outside the brush input event. */
-  renderGamePreview(canvas: HTMLCanvasElement, center: Point): { tileScale: number; pixelScale: number } | null {
+  renderGamePreview(canvas: HTMLCanvasElement, center: Point, worldDamage?: Rect): { tileScale: number; pixelScale: number } | null {
     const camera = this.cameraProfile, rect = canvas.getBoundingClientRect();
     if (!camera || rect.width <= 0 || rect.height <= 0) return null;
     const ctx = canvas.getContext('2d', { alpha: false }); if (!ctx) return null;
@@ -1208,14 +1219,27 @@ export class MapCanvas {
     try {
       this.canvas = canvas; this.ctx = ctx; this.width = rect.width; this.height = rect.height;
       this.dpr = Math.max(1, window.devicePixelRatio || 1); this.center = center; this.cameraPreview = true;
-      this.renderOrigin = null; this.selectedObjects = new Set(); this.tileLodModes = new Map(); this.renderFrame++;
+      const previous = this.previewViews.get(canvas);
+      this.renderOrigin = null; this.selectedObjects = new Set(); this.tileLodModes = previous?.lod || new Map(); this.renderFrame++;
       const width = Math.round(rect.width * this.dpr), height = Math.round(rect.height * this.dpr);
       if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
       this.width = width / this.dpr; this.height = height / this.dpr;
       const fit = Math.min(width / camera.referenceWidth, height / camera.referenceHeight);
       // Integer magnification and reciprocal reduction keep the whole camera frame visible.
       this.pixelScale = fit >= 1 ? Math.floor(fit) : 1 / Math.ceil(1 / fit);
-      this.drawScene();
+      const stamp = `${this.previewRevision}:${this.gameCamera.revision}:${width}:${height}:${this.dpr}:${this.pixelScale}:${center.x}:${center.y}`;
+      let damage: Rect | undefined;
+      // Partial compositing is exact on the source-pixel grid. Reduced or smooth
+      // views use a full cached pass to avoid resampling seams along patch edges.
+      if (worldDamage && previous?.stamp === stamp && this.pixelScale >= 1 && this.gameCamera.pixelPerfect) {
+        const r = this.screenRect(worldDamage);
+        const x = Math.max(0, Math.floor(r.x * this.dpr) - 2), y = Math.max(0, Math.floor(r.y * this.dpr) - 2);
+        damage = { x: x / this.dpr, y: y / this.dpr,
+          width: (Math.min(width, Math.ceil((r.x + r.width) * this.dpr) + 2) - x) / this.dpr,
+          height: (Math.min(height, Math.ceil((r.y + r.height) * this.dpr) + 2) - y) / this.dpr };
+      }
+      if (!damage || damage.width > 0 && damage.height > 0) this.drawScene(damage);
+      this.previewViews.set(canvas, { stamp, lod: this.tileLodModes });
       return { tileScale: this.scale, pixelScale: this.pixelScale };
     } finally { Object.assign(this, saved); }
   }
@@ -1297,11 +1321,11 @@ export class MapCanvas {
       ctx.strokeStyle = '#ffffff12'; ctx.lineWidth = 1 / this.dpr; ctx.stroke(); ctx.restore();
     }
     if (!this.cameraPreview && !this.gameCameraTool && room && s.area && this.gesture?.kind !== 'selection') this.outline({ x: room.x + s.area.x, y: room.y + s.area.y, width: s.area.width, height: s.area.height }, '#72bde5', true);
-    if (!this.cameraPreview && !this.gameCameraTool && room && this.canResizeRoom(room)) {
+    if (!this.cameraPreview && room && this.canResizeRoom(room)) {
       const r = this.roomMoveRect(room); ctx.fillStyle = '#334b5d'; ctx.fillRect(r.x, r.y, r.width, r.height);
       ctx.fillStyle = '#e4f3fc'; ctx.font = '11px system-ui'; ctx.fillText('⠿ ' + room.name, r.x + 5, r.y + 12, r.width - 10);
     }
-    if (!this.cameraPreview && !this.gameCameraTool && room && this.canResizeRoom(room)) for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1]) if (x || y) {
+    if (!this.cameraPreview && room && this.canResizeRoom(room)) for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1]) if (x || y) {
       const p = this.roomHandlePoint(room, x, y); ctx.fillStyle = '#6bb5dc'; ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
     }
     const g = this.gesture;
@@ -1309,11 +1333,11 @@ export class MapCanvas {
       const area = this.selectionRect(g); this.outline({ ...area, x: area.x + g.room.x, y: area.y + g.room.y }, '#72bde5', true);
     }
     if (!this.cameraPreview && !this.gameCameraTool && g?.kind === 'room-create') this.outline(box(g.start, g.last), '#72bde5', true);
-    if (!this.cameraPreview && !this.gameCameraTool && g?.kind === 'room-resize') this.outline(this.resizedRoom(g), '#ffffff', true);
-    if (!this.cameraPreview && !this.gameCameraTool && this.selectedRooms.size > 1) {
+    if (!this.cameraPreview && g?.kind === 'room-resize') this.outline(this.resizedRoom(g), '#ffffff', true);
+    if (!this.cameraPreview && this.selectedRooms.size > 1) {
       for (const selected of this.state.document.rooms) if (selected.visible && this.selectedRooms.has(selected.id)) this.outline(selected, '#72bde5', false);
     }
-    if (!this.cameraPreview && !this.gameCameraTool && g?.kind === 'room-move') {
+    if (!this.cameraPreview && g?.kind === 'room-move') {
       const rooms = g.rooms || [g.room];
       const delta = resolveRoomGroupMove(rooms, { x: Math.round(g.last.x - g.start.x), y: Math.round(g.last.y - g.start.y) }, this.state.document.rooms);
       for (const moved of rooms) if (moved.visible) this.outline({ ...moved, x: moved.x + delta.x, y: moved.y + delta.y }, '#ffffff', true);
@@ -1323,7 +1347,7 @@ export class MapCanvas {
       const preview = g?.kind === 'paint' && [4, 6, 7, 8].includes(s.tool) ? box(g.start, this.hover) : { x: Math.floor(this.hover.x) - Math.floor((size - 1) / 2), y: Math.floor(this.hover.y) - Math.floor((size - 1) / 2), width: size, height: size };
       this.outline(preview, '#72bde5', false);
     }
-    if (!this.cameraPreview && this.gameCameraTool) this.drawGameCamera();
+    if (!this.cameraPreview && this.gameCameraVisible) this.drawGameCamera();
     if (cameraRect) ctx.restore();
     if (damage) ctx.restore();
     this.renderOrigin = null; this.selectedObjects.clear();
