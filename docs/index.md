@@ -1,8 +1,22 @@
-# Automation
+# Metroidvania Studio documentation
 
-Metroidvania Studio supports Lua scripts, a headless CLI, a local MCP server, and a versioned editing API. All four use the same validated operations and the existing map JSON format.
+Create connected rooms, paint autotiled terrain, and design minimaps with Metroidvania Studio. These guides cover visual editing, portable JSON maps, and automation through Lua, the CLI, MCP, and the editing API.
 
-| Start here | Use it for |
+## Start editing
+
+| Guide | What you can do |
+| --- | --- |
+| [Sample world](sample-world.md) | Try painting, arranging rooms, and navigating the minimap |
+| [Room layout](room-layout.md) | Add rooms, resize them, and move selected rooms together |
+| [Tile palettes and autotiling](tilesets.md) | Import PNGs and set up 4-tile or 47-tile palettes |
+| [Minimap design](minimap.md) | Set room colors, adjust outlines, and return to a room for editing |
+| [Texture editing](textures.md) | Update shared PNG files and export portable resources |
+
+## Scripts and automation
+
+Lua scripts, the headless CLI, the local MCP server, and the editing API use the same validated operations and map JSON format.
+
+| Guide | Use it for |
 | --- | --- |
 | [Lua quick start](scripting/quick-start.md) | Generate or modify rooms with a script |
 | [Headless from a download](cli/release-downloads.md) | Run commands from the extracted program download |
@@ -12,17 +26,11 @@ Metroidvania Studio supports Lua scripts, a headless CLI, a local MCP server, an
 | [Live web API](api/live-api.md) | Work on the document currently open in the studio |
 | [Local npm package](distribution/local-package.md) | Build and test an installable package from source |
 
-Start with the [sample-world walkthrough](sample-world.md) to explore painting, room layout and the minimap.
-
 ## Open and save maps
 
 Use **File → Open map** to choose a JSON map from your computer. **Save map** or **Ctrl+S** writes back to that file; **Save map as** lets you choose another name or folder. **Import map JSON** opens a copy with no link to the original file. Room JSON exports and workspace recovery continue in the background.
 
 Chrome, Edge, and the Windows program support the file picker workflow. In browsers without a writable file picker, saving starts a JSON download using the browser's download settings. A download does not mark the document saved because the editor cannot confirm its completion.
-
-See [Tile palettes](tilesets.md) for 4-tile and 47-tile setup, PNG imports and the default tile preview.
-
-See [Texture editing and engine resources](textures.md) for external image updates and portable resource files.
 
 ## In the web editor
 
@@ -48,4 +56,4 @@ Install the CLI and MCP tools with `npm install --global metroidvania-studio`. R
 
 ## Browse the reference
 
-Use **Help → Documentation** for searchable guides, or **Help → API reference** for the editing API. The same pages work offline in `app/metroidvania-studio/dist/docs/index.html` inside a release download. From source, run `node tools/docs/build.mjs` and open `builds/docs/index.html`.
+Read the [online documentation](https://lbarimi.github.io/metroidvania-studio/), or open **Help → Documentation** in the studio for searchable offline guides. **Help → API reference** opens the editing API. The bundled pages are also available at `app/metroidvania-studio/dist/docs/index.html` inside a release download. From source, run `node tools/docs/build.mjs` and open `builds/docs/index.html`.

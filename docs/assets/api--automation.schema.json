@@ -1,0 +1,857 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Metroidvania Studio automation batch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "apiVersion",
+    "operations"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": 1
+    },
+    "operations": {
+      "type": "array",
+      "maxItems": 1024,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "x": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "y": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "op": {
+                "const": "room.add"
+              }
+            },
+            "required": [
+              "op",
+              "x",
+              "y",
+              "width",
+              "height"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "visible": {
+                "type": "boolean",
+                "default": true
+              },
+              "op": {
+                "const": "room.update"
+              }
+            },
+            "required": [
+              "op",
+              "roomId"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "x": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "y": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "op": {
+                "const": "room.move"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "x",
+              "y"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "x": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "y": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "crop": {
+                "type": "boolean",
+                "default": false
+              },
+              "keepLocalContents": {
+                "type": "boolean",
+                "default": false
+              },
+              "op": {
+                "const": "room.resize"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "width",
+              "height"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "clockwise": {
+                "type": "boolean",
+                "default": true
+              },
+              "op": {
+                "const": "room.rotate"
+              }
+            },
+            "required": [
+              "op",
+              "roomId"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "x": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "y": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "op": {
+                "const": "room.duplicate"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "x",
+              "y"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "op": {
+                "const": "room.delete"
+              }
+            },
+            "required": [
+              "op",
+              "roomId"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "foreground",
+                  "background"
+                ]
+              },
+              "materialId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "groupId": {
+                "type": "string",
+                "maxLength": 256,
+                "default": ""
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "solid",
+                  "bottomLeft",
+                  "bottomRight",
+                  "topLeft",
+                  "topRight"
+                ]
+              },
+              "cells": {
+                "type": "array",
+                "maxItems": 1048576,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "x": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 1023
+                    },
+                    "y": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 1023
+                    },
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "solid",
+                        "bottomLeft",
+                        "bottomRight",
+                        "topLeft",
+                        "topRight"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ]
+                }
+              },
+              "op": {
+                "const": "tiles.paint"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "layer",
+              "cells"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "foreground",
+                  "background"
+                ]
+              },
+              "materialId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "groupId": {
+                "type": "string",
+                "maxLength": 256,
+                "default": ""
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "solid",
+                  "bottomLeft",
+                  "bottomRight",
+                  "topLeft",
+                  "topRight"
+                ]
+              },
+              "cells": {
+                "type": "array",
+                "maxItems": 1048576,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "x": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 1023
+                    },
+                    "y": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 1023
+                    },
+                    "shape": {
+                      "type": "string",
+                      "enum": [
+                        "solid",
+                        "bottomLeft",
+                        "bottomRight",
+                        "topLeft",
+                        "topRight"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "y"
+                  ]
+                }
+              },
+              "op": {
+                "const": "tiles.erase"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "layer",
+              "cells"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "foreground",
+                  "background"
+                ]
+              },
+              "materialId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "groupId": {
+                "type": "string",
+                "maxLength": 256,
+                "default": ""
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "solid",
+                  "bottomLeft",
+                  "bottomRight",
+                  "topLeft",
+                  "topRight"
+                ]
+              },
+              "x": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1023
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1023
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "erase": {
+                "type": "boolean",
+                "default": false
+              },
+              "op": {
+                "const": "tiles.rectangle"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "layer",
+              "x",
+              "y",
+              "width",
+              "height"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "foreground",
+                  "background"
+                ]
+              },
+              "materialId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "groupId": {
+                "type": "string",
+                "maxLength": 256,
+                "default": ""
+              },
+              "shape": {
+                "type": "string",
+                "enum": [
+                  "solid",
+                  "bottomLeft",
+                  "bottomRight",
+                  "topLeft",
+                  "topRight"
+                ]
+              },
+              "x": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1023
+              },
+              "y": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 1023
+              },
+              "erase": {
+                "type": "boolean",
+                "default": false
+              },
+              "op": {
+                "const": "tiles.fill"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "layer",
+              "x",
+              "y"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "definitionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "groupId": {
+                "type": "string",
+                "maxLength": 256,
+                "default": ""
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "default": 1
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "default": 1
+              },
+              "rotation": {
+                "type": "number"
+              },
+              "scaleX": {
+                "type": "number"
+              },
+              "scaleY": {
+                "type": "number"
+              },
+              "nodes": {
+                "type": "array",
+                "maxItems": 4096,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "x",
+                    "y"
+                  ],
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "properties": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "additionalProperties": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 65536
+                }
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "layer": {
+                "type": "string",
+                "enum": [
+                  "entities",
+                  "triggers",
+                  "foregroundDecals",
+                  "backgroundDecals"
+                ]
+              },
+              "op": {
+                "const": "object.add"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "definitionId",
+              "layer",
+              "x",
+              "y"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "definitionId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "groupId": {
+                "type": "string",
+                "maxLength": 256,
+                "default": ""
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "default": 1
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "default": 1
+              },
+              "rotation": {
+                "type": "number"
+              },
+              "scaleX": {
+                "type": "number"
+              },
+              "scaleY": {
+                "type": "number"
+              },
+              "nodes": {
+                "type": "array",
+                "maxItems": 4096,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "x",
+                    "y"
+                  ],
+                  "properties": {
+                    "x": {
+                      "type": "number"
+                    },
+                    "y": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "properties": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "additionalProperties": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 65536
+                }
+              },
+              "objectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "op": {
+                "const": "object.update"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "objectId"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "objectId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "op": {
+                "const": "object.delete"
+              }
+            },
+            "required": [
+              "op",
+              "roomId",
+              "objectId"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "roomId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "values": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "additionalProperties": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 65536
+                }
+              },
+              "op": {
+                "const": "properties.set"
+              }
+            },
+            "required": [
+              "op",
+              "values"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "op": {
+                "const": "document.update"
+              }
+            },
+            "required": [
+              "op",
+              "name"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "ppu": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 8192
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16384
+              },
+              "height": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16384
+              },
+              "op": {
+                "const": "camera.set"
+              }
+            },
+            "required": [
+              "op",
+              "ppu",
+              "width",
+              "height"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
