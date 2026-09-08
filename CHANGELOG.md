@@ -1,5 +1,10 @@
 # Changes
 
+## 1.3.2 (unreleased)
+
+- Leave Rooms, Selection and Game camera when choosing an editable layer, including the current layer. Select the tile brush or object placement tool so drawing in a new room does not move it.
+- Preserve tile drawing tools when switching between tile layers, and keep visibility and lock controls independent of tool selection.
+
 ## 1.3.1
 
 - Keep room movement and resize handles available with every tool, including Game camera, while preserving room locks and pending-write protection.

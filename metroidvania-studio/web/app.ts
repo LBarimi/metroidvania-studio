@@ -96,11 +96,13 @@ async function settleFileSnapshot(): Promise<void> { await map.settled(); await 
 async function option(values: CommandValues): Promise<void> {
   map.cancel(); await run('options', () => {
     const next = { ...(typeof values === 'function' ? values() : values) } as Record<string, unknown>;
-    if (typeof next.tool === 'number' && map.gameCameraTool) { map.setGameCameraTool(false); drawPanels(true); }
     if (typeof next.layer === 'number' && next.tool === undefined) {
       const current = state?.selection.tool ?? 3;
-      next.tool = tileLayer(next.layer) ? current === 1 ? 3 : current : current === 0 || current === 2 ? current : next.layer === 6 ? 2 : 1;
-    } return next;
+      // A layer click starts editing, even when that layer is already active.
+      next.tool = tileLayer(next.layer) ? map.gameCameraTool || current <= 2 ? 3 : current : next.layer === 6 ? 2 : 1;
+    }
+    if (typeof next.tool === 'number' && map.gameCameraTool) { map.setGameCameraTool(false); drawPanels(true); }
+    return next;
   });
 }
 function showModal(title: string, content: (body: HTMLElement) => void, apply?: () => Promise<unknown>, action = 'apply'): HTMLDialogElement {

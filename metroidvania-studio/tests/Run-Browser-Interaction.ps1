@@ -69,6 +69,8 @@ try {
         return
     }
     if (-not $RoomOnly -and -not $SyncOnly -and -not $PerformanceOnly) {
+        & node (Join-Path $PSScriptRoot 'browser-layer-activation.mjs')
+        if ($LASTEXITCODE -ne 0) { throw 'Layer activation validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-camera-settings.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Camera settings validation failed.' }
         if ($CameraOnly) { return }
