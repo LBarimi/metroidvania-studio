@@ -2,6 +2,9 @@
 
 ## 1.3.1
 
+- Merge selected rooms from Edit or the inspector, preserving world positions, both tile layers, object IDs and compatible room properties in one Undo step.
+- Split a selected rectangle into a new room and partition the remaining area without overlapping rooms. Preserve complete objects, triggers, nodes and room backdrops; reject cuts through an object and conflicting merge metadata.
+
 - Allow room movement and resizing from foreground, background, object, trigger and decal layers.
 - Draw magenta portal regions on the tile grid with click-and-drag, clipped to the active room, while preserving existing portal IDs and event settings.
 - Add magenta one-shot portals and respawn points. Show Spawn, Portal, Path and Respawn point in the object palette while retaining legacy placed objects.

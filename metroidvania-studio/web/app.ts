@@ -385,7 +385,8 @@ function drawChrome(): void {
     button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
     button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')), null, button(locale.t('storageFolders'), () => openWorkspaceFolders(locale)), scripts]));
-  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo]),
+  actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null,
+    roomRestructureButton('merge', 'room-merge-action'), roomRestructureButton('split', 'room-split-action')]),
     menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('sampleWorld'), openSampleWorld), null, button(locale.t('docs.title'), () => { window.open('/docs/index.html', '_blank', 'noopener'); }), button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }), null, button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
   const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
   updateView(); drawPanels(true); renderInspector(true);
@@ -451,6 +452,8 @@ function drawPanels(force = false): void {
   el('project-name').replaceChildren(text('span', state.dirty ? '●' : '', 'dirty-dot'), document.createTextNode(state.document.name)); el('project-name').title = state.file || state.document.name;
   const viewOnly = miniMode || map.cameraPreview;
   el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
+  el<HTMLButtonElement>('room-merge-action').disabled = !canRestructureRoom('merge');
+  el<HTMLButtonElement>('room-split-action').disabled = !canRestructureRoom('split');
   el<HTMLButtonElement>('undo').disabled = viewOnly || !state.canUndo; el<HTMLButtonElement>('redo').disabled = viewOnly || !state.canRedo;
   const connection = el('connection'); connection.textContent = locale.t(api.online ? 'studioConnected' : 'serverOffline'); connection.classList.toggle('online', api.online);
   el('room-count').textContent = s.roomIds.length > 1 ? `${s.roomIds.length} / ${state.document.rooms.length}` : String(state.document.rooms.length);
@@ -598,6 +601,42 @@ async function editSelection(action: string, values: object = {}, inspector = fa
   if (scope === 'room') map.selectRoomTarget(action === 'delete' || action === 'cut' ? null : next.selection.roomId);
   renderInspector(true);
 }
+function canRestructureRoom(action: 'merge' | 'split'): boolean {
+  if (!state || miniMode || map.cameraPreview) return false;
+  const selection = state.selection, room = activeRoom(state);
+  if (action === 'merge') return selection.roomIds.length >= 2
+    && !state.document.rooms.some(candidate => selection.roomIds.includes(candidate.id) && candidate.locked);
+  const area = selection.area;
+  return !!room && !room.locked && selection.tool === 2 && !!area && area.width > 0 && area.height > 0
+    && (area.width !== room.width || area.height !== room.height);
+}
+function roomRestructureButton(action: 'merge' | 'split', id: string): HTMLButtonElement {
+  const control = button(locale.t(action === 'merge' ? 'roomMerge' : 'roomSplit'), () => restructureRoom(action));
+  control.id = id; control.disabled = !canRestructureRoom(action);
+  control.title = locale.t(action === 'merge' ? 'roomMergeHint' : 'roomSplitHint');
+  return control;
+}
+async function restructureRoom(action: 'merge' | 'split'): Promise<void> {
+  await settleFileSnapshot();
+  if (!state || !canRestructureRoom(action)) return;
+  const snapshot = state, room = activeRoom(snapshot)!, expectation = expectedAt(snapshot);
+  const key = action === 'merge' ? 'roomMerge' : 'roomSplit';
+  const dialog = showModal(locale.t(key), body => {
+    body.append(text('p', locale.t(key + 'Hint')));
+    if (action === 'merge') {
+      body.append(text('p', snapshot.document.rooms.filter(candidate => snapshot.selection.roomIds.includes(candidate.id)).map(candidate => candidate.name).join(' + ')));
+      body.append(text('p', locale.t('roomMergePrimary').replace('{0}', room.name)));
+    } else {
+      const area = snapshot.selection.area!;
+      body.append(text('p', `${room.name} · ${area.width} × ${area.height}`));
+      body.append(text('p', locale.t('roomSplitContents')));
+    }
+  }, async () => {
+    const next = await run(action === 'merge' ? 'roomMerge' : 'roomSplit', {}, expectation);
+    map.selectRoomTarget(next.selection.roomId); map.frameRoom(true); mini.fit(); renderInspector(true);
+  }, key);
+  dialog.id = 'room-restructure-dialog';
+}
 function renderInspector(force = false): void {
   if (!state) return; const inspector = el('inspector');
   if (updateInspectorSelection(state.selection.objects)) force = true;
@@ -607,7 +646,7 @@ function renderInspector(force = false): void {
   const room = activeRoom(state), selected = selectedObjects(room, state.selection.objects);
   const contentKey = selected.length ? ['objects', inspectorObjectVersion] : room
     ? ['room', room.id, room.name, room.x, room.y, room.width, room.height, room.visible, room.locked, room.properties] : null;
-  const selection = state.selection, inspectorSelection = [selection.roomId, selection.tool, selection.layer, selection.shape,
+  const selection = state.selection, inspectorSelection = [selection.roomId, selection.roomIds, selection.tool, selection.layer, selection.shape,
     selection.material, selection.brushSize, selection.filled, selection.objectDefinition, selection.groupId,
     selection.hiddenLayers, selection.lockedLayers, selection.area, selection.nodes, inspectorSelectionVersion];
   const key = JSON.stringify([state.instanceId, state.catalogRevision, inspectorSelection, contentKey, languageVersion]); if (!force && lastInspectorKey === key) return; lastInspectorKey = key;
@@ -618,6 +657,8 @@ function renderInspector(force = false): void {
   // an unrelated compact tile edit cannot leave otherwise valid actions stale.
   if (state.selection.area) { const area = state.selection.area; const summary = section(locale.t('selectionSummary')); summary.id = 'selection-summary'; summary.append(text('div', `${area.width} × ${area.height} · ${locale.enum('MapLayer', LAYERS[state.selection.layer], state.selection.layer)}`), text('p', locale.t('selectionHelp'))); inspector.append(summary); }
   const actions = section(locale.t(!state.selection.area && !selected.length ? 'roomActions' : 'selectionActions')); actions.dataset.scope = !state.selection.area && !selected.length ? 'room' : 'content';
+  if (state.selection.roomIds.length > 1) actions.append(roomRestructureButton('merge', 'room-merge-selection'));
+  if (state.selection.area && state.selection.tool === 2) actions.append(roomRestructureButton('split', 'room-split-selection'));
   actions.append(row(button(locale.t('copy'), () => editSelection('copy', {}, true)), button(locale.t('paste'), () => editSelection('paste', {}, true))),
     row(button(locale.t('flipH'), () => editSelection('flip', { horizontal: true }, true)), button(locale.t('flipV'), () => editSelection('flip', { horizontal: false }, true))),
     row(button('↻ ' + locale.t('rotation'), () => editSelection('rotate', { clockwise: true }, true)), button(locale.t('delete'), () => editSelection('delete', {}, true), 'danger')));

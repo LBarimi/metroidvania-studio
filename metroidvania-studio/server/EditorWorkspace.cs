@@ -738,6 +738,12 @@ public sealed partial class EditorWorkspace
             case "roomFlip": Canvas.RoomEditor.FlipSelected(B(command, "horizontal", true)); break;
             case "roomRotate": Canvas.RoomEditor.RotateSelected(B(command, "clockwise", true)); break;
             case "roomDeleteSelected": Canvas.RoomEditor.DeleteSelected(); break;
+            case "roomMerge": Canvas.SelectRoom(Canvas.RoomEditor.MergeSelected()); break;
+            case "roomSplit":
+                if (Canvas.Tool != MetroidvaniaStudioTool.Selection || !Canvas.Selection.HasValue || Canvas.Room == null)
+                    throw new InvalidOperationException("@roomSplitNeedArea");
+                Canvas.SelectRoom(Canvas.RoomEditor.SplitArea(Canvas.Room.id, Canvas.Selection.Value));
+                break;
             case "selectArea": Canvas.SelectArea(new RectInt(I(command, "x"), I(command, "y"), I(command, "width"), I(command, "height"))); break;
             case "moveSelection": Canvas.MoveSelection(new Vector2Int(I(command, "dx"), I(command, "dy"))); break;
             case "roomProperties":
