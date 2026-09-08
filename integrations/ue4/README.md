@@ -18,3 +18,7 @@ Map X maps to Unreal X; map Y maps to Unreal Z. A tile spans `16 / ppu * UnitsPe
 Textures resolve relative to the selected resource directory, respecting catalog path casing. The bundled sample is under `plugin/MetroidvaniaStudio/samples`. The importer has no network client. The installer invokes the installed engine's standard local build tools.
 
 Validation: package with the matching engine's BuildPlugin command with `-VS2019`, then run the `MetroidvaniaStudio.Import.Room` automation test using `UE4Editor-Cmd` with `-unattended -nullrhi -nosound`. Run an actual packaged-game build in the consuming project before shipping a game.
+
+## Objects and trigger events
+
+See `TRIGGERS.md` in the package for event requests, one-shot portals, stable IDs and runtime examples. The game decides when to request an event; the integration does not wire collision callbacks.

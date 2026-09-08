@@ -13,6 +13,9 @@ const textCheck = spawnSync(process.execPath, [path.join(root, '../tools/reposit
   { stdio: 'inherit', windowsHide: true });
 if (textCheck.error) throw textCheck.error;
 if (textCheck.status !== 0) process.exit(textCheck.status || 1);
+const triggerContracts = spawnSync(process.execPath, [path.join(root, '../integrations/generate-trigger-events.mjs'), ...(check ? ['--check'] : [])], { stdio: 'inherit', windowsHide: true });
+if (triggerContracts.error) throw triggerContracts.error;
+if (triggerContracts.status !== 0) process.exit(triggerContracts.status || 1);
 const generated = spawnSync(process.env.METROIDVANIA_STUDIO_DOTNET || 'dotnet', ['run', '--project', path.join(root, 'contracts/MetroidvaniaStudio.Contracts.csproj'),
   '--configuration', 'Debug', '--no-launch-profile', '--', path.join(root, 'web/contracts.generated.ts'), ...(check ? ['--check'] : [])],
   { stdio: 'inherit', windowsHide: true, env: { ...process.env, DOTNET_CLI_TELEMETRY_OPTOUT: '1', DOTNET_NOLOGO: '1' } });

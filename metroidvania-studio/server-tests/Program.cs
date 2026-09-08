@@ -5,6 +5,7 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("built-in object upgrade preserves custom fields and legacy definitions", BuiltInObjectTests.Upgrade),
     ("internal catalog migration preserves palettes, groups, textures and exports", InternalCatalogTests.Upgrade),
     ("internal catalog migration resumes safely and preserves conflicting copies", InternalCatalogTests.Recovery),
     ("internal catalog migration respects explicit custom locations", InternalCatalogTests.CustomPaths),

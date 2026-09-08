@@ -106,11 +106,20 @@ func load_room(map_path: String, catalog_path: String, resource_root: String, ro
         return null
     var room: Dictionary = {}
     var ids := {}
+    var placed_ids := {}
     for item in rooms:
         if not item is Dictionary or str(item.get("id", "")).is_empty() or ids.has(item.id):
             error = "Invalid or duplicate room ID."
             return null
         ids[item.id] = true
+        if not item.get("objects", []) is Array:
+            error = "Invalid object list."
+            return null
+        for object in item.get("objects", []):
+            if not object is Dictionary or str(object.get("id", "")).strip_edges().is_empty() or placed_ids.has(object.id):
+                error = "Duplicate or empty placed object ID."
+                return null
+            placed_ids[object.id] = true
         if item.id == room_id or (room_id.is_empty() and room.is_empty()): room = item
     if room.is_empty():
         error = "Room ID was not found."
@@ -257,4 +266,9 @@ func load_room(map_path: String, catalog_path: String, resource_root: String, ro
     view_camera.zoom = Vector2(ppu, ppu)
     root.add_child(view_camera)
     view_camera.owner = root
+    var triggers = preload("trigger-manager.gd").new()
+    triggers.name = "TriggerManager"
+    root.add_child(triggers)
+    triggers.owner = root
+    if not triggers.register_room(room): return fail(root, triggers.error)
     return root

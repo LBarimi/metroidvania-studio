@@ -33,3 +33,7 @@ Using the existing metadata envelope preserves format-version-2 compatibility: o
 The server returns an effective `camera` with each changed state response, including compact edit acknowledgements. A state request with `full=true` includes both document and resource catalog whenever revision tokens are stale; an unchanged request still returns 204. This permits consumers with inline JSON object serialization to request complete snapshots without polling large unchanged documents.
 
 The build also generates engine adapter DTOs, camera-setting logic and tile-mask geometry from the same core definitions. `--check-contracts` checks the TypeScript, schema and adapter outputs together. Engine API code stays under the corresponding `integrations/<engine>` source folder. Distributable archives live under `engine-packages/<engine>`.
+
+## Trigger event properties
+
+Triggers and portals use the existing object `id` and `properties` fields. `event` holds `None` or `Trigger001` through `Trigger200`; `once` holds a boolean string; `desc` holds the description. Runtime enum values are 0 through 200 across every engine package. These settings do not change map format 2. Legacy free-text events remain intact and are unassigned at runtime until mapped to a numbered event.

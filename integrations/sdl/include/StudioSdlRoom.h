@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include "StudioDocument.h"
+#include "StudioTriggerManager.h"
 #include <memory>
 
 namespace MetroidvaniaStudio
@@ -26,6 +27,7 @@ class SdlRoom
 
 public:
     Room data;
+    TriggerManager triggers;
     explicit SdlRoom(SDL_Renderer *renderer) : renderer(renderer)
     {
     }

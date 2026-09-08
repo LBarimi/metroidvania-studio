@@ -8,6 +8,7 @@ Metroidvania Studio supports Lua scripts, a headless CLI, a local MCP server, an
 | [Headless from a download](cli/release-downloads.md) | Run commands from the extracted program download |
 | [CLI quick start](cli/quick-start.md) | Edit, validate, export, and preview maps without a browser |
 | [MCP setup](mcp/setup.md) | Give an agent local map editing tools |
+| [Objects and triggers](objects-and-triggers.md) | Place portals, describe objects and connect runtime events |
 | [Editing API](api/index.md) | Apply structured, atomic operation batches |
 | [Live web API](api/live-api.md) | Work on the document currently open in the studio |
 | [Local npm package](distribution/local-package.md) | Build and test an installable package from source |
@@ -40,7 +41,7 @@ The CLI emits JSON on stdout. MCP uses stdio; it does not expose a network port.
 
 ## Data compatibility
 
-Automation API version **1**, studio version **1.3.0**, and map format version **2** are separate version numbers. Existing map files and engine packages continue using [map format 2](../metroidvania-studio/contracts/FORMAT.md). Lua scripts are editing tools and are not embedded in exported game data.
+Automation API version **1**, studio version **1.3.1**, and map format version **2** are separate version numbers. Existing map files and engine packages continue using [map format 2](../metroidvania-studio/contracts/FORMAT.md). Lua scripts are editing tools and are not embedded in exported game data.
 
 See [validation commands and platform coverage](validation.md) to run the checks locally.
 

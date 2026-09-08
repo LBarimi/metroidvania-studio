@@ -43,3 +43,7 @@ The loader resolves eight-neighbor autotiles, boundary continuation, diagonal ge
 Coordinates use +Y up in room-local source pixels. One world unit equals `data.ppu` pixels. The renderer converts to SDL's downward Y axis and snaps the camera to source pixels. The preview uses the exported reference resolution with integer presentation and nearest texture sampling. `SampleRoom::Draw(width, height)` includes a white room outline; pass `false` as its third argument for game rendering. `SdlRoom::Draw` does not add an outline.
 
 Windows compilation and a software-rendered frame are validated. Linux/macOS launch scripts are supplied; native builds on those hosts are still required before claiming platform validation.
+
+## Objects and trigger events
+
+See `TRIGGERS.md` in the package for event requests, one-shot portals, stable IDs and runtime examples. The game decides when to request an event; the integration does not wire collision callbacks.

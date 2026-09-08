@@ -1,0 +1,130 @@
+{
+  "formatVersion": 2,
+  "tileSize": 16,
+  "name": "Trigger requests",
+  "properties": [],
+  "layerGroups": [],
+  "stylegrounds": [],
+  "rooms": [
+    {
+      "id": "trigger-room",
+      "name": "Entry",
+      "x": -7,
+      "y": 3,
+      "width": 16,
+      "height": 10,
+      "foreground": [],
+      "background": [],
+      "objects": [
+        {
+          "id": "once",
+          "definition": "Area",
+          "layer": 3,
+          "x": 1,
+          "y": 1,
+          "width": 2,
+          "height": 2,
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "nodes": [],
+          "properties": [
+            {
+              "key": "once",
+              "value": "true"
+            },
+            {
+              "key": "event",
+              "value": "Trigger200"
+            },
+            {
+              "key": "desc",
+              "value": "Open gate"
+            }
+          ]
+        },
+        {
+          "id": "repeat",
+          "definition": "Area",
+          "layer": 3,
+          "x": 1,
+          "y": 1,
+          "width": 2,
+          "height": 2,
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "nodes": [],
+          "properties": [
+            {
+              "key": "once",
+              "value": "false"
+            },
+            {
+              "key": "event",
+              "value": "Trigger200"
+            },
+            {
+              "key": "desc",
+              "value": "Open gate"
+            }
+          ]
+        },
+        {
+          "id": "portal",
+          "definition": "Portal",
+          "layer": 2,
+          "x": 1,
+          "y": 1,
+          "width": 2,
+          "height": 2,
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "nodes": [],
+          "properties": [
+            {
+              "key": "once",
+              "value": "false"
+            },
+            {
+              "key": "event",
+              "value": "Trigger200"
+            },
+            {
+              "key": "desc",
+              "value": "Open gate"
+            }
+          ]
+        },
+        {
+          "id": "legacy",
+          "definition": "Area",
+          "layer": 3,
+          "x": 1,
+          "y": 1,
+          "width": 2,
+          "height": 2,
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "nodes": [],
+          "properties": [
+            {
+              "key": "once",
+              "value": "false"
+            },
+            {
+              "key": "event",
+              "value": "old-event"
+            },
+            {
+              "key": "desc",
+              "value": "Open gate"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

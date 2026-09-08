@@ -504,7 +504,7 @@ function drawPalette(): void {
       groupSettings: editPaletteGroup, report: toast
     });
   } else {
-    for (const def of state.catalog.objects.filter(d => (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
+    for (const def of [...state.catalog.objects].sort((a, b) => { const order = ['Spawn', 'Portal', 'Path', 'Respawn']; return (order.includes(a.id) ? order.indexOf(a.id) : 99) - (order.includes(b.id) ? order.indexOf(b.id) : 99); }).filter(d => !(d.name === d.id && ['Marker', 'Object'].includes(d.id)) && (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
   }
   if (!palette.childElementCount) palette.append(text('div', locale.t('noMaterials'), 'empty'));
 }
@@ -658,20 +658,53 @@ function roomInspector(inspector: HTMLElement, expectation: CommandExpectation):
 }
 function objectInspector(inspector: HTMLElement, selected: MapObject[], expectation: CommandExpectation): void {
   const object = selected[0], def = state!.catalog.objects.find(d => definitionKey(d.id) === definitionKey(object.definition)), content = section(locale.t('objectProperties')); content.append(text('div', selected.length > 1 ? `${selected.length} ${locale.t('selected')}` : (def ? definitionName(def) : object.definition), 'object-chip'));
+  const originalObjects = JSON.stringify(selected);
+  const currentExpectation = (): CommandExpectation => {
+    // Unrelated selections may advance the revision while the form stays unchanged.
+    // A changed object or workspace must still reject this form's stale edits.
+    const current = state && selectedObjects(activeRoom(state), state.selection.objects);
+    return state && state.instanceId === expectation.instanceId && JSON.stringify(current) === originalObjects ? expectedAt(state) : expectation;
+  };
+  const idLabel = document.createElement('label'); idLabel.append(text('span', locale.t('objectId')));
+  const idInput = document.createElement('textarea'); idInput.id = 'object-id'; idInput.readOnly = true; idInput.style.minHeight = '0'; idInput.style.height = selected.length > 1 ? '84px' : '28px'; idInput.style.resize = 'none';
+  idInput.rows = Math.min(4, selected.length); idInput.value = selected.map(item => item.id).join('\n');
+  idInput.setAttribute('aria-label', locale.t('objectId')); idInput.title = locale.t('objectIdHelp'); idLabel.append(idInput); content.append(idLabel);
   if (selected.length === 1) {
-    const fields = text('div', '', 'fields'), inputs = new Map<string, HTMLInputElement>(); for (const key of ['x', 'y', 'width', 'height', 'rotation', 'scaleX', 'scaleY'] as const) { const caption = key === 'x' || key === 'y' ? key.toUpperCase() : key.startsWith('scale') ? locale.t('scale') + ' ' + key.slice(-1) : locale.t(key); const [label, input] = labelInput(caption, object[key] ?? 1, 'number'); input.step = key === 'rotation' ? '1' : '.0625'; fields.append(label); inputs.set(key, input); } content.append(fields, button(locale.t('applyTransform'), () => run('objectTransform', numberValues(inputs), expectation)));
+    const fields = text('div', '', 'fields'), inputs = new Map<string, HTMLInputElement>(); for (const key of ['x', 'y', 'width', 'height', 'rotation', 'scaleX', 'scaleY'] as const) { const caption = key === 'x' || key === 'y' ? key.toUpperCase() : key.startsWith('scale') ? locale.t('scale') + ' ' + key.slice(-1) : locale.t(key); const [label, input] = labelInput(caption, object[key] ?? 1, 'number'); input.step = key === 'rotation' ? '1' : '.0625'; fields.append(label); inputs.set(key, input); } content.append(fields, button(locale.t('applyTransform'), () => run('objectTransform', numberValues(inputs), currentExpectation())));
   }
-  const values = propObject(object.properties), fieldInputs = new Map<string, HTMLInputElement | HTMLSelectElement>();
-  const keys = new Set([...(def?.properties || []).map(p => p.key), ...object.properties.map(p => p.key)]);
+  const fieldInputs = new Map<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>();
+  const keys = new Set([...(def?.properties || []).map(p => p.key), ...object.properties.map(p => p.key), 'desc']);
   for (const key of keys) {
-    if (!selected.every(o => definitionKey(o.definition) === definitionKey(object.definition) || o.properties.some(p => p.key === key))) continue;
-    const field = def?.properties.find(p => p.key === key), label = document.createElement('label'); label.append(text('span', field && def?.name === def?.id && ['label', 'name', 'player', 'tint'].includes(key) ? locale.t('builtin.field.' + key) : field?.label || key));
-    const mixed = selected.some(o => propObject(o.properties)[key] !== values[key]); let input: HTMLInputElement | HTMLSelectElement;
-    if (field?.choices?.length) input = select(field.choices.map(value => [value, value]), values[key] ?? field.defaultValue ?? '');
-    else { input = document.createElement('input'); input.value = values[key] ?? field?.defaultValue ?? ''; if (mixed) { input.value = ''; input.placeholder = locale.t('mixed'); } }
-    input.dataset.modified = 'false'; input.addEventListener('input', () => input.dataset.modified = 'true'); input.addEventListener('change', () => input.dataset.modified = 'true'); label.append(input); content.append(label); fieldInputs.set(key, input);
+    if (key !== 'desc' && !selected.every(o => definitionKey(o.definition) === definitionKey(object.definition) || o.properties.some(p => p.key === key))) continue;
+    const field = def?.properties.find(p => p.key === key), label = document.createElement('label');
+    const localized = ['desc', 'event', 'once'].includes(key) || def?.name === def?.id && ['label', 'name', 'player', 'tint'].includes(key);
+    label.append(text('span', localized ? locale.t('builtin.field.' + key) : field?.label || key));
+    const fieldValue = (item: MapObject): string => {
+      const stored = propObject(item.properties)[key];
+      if (key === 'event' && field?.choices?.includes('None') && !stored?.trim()) return 'None';
+      return stored ?? field?.defaultValue ?? '';
+    };
+    const value = fieldValue(object), mixed = selected.some(o => fieldValue(o) !== value);
+    let input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+    if (field?.kind === 3) {
+      const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = value.trim().toLowerCase() === 'true'; checkbox.indeterminate = mixed;
+      if (key === 'once' && definitionKey(object.definition) === 'portal') { checkbox.checked = true; checkbox.disabled = true; }
+      checkbox.addEventListener('change', () => checkbox.indeterminate = false); input = checkbox;
+    } else if (key === 'desc') { const area = document.createElement('textarea'); area.rows = 2; area.maxLength = 2048; area.value = mixed ? '' : value; if (mixed) area.placeholder = locale.t('mixed'); input = area; }
+    else if (field?.choices?.length) {
+      const choices = field.choices.map(value => [value, value] as [string, string]);
+      if (value && !field.choices.includes(value)) choices.unshift([value, locale.t('legacyEvent') + ': ' + value]);
+      if (mixed) choices.unshift(['', locale.t('mixed')]); input = select(choices, mixed ? '' : value);
+    } else { input = document.createElement('input'); input.value = mixed ? '' : value; if (mixed) input.placeholder = locale.t('mixed'); }
+    input.dataset.property = key; input.dataset.modified = 'false';
+    input.addEventListener('input', () => input.dataset.modified = 'true'); input.addEventListener('change', () => input.dataset.modified = 'true');
+    label.append(input); content.append(label); fieldInputs.set(key, input);
   }
-  content.append(button(locale.t('applyProperties'), async () => { const values = Object.fromEntries([...fieldInputs].filter(([, input]) => selected.length === 1 || input.dataset.modified === 'true').map(([key, input]) => [key, input.value])); await run('objectProperties', { values }, expectation); renderInspector(true); }, 'accent')); inspector.append(content);
+  content.append(button(locale.t('applyProperties'), async () => {
+    const edits = Object.fromEntries([...fieldInputs].filter(([, input]) => input.dataset.modified === 'true').map(([key, input]) =>
+      [key, input instanceof HTMLInputElement && input.type === 'checkbox' ? String(input.checked) : input.value]));
+    await run('objectProperties', { values: edits }, currentExpectation()); renderInspector(true);
+  }, 'accent')); inspector.append(content);
   if (selected.length === 1) {
     const nodes = section(locale.t('nodes')); object.nodes.forEach((node, index) => { const x = document.createElement('input'), y = document.createElement('input'); x.type = y.type = 'number'; x.step = y.step = '.0625'; x.value = String(node.x); y.value = String(node.y); x.setAttribute('aria-label', `${locale.t('nodes')} ${index + 1} X`); y.setAttribute('aria-label', `${locale.t('nodes')} ${index + 1} Y`); const div = text('div', '', 'node-row'); div.append(button(String(index + 1), () => run('nodeSelect', { id: object.id, index, additive: false }, expectation), state!.selection.nodes?.some(n => n.id === object.id && n.index === index) ? 'active' : ''), x, y, button('✓', async () => { const next = { x: numberValue(x), y: numberValue(y) }; const selectedState = await run('nodeSelect', { id: object.id, index, additive: false }, expectation); await run('nodeMove', next, expectedAt(selectedState)); })); nodes.append(div); });
     const room = activeRoom(state)!; nodes.append(button('+ ' + locale.t('addNode'), () => run('nodeAdd', { x: map.hover.x - room.x, y: map.hover.y - room.y }, expectation)), button(locale.t('deleteNode'), () => run('nodeDelete', {}, expectation), 'danger')); inspector.append(nodes);

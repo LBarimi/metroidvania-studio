@@ -405,3 +405,11 @@ docs.api,API 레퍼런스,API reference,API リファレンス,API 参考,API �
 "stageThemes.volcanic","화산지대","Volcanic","火山地帯","火山区","火山地帶","Вулкан"
 "stageThemes.ancientRuins","고대 유적","Ancient ruins","古代遺跡","古代遗迹","古代遺跡","Древние руины"
 "fileDialogWaiting","파일 창에서 맵을 선택하세요.","Choose a map in the file dialog.","ファイル画面でマップを選択してください。","请在文件窗口中选择地图。","請在檔案視窗中選擇地圖。","Выберите карту в файловом окне."
+objectId,고유 ID,Unique ID,固有ID,唯一 ID,唯一 ID,Уникальный ID
+objectIdHelp,배치 시 생성되며 복사해도 중복되지 않는 읽기 전용 ID입니다.,Read-only ID generated on placement. Copies receive new IDs.,配置時に生成される読み取り専用IDです。コピーには新しいIDが付きます。,放置时生成的只读 ID。副本会获得新 ID。,放置時產生的唯讀 ID。副本會獲得新 ID。,ID создаётся при размещении. Копии получают новые ID.
+legacyEvent,기존 이벤트,Existing event,既存のイベント,现有事件,現有事件,Прежнее событие
+builtin.field.desc,설명,Description,説明,描述,描述,Описание
+builtin.field.once,한 번만,Once,一度だけ,仅一次,僅一次,Однократно
+builtin.field.event,이벤트,Event,イベント,事件,事件,Событие
+builtin.object.Portal,포탈,Portal,ポータル,传送门,傳送門,Портал
+builtin.object.Respawn,리스폰 지점,Respawn point,リスポーン地点,重生点,重生點,Точка возрождения

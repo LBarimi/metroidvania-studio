@@ -1509,6 +1509,14 @@ export class MapCanvas {
     if (!def?.sprite || !this.sprite(def.sprite, rect)) { const alpha = ctx.globalAlpha; ctx.fillStyle = color; ctx.globalAlpha = alpha * (object.layer === 3 ? .36 : .8); ctx.fillRect(rect.x, rect.y, rect.width, rect.height); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.strokeRect(rect.x, rect.y, rect.width, rect.height); }
     if (selected) { ctx.strokeStyle = '#ffe894'; ctx.lineWidth = 2 / Math.max(Math.abs(object.scaleX || 1), 1); ctx.strokeRect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2); }
     ctx.restore();
+    const description = object.properties.find(p => p.key === 'desc')?.value.trim();
+    if (!this.cameraPreview && description && this.scale >= 8) {
+      const normalized = description.replace(/\s+/g, ' ');
+      const label = normalized.length > 32 ? normalized.slice(0, 31) + '…' : normalized;
+      ctx.save(); ctx.font = '11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = 3; ctx.strokeStyle = '#111111'; ctx.fillStyle = '#ffffff';
+      ctx.strokeText(label, center.x, center.y); ctx.fillText(label, center.x, center.y); ctx.restore();
+    }
   }
   private drawSelectedObjectPaths(view: Rect, hidden: Set<string> | undefined, hiddenLayers: number[]): void {
     for (const id of this.selectedObjects) {

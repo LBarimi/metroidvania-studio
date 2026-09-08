@@ -408,16 +408,23 @@ namespace MetroidvaniaStudio
             RequireIdle();
             if (values == null) throw new ArgumentNullException(nameof(values));
             if (values.Count == 0) return;
-            List<MapObject> selected = EditableSelection().Where(item => Definition(item)?.fields.Any(field => values.ContainsKey(field.key)) == true).ToList();
+            List<MapObject> selected = EditableSelection().Where(item => values.ContainsKey("desc") || Definition(item)?.fields.Any(field => values.ContainsKey(field.key)) == true).ToList();
             CommitObjects("Edit object properties", selected, item =>
             {
-                foreach (MapFieldDefinition field in Definition(item).fields)
+                foreach (MapFieldDefinition field in Definition(item)?.fields ?? new List<MapFieldDefinition>())
                 {
-                    if (!values.TryGetValue(field.key, out string input)) continue;
+                    if (field.key == "desc" || !values.TryGetValue(field.key, out string input)) continue;
                     string normalized = MapObjectDefinition.NormalizeValue(field, input);
                     MapProperty property = item.properties.Find(entry => entry.key == field.key);
                     if (property == null) item.properties.Add(new MapProperty { key = field.key, value = normalized });
                     else property.value = normalized;
+                }
+                if (values.TryGetValue("desc", out string description))
+                {
+                    if (description == null || description.Length > 2048) throw new ArgumentException("Description must contain at most 2048 characters.");
+                    MapProperty property = item.properties.Find(entry => entry.key == "desc");
+                    if (property == null) item.properties.Add(new MapProperty { key = "desc", value = description });
+                    else property.value = description;
                 }
             });
         }

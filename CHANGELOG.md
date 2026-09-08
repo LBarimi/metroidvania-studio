@@ -1,5 +1,15 @@
 # Changes
 
+## 1.3.1
+
+- Allow room movement and resizing from foreground, background, object, trigger and decal layers.
+- Add magenta one-shot portals and respawn points. Show Spawn, Portal, Path and Respawn point in the object palette while retaining legacy placed objects.
+- Add a Once checkbox, 200 numbered trigger events, and descriptions displayed at the center of placed objects and trigger regions.
+- Display read-only placement IDs and preserve them in JSON exports; copies receive new unique IDs.
+- Include explicit trigger request managers for Unity, Unreal Engine 4/5, Godot and SDL, with shared event numbers, room coordinates, ID and description payloads, and one-shot reset controls.
+- Preserve legacy event text and customized object definitions during catalog upgrades.
+- Fix property forms rejecting unchanged objects after a repeated selection, while continuing to reject stale edits to changed objects.
+
 ## 1.3.0
 
 - Add a tile palette editor with four-source and 47-state autotiling, separate slopes, atlas or individual PNG imports, connection previews and a default tile view.

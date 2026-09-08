@@ -28,6 +28,9 @@ public static class StudioIntegrationValidation
             string material = catalog.materials[0].id;
             for (int y = 0; y < 3; y++) for (int x = 0; x < 4; x++) room.foreground.Add(new MapCell { x = x, y = y, material = material });
             room.objects.Add(new MapObject { id = "trigger", definition = "area", layer = MapLayer.Triggers, x = 1, y = 1 });
+            room.objects[0].properties.Add(new MapProperty { key = "event", value = "Trigger200" });
+            room.objects[0].properties.Add(new MapProperty { key = "once", value = "true" });
+            room.objects[0].properties.Add(new MapProperty { key = "desc", value = "Open gate" });
             var defaults = MapCameraSettings.Resolve(document); Check(defaults.ppu == 16 && defaults.referenceWidth == 320 && defaults.referenceHeight == 180 && defaults.orthographicSize == 5.625f, "Default camera profile");
             MapCameraSettings.Apply(document, 32, 400, 224); var profile = MapCameraSettings.Resolve(document);
             Check(profile.orthographicSize == 3.5f, "PPU and reference resolution determine projection");
@@ -47,6 +50,13 @@ public static class StudioIntegrationValidation
             Check(slopePoints.Length == 3 && slopePoints.Contains(new Vector2(1.5f, 1)) && slopePoints.Contains(new Vector2(2, 1)) && slopePoints.Contains(new Vector2(1.5f, 1.5f)), "Slope collision follows tile geometry and PPU");
             var composite = root.GetComponentInChildren<CompositeCollider2D>(); Check(composite.pathCount > 0 && composite.geometryType == CompositeCollider2D.GeometryType.Outlines, "Terrain collision is a merged outline");
             Check(root.GetComponentInChildren<StudioPlacedObject>().data.id == "trigger" && root.GetComponentInChildren<BoxCollider2D>().isTrigger, "Object metadata and trigger regions import");
+            var triggers = root.Triggers;
+            int delivered = 0;
+            triggers.TriggerRequested += info => { delivered++; Check(info.ObjectId == "trigger" && info.RoomX == -4 && info.RoomY == 2 && info.Event == StudioTriggerEvent.Trigger200 && info.Description == "Open gate", "Trigger request payload"); };
+            Check(root.GetComponentInChildren<StudioPlacedObject>().TryRequestTrigger(out var triggerInfo), "Explicit placed-object request");
+            Check(!root.GetComponentInChildren<StudioPlacedObject>().TryRequestTrigger(out _) && delivered == 1, "Once prevents repeat delivery");
+            triggers.RegisterRoom(parsed.rooms[0]); Check(!triggers.TryRequest("trigger", out _), "Room reload retains consumed events");
+            Check(triggers.ResetOnce("trigger") && triggers.TryRequest("trigger", out _), "Explicit reset reactivates event");
             Check(camera.orthographicSize == 3.5f && camera.transform.position.x == -1 && camera.transform.position.y == 1.75f, "Camera centers on the scaled room");
             var renderTexture = new RenderTexture(1000, 600, 16); camera.targetTexture = renderTexture; camera.GetComponent<StudioPixelCamera>().Apply();
             Check(Mathf.Approximately(camera.rect.width, .8f) && Mathf.Approximately(camera.rect.height, 448f / 600), "Camera viewport uses integer pixel magnification");

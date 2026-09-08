@@ -5,6 +5,7 @@ using MetroidvaniaStudio.Primitives;
 
 var tests = new (string name, Action run)[]
 {
+    ("explicit trigger requests, stable events, one-shot portals and reload state", TriggerTests.Requests),
     ("v2 fields and Unicode round trip", RoundTrip),
     ("compact UTF-8 saves and exports preserve numbers across cultures", CompactCultureRoundTrip),
     ("published v2 wire field compatibility", WireCompatibility),
