@@ -20,9 +20,17 @@ A web-based 2D world editor for metroidvania games. Create connected rooms, pain
 
 Runs locally on Windows, macOS, and Linux. No game engine installation is required.
 
-Download a ready-to-run package from [GitHub Releases](https://github.com/LBarimi/metroidvania-studio/releases/latest), extract it, and open the launch file at the top level.
+Download a ready-to-run package from [GitHub Releases](https://github.com/LBarimi/metroidvania-studio/releases/latest), extract it, and open the launch file at the top level. The prebuilt web package requires **ASP.NET Core Runtime 10**.
 
-To build from source, install **Node.js 24+**, **.NET SDK 10**, and **Git**.
+To build from source, install:
+
+| Requirement | Used for |
+| --- | --- |
+| **Node.js 24+** | Building the web UI and running build scripts |
+| **.NET SDK 10** | Building the local server and command-line tools |
+| **Git** | Validating source files during the build |
+
+Then use the scripts for your platform:
 
 | Platform | Build | Run |
 | --- | --- | --- |
@@ -30,7 +38,7 @@ To build from source, install **Node.js 24+**, **.NET SDK 10**, and **Git**.
 | macOS | `platform/mac/build.command` | `platform/mac/run.command` |
 | Linux | `bash platform/linux/build.sh` | `bash platform/linux/run.sh` |
 
-**Run** checks your local build against the current version and source files. It builds automatically when needed, then opens the studio in your browser. An up-to-date build starts immediately. Prebuilt web copies require **ASP.NET Core Runtime 10**.
+**Run** checks your local build against the current version and source files. It builds automatically when needed, then opens the studio in your browser. An up-to-date build starts immediately.
 
 `Maps` and `Textures` are stored beside the launcher or at the source project root. Find them through **File → Storage folders**. Room JSON updates automatically in `Maps/AutoExport`; palette settings are managed in `.studio/catalog.json`. Keep `Maps`, `Textures` and `.studio` when updating the studio.
 
