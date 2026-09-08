@@ -3,7 +3,7 @@ import type { CameraProfile } from './types.js';
 type CameraValues = Pick<CameraProfile, 'ppu' | 'referenceWidth' | 'referenceHeight'>;
 export type CameraChange = Pick<CameraValues, 'ppu'> | Pick<CameraValues, 'referenceWidth' | 'referenceHeight'>;
 
-const ppuPresets = Array.from({ length: 14 }, (_, index) => 2 ** index);
+const ppuPresets = [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 48, 64, 96, 100, 128];
 const resolutionPresets: Array<[string, Array<[number, number]>]> = [
   ['16:9', [[320, 180], [640, 360], [1280, 720], [1600, 900], [1920, 1080], [2560, 1440]]],
   ['4:3', [[320, 240], [640, 480], [800, 600], [1024, 768], [1280, 960], [1600, 1200], [1920, 1440]]],

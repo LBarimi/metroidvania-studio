@@ -42,7 +42,7 @@ try {
   await page.goto(base); await page.locator('#room-list button').first().waitFor(); await page.locator('#language').selectOption('EN');
   assert.deepEqual(profile(initial), [16, 320, 180]); await applied(16, 320, 180);
   assert.equal(await page.locator('#camera-preview + .camera-controls').count(), 1);
-  assert.deepEqual(await page.locator('#camera-ppu option').evaluateAll(options => options.map(o => Number(o.value))), Array.from({ length: 14 }, (_, index) => 2 ** index));
+  assert.deepEqual(await page.locator('#camera-ppu option').evaluateAll(options => options.map(o => Number(o.value))), [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 48, 64, 96, 100, 128]);
   assert.deepEqual(await page.locator('#camera-resolution optgroup').evaluateAll(groups => groups.map(g => g.label)), ['16:9', '4:3', '16:10', '3:2']);
   await page.locator('#edit-menu-button').click();
   assert.equal(await page.locator('#edit-menu [role="menuitem"]').count(), 2);
