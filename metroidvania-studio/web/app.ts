@@ -30,7 +30,7 @@ let pendingStatusPoint: Point | null = null;
 const app = document.getElementById('app')!;
 app.className = 'app' + (standalone ? ' standalone-app' : '');
 // This template contains only application-owned markup. Project text is always assigned with textContent/value.
-app.innerHTML = `<header class="topbar"><div class="brand"><img class="brand-mark" src="studio-icon.svg" alt=""><span class="brand-text">Metroidvania Studio</span></div><div class="top-actions" id="file-actions"></div><div class="spacer"></div><div class="project-name" id="project-name"></div><span class="connection" id="connection"></span><select class="language" id="language" aria-label="Language"><option value="KR">한국어</option><option value="EN">English</option></select></header><nav class="tabbar" id="tabs"></nav><main class="workspace" id="workspace"><aside class="sidebar"><section class="section"><div class="section-title"><span data-label="rooms"></span><span class="count" id="room-count"></span><button id="add-room" class="icon">+</button></div><input id="room-search" class="room-search"><div class="room-list" id="room-list"></div></section><section class="section"><div class="section-title" data-label="tools"></div><div class="tool-grid" id="tools"></div></section><section class="section"><div class="section-title" data-label="layers"></div><div id="layers"></div><select id="group-select"></select><div class="row" id="group-actions"></div></section><section class="section"><div class="section-title"><span data-label="palette"></span><button id="add-palette-group" class="icon palette-add-group"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 4V2h5l2 2h7v10H1Z M8 7v5 M5.5 9.5h5"/></svg></button><button id="add-palette" class="icon">+</button></div><div id="brush-options"></div><input id="palette-search" class="room-search"><div class="palette-list" id="palette"></div></section></aside><section class="content"><div class="view-toolbar" id="view-toolbar"></div><div class="canvas-wrap"><canvas class="map-canvas" id="map-canvas"></canvas><canvas class="mini-canvas" id="mini-canvas" hidden></canvas><div class="canvas-help" id="canvas-help"></div></div></section><aside class="inspector" id="inspector"></aside></main><footer class="statusbar"><span class="status-state" id="status-state"></span><span class="sync-status" id="status-export" aria-live="polite"></span><span id="status-coordinates"></span><span id="status-layer"></span><span id="status-room-sizes"></span><div class="spacer"></div><span id="status-camera"></span><span id="status-revision"></span></footer><div class="error-banner" id="toast" hidden role="status"></div>`;
+app.innerHTML = `<header class="topbar"><div class="brand"><img class="brand-mark" src="studio-icon.svg" alt=""><span class="brand-text">Metroidvania Studio</span></div><div class="top-actions" id="file-actions"></div><div class="spacer"></div><div class="project-name" id="project-name"></div><span class="connection" id="connection"></span><select class="language" id="language" aria-label="Language"><option value="KR">한국어</option><option value="EN">English</option></select></header><nav class="tabbar" id="tabs"></nav><main class="workspace" id="workspace"><aside class="sidebar"><section class="section"><div class="section-title"><span data-label="rooms"></span><span class="count" id="room-count"></span><button id="add-room" class="icon">+</button></div><input id="room-search" class="room-search"><div class="room-list" id="room-list"></div></section><section class="section"><div class="section-title" data-label="tools"></div><div class="tool-grid" id="tools"></div></section><section class="section"><div class="section-title" data-label="layers"></div><div id="layers"></div><select id="group-select"></select><div class="row" id="group-actions"></div></section><section class="section"><div class="section-title"><span data-label="palette"></span><button id="add-palette" class="icon">+</button></div><div id="brush-options"></div><input id="palette-search" class="room-search"><div class="palette-list" id="palette"></div></section></aside><section class="content"><div class="view-toolbar" id="view-toolbar"></div><div class="canvas-wrap"><canvas class="map-canvas" id="map-canvas"></canvas><canvas class="mini-canvas" id="mini-canvas" hidden></canvas><div class="canvas-help" id="canvas-help"></div></div></section><aside class="inspector" id="inspector"></aside></main><footer class="statusbar"><span class="status-state" id="status-state"></span><span class="sync-status" id="status-export" aria-live="polite"></span><span id="status-coordinates"></span><span id="status-layer"></span><span id="status-room-sizes"></span><div class="spacer"></div><span id="status-camera"></span><span id="status-revision"></span></footer><div class="error-banner" id="toast" hidden role="status"></div>`;
 function el<T extends HTMLElement = HTMLElement>(id: string): T { return document.getElementById(id) as T; }
 function text(tag: string, value: string, className = ''): HTMLElement { const node = document.createElement(tag); node.textContent = value; node.className = className; return node; }
 function button(label: string, action: () => void | Promise<unknown>, className = ''): HTMLButtonElement { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.className = className; b.addEventListener('click', () => { Promise.resolve().then(action).catch(error => toast(error)); }); return b; }
@@ -57,7 +57,10 @@ function definitionName(value: Definition): string {
 }
 const defaultThemeNames: Record<string, [string, string]> = {
   terrain: ['Green', 'green'], 'terrain-blue': ['Blue', 'blue'], 'terrain-dark-gray': ['Dark Gray', 'darkGray'],
-  'terrain-orange': ['Orange', 'orange'], 'terrain-yellow': ['Yellow', 'yellow']
+  'terrain-orange': ['Orange', 'orange'], 'terrain-yellow': ['Yellow', 'yellow'],
+  'biome-grassland': ['Grassland', 'grassland'], 'biome-rock': ['Rock', 'rock'],
+  'biome-ice-cavern': ['Ice cavern', 'iceCavern'], 'biome-volcanic': ['Volcanic', 'volcanic'],
+  'biome-ancient-ruins': ['Ancient ruins', 'ancientRuins']
 };
 function materialName(value: Material): string {
   const entry = defaultThemeNames[value.themeId || value.id];
@@ -367,7 +370,6 @@ function drawChrome(): void {
   }
   document.documentElement.lang = locale.htmlLanguage; el<HTMLSelectElement>('language').replaceChildren(...LANGUAGES.map(([key, label]) => new Option(label, key))); el<HTMLSelectElement>('language').value = locale.language; el('language').setAttribute('aria-label', locale.t('language'));
   for (const node of document.querySelectorAll<HTMLElement>('[data-label]')) node.textContent = locale.t(node.dataset.label!);
-  el<HTMLButtonElement>('add-palette-group').title = locale.t('paletteGroupAdd'); el('add-palette-group').setAttribute('aria-label', locale.t('paletteGroupAdd'));
   el<HTMLButtonElement>('add-palette').title = locale.t('paletteAdd'); el('add-palette').setAttribute('aria-label', locale.t('paletteAdd'));
   el<HTMLInputElement>('room-search').placeholder = locale.t('search'); el<HTMLInputElement>('palette-search').placeholder = locale.t('search'); el<HTMLButtonElement>('add-room').title = locale.t('addRoom');
   const actions = el('file-actions'); actions.replaceChildren();
@@ -489,11 +491,11 @@ function drawPalette(): void {
   }
   const s = state.selection, options = el('brush-options'), palette = el('palette'); options.replaceChildren(); palette.replaceChildren();
   el<HTMLButtonElement>('add-palette').hidden = !tileLayer(s.layer);
-  el<HTMLButtonElement>('add-palette-group').hidden = !tileLayer(s.layer);
   if (tileLayer(s.layer)) {
     const shapes = text('div', '', 'shape-row'); ['■', '◣', '◢', '◤', '◥'].forEach((symbol, i) => { const b = button(symbol, () => option({ shape: i })); b.classList.toggle('active', s.shape === i); b.title = locale.enum('TileShape', SHAPES[i], i); shapes.append(b); }); options.append(shapes);
     const [brushLabel, brush] = labelInput(locale.t('brush'), map.brushSize, 'number'); brush.min = '1'; brush.max = String(MAX_BRUSH_SIZE); brush.step = '1'; brush.title = locale.t('brushWheelHelp'); brush.addEventListener('change', () => { void option({ brushSize: Number(brush.value) }).catch(() => undefined); }); options.append(row(brushLabel, check(locale.t('filled'), s.filled, filled => { void option({ filled }).catch(() => undefined); })[0]));
-    options.append(button(locale.t('clearLayer'), () => confirmRun(locale.t('confirmClear'), 'clearLayer'), 'danger'));
+    const addGroup = button('+ ' + locale.t('group'), addPaletteGroup); addGroup.id = 'add-palette-group'; addGroup.title = locale.t('paletteGroupAdd');
+    options.append(addGroup);
     renderPaletteGroups(palette, state, locale, paletteSearch, run, {
       name: materialName,
       thumbnail: material => thumbnail(material.sprites.find(p => p.shape === s.shape && (s.shape !== 0 || p.mask === 0)), colorCss(material.color)),
@@ -541,8 +543,8 @@ function addPaletteGroup(): void {
   }, 'paletteGroupAdd'); dialog.id = 'palette-group-dialog'; name.focus();
 }
 function editPaletteGroup(group: EditorPaletteGroup): void {
-  const groups = state!.paletteGroups, [field, name] = labelInput(locale.t('name'), group.id === 'default' ? locale.t('paletteDefaultGroup') : group.name);
-  name.id = 'palette-group-name'; name.maxLength = 80; name.disabled = group.id === 'default';
+  const groups = state!.paletteGroups, [field, name] = labelInput(locale.t('name'), paletteGroupName(group, locale));
+  name.id = 'palette-group-name'; name.maxLength = 80; name.disabled = ['default', 'default-themes'].includes(group.id);
   let index = groups.findIndex(g => g.id === group.id);
   const position = text('span', ''), up = button('↑', () => { index--; update(); }), down = button('↓', () => { index++; update(); });
   up.id = 'palette-group-up'; down.id = 'palette-group-down'; up.title = locale.t('paletteMoveUp'); down.title = locale.t('paletteMoveDown');
@@ -550,7 +552,7 @@ function editPaletteGroup(group: EditorPaletteGroup): void {
   update();
   const dialog = showModal(locale.t('paletteGroupSettings'), body => body.append(field, row(position, up, down)), async () => {
     const others = groups.filter(g => g.id !== group.id);
-    await run('paletteGroupMove', { id: group.id, beforeId: others[index]?.id ?? null, name: group.id === 'default' ? group.name : name.value, expectedGroups: groups });
+    await run('paletteGroupMove', { id: group.id, beforeId: others[index]?.id ?? null, name: name.disabled ? group.name : name.value, expectedGroups: groups });
   }); dialog.id = 'palette-group-dialog';
 }
 
@@ -732,7 +734,6 @@ function stateChanged(): void {
 api.addEventListener('state', stateChanged); api.addEventListener('busy', () => drawStatus()); api.addEventListener('error', event => toast((event as CustomEvent).detail));
 api.addEventListener('connection', () => drawStatus()); api.addEventListener('offline', () => drawStatus());
 locale.addEventListener('change', () => { languageVersion++; drawChrome(); }); el('language').addEventListener('change', () => locale.set(el<HTMLSelectElement>('language').value as Language));
-el('add-palette-group').addEventListener('click', addPaletteGroup);
 el('add-palette').addEventListener('click', addPaletteDialog);
 el('add-room').addEventListener('click', () => roomAddDialog()); el('room-search').addEventListener('input', () => { roomSearch = el<HTMLInputElement>('room-search').value; drawPanels(); }); el('palette-search').addEventListener('input', () => { paletteSearch = el<HTMLInputElement>('palette-search').value; drawPalette(); }); el('group-select').addEventListener('change', () => { void option({ groupId: el<HTMLSelectElement>('group-select').value }).catch(() => undefined); });
 el('inspector').addEventListener('focusout', () => { window.setTimeout(() => renderInspector(), 0); });

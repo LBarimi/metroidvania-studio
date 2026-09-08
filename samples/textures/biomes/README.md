@@ -16,7 +16,9 @@ Choose a sheet from `4-tiles/` or `47-tiles/`. Editable Aseprite originals are i
 
 ## Use in the studio
 
-1. Add a palette, then open its **…** settings.
+The five themes are ready to paint in the **Default themes** palette group. To change the source sheet:
+
+1. Open a theme’s **…** settings.
 2. Choose **4 tiles** or **47 tiles** to match the sheet.
 3. Import its PNG. Use **Assign in order** if the slots are not already filled.
 4. Apply the palette. Both formats include four slope tiles.

@@ -109,3 +109,9 @@ export function openWorkspaceFolders(locale: Locale, focus: FolderKind = 'maps')
     body.append(error);
   }).catch(report);
 }
+
+/** Open only a validated texture resource folder on the local host. */
+export async function openTextureFolder(asset?: string): Promise<void> {
+  const response = await fetch('/api/workspace-folders/open', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folder: 'textures', asset }) });
+  if (!response.ok) throw new Error((await response.json()).error);
+}

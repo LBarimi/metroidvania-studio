@@ -26,7 +26,7 @@ try {
   await page.goto(base); await page.locator('#add-palette-group').waitFor(); await page.locator('#language').selectOption('KR');
   const group = id => page.locator(`.palette-group[data-group-id="${id}"]`);
   const entry = id => page.locator(`.palette-entry[data-material-id="${id}"]`);
-  assert.equal(await group('default').locator('.palette-group-name').innerText(), '디폴트');
+  assert.equal(await group('default').locator('.palette-group-name').innerText(), '디폴트 색상');
   async function changed(action, work) {
     const reply = page.waitForResponse(r => r.url().endsWith('/api/command') && r.request().postDataJSON()?.action === action);
     await work(); const r = await reply; assert.ok(r.ok(), await r.text());
@@ -46,7 +46,7 @@ try {
   await group('default').locator('.palette-group-toggle').click(); assert.equal(await entry(ids[0]).isVisible(), false);
   await page.locator('#palette-search').fill(initial.catalog.materials.find(m => m.id === ids[0]).name);
   // Built-in names are localized; searching by the group name also reveals collapsed contents.
-  await page.locator('#palette-search').fill('디폴트'); await entry(ids[0]).waitFor();
+  await page.locator('#palette-search').fill('디폴트 색상'); await entry(ids[0]).waitFor();
   await page.locator('#palette-search').fill(''); assert.equal(await entry(ids[0]).isVisible(), false);
   await group('default').locator('.palette-group-toggle').click();
   await page.locator('.sidebar').evaluate(el => { el.scrollTop = el.scrollHeight; });
@@ -76,6 +76,7 @@ try {
   await command('paletteGroupAdd', { name: 'External group' });
   const conflict = page.waitForResponse(r => r.url().endsWith('/api/command') && r.request().postDataJSON()?.action === 'paletteMove');
   await page.locator('#tileset-apply').click(); assert.equal((await conflict).status(), 409);
+  await page.waitForFunction(() => !!document.querySelector('#tileset-error')?.textContent);
   assert.ok(await page.locator('#tileset-error').innerText()); await page.keyboard.press('Escape');
   assert.deepEqual((await state()).paletteGroups.find(g => g.id === caves).materials, [ids[0]]);
   const saved = await state(); await page.reload(); await entry(ids[0]).waitFor();

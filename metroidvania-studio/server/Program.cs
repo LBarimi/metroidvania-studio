@@ -30,6 +30,7 @@ using var workspaceLock = new FileStream(sessionFile, FileMode.OpenOrCreate, Fil
 PortableWorkspace.SeedResources(project, studioRoot);
 var files = new ProjectFiles(project, studioRoot: studioRoot);
 TextureLibrary.Prepare(files, studioRoot);
+BuiltInPalettes.Prepare(files, studioRoot);
 var workspace = new EditorWorkspace(files);
 using var nativeMaps = new NativeMapFiles(files);
 string webRoot = Path.GetFullPath(builder.Configuration["web-root"] ?? Path.Combine(studioRoot, "metroidvania-studio/dist"));
@@ -139,7 +140,7 @@ app.MapPost("/api/workspace-folders/open", async (HttpRequest request) =>
     using var body = await JsonDocument.ParseAsync(request.Body);
     string folder = body.RootElement.GetProperty("folder").GetString() switch
     {
-        "maps" => files.MapsPath, "textures" => files.TexturesPath, "exports" => CurrentExportDirectory(),
+        "maps" => files.MapsPath, "textures" => files.TextureFolder(body.RootElement.TryGetProperty("asset", out var asset) ? asset.GetString() : null), "exports" => CurrentExportDirectory(),
         _ => throw new ArgumentException("Choose Maps or Textures.")
     };
     Directory.CreateDirectory(folder);

@@ -2,7 +2,7 @@ import { palettePlacementControls } from './palette-groups.js';
 import type { EditorPaletteGroup } from './types.js';
 import type { Command, Material } from './types.js';
 import type { Locale } from './locale.js';
-import { folderStartIn, openWorkspaceFolders, workspaceFolder } from './workspace-folders.js';
+import { folderStartIn, openTextureFolder, workspaceFolder } from './workspace-folders.js';
 import { composeTileset, defaultTile, drawTilesetExample, TILESET_MASKS } from './tileset-preview.js';
 import type { TilesetMode, TilesetSettings } from './tileset-preview.js';
 
@@ -54,7 +54,10 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
     }
     const url = URL.createObjectURL(source.blob), link = element('a'); link.href = url; link.download = source.name.split('/').pop() || 'tileset.png'; link.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
-  tools.append(importButton, templateButton, downloadButton, button(t('storageFolders'), () => openWorkspaceFolders(locale, 'textures')), file);
+  const openFolder = button(t('storageOpen'), () => {
+    void openTextureFolder(currentSource.startsWith('Textures/') ? currentSource : undefined).catch(e => { error.textContent = errorText(e); });
+  }); openFolder.id = 'tileset-open-folder';
+  tools.append(importButton, templateButton, downloadButton, openFolder, file);
   const sourcePath = element('input', 'tileset-path'); sourcePath.readOnly = true; sourcePath.setAttribute('aria-label', t('tilesetSource'));
   const sourceSelect = element('select'); sourceSelect.id = 'tileset-image'; sourceSelect.setAttribute('aria-label', t('tilesetSource'));
   sourceSelect.onchange = () => { currentSource = sourceSelect.value; render(); };

@@ -79,7 +79,7 @@ public sealed partial class Catalog
         if (name != null)
         {
             name = GroupName(name);
-            if (id == DefaultPaletteGroup && name != group.name) throw new ArgumentException("@paletteGroupInvalidName");
+            if ((id == DefaultPaletteGroup || id == "default-themes") && name != group.name) throw new ArgumentException("@paletteGroupInvalidName");
             if (groups.Any(g => g.id != id && g.name.Equals(name, StringComparison.OrdinalIgnoreCase))) throw new ArgumentException("@paletteGroupDuplicateName");
             group = group with { name = name };
         }

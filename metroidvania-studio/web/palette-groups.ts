@@ -1,7 +1,7 @@
 import type { Command, EditorPaletteGroup, Material, State } from './types.js';
 import type { Locale } from './locale.js';
 
-export const paletteGroupName = (group: EditorPaletteGroup, locale: Locale): string => group.id === 'default' ? locale.t('paletteDefaultGroup') : group.name;
+export const paletteGroupName = (group: EditorPaletteGroup, locale: Locale): string => group.id === 'default' ? locale.t('paletteDefaultGroup') : group.id === 'default-themes' ? locale.t('paletteDefaultThemes') : group.name;
 type Drag = { kind: 'palette' | 'group'; id: string; instanceId: string; revision: number };
 let dragging: Drag | undefined, instance = '';
 const collapsed = new Set<string>();

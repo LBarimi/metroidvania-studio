@@ -131,6 +131,13 @@ public sealed partial class ProjectFiles
         RejectGeneratedPath(path);
         return path;
     }
+    public string TextureFolder(string? asset)
+    {
+        if (string.IsNullOrEmpty(asset)) return TexturesPath;
+        string file = Asset(asset);
+        if (!File.Exists(file)) throw new FileNotFoundException("The texture was not found.");
+        return Path.GetDirectoryName(file)!;
+    }
     public string Asset(string relative)
     {
         if (!relative.StartsWith("Textures/", StringComparison.Ordinal)) throw new ArgumentException("Resources must use a Textures/ asset identifier.");

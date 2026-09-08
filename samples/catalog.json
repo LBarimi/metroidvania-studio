@@ -2343,6 +2343,2341 @@
           "shape": 4
         }
       ]
+    },
+    {
+      "id": "biome-grassland",
+      "name": "Grassland",
+      "color": "#638851",
+      "themeId": "biome-grassland",
+      "sprites": [
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 48,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 64,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 80,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 96,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 112,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/grassland.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
+    },
+    {
+      "id": "biome-rock",
+      "name": "Rock",
+      "color": "#827661",
+      "themeId": "biome-rock",
+      "sprites": [
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 48,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 64,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 80,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 96,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 112,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/rock.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
+    },
+    {
+      "id": "biome-ice-cavern",
+      "name": "Ice cavern",
+      "color": "#749DA4",
+      "themeId": "biome-ice-cavern",
+      "sprites": [
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 48,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 64,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 80,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 96,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 112,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ice-cavern.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
+    },
+    {
+      "id": "biome-volcanic",
+      "name": "Volcanic",
+      "color": "#B9643E",
+      "themeId": "biome-volcanic",
+      "sprites": [
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 48,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 64,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 80,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 96,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 112,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/volcanic.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
+    },
+    {
+      "id": "biome-ancient-ruins",
+      "name": "Ancient ruins",
+      "color": "#8C9073",
+      "themeId": "biome-ancient-ruins",
+      "sprites": [
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 0,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 16,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 1,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 32,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 4,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 48,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 5,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 64,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 7,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 80,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 16,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 96,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 17,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 112,
+          "y": 96,
+          "width": 16,
+          "height": 16,
+          "mask": 20,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 0,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 21,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 16,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 23,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 32,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 28,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 48,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 29,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 64,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 31,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 80,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 64,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 96,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 65,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 112,
+          "y": 80,
+          "width": 16,
+          "height": 16,
+          "mask": 68,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 0,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 69,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 16,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 71,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 32,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 80,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 48,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 81,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 64,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 84,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 80,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 85,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 96,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 87,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 112,
+          "y": 64,
+          "width": 16,
+          "height": 16,
+          "mask": 92,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 0,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 93,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 16,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 95,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 32,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 112,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 48,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 113,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 64,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 116,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 80,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 117,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 96,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 119,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 112,
+          "y": 48,
+          "width": 16,
+          "height": 16,
+          "mask": 124,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 0,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 125,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 16,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 127,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 32,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 193,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 48,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 197,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 64,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 199,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 80,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 209,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 96,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 213,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 112,
+          "y": 32,
+          "width": 16,
+          "height": 16,
+          "mask": 215,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 0,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 221,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 16,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 223,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 32,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 241,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 48,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 245,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 64,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 247,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 80,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 253,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 96,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 255,
+          "shape": 0
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 112,
+          "y": 16,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 1
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 2
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 16,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 3
+        },
+        {
+          "asset": "Textures/biomes/47-tiles/ancient-ruins.png",
+          "x": 32,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 4
+        }
+      ]
     }
   ],
   "objects": [
@@ -2354,10 +4689,10 @@
       "placement": 1,
       "minimumNodes": 0,
       "maximumNodes": 0,
-      "width": 1.0,
-      "height": 1.0,
-      "minimumWidth": 1.0,
-      "minimumHeight": 1.0,
+      "width": 1,
+      "height": 1,
+      "minimumWidth": 1,
+      "minimumHeight": 1,
       "resizable": true,
       "rotatable": true,
       "flippable": true,
@@ -2393,10 +4728,10 @@
       "placement": 1,
       "minimumNodes": 0,
       "maximumNodes": 0,
-      "width": 1.0,
-      "height": 1.0,
-      "minimumWidth": 1.0,
-      "minimumHeight": 1.0,
+      "width": 1,
+      "height": 1,
+      "minimumWidth": 1,
+      "minimumHeight": 1,
       "resizable": true,
       "rotatable": true,
       "flippable": true,
@@ -2422,10 +4757,10 @@
       "placement": 0,
       "minimumNodes": 0,
       "maximumNodes": 0,
-      "width": 1.0,
-      "height": 1.0,
-      "minimumWidth": 1.0,
-      "minimumHeight": 1.0,
+      "width": 1,
+      "height": 1,
+      "minimumWidth": 1,
+      "minimumHeight": 1,
       "resizable": true,
       "rotatable": true,
       "flippable": true,
@@ -2451,10 +4786,10 @@
       "placement": 1,
       "minimumNodes": 0,
       "maximumNodes": 0,
-      "width": 1.0,
-      "height": 1.0,
-      "minimumWidth": 1.0,
-      "minimumHeight": 1.0,
+      "width": 1,
+      "height": 1,
+      "minimumWidth": 1,
+      "minimumHeight": 1,
       "resizable": true,
       "rotatable": true,
       "flippable": true,
@@ -2480,10 +4815,10 @@
       "placement": 2,
       "minimumNodes": 2,
       "maximumNodes": -1,
-      "width": 1.0,
-      "height": 1.0,
-      "minimumWidth": 1.0,
-      "minimumHeight": 1.0,
+      "width": 1,
+      "height": 1,
+      "minimumWidth": 1,
+      "minimumHeight": 1,
       "resizable": true,
       "rotatable": true,
       "flippable": true,
@@ -2495,8 +4830,8 @@
           "kind": 2,
           "defaultValue": "4",
           "required": false,
-          "min": 0.0,
-          "max": 1024.0,
+          "min": 0,
+          "max": 1024,
           "choices": []
         },
         {
@@ -2519,10 +4854,10 @@
       "placement": 0,
       "minimumNodes": 0,
       "maximumNodes": 0,
-      "width": 1.0,
-      "height": 1.0,
-      "minimumWidth": 1.0,
-      "minimumHeight": 1.0,
+      "width": 1,
+      "height": 1,
+      "minimumWidth": 1,
+      "minimumHeight": 1,
       "resizable": true,
       "rotatable": true,
       "flippable": true,
@@ -2538,6 +4873,30 @@
           "max": 1.7976931348623157e+308,
           "choices": []
         }
+      ]
+    }
+  ],
+  "editorPaletteGroups": [
+    {
+      "id": "default",
+      "name": "Default colors",
+      "materials": [
+        "terrain",
+        "terrain-blue",
+        "terrain-dark-gray",
+        "terrain-orange",
+        "terrain-yellow"
+      ]
+    },
+    {
+      "id": "default-themes",
+      "name": "Default themes",
+      "materials": [
+        "biome-grassland",
+        "biome-rock",
+        "biome-ice-cavern",
+        "biome-volcanic",
+        "biome-ancient-ruins"
       ]
     }
   ]
