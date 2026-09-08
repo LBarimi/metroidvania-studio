@@ -28,7 +28,7 @@ export function readZip(bytes) {
     assert.ok(start + size <= bytes.length && expected <= 256 * 1024 * 1024, 'Invalid ZIP size.');
     assert.ok(!entries.has(name), 'Duplicate ZIP entry.');
     const packed = bytes.subarray(start, start + size);
-    const data = method === 0 ? packed : method === 8 ? inflateRawSync(packed, { maxOutputLength: expected }) : null;
+    const data = method === 0 ? packed : method === 8 ? inflateRawSync(packed, { maxOutputLength: Math.max(1, expected) }) : null;
     assert.ok(data && data.length === expected, 'Invalid ZIP entry.');
     if (!directory) entries.set(name, data); offset = start + size;
   }
