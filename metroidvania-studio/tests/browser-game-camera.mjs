@@ -48,7 +48,11 @@ try {
     const { MapCanvas } = await import('/map-canvas.js'), original = MapCanvas.prototype.renderGamePreview;
     MapCanvas.prototype.renderGamePreview = function (...args) { window.__cameraMap = this; window.__previewPosition = args[1]; return original.apply(this,args); };
   });
-  await page.setViewportSize({ width: 1598, height: 1000 }); await page.waitForFunction(() => window.__cameraMap);
+  // The dock has a fixed width; use a real layout change to observe the renderer.
+  await page.locator('#preview-maximize').click();
+  await page.waitForFunction(() => window.__cameraMap);
+  await page.locator('#preview-maximize').click();
+  await page.waitForTimeout(80);
   await page.locator('#preview-collapse').click();
   const original = await state(); await page.locator('#game-camera-tool').click();
   assert.equal(await preview.isVisible(), true); assert.equal(await page.locator('#game-camera-tool').getAttribute('aria-pressed'), 'true');

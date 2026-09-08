@@ -59,8 +59,11 @@ try {
     };
     MapCanvas.prototype.rebuildDocument = function (...args) { window.__previewIndexes++; return index.apply(this, args); };
   });
-  await page.setViewportSize({ width: 1598, height: 1000 });
+  // The dock has a fixed width; use a real layout change to observe the renderer.
+  await page.locator('#preview-maximize').click();
   await page.waitForFunction(() => window.__previewMap);
+  await page.locator('#preview-maximize').click();
+  await page.waitForTimeout(80);
   assert.equal(await page.locator('#camera-preview').count(), 0);
   assert.equal(await page.locator('#camera-ppu, #camera-resolution').count(), 2);
   assert.equal(await canvas.getAttribute('data-camera-resolution'), '320x180');
