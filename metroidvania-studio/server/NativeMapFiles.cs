@@ -83,7 +83,12 @@ public sealed class NativeMapFiles(ProjectFiles files, Func<string, string, stri
         $dialog = if ($save) { [System.Windows.Forms.SaveFileDialog]::new() } else { [System.Windows.Forms.OpenFileDialog]::new() }
         $owner = [System.Windows.Forms.Form]::new()
         try {
+            $owner.ShowInTaskbar = $false
+            $owner.Opacity = 0
+            $owner.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
             $owner.TopMost = $true
+            $owner.Show()
+            $owner.Activate()
             $dialog.InitialDirectory = $env:STUDIO_DIALOG_DIRECTORY
             $dialog.RestoreDirectory = $true
             $dialog.Filter = 'JSON map (*.json)|*.json'
@@ -98,7 +103,8 @@ public sealed class NativeMapFiles(ProjectFiles files, Func<string, string, stri
     {
         var start = new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "WindowsPowerShell", "v1.0", "powershell.exe"))
         {
-            UseShellExecute = false, CreateNoWindow = true, WindowStyle = ProcessWindowStyle.Hidden,
+            // Hide the console, not the process's first GUI window (the file dialog).
+            UseShellExecute = false, CreateNoWindow = true,
             RedirectStandardOutput = true, RedirectStandardError = true, StandardOutputEncoding = Encoding.UTF8
         };
         foreach (string arg in new[] { "-NoProfile", "-NonInteractive", "-STA", "-EncodedCommand", Convert.ToBase64String(Encoding.Unicode.GetBytes(DialogScript)) }) start.ArgumentList.Add(arg);

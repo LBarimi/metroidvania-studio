@@ -6,6 +6,13 @@ const base = process.env.METROIDVANIA_STUDIO_BASE_URL;
 assert.equal(process.env.METROIDVANIA_STUDIO_TEST_ISOLATED, '1');
 assert.ok(['localhost', '127.0.0.1'].includes(new URL(base).hostname));
 const state = async () => (await fetch(base + '/api/state?full=true')).json();
+async function waitState(predicate) {
+  for (let attempt = 0; attempt < 120; attempt++) {
+    const value = await state(); if (predicate(value)) return value;
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  throw new Error('The file operation did not reach its expected server state.');
+}
 const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : undefined, headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, locale: 'en-US' });
@@ -39,13 +46,13 @@ try {
   await page.evaluate(async doc => { await window.__putMapFile('opened.map.json', JSON.stringify(doc)); }, loaded);
   await menu('Open map');
   if (original.dirty) await page.locator('dialog .accent').click();
-  await page.waitForFunction(async () => (await (await fetch('/api/state')).json()).file === 'opened.map.json');
+  await waitState(s => s.file === 'opened.map.json');
   let current = await sync(); assert.equal(current.dirty, false); assert.deepEqual(current.document, loaded);
   const fileId = current.browserFileId;
   await command('documentProperties', { name: 'Saved by shortcut' });
   await page.locator('#map-canvas').focus(); await page.keyboard.press('Control+s');
   await page.waitForFunction(() => window.__filePickers.writes === 1);
-  await page.waitForFunction(async () => !(await (await fetch('/api/state')).json()).dirty); await sync();
+  await waitState(s => !s.dirty); await sync();
   const savedJson = await page.evaluate(() => window.__readMapFile('opened.map.json'));
   assert.equal(JSON.parse(savedJson).name, 'Saved by shortcut');
   assert.equal(savedJson, JSON.stringify(JSON.parse(savedJson)), 'Browser file saves must be compact JSON without a trailing newline.');
@@ -61,13 +68,13 @@ try {
   await page.locator('#map-canvas').focus(); await page.keyboard.press('Control+s');
   await page.waitForTimeout(100); assert.equal(await page.evaluate(() => window.__filePickers.writes), writes, 'Save must drain earlier input before serializing the file.');
   releaseWriter(); await page.waitForFunction(n => window.__filePickers.writes > n, writes);
-  await page.waitForFunction(async () => !(await (await fetch('/api/state')).json()).dirty); await sync();
+  await waitState(s => !s.dirty); await sync();
   await page.unroute('**/api/command', delay);
 
   await page.evaluate(() => { window.__filePickers.cancel = true; });
   await menu('Save map as'); await sync(); assert.equal((await state()).browserFileId, fileId);
   await page.evaluate(() => { window.__filePickers.cancel = false; window.__filePickers.saveName = 'copy.map.json'; });
-  await menu('Save map as'); await page.waitForFunction(async () => (await (await fetch('/api/state')).json()).file === 'copy.map.json'); await sync();
+  await menu('Save map as'); await waitState(s => s.file === 'copy.map.json'); await sync();
   assert.notEqual((await state()).browserFileId, fileId);
   assert.equal(await page.evaluate(async () => JSON.parse(await window.__readMapFile('copy.map.json')).name), 'Saved by shortcut');
   await command('documentProperties', { name: 'Not saved yet' });
@@ -81,19 +88,19 @@ try {
   assert.equal(await page.evaluate(() => window.__readMapFile('copy.map.json')), '{"external":true}');
   await page.evaluate(() => { window.__filePickers.saveName = 'raced.map.json'; window.__filePickers.afterWriteName = 'Later edit'; });
   await menu('Save map as');
-  await page.waitForFunction(async () => (await (await fetch('/api/state')).json()).document.name === 'Later edit');
+  await waitState(s => s.document.name === 'Later edit');
   await page.locator('#toast').filter({ hasText: /changed|stale|newer/i }).waitFor();
   assert.equal((await state()).dirty, true, 'A late receipt must not mark a later edit saved.');
   assert.equal(await page.evaluate(async () => JSON.parse(await window.__readMapFile('raced.map.json')).name), 'Not saved yet');
   // Import keeps its ordinary OS file chooser and deliberately drops the source-file binding.
   const chooser = page.waitForEvent('filechooser'); await menu('Import map JSON');
   await (await chooser).setFiles({ name: 'imported.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(loaded)) });
-  await page.locator('dialog .accent').click(); await page.waitForFunction(async () => (await (await fetch('/api/state')).json()).browserFileId === null); await sync();
+  await page.locator('dialog .accent').click(); await waitState(s => s.browserFileId === null); await sync();
   assert.equal((await state()).dirty, true);
   await page.evaluate(() => { window.showOpenFilePicker = undefined; window.showSaveFilePicker = undefined; });
   const fallback = page.waitForEvent('filechooser'); await menu('Open map');
   await (await fallback).setFiles({ name: 'fallback.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(loaded)) });
-  await page.locator('dialog .accent').click(); await page.waitForFunction(async () => (await (await fetch('/api/state')).json()).file === 'fallback.json'); await sync();
+  await page.locator('dialog .accent').click(); await waitState(s => s.file === 'fallback.json'); await sync();
   await command('documentProperties', { name: 'Fallback download' });
   const download = page.waitForEvent('download'); await menu('Save map as');
   assert.equal((await download).suggestedFilename(), 'fallback.json'); assert.equal((await state()).dirty, true, 'Starting a browser download is not a confirmed file save.');

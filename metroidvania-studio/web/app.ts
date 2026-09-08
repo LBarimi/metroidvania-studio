@@ -142,7 +142,7 @@ async function openMap(): Promise<void> {
   if (fileBusy || !state) return;
   fileBusy = true; let choosing = true;
   try {
-    const chosen = await pickMapFile(); choosing = false; if (!chosen) return;
+    const chosen = await pickMapFile(key => locale.t(key)); choosing = false; if (!chosen) return;
     if (chosen.file.size > 32 * 1024 * 1024) throw new Error(locale.t('importTooLarge'));
     const document = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(await chosen.file.arrayBuffer()));
     const hash = await fileHash(chosen.file);
@@ -160,7 +160,7 @@ async function save(saveAs = false): Promise<void> {
   try {
     const previous = !saveAs && attachedFile?.instanceId === state.instanceId && attachedFile?.id === state.browserFileId ? attachedFile : undefined;
     const fileName = state.file?.split('/').pop() || state.document.name.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').trim() + '.map.json';
-    const handle = await pickMapSave(fileName, previous?.handle); choosing = false;
+    const handle = await pickMapSave(fileName, previous?.handle, key => locale.t(key)); choosing = false;
     const hash = previous?.hash ?? (handle ? await fileHash(await handle.getFile()) : '');
     await settleFileSnapshot(); const snapshot = state;
     const json = JSON.stringify(snapshot.document);

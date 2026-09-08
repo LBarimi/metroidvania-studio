@@ -398,3 +398,4 @@ docs.api,API 레퍼런스,API reference,API リファレンス,API 参考,API �
 "paletteGroupsChanged","그룹 구성이 변경되었습니다. 창을 다시 열고 이동해 주세요.","The groups changed. Reopen the dialog before moving.","グループが変更されました。ダイアログを開き直してください。","分组已发生变化，请重新打开对话框后移动。","群組已變更，請重新開啟對話框後移動。","Группы изменились. Откройте диалог заново."
 "paletteGroupInvalidData","팔레트 그룹 정보를 확인해 주세요.","Check the palette group data.","パレットのグループ情報を確認してください。","请检查调色板分组数据。","請檢查調色盤群組資料。","Проверьте данные групп палитр."
 "paletteGroupLimit","그룹은 최대 128개까지 추가할 수 있습니다.","You can create up to 128 groups.","グループは最大128個です。","最多可创建128个分组。","最多可建立128個群組。","Можно создать до 128 групп."
+"fileDialogWaiting","파일 창에서 맵을 선택하세요.","Choose a map in the file dialog.","ファイル画面でマップを選択してください。","请在文件窗口中选择地图。","請在檔案視窗中選擇地圖。","Выберите карту в файловом окне."
