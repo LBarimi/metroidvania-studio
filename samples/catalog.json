@@ -5015,7 +5015,7 @@
       "name": "Portal",
       "color": "#FF00FFFF",
       "layer": 2,
-      "placement": 0,
+      "placement": 1,
       "minimumNodes": 0,
       "maximumNodes": 0,
       "width": 1,

@@ -27,6 +27,13 @@ public static class BuiltInObjects
                 continue;
             }
             if (existing["name"]?.GetValue<string>() != existing["id"]?.GetValue<string>() || existing["properties"] is not JsonArray fields) continue;
+            if (name == "Portal" && existing["placement"]?.GetValue<int>() == 0
+                && new[] { "layer", "width", "height", "minimumWidth", "minimumHeight", "resizable", "minimumNodes", "maximumNodes" }
+                    .All(key => JsonNode.DeepEquals(existing[key], bundled[key])))
+            {
+                existing["placement"] = bundled["placement"]!.DeepClone();
+                changed = true;
+            }
             foreach (var field in bundled["properties"]!.AsArray().OfType<JsonObject>().Where(f => f["key"]?.GetValue<string>() is "desc" or "event" or "once"))
             {
                 string key = field["key"]!.GetValue<string>();

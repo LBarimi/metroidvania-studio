@@ -1,6 +1,6 @@
 # Objects and trigger events
 
-The Objects palette contains **Spawn**, **Portal**, **Path**, and **Respawn point**. Portals are magenta. Use the Triggers layer to draw a rectangular event region. Previously placed legacy objects stay in existing maps.
+The Objects palette contains **Spawn**, **Portal**, **Path**, and **Respawn point**. Portals are magenta room-transition regions: choose Portal in the Objects palette, then click for one tile or drag to cover a rectangle. The region snaps to tile cells and stays inside its room. Each drag creates one portal with one ID, regardless of its size. Use the Triggers layer to draw a rectangular event region. Previously placed legacy objects stay in existing maps.
 
 Every placed object, trigger, and decal has a unique ID. The inspector displays it as a read-only value, and JSON exports retain it. Copying an object or a room assigns new IDs to the copies. Moving, resizing, saving and reopening keep the original IDs.
 

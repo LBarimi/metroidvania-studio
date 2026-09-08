@@ -3,6 +3,7 @@
 ## 1.3.1
 
 - Allow room movement and resizing from foreground, background, object, trigger and decal layers.
+- Draw magenta portal regions on the tile grid with click-and-drag, clipped to the active room, while preserving existing portal IDs and event settings.
 - Add magenta one-shot portals and respawn points. Show Spawn, Portal, Path and Respawn point in the object palette while retaining legacy placed objects.
 - Add a Once checkbox, 200 numbered trigger events, and descriptions displayed at the center of placed objects and trigger regions.
 - Display read-only placement IDs and preserve them in JSON exports; copies receive new unique IDs.

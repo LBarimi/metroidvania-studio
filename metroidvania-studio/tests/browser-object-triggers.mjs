@@ -38,9 +38,33 @@ try {
   await page.locator('#room-list button').first().click(); await settle();
   const names=await page.locator('.palette-item').allTextContents();
   assert.deepEqual(names.map(n=>n.trim()),['Spawn','Portal','Path','Respawn point']);
-  let p=await at(3,3); await page.mouse.click(p.x,p.y);
+  let p=await at(3.2,3.7); await page.mouse.click(p.x,p.y);
   let s=await until(s=>s.document.rooms[0].objects.length===1);
   const portal=s.document.rooms[0].objects[0]; assert.equal(portal.definition,'Portal'); assert.ok(portal.id);
+  const bounds = o => [o.x,o.y,o.width,o.height];
+  assert.deepEqual(bounds(portal),[3,3,1,1],'Click snaps the portal to a tile cell.');
+  async function stroke(from,to,expected) {
+    const start=await at(...from), end=await at(...to);
+    await page.mouse.move(start.x,start.y); await page.mouse.down();
+    await page.mouse.move(end.x,end.y,{steps:12}); await paint();
+    assert.equal((await state()).document.rooms[0].objects.length,1,'Dragging previews one area without placing per-pointer objects.');
+    await page.mouse.up();
+    const placed=(await until(s=>s.document.rooms[0].objects.length===2)).document.rooms[0].objects.find(o=>o.id!==portal.id);
+    assert.deepEqual(bounds(placed),expected);
+    await command('undo'); await settle();
+    assert.equal((await state()).document.rooms[0].objects.length,1);
+    return placed;
+  }
+  const drawn=await stroke([6.2,3.8],[8.7,6.2],[6,3,3,4]);
+  await command('redo'); await settle();
+  assert.equal((await state()).document.rooms[0].objects.find(o=>o.id===drawn.id)?.width,3);
+  await command('undo'); await settle();
+  await stroke([8.7,6.2],[6.2,3.8],[6,3,3,4]);
+  await stroke([14.2,3.8],[17.2,6.2],[14,3,2,4]);
+  p=await at(10.2,3.8); const cancelled=await at(12.7,6.2);
+  await page.mouse.move(p.x,p.y); await page.mouse.down(); await page.mouse.move(cancelled.x,cancelled.y,{steps:4});
+  await page.keyboard.press('Escape'); await page.mouse.up(); await settle();
+  assert.equal((await state()).document.rooms[0].objects.length,1,'Escape cancels the portal preview.');
   await command('objectClick',{x:portal.x+.5,y:portal.y+.5}); await settle();
   const id=page.locator('#object-id'); assert.equal(await id.inputValue(),portal.id); assert.ok(await id.getAttribute('readonly')!==null);
   assert.ok(await page.locator('[data-property="once"]').isChecked()); assert.ok(await page.locator('[data-property="once"]').isDisabled());

@@ -1476,8 +1476,14 @@ export class MapCanvas {
   private drawObjectPlacementPreview(gesture: ObjectGesture): void {
     const room = this.state?.document.rooms.find(candidate => candidate.id === gesture.roomId), definition = this.definitions.get(definitionKey(gesture.definition));
     if (!room?.visible || !definition || room.locked || !this.memberEditable(gesture.layer, gesture.groupId, gesture.groupId)) return;
-    const start = gesture.points[0], end = gesture.points[gesture.points.length - 1];
+    let start = gesture.points[0], end = gesture.points[gesture.points.length - 1];
     const rectangle = definition.placement === 1;
+    if (rectangle && definitionKey(definition.id) === 'portal') {
+      if (start.x < 0 || start.y < 0 || start.x >= room.width || start.y >= room.height) return;
+      const cell = (point: Point) => ({ x: Math.max(0, Math.min(room.width - 1, Math.floor(point.x))),
+        y: Math.max(0, Math.min(room.height - 1, Math.floor(point.y))) });
+      start = cell(start); end = cell(end);
+    }
     const snap = (value: number) => Math.round(value * 16) / 16;
     const x = rectangle ? Math.floor(Math.min(start.x, end.x)) : snap(start.x);
     const y = rectangle ? Math.floor(Math.min(start.y, end.y)) : snap(start.y);
@@ -1506,7 +1512,7 @@ export class MapCanvas {
     const center = this.toScreen({ x: room.x + object.x + object.width / 2, y: room.y + object.y + object.height / 2 });
     ctx.save(); ctx.translate(center.x, center.y); ctx.rotate(-(object.rotation || 0) * Math.PI / 180); ctx.scale(object.scaleX ?? 1, object.scaleY ?? 1);
     const rect = { x: -object.width * this.scale / 2, y: -object.height * this.scale / 2, width: object.width * this.scale, height: object.height * this.scale };
-    if (!def?.sprite || !this.sprite(def.sprite, rect)) { const alpha = ctx.globalAlpha; ctx.fillStyle = color; ctx.globalAlpha = alpha * (object.layer === 3 ? .36 : .8); ctx.fillRect(rect.x, rect.y, rect.width, rect.height); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.strokeRect(rect.x, rect.y, rect.width, rect.height); }
+    if (!def?.sprite || !this.sprite(def.sprite, rect)) { const alpha = ctx.globalAlpha; ctx.fillStyle = color; ctx.globalAlpha = alpha * (object.layer === 3 || key === 'portal' ? .36 : .8); ctx.fillRect(rect.x, rect.y, rect.width, rect.height); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.strokeRect(rect.x, rect.y, rect.width, rect.height); }
     if (selected) { ctx.strokeStyle = '#ffe894'; ctx.lineWidth = 2 / Math.max(Math.abs(object.scaleX || 1), 1); ctx.strokeRect(rect.x - 1, rect.y - 1, rect.width + 2, rect.height + 2); }
     ctx.restore();
     const description = object.properties.find(p => p.key === 'desc')?.value.trim();

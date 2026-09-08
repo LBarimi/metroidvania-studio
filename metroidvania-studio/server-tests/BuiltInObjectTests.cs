@@ -41,6 +41,19 @@ internal static class BuiltInObjectTests
             Check(updated.Any(o => o!["id"]!.GetValue<string>() == "Marker") && updated.Any(o => o!["id"]!.GetValue<string>() == "Object"), "Legacy definitions are preserved.");
             var portal = updated.Single(o => o!["id"]!.GetValue<string>() == "Portal")!;
             Check(portal["color"]!.GetValue<string>() == "#FF00FFFF", "Portal is magenta.");
+            Check(portal["placement"]!.GetValue<int>() == 1, "New portals use tile-aligned rectangle placement.");
+            portal["placement"] = 0;
+            portal["color"] = "#FF22CCFF";
+            var description = portal["properties"]!.AsArray().Single(p => p!["key"]!.GetValue<string>() == "desc")!;
+            description["defaultValue"] = "Room transition";
+            File.WriteAllText(files.CatalogWritePath, result.ToJsonString());
+            BuiltInObjects.Prepare(files, studio);
+            result = JsonNode.Parse(File.ReadAllText(files.CatalogWritePath))!;
+            updated = result["objects"]!.AsArray();
+            portal = updated.Single(o => o!["id"]!.GetValue<string>() == "Portal")!;
+            Check(portal["placement"]!.GetValue<int>() == 1 && portal["color"]!.GetValue<string>() == "#FF22CCFF"
+                && portal["properties"]!.AsArray().Single(p => p!["key"]!.GetValue<string>() == "desc")!["defaultValue"]!.GetValue<string>() == "Room transition",
+                "Old built-in point portals upgrade without losing customized color or fields.");
             string stable = File.ReadAllText(files.CatalogWritePath);
             BuiltInObjects.Prepare(files, studio);
             Check(File.ReadAllText(files.CatalogWritePath) == stable, "Migration is idempotent.");
