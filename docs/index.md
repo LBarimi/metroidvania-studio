@@ -52,7 +52,7 @@ The CLI emits JSON on stdout. MCP uses stdio; it does not expose a network port.
 
 ## Data compatibility
 
-Automation API version **1**, studio version **1.3.1**, and map format version **2** are separate version numbers. Existing map files and engine packages continue using [map format 2](../metroidvania-studio/contracts/FORMAT.md). Lua scripts are editing tools and are not embedded in exported game data.
+Automation API version **1**, studio version **1.3.2**, and map format version **2** are separate version numbers. Existing map files and engine packages continue using [map format 2](../metroidvania-studio/contracts/FORMAT.md). Lua scripts are editing tools and are not embedded in exported game data.
 
 See [validation commands and platform coverage](validation.md) to run the checks locally.
 

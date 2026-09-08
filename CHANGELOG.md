@@ -1,6 +1,6 @@
 # Changes
 
-## Unreleased
+## 1.3.2
 
 - Keep room movement and resize handles available with every tool, including Game camera, while preserving room locks and pending-write protection.
 - Add an Always show game camera toolbar toggle to retain the camera frame while editing with other tools.
