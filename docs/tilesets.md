@@ -1,4 +1,6 @@
-# Tile palettes
+# Tile palettes and autotiling
+
+Set up 4-tile or 47-tile autotiling, import your PNG tileset, and organize palettes into groups. Neighboring tiles determine which sprite appears as you paint.
 
 Open **…** beside a palette in the left sidebar. The same settings apply to its solid and slope brushes. Palette changes affect every tile using that palette; use **+** to create an independent palette first when needed.
 

@@ -1,6 +1,8 @@
 # <img src="metroidvania-studio/web/studio-icon.svg" width="36" height="36" alt=""> Metroidvania Studio
 
-A web-based 2D world editor for metroidvania games. Create connected rooms, paint tilemaps, and design minimaps with JSON export for cross-engine workflows.
+Metroidvania Studio is a web-based level editor for metroidvania games. Create connected 2D worlds with a room-based map editor, paint autotiled terrain, and design minimaps with JSON export for your game engine.
+
+[Documentation](https://lbarimi.github.io/metroidvania-studio/) · [Downloads](https://github.com/LBarimi/metroidvania-studio/releases/latest)
 
 **Automate your workflow:** [Lua scripts](docs/scripting/quick-start.md), a [headless CLI](docs/cli/quick-start.md), and a [local MCP server for AI agents](docs/mcp/setup.md).
 
@@ -94,7 +96,7 @@ npm install --global metroidvania-studio
 
 Using a program download? Run `metroidvania-studio-cli.cmd help` on Windows, or `bash metroidvania-studio-cli.sh help` on macOS/Linux. See [headless from a download](docs/cli/release-downloads.md).
 
-Start with the [automation guides](docs/index.md), [API reference](docs/api/index.md), [Lua examples](docs/examples/connected-rooms.lua), or [MCP setup](docs/mcp/setup.md).
+Start with the [documentation](https://lbarimi.github.io/metroidvania-studio/), [API reference](docs/api/index.md), [Lua examples](docs/examples/connected-rooms.lua), or [MCP setup](docs/mcp/setup.md).
 
 ## License
 

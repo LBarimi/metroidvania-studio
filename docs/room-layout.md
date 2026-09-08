@@ -1,0 +1,29 @@
+# Room layout
+
+Build a connected world by adding rooms, resizing their bounds, and arranging them on the map canvas. Move rooms individually or select several rooms to reposition a whole section.
+
+## Add and select rooms
+
+Right-click empty space in the map editor and choose the room creation action. The new room is placed near that position without overlapping existing rooms.
+
+Click a room to select it. While painting, the first click in a different room activates that room; start a new stroke to paint there. The selected room's properties appear in the inspector.
+
+## Move and resize
+
+Drag a room's title strip to move it. Bring room edges together to snap them into place. Drag the outer resize handles to change the room's bounds; the inspector also provides room dimensions and rotation controls.
+
+When shrinking a room, existing contents limit how far its bounds can move inward. Rooms touching a resized edge may move with it to preserve their layout.
+
+Hold **Ctrl** and click rooms to build a selection, then drag a selected room's title strip to move the selection together. Click empty space to clear the multiple selection. Use **Edit → Undo** to undo a layout change.
+
+## Navigate the world
+
+Middle-drag to pan and use the mouse wheel to zoom. Right-drag on empty space also pans. Switch between the whole-world view, room view, and game view using the toolbar.
+
+The PPU and resolution controls beside **Game view** define its camera framing. Room positions and dimensions remain part of the map document.
+
+## Paint connected spaces
+
+Select a tile palette and paint the room's foreground or background layer. Autotiling updates neighboring tile edges as you draw. Use [tile palette settings](tilesets.md) to choose your source images and connection mode.
+
+Open the [minimap](minimap.md) to review the overall layout. Room adjacency describes the map layout; gameplay transitions are implemented in your game project.
