@@ -8,15 +8,15 @@ A web-based 2D world editor for metroidvania games. Create connected rooms, pain
 
 ## Add Rooms & Paint Tiles
 
-![Add a second room, paint its tiles, then pan back and paint the first room to connect their terrain](media/readme/create-and-paint.gif)
+![Add a second room, paint rock tiles, then pan back and connect the first room](media/readme/create-and-paint.gif)
 
 ## Resize, Rotate & Connect Rooms
 
-![Resize and rotate a room, then drag two separate rooms into place to connect them](media/readme/resize-rotate-and-connect.gif)
+![Resize and rotate an ice cavern, then connect grassland and volcanic rooms](media/readme/resize-rotate-and-connect.gif)
 
 ## Design Your Minimap
 
-![Explore the minimap, double-click a room to edit it, then zoom out](media/readme/design-the-minimap.gif)
+![Explore a world of five terrain themes, double-click an ice cavern to edit it, then zoom out](media/readme/design-the-minimap.gif)
 
 ## Get Started
 
