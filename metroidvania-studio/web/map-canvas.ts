@@ -257,6 +257,11 @@ export class MapCanvas {
     this.canvas.style.cursor = ''; this.requestDraw();
   }
   moveGameCamera(center: Point): void { if (this.gameCamera.move(center)) this.gameCameraTool ? this.requestDraw() : this.onPreviewChange?.(); }
+  setGameCameraPixelPerfect(enabled: boolean): void {
+    if (!this.gameCamera.setPixelPerfect(enabled)) return;
+    if (this.gesture?.kind === 'game-camera') this.cancel();
+    this.gameCameraTool ? this.requestDraw() : this.onPreviewChange?.();
+  }
   centerGameCamera(): void { if (this.gameCamera.recenter()) this.gameCameraTool ? this.requestDraw() : this.onPreviewChange?.(); }
   get interacting(): boolean { return this.gesture !== null; }
   get hasPendingWork(): boolean { return this.gesture !== null || this.gestureCommandsPending > 0 || this.brushSizeTask !== null; }
@@ -495,7 +500,11 @@ export class MapCanvas {
   toScreen(world: Point): Point { const origin = this.origin(); return { x: origin.x + world.x * this.scale, y: origin.y - world.y * this.scale }; }
   toWorld(point: Point): Point { const origin = this.origin(); return { x: (point.x - origin.x) / this.scale, y: -(point.y - origin.y) / this.scale }; }
   private origin(): Point { return this.renderOrigin || this.computeOrigin(); }
-  private computeOrigin(): Point { return { x: Math.round((this.width / 2 - this.center.x * this.scale) * this.dpr) / this.dpr, y: Math.round((this.height / 2 + this.center.y * this.scale) * this.dpr) / this.dpr }; }
+  private computeOrigin(): Point {
+    const x = this.width / 2 - this.center.x * this.scale, y = this.height / 2 + this.center.y * this.scale;
+    if (this.cameraPreview && !this.gameCamera.pixelPerfect) return { x, y };
+    return { x: Math.round(x * this.dpr) / this.dpr, y: Math.round(y * this.dpr) / this.dpr };
+  }
   private point(e: MouseEvent): Point { const r = this.canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
   private roomAt(point: Point): Room | undefined {
     const current = activeRoom(this.state); if (current?.visible && contains(current, point)) return current;

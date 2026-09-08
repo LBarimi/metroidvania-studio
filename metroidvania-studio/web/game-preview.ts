@@ -12,6 +12,8 @@ export class GamePreview {
   private collapseButton = document.createElement('button');
   private maximizeButton = document.createElement('button');
   private centerButton = document.createElement('button');
+  private pixelPerfect = document.createElement('input');
+  private pixelPerfectLabel = document.createElement('label');
   private body = document.createElement('div');
   private source: MapCanvas;
   private t: (key: string) => string;
@@ -41,9 +43,20 @@ export class GamePreview {
     button(this.collapseButton, 'preview-collapse', '−', () => this.setCollapsed(!this.collapsed));
     button(this.maximizeButton, 'preview-maximize', '□', () => this.setMaximized(!this.maximized));
     button(this.centerButton, 'preview-center', '⌾', () => this.frameRoom());
+    this.pixelPerfect.type = 'checkbox'; this.pixelPerfect.id = 'preview-pixel-perfect';
+    this.pixelPerfect.checked = localStorage.getItem('metroidvaniaStudio.previewPixelPerfect') !== 'false';
+    this.pixelPerfectLabel.className = 'preview-pixel-perfect';
+    this.pixelPerfectLabel.append(this.pixelPerfect, 'Pixel Perfect');
+    source.setGameCameraPixelPerfect(this.pixelPerfect.checked);
+    this.pixelPerfect.addEventListener('change', () => {
+      this.cancelPan();
+      source.setGameCameraPixelPerfect(this.pixelPerfect.checked);
+      localStorage.setItem('metroidvaniaStudio.previewPixelPerfect', String(this.pixelPerfect.checked));
+      this.requestDraw(true);
+    });
     this.collapseButton.setAttribute('aria-controls', this.body.id);
     header.append(this.title, this.roomName, this.collapseButton, this.maximizeButton);
-    footer.append(this.info, this.centerButton); this.body.append(this.canvas, footer); this.element.append(header, this.body);
+    footer.append(this.info, this.pixelPerfectLabel, this.centerButton); this.body.append(this.canvas, footer); this.element.append(header, this.body);
     this.resize = new ResizeObserver(() => this.requestDraw(true)); this.resize.observe(this.canvas);
     const options = { signal: this.abort.signal };
     this.canvas.addEventListener('contextmenu', event => event.preventDefault(), options);
@@ -67,7 +80,7 @@ export class GamePreview {
       if (event.ctrlKey || event.metaKey) { if (event.key.toLowerCase() === 's') return; }
       if (event.key === 'Escape') { event.preventDefault(); this.cancelPan(); if (this.maximized) this.setMaximized(false); this.returnFocus(); }
       else if (event.key.toLowerCase() === 'f') { event.preventDefault(); this.frameRoom(); }
-      else if (event.key !== 'Tab' && !(event.target instanceof HTMLButtonElement && ['Enter', ' '].includes(event.key))) event.preventDefault();
+      else if (event.key !== 'Tab' && !((event.target instanceof HTMLButtonElement || event.target === this.pixelPerfect) && ['Enter', ' '].includes(event.key))) event.preventDefault();
       event.stopPropagation();
     }, options);
     source.onPreviewChange = () => this.requestDraw();
@@ -76,6 +89,7 @@ export class GamePreview {
   updateLabels(): void {
     this.canvas.setAttribute('aria-label', this.t('previewHelp'));
     this.canvas.title = this.t('previewHelp');
+    this.pixelPerfectLabel.title = this.t('previewPixelPerfectHelp');
     for (const [button, key] of [[this.collapseButton, this.collapsed ? 'previewExpand' : 'previewCollapse'],
       [this.maximizeButton, this.maximized ? 'previewRestore' : 'previewMaximize'], [this.centerButton, 'frameRoom']] as const) {
       button.title = this.t(key); button.setAttribute('aria-label', this.t(key));

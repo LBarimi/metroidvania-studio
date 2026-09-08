@@ -1,5 +1,9 @@
 # Changes
 
+## Unreleased
+
+- Add a Pixel Perfect checkbox to Game Preview. Toggle source-pixel snapping for both camera controls while retaining room bounds, and remember the setting locally without changing map data.
+
 ## 1.3.1
 
 - Add tile palette import and Game Preview demonstrations to the README.
