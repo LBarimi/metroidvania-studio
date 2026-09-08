@@ -21,7 +21,7 @@ For clients that launch npm packages through `npx`, pin the version in the confi
   "mcpServers": {
     "metroidvania-studio": {
       "command": "npx",
-      "args": ["-y", "metroidvania-studio@1.3.2", "mcp", "--workspace", "workspace"]
+      "args": ["-y", "metroidvania-studio@1.3.1", "mcp", "--workspace", "workspace"]
     }
   }
 }
