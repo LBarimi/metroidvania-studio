@@ -2,6 +2,7 @@
 
 ## 1.3.2 (unreleased)
 
+- Open the room creation menu on empty-space right clicks with every tool, including Game camera. Keep right-drag panning and in-room erase behavior.
 - Leave Rooms, Selection and Game camera when choosing an editable layer, including the current layer. Select the tile brush or object placement tool so drawing in a new room does not move it.
 - Preserve tile drawing tools when switching between tile layers, and keep visibility and lock controls independent of tool selection.
 

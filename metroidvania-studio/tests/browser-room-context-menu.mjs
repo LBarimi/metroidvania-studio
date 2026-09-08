@@ -35,6 +35,10 @@ await command('selectRoom', { id: 'A' });
 await command('options', { tool: 3, layer: 0, brushSize: 1, shape: 0, material: 'terrain', groupId: '', hiddenLayers: [], lockedLayers: [] });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, ignoreDefaultArgs: ['--hide-scrollbars'] });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'ko-KR' });
+await page.route('**/app.js', async route => {
+  const response = await route.fetch();
+  await route.fulfill({ response, body: await response.text() + '\nwindow.__contextMap = map;' });
+});
 const errors = [], checks = [], requests = [];
 page.on('pageerror', error => errors.push(error.message));
 page.on('request', request => { if (request.url().endsWith('/api/command')) requests.push(JSON.parse(request.postData())); });
@@ -73,6 +77,46 @@ function overlaps(a, b) { return a.x < b.x + b.width && a.x + a.width > b.x && a
 try {
   await page.goto(base); await page.locator('#room-list button').first().waitFor(); await clientAt((await state()).revision);
   const before = JSON.stringify((await state()).document);
+  const cases = [{ tool: 3, layer: 0, camera: true }];
+  for (const layer of [0, 1, 2, 3, 4, 5, 6]) {
+    const tools = layer < 2 ? [0, 2, 3, 4, 5, 6, 7, 8] : layer === 6 ? [0, 2] : [0, 1, 2];
+    for (const tool of tools) cases.push({ tool, layer, camera: false });
+    if (layer !== 0) cases.push({ tool: layer < 2 ? 3 : 2, layer, camera: true });
+  }
+  for (const entry of cases) {
+    const selected = await command('options', { tool: entry.tool, layer: entry.layer }); await clientAt(selected.revision);
+    await page.evaluate(camera => { window.__contextMap.setGameCameraTool(camera); window.__contextMap.frameRoom(); }, entry.camera);
+    await paint();
+    const start = await point(-2.25, -1.25), cameraBefore = await page.evaluate(() => window.__contextMap.gameCamera.center);
+    requests.length = 0;
+    await page.mouse.move(start.x, start.y); await page.mouse.down({ button: 'right' });
+    await page.mouse.move(start.x + 2, start.y + 1); await page.mouse.up({ button: 'right' });
+    assert.equal(await menu.count(), 1, 'Empty-space context click must work: ' + JSON.stringify(entry));
+    await menu.getByRole('menuitem').click(); await page.locator('dialog[open]').waitFor();
+    assert.equal(await page.locator('#room-add-x').inputValue(), '-3');
+    assert.equal(await page.locator('#room-add-y').inputValue(), '-2');
+    await page.keyboard.press('Escape'); await paint();
+    assert.equal(await page.evaluate(() => window.__contextMap.gameCameraTool), entry.camera);
+    await page.mouse.move(start.x, start.y); await page.mouse.down({ button: 'right' });
+    await page.mouse.move(start.x + 64, start.y - 32, { steps: 6 });
+    assert.equal(await page.locator('#map-canvas').evaluate(c => c.style.cursor), 'grabbing');
+    await page.mouse.up({ button: 'right' }); await paint();
+    assert.equal(await menu.count(), 0);
+    assert.deepEqual(await page.evaluate(() => window.__contextMap.center), { x: 3, y: 3 });
+    assert.deepEqual(await page.evaluate(() => window.__contextMap.gameCamera.center), cameraBefore);
+    assert.deepEqual(requests, []); assert.equal(JSON.stringify((await state()).document), before);
+  }
+  checks.push('All tools and layers open room creation on an empty-space right click and pan on a right drag without map edits');
+  await page.evaluate(() => window.__contextMap.frameRoom()); await paint();
+  const insideCamera = await point(2.5, 3.5); requests.length = 0;
+  await page.mouse.move(insideCamera.x, insideCamera.y); await page.mouse.down({ button: 'right' });
+  await page.mouse.move(insideCamera.x + 32, insideCamera.y, { steps: 4 }); await page.mouse.up({ button: 'right' }); await paint();
+  assert.equal(await menu.count(), 0); assert.deepEqual(requests, []);
+  assert.deepEqual(await page.evaluate(() => window.__contextMap.center), { x: 4, y: 4 });
+  assert.equal(JSON.stringify((await state()).document), before);
+  checks.push('Camera-tool right drags inside rooms continue to pan without erasing');
+  const brush = await command('options', { tool: 3, layer: 0 }); await clientAt(brush.revision);
+  await page.evaluate(() => { window.__contextMap.setGameCameraTool(false); window.__contextMap.frameRoom(); }); await paint();
   await openAt(-2.25, -1.25);
   assert.equal(await page.locator('#room-add-x').inputValue(), '-3');
   assert.equal(await page.locator('#room-add-y').inputValue(), '-2');
@@ -174,8 +218,10 @@ try {
   const bounds = await menu.boundingBox();
   assert.ok(bounds.x >= 0 && bounds.y >= 0 && bounds.x + bounds.width <= 1440 && bounds.y + bounds.height <= 900);
   await page.keyboard.press('Escape');
-  await page.locator('#camera-preview').click(); await paint();
-  const camera = await page.locator('#map-canvas').boundingBox();
+  const preview = page.locator('#game-preview-canvas');
+  if (!await preview.isVisible()) await page.locator('#preview-collapse').click();
+  await paint();
+  const camera = await preview.boundingBox();
   await page.mouse.click(camera.x + 8, camera.y + 8, { button: 'right' }); await paint();
   assert.equal(await menu.count(), 0); assert.equal(JSON.stringify((await state()).document), before);
   checks.push('English translation, viewport-edge menu clamping and read-only camera preview remain correct');

@@ -28,6 +28,8 @@ const document = { ...initial.document, name: 'Camera views', properties: [], st
 const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : undefined, headless: true });
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, locale: 'en-US' }); page.setDefaultTimeout(10000);
 const errors = [], checks = []; page.on('pageerror', error => errors.push(error.message));
+const commands = [];
+page.on('request', request => { if (request.url().endsWith('/api/command')) commands.push(JSON.parse(request.postData())); });
 const preview = page.locator('#game-preview-canvas');
 const pixels = async () => createHash('sha256').update(await preview.evaluate(c => c.toDataURL())).digest('hex');
 async function settled() { const current = await state(); await page.waitForFunction(r => window.__cameraMap?.state.revision >= r, current.revision); await page.waitForTimeout(80); }
@@ -69,7 +71,12 @@ try {
   assert.equal(await page.locator('#map-canvas').evaluate(c => c.style.cursor), 'grabbing');
   assert.deepEqual(await position(), { x: 24, y: 15 }); assert.notEqual(await pixels(), beforePixels);
   assert.deepEqual(await page.evaluate(() => window.__previewPosition), await position());
-  await page.mouse.up(); assert.equal((await state()).revision, original.revision);
+  await page.mouse.up();
+  // Export status may advance the general revision without editing the document.
+  const afterCameraDrag = await state();
+  assert.equal(afterCameraDrag.documentRevision, original.documentRevision);
+  assert.deepEqual(afterCameraDrag.document, original.document);
+  assert.deepEqual(commands, []);
   await snapshot('game-camera-tool');
   checks.push('Game camera opens Preview, shows a white frame/crosshair and hand cursor, and updates Preview during the held drag without commands');
 
@@ -89,6 +96,8 @@ try {
 
   for (const layer of [1, 2, 3, 4, 5, 6, 0]) {
     await page.locator('#layers .layer-select').nth(layer).click(); await settled();
+    assert.equal(await page.locator('#game-camera-tool').getAttribute('aria-pressed'), 'false');
+    await page.locator('#game-camera-tool').click();
     assert.equal(await page.locator('#game-camera-tool').getAttribute('aria-pressed'), 'true');
     const from = await position(); await drag(from, { x: from.x + .5, y: from.y });
     assert.ok((await position()).x > from.x);

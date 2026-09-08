@@ -542,7 +542,8 @@ export class MapCanvas {
   }
   private down(e: PointerEvent): void {
     if (!this.state || this.gesture || ![0, 1, 2].includes(e.button)) return;
-    const previewPan = e.button === 1 || e.button === 0 && e.altKey || this.gameCameraTool && e.button === 2;
+    const screen = this.point(e), world = this.toWorld(screen), hit = this.roomAt(world);
+    const previewPan = e.button === 1 || e.button === 0 && e.altKey || this.gameCameraTool && e.button === 2 && !!hit;
     if (this.cameraPreview && !previewPan) { e.preventDefault(); this.canvas.focus(); return; }
     const selection = this.state.selection;
     // Every authoring gesture captures a revision and document references at
@@ -552,9 +553,9 @@ export class MapCanvas {
     const blocked = !previewPan && !this.gameCameraTool && busy;
     if (blocked) { e.preventDefault(); this.onError('writerBusy'); return; }
     e.preventDefault(); this.canvas.focus();
-    const screen = this.point(e), world = this.toWorld(screen), previousHover = this.hover;
+    const previousHover = this.hover;
     this.hover = world; this.onHover(world);
-    const selectedRoom = activeRoom(this.state), current = selectedRoom?.visible ? selectedRoom : undefined, hit = this.roomAt(world);
+    const selectedRoom = activeRoom(this.state), current = selectedRoom?.visible ? selectedRoom : undefined;
     const room = current || hit || { x: 0, y: 0 } as Room;
     const g: Gesture = { kind: 'pan', pointer: e.pointerId, start: world, last: world, screen, center: { ...this.center }, room,
       expectation: { instanceId: this.state.instanceId, revision: this.state.revision }, tail: this.gestureTail, failed: false };
