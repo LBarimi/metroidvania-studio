@@ -15,6 +15,7 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   const label = (caption: string, input: HTMLElement) => { const field = element('label'); field.append(element('span', '', caption), input); return field; };
   const errorText = (error: unknown) => { const message = error instanceof Error ? error.message : String(error); return message.startsWith('@') ? t(message.slice(1)) : message; };
   const saved = (material as Material & { editorTileset?: TilesetSettings }).editorTileset;
+  // New palettes carry explicit four-tile settings. Preserve older authored sprite atlases as-is.
   let settings: TilesetSettings = saved ? structuredClone(saved) : { mode: 'blob47', source: material.sprites[0]?.asset || '', slots: Array(51).fill(null) };
   type Source = { image: HTMLImageElement; blob: Blob; name: string; png?: string };
   const sources = new Map<string, Source>();
@@ -30,7 +31,7 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   const color = element('input'); color.id = 'tileset-color'; color.type = 'color'; color.value = /^#[a-f0-9]{6}$/i.test(material.color) ? material.color : '#9655cf';
   const originalColor = color.value;
   const mode = element('select'); mode.id = 'tileset-mode';
-  for (const [value, key] of [['template','tilesetTemplate'], ['four','tilesetFour'], ['blob47','tileset47']]) { const o = element('option', '', t(key)); o.value = value; mode.append(o); }
+  for (const [value, key] of [['four','tilesetFour'], ['blob47','tileset47'], ['template','tilesetTemplate']]) { const o = element('option', '', t(key)); o.value = value; mode.append(o); }
   mode.value = settings.mode;
   const fields = element('div', 'tileset-fields'); fields.append(label(t('name'), name), label(t('theme'), color), label(t('tilesetMethod'), mode));
   const hint = element('p', 'hint'), columns = element('div', 'tileset-columns'), sourcePane = element('section', 'tileset-source'), slotsPane = element('section', 'tileset-target');
@@ -80,9 +81,21 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   dialog.addEventListener('close', () => { disposed = true; generation++; window.clearTimeout(colorTimer); dialog.remove(); });
   dialog.addEventListener('cancel', e => { if (locked) e.preventDefault(); });
   mode.onchange = () => {
+    if (settings.mode === mode.value) return;
+    const previous = structuredClone(settings), previousSource = currentSource;
+    const priorSource = settings.source;
     generation++; loading = false; apply.disabled = false;
     settings.mode = mode.value as TilesetMode; settings.slots = Array(settings.mode === 'four' ? 8 : settings.mode === 'blob47' ? 51 : 0).fill(null);
-    selected = 0; slopes = false; render();
+    selected = 0; slopes = false;
+    const source = pairedSource(priorSource, settings.mode);
+    if (source) {
+      const operation = loadBundled(source), token = generation;
+      void operation.then(loaded => {
+        if (!loaded && !disposed && token === generation) {
+          settings = previous; currentSource = previousSource; mode.value = settings.mode; render();
+        }
+      });
+    } else render();
   };
   // Native color picking emits many input events. Keep its pointer path free of atlas/DOM work.
   color.oninput = () => { window.clearTimeout(colorTimer); colorTimer = window.setTimeout(() => { if (!disposed) render(); }, 120); };
@@ -141,7 +154,25 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
     const used = new Set([settings.source, currentSource, ...settings.slots.map(s => s?.asset).filter(Boolean)]);
     for (const key of sources.keys()) if (!used.has(key)) sources.delete(key);
   }
+  function pairedSource(asset: string, target: TilesetMode): string | undefined {
+    if (target === 'template' || !/^Textures\/(default|biomes)\/(4-tiles|47-tiles)\/[^/]+\.png$/.test(asset)) return;
+    return asset.replace(/\/(4-tiles|47-tiles)\//, target === 'four' ? '/4-tiles/' : '/47-tiles/');
+  }
+  async function loadBundled(asset: string): Promise<boolean> {
+    const token = ++generation; loading = true; apply.disabled = true; error.textContent = '';
+    try {
+      const response = await fetch('/api/asset?path=' + encodeURIComponent(asset), { cache: 'no-store' });
+      if (!response.ok) throw new Error('@tilesetChooseImage');
+      const source = await decode(await response.blob(), false, asset);
+      if (disposed || token !== generation) return false;
+      sources.set(asset, source); currentSource = settings.source = asset; settings.slots.fill(null);
+      autoAssign(); pruneSources(); render(); return true;
+    } catch (e) { if (!disposed && token === generation) error.textContent = errorText(e); return false; }
+    finally { if (!disposed && token === generation) { loading = false; apply.disabled = false; } }
+  }
   async function template(): Promise<void> {
+    const bundled = pairedSource(settings.source, settings.mode);
+    if (bundled) { slopes = false; selected = 0; await loadBundled(bundled); return; }
     const token = ++generation; loading = true; apply.disabled = true;
     try {
       if (settings.mode === 'template') { settings.mode = 'four'; mode.value = 'four'; settings.slots = Array(8).fill(null); }
@@ -212,7 +243,7 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   async function initial(): Promise<void> {
     const token = ++generation; loading = true; apply.disabled = true;
     try {
-      const keys = saved ? [settings.source,...settings.slots.map(s => s?.asset).filter((s): s is string => !!s)] : material.sprites.map(s => s.asset);
+      const keys = saved ? [settings.source,...settings.slots.map(s => s?.asset).filter((s): s is string => !!s)] : [settings.source, ...material.sprites.map(s => s.asset)];
       let bytes = 0, pixels = 0;
       for (const key of new Set(keys.filter(Boolean))) {
         const response = await fetch('/api/asset?path=' + encodeURIComponent(key), { cache: 'no-store' });

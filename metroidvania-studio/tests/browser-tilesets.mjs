@@ -25,7 +25,8 @@ try {
     const response=page.waitForResponse(r=>r.url().endsWith('/api/command')&&r.request().postDataJSON()?.action==='paletteConfigure');
     await page.locator('#tileset-apply').click();const result=await response;assert.ok(result.ok(),await result.text());await page.locator('#tileset-dialog').waitFor({state:'detached'});
   };
-  await open();await page.locator('#tileset-mode').selectOption('four');
+  await open();assert.equal(await page.locator('#tileset-mode').inputValue(),'four');
+  await page.locator('#tileset-clear-slot').click();
   await page.locator('#tileset-apply').click();assert.match(await page.locator('#tileset-error').innerText(),/4개/);
   await page.locator('#tileset-load-template').click();await page.waitForFunction(()=>!document.querySelector('#tileset-apply').disabled && document.querySelectorAll('.tileset-slot:not(.unassigned)').length===4);
   assert.equal(await page.locator('.tileset-slot').count(),4);

@@ -19,10 +19,10 @@ try {
   await page.locator(`.palette-settings[data-material-id="biome-${slug}"]`).click();
   await page.waitForFunction(()=>document.querySelector('#tileset-apply')?.disabled===false);
   assert.equal(await page.getByRole('button',{name:'저장 폴더',exact:true}).count(),0);
-  assert.equal(await page.locator('#tileset-mode').inputValue(),'blob47');
+  assert.equal(await page.locator('#tileset-mode').inputValue(),'four');
   await page.locator('#tileset-open-folder').click();
   await page.waitForTimeout(30);
-  assert.deepEqual(opened.at(-1),{folder:'textures',asset:`Textures/biomes/47-tiles/${slug}.png`});
+  assert.deepEqual(opened.at(-1),{folder:'textures',asset:`Textures/biomes/4-tiles/${slug}.png`});
   assert.equal(await page.locator('#tileset-dialog .modal-error').textContent(),'');
   await page.keyboard.press('Escape');
  }

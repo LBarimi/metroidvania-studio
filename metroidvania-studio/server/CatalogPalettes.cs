@@ -35,16 +35,22 @@ public sealed partial class Catalog
         else if (loadedFromFile) throw new WorkspaceConflict("The palette catalog was removed. Wait for it to reload before adding a palette.");
 
         string id = "palette-" + Guid.NewGuid().ToString("N"), asset = files.NextPaletteAsset(files.PaletteDirectory(name), "atlas");
-        PaletteAtlas.Result atlas = PaletteAtlas.Create(asset, color);
+        string sourceAsset = files.NextPaletteAsset(asset[..(asset.LastIndexOf('/') + 1)], "source");
+        byte[] sourcePng = TilesetComposer.Template("four", color);
+        var settings = BundledTilesets.Four(sourceAsset);
+        PaletteAtlas.Result atlas = TilesetComposer.Compose(asset, color, settings, PngRaster.Decode(sourcePng));
+        settings = settings with { atlasHash = Convert.ToHexString(SHA256.HashData(atlas.Png)) };
         var material = new MaterialData { id = id, name = name, color = color, themeId = id, sprites = atlas.Sprites };
         var nextNode = JsonNode.Parse(Data.GetRawText())!;
-        nextNode["materials"]!.AsArray().Add(JsonSerializer.SerializeToNode(material, Json));
+        var materialNode = JsonSerializer.SerializeToNode(material, Json)!;
+        materialNode["editorTileset"] = JsonSerializer.SerializeToNode(settings, Json);
+        nextNode["materials"]!.AsArray().Add(materialNode);
         nextNode["editorPaletteGroups"] = JsonSerializer.SerializeToNode(groups.Select(g => g.id == groupId ? g with { materials = [.. g.materials, id] } : g));
         string serialized = nextNode.ToJsonString();
         byte[] bytes = Utf8.GetBytes(serialized);
         if (bytes.LongLength > MaximumCatalogBytes) throw new InvalidDataException("The palette catalog is full.");
         JsonElement next = ParseClone(serialized); ValidateComplexity(next);
-        files.PublishPalette(asset, atlas.Png, serialized, expected);
+        files.PublishPalette(asset, atlas.Png, serialized, expected, new Dictionary<string, byte[]> { [sourceAsset] = sourcePng });
 
         // Publish memory only after the texture and catalog are durable. Existing opaque fields remain intact.
         Data = next; Materials.Add(id, MapResourceFactory.CreateTerrainMaterial(id, name, id, color));

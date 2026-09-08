@@ -31,6 +31,7 @@ PortableWorkspace.SeedResources(project, studioRoot);
 var files = new ProjectFiles(project, studioRoot: studioRoot);
 TextureLibrary.Prepare(files, studioRoot);
 BuiltInPalettes.Prepare(files, studioRoot);
+BundledTilesets.Prepare(files, studioRoot);
 var workspace = new EditorWorkspace(files);
 using var nativeMaps = new NativeMapFiles(files);
 string webRoot = Path.GetFullPath(builder.Configuration["web-root"] ?? Path.Combine(studioRoot, "metroidvania-studio/dist"));

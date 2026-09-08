@@ -10,6 +10,7 @@ var tests = new (string name, Action run)[]
     ("internal catalog migration respects explicit custom locations", InternalCatalogTests.CustomPaths),
     ("palette groups persist order, moves and empty groups without changing maps or textures", () => Fixture(PaletteGroupTests.Ordering)),
     ("palette grouping preserves legacy data and rejects stale or invalid changes", () => Fixture(PaletteGroupTests.Validation)),
+    ("four-tile defaults retain source bindings and preserve custom configurations", FourTileDefaultTests.Bindings),
     ("built-in themes preserve customized palettes and render all 51 shapes", BuiltInPaletteTests.PreserveAndRender),
     ("readable texture library migration preserves sprites and original sources", TextureWorkflowTests.Library),
     ("native map dialog starts in Maps and restricts writes to selected JSON", TextureWorkflowTests.NativeFiles),

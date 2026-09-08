@@ -48,6 +48,8 @@ public sealed partial class Catalog
                 var prior = JsonSerializer.Deserialize<PaletteTileset>(saved, Json);
                 if (prior != null) { ValidateTileset(prior); foreach (string nameOfSource in Sources(prior)) allowed.Add(nameOfSource); }
             }
+            foreach (string mode in new[] { "four", "blob47" })
+                if (BundledTilesets.Source(id, mode) is { } bundled) allowed.Add(bundled);
             var remap = new Dictionary<string, string>(StringComparer.Ordinal); long totalBytes = 0, totalPixels = 0;
             foreach (string input in Sources(settings))
             {

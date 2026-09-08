@@ -63,6 +63,7 @@ try {
   env.METROIDVANIA_STUDIO_TEST_PROJECT_ROOT = workspace;
   env.METROIDVANIA_STUDIO_TEST_WEB_ROOT = dist;
   await run('metroidvania-studio/tests/browser-palette-workflow.mjs');
+  await run('metroidvania-studio/tests/browser-four-defaults.mjs');
   await run('metroidvania-studio/tests/browser-camera-settings.mjs');
   await run('metroidvania-studio/tests/browser-documentation.mjs');
   await run('metroidvania-studio/tests/browser-sample-world.mjs');
