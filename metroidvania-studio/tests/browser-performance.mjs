@@ -367,13 +367,11 @@ try {
     const editor = new MapCanvas(canvas, async () => initial, () => {}, () => {}); editor.setState(initial);
     let rebuilds = 0; const rebuild = editor.rebuildDocument.bind(editor);
     editor.rebuildDocument = value => { rebuilds++; return rebuild(value); };
-    const painted = { x: 2, y: 3, shape: 0, material, groupId: '' };
-    const tile = { roomId: room.id, layer: 0, erase: false, live: true, material, shape: 0, groupId: '', brushSize: 1,
-      tool: 3, baseRevision: 1, baseInstanceId: initial.instanceId, baseDocumentRevision: 1, baseDocument: initial.document,
-      points: [{ x: 2, y: 3 }], rasterLength: 1,
-      cells: new Map([['2,3', painted]]), overflow: false };
+    const gesture = { room };
+    editor.beginTileGesture(gesture, { x: 2, y: 3 }, false, initial.selection);
+    const tile = gesture.tile, painted = tile.cells.values().next().value;
     editor.tileOverlay = tile; editor.tileCommitPending = true;
-    const compact = { ...initial, revision: 2, documentRevision: 2 };
+    const compact = { ...initial, revision: 2, documentRevision: 2, export: { ...initial.export, version: initial.export.version + 1 } };
     editor.setState(compact); const deferredRebuilds = rebuilds;
     const applied = editor.applyCommittedTileGesture(tile, compact);
     const paintedCell = room.foreground.find(cell => cell.x === 2 && cell.y === 3);
@@ -405,12 +403,11 @@ try {
     const second = { ...first, revision: 2, camera: { ppu: 16, referenceWidth: 640, referenceHeight: 360, orthographicSize: 11.25 }, catalog: { ...first.catalog,
       camera: { ppu: 16, referenceWidth: 640, referenceHeight: 360, orthographicSize: 11.25 } } };
     editor.setState(second); await new Promise(resolve => requestAnimationFrame(resolve)); const updatedScale = editor.pixelScale;
-    const tile = { roomId: room.id, layer: 0, erase: false, live: true, material: material.id, shape: 0, groupId: '', brushSize: 1,
-      tool: 3, baseRevision: 2, baseInstanceId: second.instanceId, baseDocumentRevision: 1, baseDocument: second.document,
-      points: [{ x: 1, y: 1 }],
-      rasterLength: 1, cells: new Map([['1,1', { x: 1, y: 1, shape: 0, material: material.id, groupId: '' }]]), overflow: false };
+    const gesture = { room };
+    editor.beginTileGesture(gesture, { x: 1, y: 1 }, false, second.selection);
+    const tile = gesture.tile;
     editor.tileOverlay = tile;
-    const committed = { ...second, revision: 3, documentRevision: 2 };
+    const committed = { ...second, revision: 3, documentRevision: 2, export: { ...second.export, version: second.export.version + 1 } };
     const applied = editor.applyCommittedTileGesture(tile, committed);
     const properties = room.properties.map(item => item.key);
     const paintedCell = room.foreground.some(cell => cell.x === 1 && cell.y === 1 && cell.material === material.id);

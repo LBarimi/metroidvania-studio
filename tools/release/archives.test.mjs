@@ -27,7 +27,7 @@ test('release layouts require immediate root launch files and complete matching 
   for (const kind of ['web', 'win', 'mac', 'linux']) {
     const files = payload(kind); assert.doesNotThrow(() => validateEntries(files, kind, '1.0.0'));
     assert.throws(() => validateEntries(files, kind, '1.0.1'));
-    for (const file of ['media/readme/demo.gif', 'README.md', 'app/README.txt', 'platform/mac/run.command', '.local/secret', 'app/test.pdb']) {
+    for (const file of ['media/readme/demo.gif', 'README.md', 'app/README.txt', 'app/samples/textures/biomes/README.md', 'platform/mac/run.command', '.local/secret', 'app/test.pdb']) {
       const invalid = new Map(files); invalid.set(file, Buffer.from('bad')); assert.throws(() => validateEntries(invalid, kind, '1.0.0'));
     }
     const start = { web: 'metroidvania-studio.bat', win: 'metroidvania-studio.exe', mac: 'metroidvania-studio.command', linux: 'metroidvania-studio.sh' }[kind];

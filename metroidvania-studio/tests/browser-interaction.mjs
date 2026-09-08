@@ -165,7 +165,9 @@ try {
   assert.deepEqual(afterHttpBoundary.document, beforeHttpBoundary.document, 'Rejected HTTP bodies must preserve the document.');
   checks.push('HTTP boundary rejects malformed, non-JSON, and oversized command bodies atomically');
 
-  await command('new', { name: 'Browser integration', discard: true });
+  const fixture = await command('new', { name: 'Browser integration', discard: true });
+  // Keep the interaction coordinates independent of the new-map default dimensions.
+  await command('roomResize', { id: fixture.document.rooms[0].id, x: 0, y: 0, width: 40, height: 24 });
   await command('save', { path: '__browser_validation__/working.map.json' });
   await command('options', { layer: 0, tool: 3, shape: 0, material: initial.catalog.materials[0]?.id || 'terrain', brushSize: 16 });
   const brush16 = await state();

@@ -17,6 +17,7 @@ function add(name){
 function tree(name){
  for(const entry of readdirSync(path.join(program,name),{withFileTypes:true})) {
   assert.ok(!entry.isSymbolicLink());
+  if(/^readme(?:\.[^/]*)?$/i.test(entry.name))continue;
   const child=name+'/'+entry.name;
   if(entry.isDirectory())tree(child);else add(child);
  }
