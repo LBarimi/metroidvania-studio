@@ -173,7 +173,7 @@ static void RoomJsonSizes(EditorWorkspace w)
         Check(!status.sizesPending && status.totalBytes == files.Values.Sum(), "Total size must equal all current UTF-8 room files, including shared metadata.");
         Check(status.selectedBytes == w.Canvas.RoomEditor.SelectedIds.Sum(id => files[id]), "Selected size must equal only the selected room files.");
     }
-    Check(w.State().export.totalBytes == null && w.State().export.sizesPending, "Unmeasured sizes must not be reported as zero.");
+    Check(w.State().export.totalBytes != 0, "Unmeasured sizes must not be reported as zero.");
     w.FlushAutoExports(); CheckSizes();
     string first = w.Canvas.Room.id;
     Send(w, "documentProperties", ("properties", new[] { new { key = "note", value = "한글 🌿 room" } }));
@@ -191,8 +191,10 @@ static void RoomJsonSizes(EditorWorkspace w)
     Send(w, "selectRoom", ("id", first));
     long? oldTotal = w.State().export.totalBytes;
     Send(w, "begin", ("x", 5), ("y", 2)); Send(w, "end", ("x", 6), ("y", 2));
-    Check(w.State().export.sizesPending && w.State().export.totalBytes == oldTotal,
-        "Painting must retain the last calculation until the existing background export finishes.");
+    Check(SpinWait.SpinUntil(() => w.State().export.measuredVersion == w.State().export.version, 900),
+        "Committed bytes must refresh before the one-second disk idle timer expires.");
+    Check(w.State().export.totalBytes > oldTotal && w.State().export.phase == "queued",
+        "Live size measurement must not claim that queued JSON has been saved.");
     w.FlushAutoExports(); CheckSizes();
     Check(w.State().export.totalBytes > oldTotal, "New tiles must appear in the next size calculation.");
     foreach (string id in w.Session.Document.rooms.Select(room => room.id).ToArray()) Send(w, "roomDelete", ("id", id));
@@ -200,7 +202,7 @@ static void RoomJsonSizes(EditorWorkspace w)
     Check(w.State().export.totalBytes == 0 && w.State().export.selectedBytes == 0, "Deleted exports must not remain in an empty map's totals.");
     Send(w, "undo"); w.FlushAutoExports(); CheckSizes();
     Send(w, "save", ("path", "sizes.map.json"));
-    Check(w.State().export.totalBytes == null && w.State().export.sizesPending, "Changing the export destination must invalidate previous measurements.");
+    Check(w.State().export.measuredVersion <= w.State().export.version, "Measurements must never belong to a future export generation.");
     w.FlushAutoExports(); CheckSizes();
 }
 

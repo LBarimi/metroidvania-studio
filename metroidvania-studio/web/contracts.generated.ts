@@ -55,6 +55,7 @@ export interface Definition {
 export interface EditorExportStatus {
   error: string | null;
   hash: string | null;
+  measuredVersion: number;
   path: string | null;
   phase: string;
   roomId: string | null;

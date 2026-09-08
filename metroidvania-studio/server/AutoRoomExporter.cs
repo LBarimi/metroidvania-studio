@@ -50,7 +50,7 @@ public sealed class AutoRoomExporter : IDisposable
             }
             else if (roomId != null) selectedBytes = measuredRoomBytes.TryGetValue(roomId, out long bytes) ? bytes : null;
             return new EditorExportStatus(phase, version, statusError, roomId, room?.Path, room?.Hash,
-                selectedBytes, measuredTotalBytes, measuredVersion != version);
+                selectedBytes, measuredTotalBytes, measuredVersion != version, measuredVersion);
         }
     }
     private static readonly UTF8Encoding Utf8 = new(false, true);
@@ -139,7 +139,37 @@ public sealed class AutoRoomExporter : IDisposable
                 snapshot = pending;
                 if (delay == 0) { pending = null; phase = "exporting"; statusRevision++; }
             }
-            if (delay > 0) { await wake.WaitAsync(delay).ConfigureAwait(false); continue; }
+            if (delay > 0)
+            {
+                // Measure the immutable snapshot independently of the disk idle timer.
+                // Browser tile deltas cover a held brush; this also catches up after
+                // metadata edits, imports and non-brush commands without waiting to save.
+                bool needsMeasurement;
+                lock (gate) needsMeasurement = measuredVersion != snapshot.Version;
+                if (needsMeasurement)
+                {
+                    using JsonDocument parsed = JsonDocument.Parse(snapshot.Json);
+                    long shared = Utf8.GetByteCount(WriteDocument(parsed.RootElement, null));
+                    var sizes = new Dictionary<string, long>(StringComparer.Ordinal);
+                    long total = 0;
+                    foreach (JsonElement room in parsed.RootElement.GetProperty("rooms").EnumerateArray())
+                    {
+                        if (!Current(snapshot)) break;
+                        // Snapshots already use the same compact encoder as exported rooms.
+                        long bytes = shared + Utf8.GetByteCount(room.GetRawText());
+                        sizes.Add(room.GetProperty("id").GetString()!, bytes); total += bytes;
+                    }
+                    lock (gate)
+                    {
+                        if (!stopped && snapshot.Version == version)
+                        {
+                            measuredRoomBytes = sizes; measuredTotalBytes = total;
+                            measuredVersion = snapshot.Version; statusRevision++;
+                        }
+                    }
+                }
+                await wake.WaitAsync(delay).ConfigureAwait(false); continue;
+            }
             string? error = null;
             ExportResult? result = null;
             try { result = Export(snapshot); error = result?.Error; }

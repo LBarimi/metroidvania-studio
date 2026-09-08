@@ -702,11 +702,11 @@ function renderStatus(point: Point): void {
   statusText('status-coordinates', `X ${Math.floor(point.x)}  Y ${Math.floor(point.y)}  ·  16 px`);
   const viewing = state?.document.rooms.find(room => room.visible && map.center.x >= room.x && map.center.x < room.x + room.width && map.center.y >= room.y && map.center.y < room.y + room.height);
   statusText('status-layer', state ? locale.enum('MapLayer', LAYERS[state.selection.layer], state.selection.layer) + ' · ' + (viewing?.name || '—') : '');
-  const sizeStatus = state?.export, sizes = el('status-room-sizes');
+  const sizeStatus = map.roomSizes, sizes = el('status-room-sizes');
   const kilobytes = (bytes: number | null | undefined) => bytes == null ? '—' : (bytes / 1024).toFixed(2) + ' KB';
   statusText('status-room-sizes', locale.t('statusSelectedSize').replace('{0}', kilobytes(sizeStatus?.selectedBytes))
     + ' · ' + locale.t('statusTotalSize').replace('{0}', kilobytes(sizeStatus?.totalBytes)));
-  const sizesPending = !sizeStatus || sizeStatus.sizesPending || map.hasPendingWork;
+  const sizesPending = !sizeStatus || sizeStatus.pending;
   const pendingSizeValue = String(sizesPending);
   if (sizes.dataset.pending !== pendingSizeValue) sizes.dataset.pending = pendingSizeValue;
   const sizeHint = locale.t('statusSizeHint') + (sizesPending ? '\n' + locale.t('statusSizePending') : '');

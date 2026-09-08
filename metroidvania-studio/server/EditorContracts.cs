@@ -19,7 +19,7 @@ public sealed record EditorSelection(string? roomId, int tool, int layer, int sh
     int[] hiddenLayers, int[] lockedLayers, string[] objects, EditorNodeSelection[] nodes, EditorRect? area, string[] roomIds);
 public sealed record EditorConnection(string roomAId, string roomBId, bool vertical, double coordinate, double start, double end);
 public sealed record EditorExportStatus(string phase, long version, string? error,
-    string? roomId, string? path, string? hash, long? selectedBytes = null, long? totalBytes = null, bool sizesPending = true);
+    string? roomId, string? path, string? hash, long? selectedBytes = null, long? totalBytes = null, bool sizesPending = true, long measuredVersion = -1);
 
 public sealed record EditorWorkspaceInfo(string name, string mapsPath);
 

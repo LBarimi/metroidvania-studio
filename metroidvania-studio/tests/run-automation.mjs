@@ -62,6 +62,7 @@ try {
   env.METROIDVANIA_STUDIO_TEST_ISOLATED = '1';
   env.METROIDVANIA_STUDIO_TEST_PROJECT_ROOT = workspace;
   env.METROIDVANIA_STUDIO_TEST_WEB_ROOT = dist;
+  await run('metroidvania-studio/tests/browser-live-room-sizes.mjs');
   await run('metroidvania-studio/tests/browser-palette-workflow.mjs');
   await run('metroidvania-studio/tests/browser-four-defaults.mjs');
   await run('metroidvania-studio/tests/browser-camera-settings.mjs');

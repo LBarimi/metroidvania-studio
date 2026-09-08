@@ -1,3 +1,4 @@
+import { LiveRoomSizes, TileByteCounter } from './live-room-sizes.js';
 import { defaultTile } from './tileset-preview.js';
 import { AssetImages } from './asset-images.js';
 import { resolveRoomGroupMove } from './room-layout.js';
@@ -23,6 +24,7 @@ interface TileGesture {
   rasterLength: number;
   cells: Map<TileCellKey, Cell | null>;
   overflow: boolean;
+  size: { counter: TileByteCounter; version: number; bytes: number; count: number; baseCount: number; properties: number; applied?: boolean };
 }
 interface ObjectGesture {
   roomId: string;
@@ -191,6 +193,17 @@ export class MapCanvas {
   private editView: ViewSnapshot | null = null;
   private gestureTail: Promise<unknown> = Promise.resolve();
   private tileOverlay: TileGesture | null = null;
+  private liveSizes = new LiveRoomSizes();
+  get roomSizes() {
+    const tile = this.tileOverlay;
+    return this.state ? this.liveSizes.read(this.state, tile?.live && !tile.size.applied ? { version: tile.size.version,
+      roomId: tile.roomId, bytes: this.tileSizeDelta(tile) } : undefined) : null;
+  }
+  private tileSizeDelta(tile: TileGesture): number {
+    const size = tile.size;
+    return size.bytes + Math.max(0, size.baseCount + size.count - 1) - Math.max(0, size.baseCount - 1)
+      + (!tile.erase && tile.cells.size ? size.properties : 0);
+  }
   private objectOverlay: ObjectGesture | null = null;
   private tileCommitPending = false;
   private tileLodModes = new Map<string, boolean>();
@@ -725,8 +738,19 @@ export class MapCanvas {
       brushSize: selection.brushSize, tool: selection.tool,
       baseRevision: this.state!.revision, baseInstanceId: this.state!.instanceId, baseDocumentRevision: this.state!.documentRevision,
       baseDocument: this.state!.document,
-      points: [first], rasterLength: 1, cells: new Map<TileCellKey, Cell | null>(), overflow: false
+      points: [first], rasterLength: 1, cells: new Map<TileCellKey, Cell | null>(), overflow: false,
+      size: { counter: new TileByteCounter(), version: this.state!.export.version, bytes: 0, count: 0,
+        baseCount: (selection.layer === 0 ? g.room.foreground : g.room.background).length, properties: 0 }
     };
+    const material = this.materials.get(tile.material);
+    if (!erase && material?.themeId) {
+      const properties = g.room.properties.map(property => ({ ...property }));
+      for (const [key, value] of [['mapMaker.terrainTheme', material.themeId], ['mapMaker.minimapColor', material.themeColor]]) {
+        const property = properties.find(item => item.key === key);
+        if (property) property.value = value; else properties.push({ key, value });
+      }
+      tile.size.properties = tile.size.counter.propertiesBytes(properties) - tile.size.counter.propertiesBytes(g.room.properties);
+    }
     g.tile = tile; this.tileOverlay = tile;
     this.tileIdle = new Promise(resolve => this.resolveTileIdle = resolve);
     if (tile.live) this.stampTile(g.room, tile, first);
@@ -793,6 +817,9 @@ export class MapCanvas {
     if (existing && !this.memberEditable(tile.layer, existing.groupId || '', tile.groupId)) return;
     if (tile.erase && !existing) return;
     const replacement = tile.erase ? null : { x, y, shape: tile.shape, material: tile.material, groupId: existing?.groupId ?? tile.groupId };
+    tile.size.bytes += (replacement ? tile.size.counter.cellBytes(replacement) : 0)
+      - (existing ? tile.size.counter.cellBytes(existing) : 0);
+    tile.size.count += Number(!!replacement) - Number(!!existing);
     this.setOverlayCell(tile, overlay, row, had, x, y, replacement, replacement || existing!);
   }
   private continuousTileWork(brushSize: number, rasterLength: number): number {
@@ -896,6 +923,9 @@ export class MapCanvas {
     const room = state.document.rooms.find(candidate => candidate.id === tile.roomId);
     const index = this.occupancy.get(tile.roomId + ':' + tile.layer);
     if (!room || !index || index.cells !== (tile.layer === 0 ? room.foreground : room.background)) return false;
+    this.liveSizes.commit(state.instanceId, { from: tile.size.version, to: state.export.version,
+      roomId: tile.roomId, bytes: this.tileSizeDelta(tile) });
+    tile.size.applied = true;
     const overlay = this.ensureOverlayIndex();
     for (const key of overlay.affectedChunks) {
       const cached = this.exactTileChunks.get(tile.roomId + ':' + tile.layer + ':' + key);
@@ -976,6 +1006,7 @@ export class MapCanvas {
     this.overlayIndex = index; this.overlayLod = null;
   }
   private releaseTileOverlay(source: TileGesture): void {
+    this.onHover(this.hover);
     if (this.tileOverlay === source) this.tileOverlay = null;
     if (this.overlayIndex.source === source)
       this.overlayIndex = { source: null, size: 0, rows: new Map(), chunks: new Map(), affectedChunks: new Set() };
