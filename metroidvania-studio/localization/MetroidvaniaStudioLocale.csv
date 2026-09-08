@@ -429,3 +429,9 @@ roomSplitNeedArea,선택 도구로 방 안의 사각형 영역을 먼저 선택�
 roomSplitWholeRoom,방 전체는 분할할 수 없습니다. 일부 영역만 선택해 주세요.,Select part of the room rather than the entire room.,部屋全体ではなく一部を選択してください。,请选择房间的一部分而非整个房间。,請選取房間的一部分而非整個房間。,Выделите часть комнаты для разделения.
 roomSplitCrossingObject,분할 경계에 걸친 오브젝트·트리거·경로가 있습니다. 해당 요소를 옮기거나 선택 영역을 조정해 주세요.,An object or its path crosses a split boundary. Move it or adjust the selection first.,分割境界をまたぐオブジェクトまたは経路があります。移動するか選択範囲を調整してください。,有对象或路径跨越分割边界。请移动对象或调整选区。,有物件或路徑跨越分割邊界。請移動物件或調整選區。,Объект или его путь пересекает линию разделения. Переместите его или измените выделение.
 roomSplitLimit,분할하면 최대 방 개수인 1024개를 초과합니다.,Splitting would exceed the limit of 1024 rooms.,分割すると部屋の上限1024個を超えます。,拆分后将超过1024个房间的上限。,分割後將超過1024個房間的上限。,Разделение превысит лимит в 1024 комнаты.
+previewExpand,Game Preview 펼치기,Expand Game Preview,Game Preview を展開,展开 Game Preview,展開 Game Preview,Развернуть Game Preview
+previewCollapse,Game Preview 접기,Collapse Game Preview,Game Preview を折りたたむ,折叠 Game Preview,收合 Game Preview,Свернуть Game Preview
+previewMaximize,Game Preview 최대화,Maximize Game Preview,Game Preview を最大化,最大化 Game Preview,最大化 Game Preview,Увеличить Game Preview
+previewRestore,Game Preview 원래 크기로,Restore Game Preview,Game Preview を元のサイズに戻す,还原 Game Preview,還原 Game Preview,Восстановить Game Preview
+previewNoRoom,선택한 방 없음,No room selected,部屋が未選択,未选择房间,未選擇房間,Комната не выбрана
+previewHelp,선택한 방의 게임 시야 · 드래그로 시야 이동 · F로 방 중앙 보기,Selected room game view · Drag to pan · F to center on the room,選択した部屋のゲーム視野 · ドラッグで移動 · F で部屋の中央へ,所选房间的游戏视野 · 拖动平移 · F 回到房间中央,所選房間的遊戲視野 · 拖曳平移 · F 回到房間中央,Игровой вид выбранной комнаты · Перетаскивайте для перемещения · F — центр комнаты

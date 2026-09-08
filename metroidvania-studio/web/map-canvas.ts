@@ -141,6 +141,9 @@ export class MapCanvas {
   pixelScale = 2;
   overview = false;
   cameraPreview = false;
+  onPreviewChange: (() => void) | null = null;
+  private previewRevision = 0;
+  get previewVersion(): string { return this.previewRevision + ':' + (this.tileOverlay?.size.version ?? -1); }
   showGrid = true;
   showNames = true;
   snapRooms = true;
@@ -158,7 +161,7 @@ export class MapCanvas {
   private onRoomContextMenu: (world: Point, client: Point) => void;
   private gesture: Gesture | null = null;
   private images = new AssetImages();
-  private imageChanged = () => { this.clearExactTileChunks(); this.requestDraw(); };
+  private imageChanged = () => { this.clearExactTileChunks(); this.previewRevision++; this.requestDraw(); };
   private occupancy = new Map<string, LayerIndex>();
   private objectLayers = new Map<string, Map<number, ObjectLayerIndex>>();
   private objectById = new Map<string, { roomId: string; entry: ObjectRenderEntry }>();
@@ -288,7 +291,7 @@ export class MapCanvas {
     if (this.active) this.syncIndexes(state);
     if (!this.initialized && state.document.rooms.length) { this.frameRoom(); this.initialized = true; }
     if (this.gesture && previousRoom !== state.selection.roomId && this.gesture.room.id !== state.selection.roomId && this.gesture.kind !== 'room-create') this.cancel();
-    if (redraw) this.requestDraw(); if (cameraChanged) this.onHover(this.hover);
+    if (redraw) { this.previewRevision++; this.requestDraw(); } if (cameraChanged) this.onHover(this.hover);
   }
   private syncIndexes(state: State): void {
     const revisioned = state as RevisionedState;
@@ -1108,8 +1111,9 @@ export class MapCanvas {
     }
     return { x: left, y: bottom, width: right - left, height: top - bottom };
   }
-  requestDraw(): void { if (this.active && !this.raf) this.raf = requestAnimationFrame(() => { this.raf = 0; this.draw(); }); }
+  requestDraw(): void { this.onPreviewChange?.(); if (this.active && !this.raf) this.raf = requestAnimationFrame(() => { this.raf = 0; this.draw(); }); }
   private drawBrushDamage(points: Point[]): void {
+    this.onPreviewChange?.();
     // A brush must reach the canvas during the input event, not in the next
     // animation frame behind panel/status updates. Limit work to the stroke,
     // old/new cursor and the neighbours whose autotile masks can change.
@@ -1144,11 +1148,40 @@ export class MapCanvas {
     if (viewportChanged) this.onHover(this.hover);
     const w = Math.round(rect.width * this.dpr), h = Math.round(rect.height * this.dpr);
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
+    this.drawScene(damage);
+  }
+  /** Render synchronously into another viewport using the same indexes, images and live stroke.
+   * The scoped render state is restored even if a texture fails. No editing state or camera
+   * position escapes this pass, and the caller schedules it outside the brush input event. */
+  renderGamePreview(canvas: HTMLCanvasElement, center: Point): { tileScale: number; pixelScale: number } | null {
+    const camera = this.cameraProfile, rect = canvas.getBoundingClientRect();
+    if (!camera || rect.width <= 0 || rect.height <= 0) return null;
+    const ctx = canvas.getContext('2d', { alpha: false }); if (!ctx) return null;
+    const saved = { canvas: this.canvas, ctx: this.ctx, width: this.width, height: this.height, dpr: this.dpr,
+      center: this.center, pixelScale: this.pixelScale, cameraPreview: this.cameraPreview,
+      renderOrigin: this.renderOrigin, tileLodModes: this.tileLodModes, selectedObjects: this.selectedObjects };
+    try {
+      this.canvas = canvas; this.ctx = ctx; this.width = rect.width; this.height = rect.height;
+      this.dpr = Math.max(1, window.devicePixelRatio || 1); this.center = center; this.cameraPreview = true;
+      this.renderOrigin = null; this.selectedObjects = new Set(); this.tileLodModes = new Map(); this.renderFrame++;
+      const width = Math.round(rect.width * this.dpr), height = Math.round(rect.height * this.dpr);
+      if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+      this.width = width / this.dpr; this.height = height / this.dpr;
+      const fit = Math.min(width / camera.referenceWidth, height / camera.referenceHeight);
+      // Integer magnification and reciprocal reduction keep the whole camera frame visible.
+      this.pixelScale = fit >= 1 ? Math.floor(fit) : 1 / Math.ceil(1 / fit);
+      this.drawScene();
+      return { tileScale: this.scale, pixelScale: this.pixelScale };
+    } finally { Object.assign(this, saved); }
+  }
+  private drawScene(damage?: Rect): void {
     // LOD is a viewport decision, not a dirty-rectangle decision. Crossing its
     // density threshold invalidates the entire frame so exact sprites and LOD
     // colours can never be mixed into differently rendered patches.
     const camera = this.cameraProfile, view = this.visibleWorldBounds(camera), nextLodModes = new Map<string, boolean>();
-    if (this.state) for (const room of this.state.document.rooms) {
+    const selectedRoom = activeRoom(this.state);
+    const rooms = this.cameraPreview ? (selectedRoom ? [selectedRoom] : []) : this.state?.document.rooms || [];
+    if (this.state) for (const room of rooms) {
       if (!room.visible || this.cameraPreview && room.id !== this.state.selection.roomId || !overlaps(room, view)) continue;
       for (const layer of [0, 1]) {
         if (this.state.selection.hiddenLayers.includes(layer)) continue;
@@ -1187,7 +1220,7 @@ export class MapCanvas {
     const padding = this.objectOutlinePadding / this.scale;
     const objectView = damage ? { x: tileView.x - padding, y: tileView.y - padding,
       width: tileView.width + padding * 2, height: tileView.height + padding * 2 } : view;
-    for (const room of this.state.document.rooms) {
+    for (const room of rooms) {
       if (!room.visible || this.cameraPreview && room.id !== s.roomId || !overlaps(room, view)) continue;
       const rect = this.screenRect(room);
       ctx.save(); ctx.globalAlpha = roomOpacity(room.id, s.roomId);
@@ -1319,7 +1352,7 @@ export class MapCanvas {
       // A held brush redraws only touched cells directly. Stable chunks can be
       // reused on pan, zoom, cursor movement and commit without recomputing
       // their neighbour masks or issuing one image call per tile.
-      if (cells && !overlay?.affectedChunks.has(key) && Number.isInteger(this.pixelScale) && this.pixelScale >= 1) {
+      if (cells && !overlay?.affectedChunks.has(key) && (this.cameraPreview || Number.isInteger(this.pixelScale) && this.pixelScale >= 1)) {
         const cached = this.exactTileChunk(room, layer, index, key, chunkX, chunkY, cells,
           (x1 - x0 + 1) * (y1 - y0 + 1) >= MIN_CACHED_LOD_CHUNK_CELLS);
         if (cached) {
@@ -1342,7 +1375,7 @@ export class MapCanvas {
     ctx.globalAlpha = alpha;
   }
   private useTileLod(room: Room, layer: number, index: LayerIndex, x0: number, y0: number, x1: number, y1: number): boolean {
-    if (this.scale * this.dpr < LOD_PHYSICAL_TILE_SIZE) return true;
+    if (!this.cameraPreview && this.scale * this.dpr < LOD_PHYSICAL_TILE_SIZE) return true;
     let count = 0;
     for (let chunkY = Math.floor(y0 / TILE_CHUNK_SIZE); chunkY <= Math.floor(y1 / TILE_CHUNK_SIZE); chunkY++) {
       for (let chunkX = Math.floor(x0 / TILE_CHUNK_SIZE); chunkX <= Math.floor(x1 / TILE_CHUNK_SIZE); chunkX++) {
@@ -1354,7 +1387,7 @@ export class MapCanvas {
     return !!overlay && overlay.roomId === room.id && overlay.layer === layer && count + overlay.cells.size > MAX_EXACT_VISIBLE_CELLS;
   }
   showDefaultTiles = false;
-  setDefaultTiles(value: boolean): void { this.showDefaultTiles = value; this.clearExactTileChunks(); this.requestDraw(); }
+  setDefaultTiles(value: boolean): void { this.previewRevision++; this.showDefaultTiles = value; this.clearExactTileChunks(); this.requestDraw(); }
   private clearExactTileChunks(): void {
     for (const cached of this.exactTileChunks.values()) cached.canvas.width = cached.canvas.height = 1;
     this.exactTileChunks.clear();

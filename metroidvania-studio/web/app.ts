@@ -1,3 +1,4 @@
+import { GamePreview } from './game-preview.js';
 import { renderPaletteGroups, paletteGroupName, expandPaletteGroup } from './palette-groups.js';
 import type { EditorPaletteGroup } from './types.js';
 import { openPaletteDialog } from './palette-dialog.js';
@@ -74,6 +75,8 @@ const map = new MapCanvas(el('map-canvas'), api.command, point => drawStatus(poi
   const brush = el('brush-options').querySelector<HTMLInputElement>('input[type="number"]');
   if (brush) brush.value = String(size);
 }, (point, client) => roomContextMenu(point, client));
+const preview = new GamePreview(map, key => locale.t(key), () => el('map-canvas').focus());
+el('map-canvas').parentElement!.append(preview.element);
 const mini = new MiniMap(el('mini-canvas'),
   id => { void run('selectRoom', { id }).catch(() => undefined); },
   id => { void editMiniRoom(id).catch(error => toast(error)); });
@@ -398,12 +401,11 @@ function updateView(): void {
   const workspace = el('workspace'); workspace.classList.toggle('inspector-hidden', inspectorHidden); workspace.classList.toggle('minimap-mode', miniMode); workspace.classList.toggle('standalone', standalone); workspace.classList.toggle('camera-preview', cameraPreview);
   el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
   el<HTMLCanvasElement>('map-canvas').hidden = miniMode; el<HTMLCanvasElement>('mini-canvas').hidden = !miniMode;
-  map.setActive(!miniMode); mini.setActive(miniMode);
+  map.setActive(!miniMode); mini.setActive(miniMode); preview.setVisible(!miniMode); preview.updateLabels();
   const tabButtons = el('tabs').querySelectorAll('button'); tabButtons[0]?.classList.toggle('active', !miniMode); tabButtons[1]?.classList.toggle('active', miniMode);
   const toolbar = el('view-toolbar'); toolbar.replaceChildren(button('⊞ ' + locale.t('fit'), () => { if (miniMode) mini.fit(); else if (map.cameraPreview) { map.gameView(false); updateView(); requestAnimationFrame(() => map.fit()); } else map.fit(); }), button('⌾ ' + locale.t('frameRoom'), () => miniMode ? mini.frameRoom() : map.frameRoom()));
   cameraControls = undefined;
   if (!miniMode) {
-    const camera = button(locale.t('camera'), () => { map.gameView(); updateView(); }, map.cameraPreview ? 'active' : ''); camera.id = 'camera-preview'; camera.setAttribute('aria-pressed', String(map.cameraPreview)); camera.title = locale.t('cameraHelp');
     const defaults = button(locale.t('tilesetDefaultView'), () => { map.setDefaultTiles(!map.showDefaultTiles); updateView(); }, map.showDefaultTiles ? 'active' : '');
     defaults.id = 'default-tile-view'; defaults.setAttribute('aria-pressed', String(map.showDefaultTiles));
     toolbar.append(defaults);
@@ -412,7 +414,7 @@ function updateView(): void {
       return { ppu: current.ppu, referenceWidth: current.referenceWidth, referenceHeight: current.referenceHeight, ...values };
     }), toast);
     cameraControls.update(map.cameraProfile);
-    toolbar.append(camera, cameraControls.element, button('−', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, -1), 'icon'), text('span', '', 'zoom-readout'), button('+', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, 1), 'icon'));
+    toolbar.append(cameraControls.element, button('−', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, -1), 'icon'), text('span', '', 'zoom-readout'), button('+', () => map.zoom({ x: el('map-canvas').clientWidth / 2, y: el('map-canvas').clientHeight / 2 }, 1), 'icon'));
   }
   toolbar.append(text('div', '', 'spacer'));
   if (!miniMode && !map.cameraPreview) toolbar.append(check(locale.t('grid'), map.showGrid, checked => { map.showGrid = checked; map.requestDraw(); })[0]);
@@ -814,6 +816,7 @@ function authoringShortcut(key: string, mod: boolean): boolean {
 }
 document.addEventListener('keydown', event => {
   if (event.defaultPrevented || document.querySelector('dialog[open]')) return;
+  if (event.key === 'Escape' && preview.maximized) { event.preventDefault(); preview.setMaximized(false); el('map-canvas').focus(); return; }
   if (event.altKey && !event.ctrlKey && ['f', 'e', 'h'].includes(event.key.toLowerCase())) { event.preventDefault(); el<HTMLButtonElement>(event.key.toLowerCase() === 'f' ? 'file-menu-button' : event.key.toLowerCase() === 'e' ? 'edit-menu-button' : 'help-menu-button').click(); return; }
   if (document.querySelector('.menu-popup:not([hidden])')) return;
   const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || (event.target as HTMLElement)?.isContentEditable;
@@ -849,7 +852,7 @@ window.addEventListener('pagehide', event => {
   // A persisted page remains live in the back-forward cache. For a real unload,
   // stop polling and rendering without aborting an edit request already in flight.
   if (event.persisted) return;
-  cancelAnimationFrame(uiRaf); cancelAnimationFrame(statusRaf); api.stop(false); map.dispose(); mini.dispose();
+  cancelAnimationFrame(uiRaf); cancelAnimationFrame(statusRaf); api.stop(false); preview.dispose(); map.dispose(); mini.dispose();
 });
 drawChrome();
 void locale.load().then(() => { languageVersion++; drawChrome(); }).catch(error => toast(error));
