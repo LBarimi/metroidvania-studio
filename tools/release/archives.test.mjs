@@ -103,3 +103,12 @@ test('every release rejects a missing automation worker or linked documentation'
     }
   }
 });
+
+test('ZIP inspection accepts empty files and rejects a forged empty size', () => {
+  const files = new Map([['app/docs/.nojekyll', Buffer.alloc(0)], ['LICENSE', Buffer.from('license')]]);
+  const bytes = zip(files);
+  assert.deepEqual(readZip(bytes), files);
+  const forged = zip(new Map([['not-empty', Buffer.from('x')]]));
+  forged.writeUInt32LE(0, 22);
+  assert.throws(() => readZip(forged), /Invalid ZIP entry/);
+});
