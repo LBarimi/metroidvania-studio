@@ -1,7 +1,7 @@
 {
   "FileVersion": 3,
-  "Version": 10000,
-  "VersionName": "1.2.1",
+  "Version": 10300,
+  "VersionName": "1.3.0",
   "FriendlyName": "Metroidvania Studio",
   "Description": "Load rooms from shared JSON with pixel textures and collision.",
   "Category": "Importers",

@@ -1,45 +1,20 @@
 # Changes
 
-## Unreleased
+## 1.3.0
 
-- Add grassland, rock, ice cavern, volcanic and ancient ruins terrain art in a separate biome texture collection, with matching four-source and 47-state PNGs, four slopes per theme and editable Aseprite originals.
-
-- Place PPU and resolution preset dropdowns beside Game view, with per-map persistence, Undo/Redo and preservation of imported custom values. Remove the camera settings dialog from Edit.
-
-- Remove the raw map JSON settings dialog from Edit while preserving existing document metadata.
-
-- Store the workspace catalog inside `.studio`, migrate existing root catalogs with an internal backup, and preserve palette groups, texture references and custom catalog locations.
-
-- Organize palettes in named, collapsible groups, with existing palettes under Default. Reorder groups and palettes by dragging or settings controls, move palettes between groups, and preserve the layout without changing map tiles or textures.
-
-- Keep default Maps and Textures beside the application or at the project root; preserve legacy data when migrating. Add storage folder shortcuts, remembered browser file dialogs and automatic desktop dialog locations.
-- Keep palette source selection separate from rule assignment, defer expensive color previews until pointer input settles, and allow PNG open/save dialogs to remember the texture folder.
-
-- Configure tile palettes from the sidebar: four-source autotiling, 47-slot assignment, separate slope tiles, atlas or individual PNG imports, connection previews and a default tile view. Keep original images in the workspace and rebuild compatible sprite atlases after external saves.
-
-- Save and export map JSON without indentation across the browser, desktop and CLI. Keep automatic room exports and size readouts consistent with manual exports, with culture-independent numeric round trips.
-
-- Show selected-room and total room JSON sizes in the status bar with two decimal places, reusing background export byte counts.
-
-- Clear a multiple-room selection when clicking empty map space, without painting or creating a room.
-
-- Start blank maps and room creation dialogs with a 16 by 10 tile room.
-
-- Source Run scripts automatically rebuild outdated or incomplete web builds before launch, while preserving the running session if a build fails.
-
-- Add a six-room sample world for fresh workspaces and a Help menu action to reopen it. Move README demonstrations ahead of setup while keeping a short automation introduction.
-
-- Reload registered tile and object textures after external image saves, preserving map edits and the previous image while replacements load.
-
-- Use system file pickers for opening and saving maps, with file change checks and save receipts that preserve editing history and recovery. Group map creation and opening at the top of File.
-
-- Add workspace palettes with custom names and colors, generated auto-tiles and slopes, and persistent catalog storage.
-
-- Fix the documentation redirect loop when opening the guide from Help.
-
-- Use open and closed eye icons for layer visibility.
-
-- Select multiple rooms with Ctrl/Cmd-click and drag them together while preserving their relative positions, with collision handling and one-step Undo.
+- Add a tile palette editor with four-source and 47-state autotiling, separate slopes, atlas or individual PNG imports, connection previews and a default tile view.
+- Include grassland, rock, ice cavern, volcanic and ancient ruins themes, with paired four-source and 47-state textures and editable Aseprite originals. New palettes default to four-source connections.
+- Organize palettes into collapsible groups. Add, rename and reorder groups, move palettes between groups, and access texture folders from palette settings.
+- Reload registered textures after external image saves and rebuild compatible sprite atlases while preserving map edits and custom rules.
+- Select multiple rooms with Ctrl/Cmd-click and move them together, preserving their spacing with collision handling and one-step Undo. Click empty space to clear the selection.
+- Place PPU and resolution presets beside Game view, including non-power-of-two PPU values. Preserve per-map settings and imported custom values.
+- Use system file pickers for map opening and saving, remember the map and texture folders, and support cancelling or retrying a pending dialog.
+- Keep Maps and Textures beside the application or at the source root, with storage folder shortcuts. Migrate workspace catalogs into the internal .studio folder while preserving existing data.
+- Save compact UTF-8 JSON with culture-independent numbers. Update selected-room and total JSON sizes during painting and erasing without waiting for automatic export.
+- Keep palette source selection separate from rule assignment, fix paired theme texture selection, and prevent color picker work from delaying pointer input.
+- Add a six-room sample world and Help shortcut. Start blank maps and new room dialogs at 16 by 10 tiles.
+- Rebuild outdated source web bundles automatically when running the studio. Fix the Help documentation redirect loop, use eye icons for layer visibility, and simplify the Edit menu.
+- Refresh the three README demonstrations with terrain themes while preserving their room-editing choreography and playback speed.
 
 ## 1.2.1
 

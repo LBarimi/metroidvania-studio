@@ -48,7 +48,7 @@ Paint a room, **Ctrl-click** two rooms to move them together, or switch to the m
 - **Erase:** right-drag inside the active room.
 - **Pan and zoom:** middle-drag to pan, mouse wheel to zoom, **Ctrl + wheel** to change brush size. Right-drag on empty space also pans.
 - **Arrange rooms:** right-click empty space to add a room, drag a room's title strip to move it, or drag its outer handles to resize. Rotation is available in the inspector.
-- **Save and exchange maps:** use **File** for saving and JSON import/export. Use **Edit** for Undo/Redo and camera settings (default PPU **16**, resolution **320×180**).
+- **Save and exchange maps:** use **File** for saving and JSON import/export. Use **Edit** for Undo/Redo. Set PPU and resolution beside **Game view** (defaults: **16** and **320×180**).
 
 See **Help → Shortcuts** for the full control list. The interface follows your browser language and can be changed from the language picker.
 
