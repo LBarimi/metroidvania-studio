@@ -22,6 +22,7 @@ internal static class BuiltInObjectTests
                 var fields = item["properties"]!.AsArray();
                 foreach (var field in fields.ToArray())
                 {
+                    if (id == "Area" && field!["key"]!.GetValue<string>() == "once") field["defaultValue"] = "false";
                     if (field!["key"]!.GetValue<string>() == "desc") fields.Remove(field);
                     else if (id == "Area" && field["key"]!.GetValue<string>() == "event")
                     { field["kind"] = 0; field["defaultValue"] = ""; field["choices"] = new JsonArray(); }
@@ -36,6 +37,8 @@ internal static class BuiltInObjectTests
             var updated = result["objects"]!.AsArray();
             var area = updated.Single(o => o!["id"]!.GetValue<string>() == "Area")!;
             var events = area["properties"]!.AsArray().Single(f => f!["key"]!.GetValue<string>() == "event")!;
+            Check(area["properties"]!.AsArray().Single(p => p!["key"]!.GetValue<string>() == "once")!["defaultValue"]!.GetValue<string>() == "true",
+                "Existing standard catalogs enable Once for future trigger placements.");
             Check(events["kind"]!.GetValue<int>() == 5 && events["choices"]!.AsArray().Count == 201, "Original trigger field upgrades to 200 events and None.");
             Check(updated.Single(o => o!["id"]!.GetValue<string>() == "Path")!.ToJsonString() == customPath, "Custom definitions remain unchanged.");
             Check(updated.Any(o => o!["id"]!.GetValue<string>() == "Marker") && updated.Any(o => o!["id"]!.GetValue<string>() == "Object"), "Legacy definitions are preserved.");

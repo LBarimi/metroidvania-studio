@@ -66,7 +66,9 @@ try {
   await page.keyboard.press('Escape'); await page.mouse.up(); await settle();
   assert.equal((await state()).document.rooms[0].objects.length,1,'Escape cancels the portal preview.');
   await command('objectClick',{x:portal.x+.5,y:portal.y+.5}); await settle();
-  const id=page.locator('#object-id'); assert.equal(await id.inputValue(),portal.id); assert.ok(await id.getAttribute('readonly')!==null);
+  assert.equal(await page.locator('#object-id').count(),0,'The inspector hides internal IDs.');
+  assert.match(portal.id,/^[1-9][0-9]{0,15}$/);
+  assert.ok(BigInt(portal.id)<=9007199254740991n);
   assert.ok(await page.locator('[data-property="once"]').isChecked()); assert.ok(await page.locator('[data-property="once"]').isDisabled());
   await page.locator('[data-property="event"]').selectOption('Trigger037');
   await page.locator('[data-property="desc"]').fill('North gate');
@@ -81,14 +83,15 @@ try {
   await command('objectClick',{x:trigger.x+.5,y:trigger.y+.5}); await settle();
   assert.equal(await page.locator('[data-property="event"] option').count(),201);
   assert.equal(await page.locator('[data-property="once"]').getAttribute('type'),'checkbox');
-  await page.locator('[data-property="once"]').check();
+  assert.ok(await page.locator('[data-property="once"]').isChecked(),'New triggers default to Once.');
+  await page.locator('[data-property="once"]').uncheck();
   await page.locator('[data-property="event"]').selectOption('Trigger200');
   await page.locator('[data-property="desc"]').fill('Open gate');
   await page.getByRole('button',{name:'Apply properties',exact:true}).click();
-  s=await until(s=>s.document.rooms[0].objects.find(o=>o.id===trigger.id).properties.some(p=>p.key==='once'&&p.value==='true'));
+  s=await until(s=>s.document.rooms[0].objects.find(o=>o.id===trigger.id).properties.some(p=>p.key==='once'&&p.value==='false'));
   if (process.env.METROIDVANIA_STUDIO_TEST_SCREENSHOT) await page.screenshot({path:process.env.METROIDVANIA_STUDIO_TEST_SCREENSHOT});
   await command('undo'); await settle();
-  assert.equal((await state()).document.rooms[0].objects.find(o=>o.id===trigger.id).properties.find(p=>p.key==='once').value,'false');
+  assert.equal((await state()).document.rooms[0].objects.find(o=>o.id===trigger.id).properties.find(p=>p.key==='once').value,'true');
   await command('redo'); await settle();
   await page.locator('[data-property="once"]').uncheck();
   await page.getByRole('button',{name:'Apply properties',exact:true}).click();
@@ -101,9 +104,10 @@ try {
   s=await until(s=>s.document.rooms[0].objects.find(o=>o.id===trigger.id).properties.some(p=>p.key==='desc'&&p.value==='Updated legacy description'));
   assert.equal(s.document.rooms[0].objects.find(o=>o.id===trigger.id).properties.find(p=>p.key==='event').value,'existing-event');
   const unassigned = structuredClone(s.document);
-  unassigned.rooms[0].objects.find(o=>o.id===trigger.id).properties = unassigned.rooms[0].objects.find(o=>o.id===trigger.id).properties.filter(p=>p.key!=='event');
+  unassigned.rooms[0].objects.find(o=>o.id===trigger.id).properties = unassigned.rooms[0].objects.find(o=>o.id===trigger.id).properties.filter(p=>!['event','once'].includes(p.key));
   await command('import',{document:unassigned,discard:true}); await command('objectClick',{x:trigger.x+.5,y:trigger.y+.5}); await settle();
   assert.equal(await page.locator('[data-property="event"]').inputValue(),'None','An old missing event must not appear assigned to Trigger001.');
+  assert.ok(!await page.locator('[data-property="once"]').isChecked(),'An old trigger without Once retains repeatable behavior.');
   // A real concurrent edit must not be overwritten by an already open form.
   await page.locator('[data-property="desc"]').fill('Unsaved form');
   await command('objectProperties',{values:{desc:'Concurrent value'}}); await settle();
@@ -111,7 +115,7 @@ try {
   await page.waitForFunction(()=>document.querySelector('#toast')?.textContent.includes('changed in another view'));
   assert.equal((await state()).document.rooms[0].objects.find(o=>o.id===trigger.id).properties.find(p=>p.key==='desc').value,'Concurrent value');
   assert.deepEqual(errors,[]);
-  console.log('Object UI passed: four palette items, portal color catalog, readonly unique IDs, copy IDs, 200 events, checkbox, descriptions, undo/redo and legacy values.');
+  console.log('Object UI passed: four palette items, portal color catalog, hidden numeric IDs, copy IDs, 200 events, checkbox, descriptions, undo/redo and legacy values.');
 } finally {
   await browser.close();
   if(initial.file) await command('open',{path:initial.file,discard:true});

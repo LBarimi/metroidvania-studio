@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using MetroidvaniaStudio.Primitives;
@@ -222,8 +221,14 @@ public static partial class AutomationEngine
             return room;
         }
 
-        private string NewId(JsonElement operation, string key = "id")
+        private string NewId(JsonElement operation, string key = "id", bool numeric = false)
         {
+            if (numeric && !operation.TryGetProperty(key, out _))
+            {
+                string generated = MapObjectIds.Create(ids);
+                CreatedIds.Add(generated);
+                return generated;
+            }
             string id = OptionalText(operation, key, Guid.NewGuid().ToString("N"));
             if (!ids.Add(id)) throw new ArgumentException("The ID is already in use: '" + id + "'.");
             CreatedIds.Add(id);
@@ -309,8 +314,7 @@ public static partial class AutomationEngine
             copy.x = checked(copy.x + delta.x); copy.y = checked(copy.y + delta.y);
             for (int index = 0; index < copy.objects.Count; index++)
             {
-                string objectId = "object-" + Convert.ToHexStringLower(SHA256.HashData(Utf8.GetBytes(id + "\0" + room.objects[index].id)))[..32];
-                if (!ids.Add(objectId)) throw new ArgumentException("A derived duplicate object ID is already in use.");
+                string objectId = MapObjectIds.Derive("room-object\0" + id + "\0" + room.objects[index].id, ids);
                 copy.objects[index].id = objectId;
                 CreatedIds.Add(objectId);
             }
@@ -420,7 +424,7 @@ public static partial class AutomationEngine
             Fields(operation, "op", "roomId", "id", "definitionId", "layer", "groupId", "x", "y", "width", "height", "rotation", "scaleX", "scaleY", "nodes", "properties");
             MapRoom room = Room(operation);
             if (room.objects.Count >= MapDocument.MaximumObjectsPerRoom) throw new ArgumentException("The room has reached its object limit.");
-            var item = new MapObject { id = NewId(operation), definition = Text(operation, "definitionId"), layer = ObjectLayer(operation),
+            var item = new MapObject { id = NewId(operation, numeric: true), definition = Text(operation, "definitionId"), layer = ObjectLayer(operation),
                 groupId = OptionalText(operation, "groupId", "", true), x = Number(operation, "x"), y = Number(operation, "y") };
             ApplyObjectFields(item, operation);
             RequireGroup(item.groupId, item.layer);

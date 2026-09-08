@@ -43,7 +43,8 @@ internal static class IntegrationContracts
                     : valueType.IsEnum ? "(" + valueName + ")" + Convert.ToInt32(value)
                     : valueType.IsPrimitive ? Convert.ToString(value, CultureInfo.InvariantCulture)! + (valueType == typeof(float) ? "f" : "")
                     : value == null ? "null" : valueType.IsArray ? "new " + TypeName(valueType.GetElementType()!) + "[0]" : "new " + valueName + "()";
-                if (field.Name == "id" && value is string id && Guid.TryParseExact(id, "N", out _)) initializer = "\"\"";
+                if (field.Name == "id" && (type == typeof(MapObject) || type == typeof(MapRoom)
+                    || type == typeof(MapLayerGroup) || type == typeof(MapStyleground))) initializer = "\"\"";
                 body.Append("        public " + valueName + " " + field.Name + " = " + initializer + ";\n");
             }
             if (name == "StudioPoint") body.Append("        public StudioPoint() {}\n        public StudioPoint(float x, float y) { this.x = x; this.y = y; }\n");

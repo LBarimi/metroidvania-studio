@@ -19,6 +19,7 @@ var tests = new (string Name, Action Body)[]
     ("script syntax errors include a local line location", Syntax),
     ("published Lua examples execute through the shared API", Examples),
     ("duplicated room object IDs remain deterministic", DuplicateIds),
+    ("Lua-generated object IDs are numeric and deterministic", NumericObjectIds),
     ("reused values cannot amplify JSON past its budget", JsonAmplification),
     ("tile inspection is bounded and uses the input snapshot", TileInspection)
 };
@@ -31,6 +32,19 @@ foreach (var test in tests)
 Console.WriteLine($"Lua regression: {tests.Length - failed}/{tests.Length} passed.");
 return failed == 0 ? 0 : 1;
 
+static void NumericObjectIds()
+{
+    const string source = """
+        local room = studio.room.add { x=0, y=0, width=16, height=10 }
+        local object = studio.object.add { roomId=room, definitionId="Portal", layer="entities", x=2, y=2 }
+        print(object)
+        """;
+    var first = LuaScriptRunner.Run(Empty(), source, 7);
+    var second = LuaScriptRunner.Run(Empty(), source, 7);
+    Check(first.DocumentJson == second.DocumentJson, "Lua-generated IDs remain deterministic for preview and apply.");
+    string id = MapDocumentStore.Deserialize(first.DocumentJson).rooms.Single().objects.Single().id;
+    Check(id.Length <= 16 && id.All(char.IsAsciiDigit) && first.Logs.Single() == id, "Lua receives the compact ID stored in JSON.");
+}
 static string Empty() => MapDocumentStore.Serialize(new MapDocument());
 static void Check(bool condition, string message) { if (!condition) throw new Exception(message); }
 static Exception Reject(string source, string? contains = null)

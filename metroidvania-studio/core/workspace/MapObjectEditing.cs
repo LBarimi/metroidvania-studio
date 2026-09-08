@@ -715,7 +715,7 @@ namespace MetroidvaniaStudio
             return ids;
         }
 
-        private static string NewId(HashSet<string> ids) { string id; do { id = Guid.NewGuid().ToString("N"); } while (!ids.Add(id)); return id; }
+        private static string NewId(HashSet<string> ids) => MapObjectIds.Create(ids);
         private static bool ActualObjectLayer(MapLayer layer) => layer >= MapLayer.Entities && layer <= MapLayer.BackgroundDecals;
         private static MapObject Clone(MapObject item) => MapJson.FromJson<MapObject>(MapJson.ToJson(item));
         private static Vector2 Center(MapObject item) => FiniteVector(item.x + item.width * 0.5, item.y + item.height * 0.5);

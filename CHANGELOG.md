@@ -5,8 +5,8 @@
 - Allow room movement and resizing from foreground, background, object, trigger and decal layers.
 - Draw magenta portal regions on the tile grid with click-and-drag, clipped to the active room, while preserving existing portal IDs and event settings.
 - Add magenta one-shot portals and respawn points. Show Spawn, Portal, Path and Respawn point in the object palette while retaining legacy placed objects.
-- Add a Once checkbox, 200 numbered trigger events, and descriptions displayed at the center of placed objects and trigger regions.
-- Display read-only placement IDs and preserve them in JSON exports; copies receive new unique IDs.
+- Add a Once checkbox (checked by default for new triggers), 200 numbered trigger events, and descriptions displayed at the center of placed objects and trigger regions.
+- Hide placement IDs in the inspector and generate compact decimal IDs for new objects and copies. Keep string IDs in JSON for compatibility, retaining existing and explicit script IDs.
 - Include explicit trigger request managers for Unity, Unreal Engine 4/5, Godot and SDL, with shared event numbers, room coordinates, ID and description payloads, and one-shot reset controls.
 - Preserve legacy event text and customized object definitions during catalog upgrades.
 - Fix property forms rejecting unchanged objects after a repeated selection, while continuing to reject stale edits to changed objects.

@@ -35,7 +35,7 @@ namespace MetroidvaniaStudio
     [Serializable]
     public sealed class MapObject
     {
-        public string id = Guid.NewGuid().ToString("N");
+        public string id = MapObjectIds.Create();
         public string definition = "object";
         public MapLayer layer = MapLayer.Entities;
         public string groupId = "";

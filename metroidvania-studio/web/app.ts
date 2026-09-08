@@ -665,10 +665,6 @@ function objectInspector(inspector: HTMLElement, selected: MapObject[], expectat
     const current = state && selectedObjects(activeRoom(state), state.selection.objects);
     return state && state.instanceId === expectation.instanceId && JSON.stringify(current) === originalObjects ? expectedAt(state) : expectation;
   };
-  const idLabel = document.createElement('label'); idLabel.append(text('span', locale.t('objectId')));
-  const idInput = document.createElement('textarea'); idInput.id = 'object-id'; idInput.readOnly = true; idInput.style.minHeight = '0'; idInput.style.height = selected.length > 1 ? '84px' : '28px'; idInput.style.resize = 'none';
-  idInput.rows = Math.min(4, selected.length); idInput.value = selected.map(item => item.id).join('\n');
-  idInput.setAttribute('aria-label', locale.t('objectId')); idInput.title = locale.t('objectIdHelp'); idLabel.append(idInput); content.append(idLabel);
   if (selected.length === 1) {
     const fields = text('div', '', 'fields'), inputs = new Map<string, HTMLInputElement>(); for (const key of ['x', 'y', 'width', 'height', 'rotation', 'scaleX', 'scaleY'] as const) { const caption = key === 'x' || key === 'y' ? key.toUpperCase() : key.startsWith('scale') ? locale.t('scale') + ' ' + key.slice(-1) : locale.t(key); const [label, input] = labelInput(caption, object[key] ?? 1, 'number'); input.step = key === 'rotation' ? '1' : '.0625'; fields.append(label); inputs.set(key, input); } content.append(fields, button(locale.t('applyTransform'), () => run('objectTransform', numberValues(inputs), currentExpectation())));
   }
@@ -681,6 +677,7 @@ function objectInspector(inspector: HTMLElement, selected: MapObject[], expectat
     label.append(text('span', localized ? locale.t('builtin.field.' + key) : field?.label || key));
     const fieldValue = (item: MapObject): string => {
       const stored = propObject(item.properties)[key];
+      if (key === 'once' && stored === undefined) return definitionKey(item.definition) === 'portal' ? 'true' : 'false';
       if (key === 'event' && field?.choices?.includes('None') && !stored?.trim()) return 'None';
       return stored ?? field?.defaultValue ?? '';
     };

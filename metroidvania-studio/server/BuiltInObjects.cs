@@ -39,6 +39,9 @@ public static class BuiltInObjects
                 string key = field["key"]!.GetValue<string>();
                 var old = fields.OfType<JsonObject>().FirstOrDefault(f => f["key"]?.GetValue<string>() == key);
                 if (old == null) { fields.Add(field.DeepClone()); changed = true; }
+                else if (key == "once" && name == "Area" && old["kind"]?.GetValue<int>() == 3
+                    && old["defaultValue"]?.GetValue<string>() == "false")
+                { old["defaultValue"] = field["defaultValue"]!.DeepClone(); changed = true; }
                 else if (key == "event" && name == "Area" && old["kind"]?.GetValue<int>() == 0 && old["defaultValue"]?.GetValue<string>() == ""
                     && old["choices"] is JsonArray choices && choices.Count == 0)
                 { fields[fields.IndexOf(old)] = field.DeepClone(); changed = true; }

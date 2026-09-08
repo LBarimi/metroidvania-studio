@@ -2,7 +2,7 @@
 
 The Objects palette contains **Spawn**, **Portal**, **Path**, and **Respawn point**. Portals are magenta room-transition regions: choose Portal in the Objects palette, then click for one tile or drag to cover a rectangle. The region snaps to tile cells and stays inside its room. Each drag creates one portal with one ID, regardless of its size. Use the Triggers layer to draw a rectangular event region. Previously placed legacy objects stay in existing maps.
 
-Every placed object, trigger, and decal has a unique ID. The inspector displays it as a read-only value, and JSON exports retain it. Copying an object or a room assigns new IDs to the copies. Moving, resizing, saving and reopening keep the original IDs.
+Every placed object, trigger, and decal has a unique ID. IDs are hidden in the inspector and retained in JSON exports. Newly generated IDs contain only decimal digits (up to 16 digits), stored as strings for compatibility. Existing IDs and explicitly supplied script IDs remain unchanged. Copying an object or a room assigns new IDs to the copies. Moving, resizing, saving and reopening keep the original IDs.
 
 Room title handles and resize handles work on every layer. Locked rooms remain protected.
 
@@ -10,7 +10,7 @@ Room title handles and resize handles work on every layer. Locked rooms remain p
 
 1. Select the Triggers layer and drag an area.
 2. Select its Event, from `Trigger001` through `Trigger200`.
-3. Check Once if this event should be delivered only once per manager session.
+3. Once is checked for new triggers. Uncheck it to allow repeated event requests within a manager session. Existing trigger settings are preserved.
 4. Enter a Description and click Apply properties.
 
 Descriptions appear at the center of objects and trigger regions in the map editor. They are hidden in Game view. A portal also has an event and description; portals always use Once.
