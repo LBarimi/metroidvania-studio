@@ -58,23 +58,23 @@ try {
   };
   await page.route('**/api/command', delay);
   await page.locator('#camera-ppu').selectOption('32'); await ready;
-  await page.locator('#camera-resolution').selectOption('512x288');
+  await page.locator('#camera-resolution').selectOption('640x360');
   await page.locator('#camera-ppu').selectOption('64');
   assert.equal(await page.locator('#camera-ppu').inputValue(), '64'); release();
-  await applied(64, 512, 288); await page.unroute('**/api/command', delay);
-  await page.locator('#edit-menu-button').click(); await page.locator('#undo').click(); await applied(32, 512, 288);
+  await applied(64, 640, 360); await page.unroute('**/api/command', delay);
+  await page.locator('#edit-menu-button').click(); await page.locator('#undo').click(); await applied(32, 640, 360);
   await page.locator('#edit-menu-button').click(); await page.locator('#undo').click(); await applied(32, 320, 180);
-  await page.locator('#edit-menu-button').click(); await page.locator('#redo').click(); await applied(32, 512, 288);
+  await page.locator('#edit-menu-button').click(); await page.locator('#redo').click(); await applied(32, 640, 360);
   assert.deepEqual((await getState()).document.rooms, initial.document.rooms);
   checks.push('Rapid mixed selections preserve both fields and Undo/Redo updates the dropdowns without touching rooms');
 
   await page.locator('#camera-preview').click();
-  await page.waitForFunction(() => document.querySelector('#map-canvas')?.dataset.cameraResolution === '512x288');
+  await page.waitForFunction(() => document.querySelector('#map-canvas')?.dataset.cameraResolution === '640x360');
   await page.waitForTimeout(100);
   const before = await page.locator('#map-canvas').evaluate(canvas => canvas.toDataURL());
-  await settings(64, 512, 288); await page.waitForTimeout(100);
+  await settings(64, 640, 360); await page.waitForTimeout(100);
   assert.equal(before, await page.locator('#map-canvas').evaluate(canvas => canvas.toDataURL()), 'PPU changes units without cropping fixed 16px source tiles.');
-  assert.equal((await getState()).camera.orthographicSize, 2.25);
+  assert.equal((await getState()).camera.orthographicSize, 2.8125);
   await settings(64, 320, 240);
   await page.waitForFunction(() => document.querySelector('#map-canvas')?.dataset.cameraResolution === '320x240');
   const frame = await page.locator('#map-canvas').evaluate(canvas => {
