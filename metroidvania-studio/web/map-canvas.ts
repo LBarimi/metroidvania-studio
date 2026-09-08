@@ -1065,8 +1065,7 @@ export class MapCanvas {
     } return null;
   }
   private canResizeRoom(room: Room): boolean {
-    return this.selectedRooms.size <= 1 && room.visible && !room.locked && (this.state?.selection.tool === 0
-      || tileLayer(this.state?.selection.layer ?? -1));
+    return this.selectedRooms.size <= 1 && room.visible && !room.locked;
   }
   private roomHandlePoint(room: Room, x: number, y: number): Point {
     const point = this.toScreen({ x: room.x + (x + 1) * room.width / 2, y: room.y + (y + 1) * room.height / 2 });
