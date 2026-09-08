@@ -4,9 +4,14 @@ Game Preview sits in the upper-right corner of the map canvas. It shows the sele
 
 - Use **−** to collapse the window and **+** to expand it.
 - Use the square button to maximize Preview within the map canvas. Press it again or **Esc** to restore its size.
-- Drag inside Preview to move its camera. Press **F** while it is focused, or use the center button, to return to the selected room's center.
+- Select **Game camera** in the left Tools panel to show a white camera frame and central crosshair in the active room. Drag anywhere inside that frame to move the camera; the pointer becomes a hand and Preview follows immediately.
+- Drag inside Preview to move the same camera. Press **F** while it is focused, or use the center button, to return to the selected room's center.
 - Change **PPU** or **Resolution** in the main toolbar. Preview updates automatically. Source tiles remain 16 pixels wide, so changing PPU changes world units rather than the number of tiles in a fixed pixel resolution.
 
 Preview preserves the full camera aspect ratio. It uses integer magnification when space allows and nearest-neighbor reduction when the reference resolution exceeds the window size. Maximize it to inspect more detail. Panning or maximizing Preview leaves your editing camera unchanged.
 
 Selecting another room recenters Preview. Collapsing it or switching to the minimap pauses its rendering. The collapsed setting is remembered on this browser. Preview does not run game logic or simulate a player.
+
+The camera stops at the room edges and moves in source-pixel steps. If a room is narrower or shorter than the camera, that axis stays centered: the editor clips the white box to the room, while Preview keeps the full resolution and shows empty space beyond it.
+
+Camera positioning is a local viewing aid and does not modify map JSON or Undo history. Choose another tool or press **Esc** to leave Game camera. It is available on every layer, including locked layers and rooms. Resizing a room or changing resolution clamps the camera to the updated bounds.

@@ -2,6 +2,8 @@
 
 ## 1.3.1
 
+- Add a Game camera tool on every layer, with a draggable white frame and crosshair synchronized with Game Preview. Clamp movement to the active room, preserve source-pixel alignment, and lock undersized axes without changing map data.
+
 - Replace the Game view toolbar button with a collapsible Game Preview window. Maximize or restore it, pan its camera independently, and see live edits with the selected room, PPU and resolution. Share tile caches and pause hidden previews.
 
 - Merge selected rooms from Edit or the inspector, preserving world positions, both tile layers, object IDs and compatible room properties in one Undo step.

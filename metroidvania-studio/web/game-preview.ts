@@ -24,7 +24,6 @@ export class GamePreview {
   maximized = false;
   private stamp = '';
   private roomStamp = '';
-  private center: Point = { x: 0, y: 0 };
   private scale = 16;
   private pan: { id: number; x: number; y: number; center: Point } | null = null;
 
@@ -52,12 +51,12 @@ export class GamePreview {
     this.canvas.addEventListener('pointerdown', event => {
       event.preventDefault(); this.canvas.focus();
       if (this.pan || ![0, 1, 2].includes(event.button)) return;
-      this.pan = { id: event.pointerId, x: event.clientX, y: event.clientY, center: { ...this.center } };
+      this.pan = { id: event.pointerId, x: event.clientX, y: event.clientY, center: this.source.gameCamera.center };
       this.canvas.setPointerCapture(event.pointerId); this.canvas.classList.add('panning');
     }, options);
     this.canvas.addEventListener('pointermove', event => {
       const pan = this.pan; if (!pan || pan.id !== event.pointerId) return;
-      this.center = { x: pan.center.x - (event.clientX - pan.x) / this.scale, y: pan.center.y + (event.clientY - pan.y) / this.scale };
+      this.source.moveGameCamera({ x: pan.center.x - (event.clientX - pan.x) / this.scale, y: pan.center.y + (event.clientY - pan.y) / this.scale });
       this.requestDraw(true);
     }, options);
     for (const name of ['pointerup', 'pointercancel', 'lostpointercapture'])
@@ -109,11 +108,8 @@ export class GamePreview {
     if (this.collapsed) { cancelAnimationFrame(this.raf); this.raf = 0; }
     this.updateLabels();
   }
-  frameRoom(): void {
-    const room = activeRoom(this.source.state);
-    this.center = room ? { x: room.x + room.width / 2, y: room.y + room.height / 2 } : { x: 0, y: 0 };
-    this.requestDraw(true);
-  }
+  reveal(): void { this.setMaximized(false); this.setCollapsed(false); }
+  frameRoom(): void { this.source.centerGameCamera(); this.requestDraw(true); }
   private cancelPan(): void {
     const pan = this.pan; this.pan = null; this.canvas.classList.remove('panning');
     if (pan && this.canvas.hasPointerCapture(pan.id)) this.canvas.releasePointerCapture(pan.id);
@@ -129,10 +125,9 @@ export class GamePreview {
     this.raf = requestAnimationFrame(() => {
       this.raf = 0;
       const room = activeRoom(this.source.state), profile = this.source.cameraProfile;
-      const roomStamp = room ? `${this.source.state?.instanceId}:${room.id}:${room.x}:${room.y}:${room.width}:${room.height}` : '';
+      const roomStamp = room ? `${this.source.state?.instanceId}:${room.id}:${room.x}:${room.y}:${room.width}:${room.height}:${profile?.referenceWidth}:${profile?.referenceHeight}` : '';
       if (roomStamp !== this.roomStamp) {
         this.cancelPan(); this.roomStamp = roomStamp;
-        this.center = room ? { x: room.x + room.width / 2, y: room.y + room.height / 2 } : { x: 0, y: 0 };
       }
       const name = room?.name || this.t('previewNoRoom');
       if (this.roomName.textContent !== name) { this.roomName.textContent = name; this.roomName.title = name; }
@@ -140,7 +135,7 @@ export class GamePreview {
       const aspect = profile ? `${profile.referenceWidth} / ${profile.referenceHeight}` : '16 / 9';
       if (this.element.style.getPropertyValue('--preview-aspect') !== aspect) this.element.style.setProperty('--preview-aspect', aspect);
       if (this.collapsed) return;
-      const result = this.source.renderGamePreview(this.canvas, this.center);
+      const result = this.source.renderGamePreview(this.canvas, this.source.gameCamera.center);
       if (!result) return;
       this.scale = result.tileScale;
       const camera = this.source.cameraProfile;

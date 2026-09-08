@@ -96,6 +96,7 @@ async function settleFileSnapshot(): Promise<void> { await map.settled(); await 
 async function option(values: CommandValues): Promise<void> {
   map.cancel(); await run('options', () => {
     const next = { ...(typeof values === 'function' ? values() : values) } as Record<string, unknown>;
+    if (typeof next.tool === 'number' && map.gameCameraTool) { map.setGameCameraTool(false); drawPanels(true); }
     if (typeof next.layer === 'number' && next.tool === undefined) {
       const current = state?.selection.tool ?? 3;
       next.tool = tileLayer(next.layer) ? current === 1 ? 3 : current : current === 0 || current === 2 ? current : next.layer === 6 ? 2 : 1;
@@ -449,7 +450,7 @@ function queuePanels(): void {
 function toolAvailable(tool: number, layer: number): boolean { return tileLayer(layer) ? tool !== 1 : layer === 6 ? [0, 2].includes(tool) : [0, 1, 2].includes(tool); }
 function drawPanels(force = false): void {
   if (!state) return;
-  const key = panelKey(state); if (!force && key === lastPanelKey) { drawStatus(); renderInspector(); return; } lastPanelKey = key;
+  const key = panelKey(state) + ':' + map.gameCameraTool; if (!force && key === lastPanelKey) { drawStatus(); renderInspector(); return; } lastPanelKey = key;
   const s = state.selection;
   el('project-name').replaceChildren(text('span', state.dirty ? '●' : '', 'dirty-dot'), document.createTextNode(state.document.name)); el('project-name').title = state.file || state.document.name;
   const viewOnly = miniMode || map.cameraPreview;
@@ -479,7 +480,13 @@ function drawPanels(force = false): void {
   }
   if (!rooms.childElementCount) rooms.append(text('div', locale.t('noRooms'), 'empty'));
   const tools = el('tools'); tools.replaceChildren(); const icons = ['▱', '+', '⬚', '▰', '□', '▨', '╱', '○', '⬭'];
-  TOOLS.forEach((name, index) => { if (!toolAvailable(index, s.layer)) return; const b = button('', () => option({ tool: index }), 'tool-button'); b.append(text('span', icons[index], 'symbol'), text('span', index === 2 ? locale.t(tileLayer(s.layer) ? 'tileSelection' : 'objectSelection') : locale.enum('MetroidvaniaStudioTool', name, index))); b.classList.toggle('active', s.tool === index); b.dataset.tool = String(index); b.title = locale.t(index === 2 ? 'selectionHelp' : index === 1 ? 'placementHelp' : index === 0 ? 'roomHelp' : 'help'); tools.append(b); });
+  TOOLS.forEach((name, index) => { if (!toolAvailable(index, s.layer)) return; const b = button('', () => option({ tool: index }), 'tool-button'); b.append(text('span', icons[index], 'symbol'), text('span', index === 2 ? locale.t(tileLayer(s.layer) ? 'tileSelection' : 'objectSelection') : locale.enum('MetroidvaniaStudioTool', name, index))); b.classList.toggle('active', !map.gameCameraTool && s.tool === index); b.dataset.tool = String(index); b.title = locale.t(index === 2 ? 'selectionHelp' : index === 1 ? 'placementHelp' : index === 0 ? 'roomHelp' : 'help'); tools.append(b); });
+  const cameraTool = button('', async () => {
+    await map.settled(); map.setGameCameraTool(true); preview.reveal(); drawPanels(true); el('map-canvas').focus();
+  }, 'tool-button');
+  cameraTool.id = 'game-camera-tool'; cameraTool.append(text('span', '⊡', 'symbol'), text('span', locale.t('gameCameraTool')));
+  cameraTool.classList.toggle('active', map.gameCameraTool); cameraTool.setAttribute('aria-pressed', String(map.gameCameraTool));
+  cameraTool.title = locale.t('gameCameraHelp'); tools.append(cameraTool);
   const layers = el('layers'); layers.replaceChildren(); LAYERS.forEach((name, index) => { const div = text('div', '', 'layer-row'), b = button(locale.enum('MapLayer', name, index), () => option({ layer: index, groupId: '', ...(!tileLayer(index) && index !== 6 ? { objectDefinition: state!.catalog.objects.find(o => o.layer === index || [4, 5].includes(o.layer) && [4, 5].includes(index))?.id || '' } : {}) }), 'layer-select'); b.classList.toggle('active', index === s.layer); div.append(b); if (index !== 6) { const visible = button('', () => option(() => { const hidden = state!.selection.hiddenLayers; return { hiddenLayers: hidden.includes(index) ? hidden.filter(layer => layer !== index) : [...hidden, index] }; }), 'icon ghost layer-visibility'); const shown = !s.hiddenLayers.includes(index), eye = document.createElement('img'); eye.src = shown ? 'layer-eye-open.svg' : 'layer-eye-closed.svg'; eye.alt = ''; eye.draggable = false; eye.setAttribute('aria-hidden', 'true'); visible.append(eye); visible.title = locale.enum('MapLayer', name, index) + ' · ' + locale.t('visible'); visible.setAttribute('aria-label', visible.title); visible.setAttribute('aria-pressed', String(shown)); const locked = button(s.lockedLayers.includes(index) ? '▣' : '▫', () => option(() => { const locked = state!.selection.lockedLayers; return { lockedLayers: locked.includes(index) ? locked.filter(layer => layer !== index) : [...locked, index] }; }), 'icon ghost'); locked.title = locale.t('locked'); div.append(visible, locked); } layers.append(div); });
   const groupSelect = el<HTMLSelectElement>('group-select'); const group = select([['', locale.t('ungrouped')], ...state.document.layerGroups.filter(g => g.layer === s.layer).map(g => [g.id, (g.locked ? '▣ ' : '') + (!g.visible ? '○ ' : '') + g.name] as [string, string])], s.groupId); groupSelect.replaceChildren(...group.children); groupSelect.value = s.groupId;
   const groupActions = el('group-actions'); groupActions.replaceChildren(button('+ ' + locale.t('group'), addGroup)); const selectedGroup = state.document.layerGroups.find(g => g.id === s.groupId); if (selectedGroup) for (const key of ['visible', 'locked'] as const) groupActions.append(button(locale.t(key), () => run('documentProperties', () => ({ layerGroups: state!.document.layerGroups.map(group => group.id === selectedGroup.id ? { ...group, [key]: !group[key] } : group) })), selectedGroup[key] ? 'active' : ''));
@@ -793,7 +800,7 @@ function renderStatus(point: Point): void {
   if (state) { if (revision.dataset.instanceId !== state.instanceId) revision.dataset.instanceId = state.instanceId; }
   else if (revision.dataset.instanceId !== undefined) delete revision.dataset.instanceId;
   const zoom = el('view-toolbar').querySelector('.zoom-readout'); if (zoom && zoom.textContent !== `×${scale}`) zoom.textContent = `×${scale}`;
-  statusText('canvas-help', locale.t(miniMode ? 'minimapHelp' : map.cameraPreview ? 'cameraHelp' : state?.selection.tool === 0 ? 'roomHelp' : tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'selectionHelp' : state?.selection.tool === 1 ? 'placementHelp' : !tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'objectHelp' : 'help'));
+  statusText('canvas-help', locale.t(miniMode ? 'minimapHelp' : map.gameCameraTool ? (map.gameCamera.clipped ? 'gameCameraSmallRoom' : 'gameCameraHelp') : map.cameraPreview ? 'cameraHelp' : state?.selection.tool === 0 ? 'roomHelp' : tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'selectionHelp' : state?.selection.tool === 1 ? 'placementHelp' : !tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'objectHelp' : 'help'));
 }
 function stateChanged(): void {
   state = api.state; if (!state) return;
@@ -822,6 +829,8 @@ document.addEventListener('keydown', event => {
   const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || (event.target as HTMLElement)?.isContentEditable;
   if (typing && !(event.key.toLowerCase() === 's' && (event.ctrlKey || event.metaKey))) return;
   const key = event.key.toLowerCase(), mod = event.ctrlKey || event.metaKey;
+  if (map.gameCameraTool && key === 'escape') { event.preventDefault(); map.setGameCameraTool(false); drawPanels(true); return; }
+  if (map.gameCameraTool && authoringShortcut(key, mod) && (mod || !toolKeys.includes(key))) { event.preventDefault(); return; }
   const recognized = authoringShortcut(key, mod) || mod && key === 's' || !mod && key === 'f';
   if (((miniMode || map.cameraPreview) && authoringShortcut(key, mod)) || ((map.interacting || mini.interacting) && key !== 'escape' && recognized)) { event.preventDefault(); return; }
   let action: (() => unknown) | undefined;
