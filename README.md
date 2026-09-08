@@ -1,7 +1,5 @@
 # <img src="metroidvania-studio/web/studio-icon.svg" width="36" height="36" alt=""> Metroidvania Studio
 
-**Build connected worlds, one room at a time.**
-
 A web-based 2D world editor for metroidvania games. Create connected rooms, paint tilemaps, and design minimaps with JSON export for cross-engine workflows.
 
 **Automate your workflow:** [Lua scripts](docs/scripting/quick-start.md), a [headless CLI](docs/cli/quick-start.md), and a [local MCP server for AI agents](docs/mcp/setup.md).
