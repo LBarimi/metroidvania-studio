@@ -8,6 +8,7 @@ Metroidvania Studio supports Lua scripts, a headless CLI, a local MCP server, an
 | [Headless from a download](cli/release-downloads.md) | Run commands from the extracted program download |
 | [CLI quick start](cli/quick-start.md) | Edit, validate, export, and preview maps without a browser |
 | [MCP setup](mcp/setup.md) | Give an agent local map editing tools |
+| [Building from source](building.md) | Build, run, and refresh local web bundles |
 | [Game Preview](game-preview.md) | Check the selected room while editing |
 | [Merge and split rooms](room-restructuring.md) | Restructure rooms while preserving world contents |
 | [Objects and triggers](objects-and-triggers.md) | Place portals, describe objects and connect runtime events |
