@@ -16,14 +16,14 @@ public static class BuiltInObjects
         var catalog = JsonNode.Parse(File.ReadAllText(files.CatalogWritePath))!;
         if (catalog["objects"] is not JsonArray objects) return;
         bool changed = false;
-        foreach (var name in new[] { "Area", "Spawn", "Portal", "Path", "Respawn" })
+        foreach (var name in new[] { "Area", "Spawn", "Portal", "InvisibleWall", "Path", "Respawn" })
         {
             var bundled = source.OfType<JsonObject>().FirstOrDefault(o => o["id"]?.GetValue<string>() == name);
             if (bundled == null) continue;
             var existing = objects.OfType<JsonObject>().FirstOrDefault(o => string.Equals(o["id"]?.GetValue<string>(), name, StringComparison.OrdinalIgnoreCase));
             if (existing == null)
             {
-                if (name is "Portal" or "Respawn") { objects.Add(bundled.DeepClone()); changed = true; }
+                if (name is "Portal" or "InvisibleWall" or "Respawn") { objects.Add(bundled.DeepClone()); changed = true; }
                 continue;
             }
             if (existing["name"]?.GetValue<string>() != existing["id"]?.GetValue<string>() || existing["properties"] is not JsonArray fields) continue;
@@ -33,6 +33,16 @@ public static class BuiltInObjects
             {
                 existing["placement"] = bundled["placement"]!.DeepClone();
                 changed = true;
+            }
+            if (name == "Portal")
+            {
+                foreach (var field in fields.OfType<JsonObject>().ToArray())
+                {
+                    bool oldEvent = field["key"]?.GetValue<string>() == "event" && field["kind"]?.GetValue<int>() == 5
+                        && field["choices"] is JsonArray options && options.Count == 201 && options[0]?.GetValue<string>() == "None";
+                    bool oldOnce = field["key"]?.GetValue<string>() == "once" && field["kind"]?.GetValue<int>() == 3;
+                    if (oldEvent || oldOnce) { fields.Remove(field); changed = true; }
+                }
             }
             foreach (var field in bundled["properties"]!.AsArray().OfType<JsonObject>().Where(f => f["key"]?.GetValue<string>() is "desc" or "event" or "once"))
             {

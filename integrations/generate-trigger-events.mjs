@@ -7,7 +7,7 @@ const specification=JSON.parse(readFileSync(path.join(root,'metroidvania-studio/
 const names=['None',...Array.from({length:specification.eventCount},(_,i)=>'Trigger'+String(i+1).padStart(3,'0'))];
 if(specification.formatVersion!==1||names.length!==201)throw new Error('Trigger event numbers are a stable runtime contract.');
 const catalog=JSON.parse(readFileSync(path.join(root,'samples/catalog.json'),'utf8'));
-for(const id of ['Area','Portal']) {
+for(const id of ['Area']) {
  const field=catalog.objects.find(o=>o.id===id)?.properties.find(p=>p.key==='event');
  if(!field||JSON.stringify(field.choices)!==JSON.stringify(names))throw new Error('Built-in event choices do not match the runtime contract: '+id);
 }

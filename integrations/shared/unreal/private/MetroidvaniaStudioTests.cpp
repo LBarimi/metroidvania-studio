@@ -8,6 +8,8 @@
 #include "StudioDocument.h"
 #include "MetroidvaniaStudioTriggerManager.h"
 #include "MetroidvaniaStudioPixelCamera.h"
+#include "ProceduralMeshComponent.h"
+#include "PhysicsEngine/BodySetup.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStudioImportTest,"MetroidvaniaStudio.Import.Room",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FStudioImportTest::RunTest(const FString& Parameters)
@@ -58,13 +60,36 @@ bool FStudioTriggerTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("First request"), Manager->RequestTrigger(TEXT("once")));
     TestFalse(TEXT("Second request"), Manager->RequestTrigger(TEXT("once")));
     TestTrue(TEXT("Repeat"), Manager->RequestTrigger(TEXT("repeat")) && Manager->RequestTrigger(TEXT("repeat")));
-    TestTrue(TEXT("Portal first"), Manager->RequestTrigger(TEXT("portal")));
-    TestFalse(TEXT("Portal repeat"), Manager->RequestTrigger(TEXT("portal")));
+    TestFalse(TEXT("Portal is independent"), Manager->GetTrigger(TEXT("portal"), Info) || Manager->RequestTrigger(TEXT("portal")));
+    TestFalse(TEXT("Invisible wall is not an event"), Manager->GetTrigger(TEXT("wall"), Info) || Manager->RequestTrigger(TEXT("wall")));
     TestFalse(TEXT("Legacy event unassigned"), Manager->RequestTrigger(TEXT("legacy")));
     TestTrue(TEXT("Register again"), Manager->RegisterRoom(Json, TEXT("trigger-room")));
     TestFalse(TEXT("Reload keeps consumed event"), Manager->RequestTrigger(TEXT("once")));
     TestTrue(TEXT("Reset once"), Manager->ResetOnce(TEXT("once")) && Manager->RequestTrigger(TEXT("once")));
     Manager->Clear(); TestFalse(TEXT("Clear"), Manager->RequestTrigger(TEXT("once")));
+    auto* World = UWorld::CreateWorld(EWorldType::Game, false);
+    auto* Room = World->SpawnActor<AMetroidvaniaStudioRoom>();
+    Room->MapDocumentJson = Json;
+    Room->CatalogJson = TEXT("{\"materials\":[],\"objects\":[]}");
+    Room->RoomId = TEXT("trigger-room");
+    TestTrue(TEXT("Build independent regions"), Room->RebuildRoom());
+    TArray<UProceduralMeshComponent*> Meshes;
+    Room->GetComponents(Meshes);
+    int32 RegionCount = 0;
+    for (auto* Mesh : Meshes)
+    {
+        const bool Portal = Mesh->ComponentHasTag(TEXT("portal"));
+        const bool Wall = Mesh->ComponentHasTag(TEXT("wall"));
+        if (!Portal && !Wall) continue;
+        ++RegionCount;
+        TestTrue(TEXT("Region has collision geometry"), Mesh->GetBodySetup() && Mesh->GetBodySetup()->AggGeom.ConvexElems.Num() > 0);
+        TestEqual(TEXT("Region has no rendered surface"), Mesh->GetNumSections(), 0);
+        TestTrue(TEXT("Collision mode"), Mesh->GetCollisionEnabled() == (Wall ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::QueryOnly));
+        TestTrue(TEXT("Player response"), Mesh->GetCollisionResponseToChannel(ECC_Pawn) == (Wall ? ECR_Block : ECR_Overlap));
+        TestEqual(TEXT("Overlap notifications"), Mesh->GetGenerateOverlapEvents(), Portal);
+    }
+    TestEqual(TEXT("Both regions imported"), RegionCount, 2);
+    World->DestroyWorld(false);
     return true;
 }
 #endif

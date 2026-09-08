@@ -18,7 +18,7 @@ internal static class BuiltInObjectTests
             foreach (var item in objects.ToArray())
             {
                 string id = item!["id"]!.GetValue<string>();
-                if (id is "Portal" or "Respawn") { objects.Remove(item); continue; }
+                if (id is "Portal" or "InvisibleWall" or "Respawn") { objects.Remove(item); continue; }
                 var fields = item["properties"]!.AsArray();
                 foreach (var field in fields.ToArray())
                 {
@@ -45,6 +45,11 @@ internal static class BuiltInObjectTests
             var portal = updated.Single(o => o!["id"]!.GetValue<string>() == "Portal")!;
             Check(portal["color"]!.GetValue<string>() == "#FF00FFFF", "Portal is magenta.");
             Check(portal["placement"]!.GetValue<int>() == 1, "New portals use tile-aligned rectangle placement.");
+            Check(portal["properties"]!.AsArray().All(field => field!["key"]!.GetValue<string>() is not "event" and not "once"), "Portals no longer expose numbered event settings.");
+            var wall = updated.Single(o => o!["id"]!.GetValue<string>() == "InvisibleWall")!;
+            Check(wall["color"]!.GetValue<string>() == "#3388FF80" && wall["placement"]!.GetValue<int>() == 1, "Missing catalogs gain a translucent blue rectangular wall.");
+            portal["properties"]!.AsArray().Add(events.DeepClone());
+            portal["properties"]!.AsArray().Add(area["properties"]!.AsArray().Single(field => field!["key"]!.GetValue<string>() == "once")!.DeepClone());
             portal["placement"] = 0;
             portal["color"] = "#FF22CCFF";
             var description = portal["properties"]!.AsArray().Single(p => p!["key"]!.GetValue<string>() == "desc")!;
@@ -57,6 +62,7 @@ internal static class BuiltInObjectTests
             Check(portal["placement"]!.GetValue<int>() == 1 && portal["color"]!.GetValue<string>() == "#FF22CCFF"
                 && portal["properties"]!.AsArray().Single(p => p!["key"]!.GetValue<string>() == "desc")!["defaultValue"]!.GetValue<string>() == "Room transition",
                 "Old built-in point portals upgrade without losing customized color or fields.");
+            Check(portal["properties"]!.AsArray().All(field => field!["key"]!.GetValue<string>() is not "event" and not "once"), "Legacy built-in event and Once fields are removed from portal controls.");
             string stable = File.ReadAllText(files.CatalogWritePath);
             BuiltInObjects.Prepare(files, studio);
             Check(File.ReadAllText(files.CatalogWritePath) == stable, "Migration is idempotent.");

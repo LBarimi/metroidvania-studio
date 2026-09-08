@@ -42,10 +42,10 @@ namespace MetroidvaniaStudio.Integration
                     || owners.TryGetValue(item.id, out string owner) && owner != room.id)
                     throw new ArgumentException("Placed object IDs must be nonempty and unique across registered rooms.");
                 bool portal = string.Equals(item.definition, "Portal", StringComparison.OrdinalIgnoreCase);
-                if (item.layer != MapLayer.Triggers && !portal) continue;
+                if (portal || string.Equals(item.definition, "InvisibleWall", StringComparison.OrdinalIgnoreCase) || item.layer != MapLayer.Triggers) continue;
                 string Value(string key) => item.properties.Find(p => p != null && p.key == key)?.value ?? "";
                 StudioTriggerEvents.TryParse(Value("event"), out StudioTriggerEvent triggerEvent);
-                bool once = portal || bool.TryParse(Value("once"), out bool value) && value;
+                bool once = bool.TryParse(Value("once"), out bool value) && value;
                 nextEntries.Add(item.id, new StudioTriggerInfo(room.id, room.name ?? "", room.x, room.y, item.id,
                     item.definition ?? "", triggerEvent, once, Value("desc")));
             }

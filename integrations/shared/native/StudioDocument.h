@@ -406,7 +406,7 @@ struct Primitive
     Sprite sprite;
     Color color;
     int layer = 0;
-    bool solid = false, trigger = false;
+    bool solid = false, trigger = false, invisible = false;
     std::string objectId, definition;
 };
 struct Room
@@ -634,7 +634,6 @@ inline Room LoadRoom(const std::string &mapText, const std::string &catalogText,
                 "Invalid object transform.");
         Primitive p;
         p.layer = layer == 5 ? -10 : layer == 4 ? 20 : 10;
-        p.trigger = layer == 3;
         p.objectId = object.Get("id").Text();
         p.definition = object.Get("definition").Text("object");
         std::string key = p.definition;
@@ -643,11 +642,15 @@ inline Room LoadRoom(const std::string &mapText, const std::string &catalogText,
                        {
                            return c >= 'A' && c <= 'Z' ? c + 32 : c;
                        });
+        p.trigger = layer == 3 || key == "portal";
+        p.invisible = key == "invisiblewall";
+        p.solid = p.invisible;
+        if (p.invisible) p.trigger = false;
         auto definition = objects.find(key);
         if (definition != objects.end())
         {
             auto &data = *definition->second;
-            if (data.Get("sprite").kind != Json::Kind::Null)
+            if (!p.trigger && !p.invisible && data.Get("sprite").kind != Json::Kind::Null)
                 p.sprite = ReadSprite(data.Get("sprite"));
             else
                 p.color = ParseColor(data.Get("color").Text("#FFFFFF"));

@@ -41,8 +41,8 @@ func register_room(room: Dictionary) -> bool:
             error = "Placed object IDs must be nonempty and unique across registered rooms."
             return false
         next_owners[id] = room_id
-        var portal := str(object.get("definition", "")).to_lower() == "portal"
-        if int(object.get("layer", 2)) != 3 and not portal: continue
+        var definition := str(object.get("definition", "")).to_lower()
+        if definition in ["portal", "invisiblewall"] or int(object.get("layer", 2)) != 3: continue
         var values := {}
         if not object.get("properties", []) is Array:
             error = "Invalid object properties."
@@ -58,7 +58,7 @@ func register_room(room: Dictionary) -> bool:
             "roomX": int(room.get("x", 0)), "roomY": int(room.get("y", 0)),
             "objectId": id, "definition": str(object.get("definition", "")),
             "event": Events.parse(str(values.get("event", ""))),
-            "once": portal or str(values.get("once", "")).strip_edges().to_lower() == "true",
+            "once": str(values.get("once", "")).strip_edges().to_lower() == "true",
             "description": str(values.get("desc", ""))
         }
     unregister_room(room_id)

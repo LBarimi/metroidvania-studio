@@ -11,7 +11,7 @@ void SdlRoom::Load(const std::filesystem::path &map, const std::filesystem::path
     std::pair<int, std::string> previous;
     for (const auto &p : next.data.primitives)
     {
-        if (p.trigger)
+        if (p.trigger || p.invisible)
             continue;
         SDL_Texture *texture = nullptr;
         float textureWidth = 1, textureHeight = 1;

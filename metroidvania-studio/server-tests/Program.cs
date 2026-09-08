@@ -2020,7 +2020,7 @@ static void PortalGesturePlacement(EditorWorkspace w)
     Check(saved.id == id && saved.width == 4 && saved.height == 4, "Export retains the region and its single identity.");
     var manager = new StudioTriggerManager();
     manager.RegisterRoom(exported.rooms.Single(r => r.id == room.id));
-    Check(manager.TryRequest(id, out var info) && info.Once && info.ObjectId == id && !manager.TryRequest(id, out _), "Portal regions use the existing one-shot runtime contract.");
+    Check(!manager.TryGet(id, out _) && !manager.TryRequest(id, out _), "Portal regions are independent from numbered trigger events.");
     Send(w, "undo");
     Check(w.Canvas.Room.objects.Count == 0, "One undo removes the entire portal stroke.");
     Send(w, "redo");
@@ -2037,6 +2037,15 @@ static void PortalGesturePlacement(EditorWorkspace w)
     ObjectGesture(w, room.id, false, Points((room.width - 1.2f, 3.2f), (room.width + 4.5f, -2.1f)));
     portal = w.Canvas.Room.objects.Single();
     Check(portal.x == room.width - 2 && portal.y == 0 && portal.width == 2 && portal.height == 4, "A stroke is clipped to the starting room.");
+    Send(w, "undo");
+    Send(w, "options", ("objectDefinition", "InvisibleWall"));
+    ObjectGesture(w, room.id, false, Points((room.width - 1.2f, 3.2f), (room.width + 4.5f, -2.1f)));
+    var wall = w.Canvas.Room.objects.Single();
+    Check(wall.definition == "InvisibleWall" && wall.x == room.width - 2 && wall.y == 0 && wall.width == 2 && wall.height == 4,
+        "Invisible walls use the same snapped and clipped placement geometry.");
+    Check(wall.properties.All(value => value.key != "event" && value.key != "once"), "Invisible walls have no event controls.");
+    var savedWallMap = MapDocumentStore.Deserialize(Snapshot(w));
+    Check(savedWallMap.rooms.Single(r => r.id == room.id).objects.Single().id == wall.id, "Invisible wall ID survives JSON round trip.");
 }
 static void ObjectGestureNodePlacement(EditorWorkspace w)
 {

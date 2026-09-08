@@ -414,6 +414,7 @@ legacyEvent,기존 이벤트,Existing event,既存のイベント,现有事件,�
 builtin.field.desc,설명,Description,説明,描述,描述,Описание
 builtin.field.once,한 번만,Once,一度だけ,仅一次,僅一次,Однократно
 builtin.field.event,이벤트,Event,イベント,事件,事件,Событие
+builtin.object.InvisibleWall,투명벽,Invisible wall,透明な壁,透明墙,透明牆,Невидимая стена
 builtin.object.Portal,포탈,Portal,ポータル,传送门,傳送門,Портал
 builtin.object.Respawn,리스폰 지점,Respawn point,リスポーン地点,重生点,重生點,Точка возрождения
 roomMerge,선택한 방 합치기,Merge selected rooms,選択した部屋を結合,合并所选房间,合併所選房間,Объединить выбранные комнаты

@@ -37,7 +37,7 @@ try {
   await page.goto(base); await page.locator('#room-list button').first().waitFor();
   await page.locator('#room-list button').first().click(); await settle();
   const names=await page.locator('.palette-item').allTextContents();
-  assert.deepEqual(names.map(n=>n.trim()),['Spawn','Portal','Path','Respawn point']);
+  assert.deepEqual(names.map(n=>n.trim()),['Spawn','Portal','Invisible wall','Path','Respawn point']);
   let p=await at(3.2,3.7); await page.mouse.click(p.x,p.y);
   let s=await until(s=>s.document.rooms[0].objects.length===1);
   const portal=s.document.rooms[0].objects[0]; assert.equal(portal.definition,'Portal'); assert.ok(portal.id);
@@ -69,8 +69,9 @@ try {
   assert.equal(await page.locator('#object-id').count(),0,'The inspector hides internal IDs.');
   assert.match(portal.id,/^[1-9][0-9]{0,15}$/);
   assert.ok(BigInt(portal.id)<=9007199254740991n);
-  assert.ok(await page.locator('[data-property="once"]').isChecked()); assert.ok(await page.locator('[data-property="once"]').isDisabled());
-  await page.locator('[data-property="event"]').selectOption('Trigger037');
+  assert.equal(await page.locator('[data-property="once"]').count(),0);
+  assert.equal(await page.locator('[data-property="event"]').count(),0);
+  assert.ok(portal.properties.every(p=>!['event','once'].includes(p.key)));
   await page.locator('[data-property="desc"]').fill('North gate');
   await page.getByRole('button',{name:'Apply properties',exact:true}).click();
   await until(s=>s.document.rooms[0].objects[0].properties.some(p=>p.key==='desc'&&p.value==='North gate'));
@@ -114,8 +115,52 @@ try {
   await page.getByRole('button',{name:'Apply properties',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('#toast')?.textContent.includes('changed in another view'));
   assert.equal((await state()).document.rooms[0].objects.find(o=>o.id===trigger.id).properties.find(p=>p.key==='desc').value,'Concurrent value');
+
+  const oldPortalMap = structuredClone(s.document);
+  oldPortalMap.rooms[0].objects.find(o=>o.id===portal.id).properties.push({key:'event',value:'Trigger200'},{key:'once',value:'true'});
+  await command('import',{document:oldPortalMap,discard:true});
+  await command('options',{layer:2,tool:1,objectDefinition:'Portal'});
+  await command('objectClick',{x:portal.x+.5,y:portal.y+.5}); await settle();
+  assert.equal(await page.locator('[data-property="event"]').count(),0,'Legacy portals do not expose numbered events.');
+  assert.equal(await page.locator('[data-property="once"]').count(),0);
+  await page.locator('[data-property="desc"]').fill('Independent portal');
+  await page.getByRole('button',{name:'Apply properties',exact:true}).click();
+  s=await until(s=>s.document.rooms[0].objects.find(o=>o.id===portal.id).properties.some(p=>p.key==='desc'&&p.value==='Independent portal'));
+  assert.equal(s.document.rooms[0].objects.find(o=>o.id===portal.id).properties.find(p=>p.key==='event').value,'Trigger200','Opaque legacy properties survive description edits.');
+
+  await command('import',{document:{...initial.document,rooms:[room],layerGroups:[],stylegrounds:[],properties:[]},discard:true});
+  await command('selectRoom',{id:room.id});
+  await command('options',{layer:2,tool:1,objectDefinition:'InvisibleWall'}); await settle();
+  await page.mouse.move(10,10); await paint();
+  const previewImage = () => page.locator('#game-preview-canvas').evaluate(c=>c.toDataURL());
+  const beforeWall = await previewImage();
+  const startWall=await at(8.2,1.2),endWall=await at(10.8,3.8);
+  await page.mouse.move(startWall.x,startWall.y); await page.mouse.down();
+  await page.mouse.move(endWall.x,endWall.y,{steps:8});
+  assert.equal((await state()).document.rooms[0].objects.length,0);
+  await page.mouse.up();
+  s=await until(s=>s.document.rooms[0].objects.length===1);
+  const wall=s.document.rooms[0].objects[0];
+  assert.equal(wall.definition,'InvisibleWall'); assert.deepEqual(bounds(wall),[8,1,3,3]);
+  assert.ok(wall.id); assert.deepEqual(wall.properties.map(p=>p.key),['desc']);
+  await page.mouse.move(10,10); await paint();
+  assert.equal(await previewImage(),beforeWall,'Invisible walls never cover the Game Preview.');
+  const sample=await at(8.5,1.5);
+  const rgba=await page.locator('#map-canvas').evaluate((c,p)=>{
+    const rect=c.getBoundingClientRect();
+    return Array.from(c.getContext('2d').getImageData(Math.floor((p.x-rect.x)*c.width/rect.width),Math.floor((p.y-rect.y)*c.height/rect.height),1,1).data);
+  },sample);
+  assert.ok(rgba[2]>rgba[1]&&rgba[1]>rgba[0]&&rgba[2]<255,'Editor wall fill is translucent blue.');
+  await command('undo'); await settle();
+  assert.equal((await state()).document.rooms[0].objects.length,0);
+  await command('redo'); await settle();
+  assert.equal((await state()).document.rooms[0].objects[0].id,wall.id);
+  const savedWall=(await state()).document;
+  await command('import',{document:savedWall,discard:true}); await settle();
+  assert.deepEqual(bounds((await state()).document.rooms[0].objects[0]),[8,1,3,3]);
+
   assert.deepEqual(errors,[]);
-  console.log('Object UI passed: four palette items, portal color catalog, hidden numeric IDs, copy IDs, 200 events, checkbox, descriptions, undo/redo and legacy values.');
+  console.log('Object UI passed: five palette items, portal color catalog, hidden numeric IDs, copy IDs, 200 events, checkbox, descriptions, undo/redo and legacy values.');
 } finally {
   await browser.close();
   if(initial.file) await command('open',{path:initial.file,discard:true});

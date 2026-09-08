@@ -15,7 +15,7 @@ func _initialize() -> void:
     var info := manager.try_get("once")
     assert(info.roomX == -7 and info.roomY == 3 and info.event == 200 and info.description == "Open gate")
     assert(manager.request_trigger("repeat") and manager.request_trigger("repeat"))
-    assert(manager.request_trigger("portal") and not manager.request_trigger("portal"))
+    assert(manager.try_get("portal").is_empty() and not manager.request_trigger("portal") and not manager.request_trigger("wall"))
     assert(not manager.request_trigger("legacy") and not manager.request_trigger("absent"))
     room.x = 10
     assert(manager.register_room(room) and not manager.request_trigger("once"))
@@ -28,7 +28,7 @@ func _initialize() -> void:
     assert(manager.try_get("once").roomId == room.id)
     assert(manager.reset_once("once") and manager.request_trigger("once"))
     manager.reset_all_once()
-    assert(manager.request_trigger("portal"))
+    assert(manager.request_trigger("once") and not manager.request_trigger("portal"))
     for i in range(1, 201): assert(Manager.Events.parse("Trigger%03d" % i) == i)
     for value in ["old", "Trigger201", "Trigger1", "-1", "+1", "1.0", "999999999999999999"]:
         assert(Manager.Events.parse(value) == 0)

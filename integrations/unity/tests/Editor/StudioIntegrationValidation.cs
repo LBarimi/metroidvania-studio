@@ -31,6 +31,9 @@ public static class StudioIntegrationValidation
             room.objects[0].properties.Add(new MapProperty { key = "event", value = "Trigger200" });
             room.objects[0].properties.Add(new MapProperty { key = "once", value = "true" });
             room.objects[0].properties.Add(new MapProperty { key = "desc", value = "Open gate" });
+            var portal = new MapObject { id = "portal", definition = "Portal", layer = MapLayer.Entities, x = 0, y = 1, width = 1, height = 2 };
+            portal.properties.Add(new MapProperty { key = "event", value = "Trigger001" }); room.objects.Add(portal);
+            room.objects.Add(new MapObject { id = "wall", definition = "InvisibleWall", layer = MapLayer.Entities, x = 3, y = 0, width = 1, height = 3 });
             var defaults = MapCameraSettings.Resolve(document); Check(defaults.ppu == 16 && defaults.referenceWidth == 320 && defaults.referenceHeight == 180 && defaults.orthographicSize == 5.625f, "Default camera profile");
             MapCameraSettings.Apply(document, 32, 400, 224); var profile = MapCameraSettings.Resolve(document);
             Check(profile.orthographicSize == 3.5f, "PPU and reference resolution determine projection");
@@ -50,6 +53,13 @@ public static class StudioIntegrationValidation
             Check(slopePoints.Length == 3 && slopePoints.Contains(new Vector2(1.5f, 1)) && slopePoints.Contains(new Vector2(2, 1)) && slopePoints.Contains(new Vector2(1.5f, 1.5f)), "Slope collision follows tile geometry and PPU");
             var composite = root.GetComponentInChildren<CompositeCollider2D>(); Check(composite.pathCount > 0 && composite.geometryType == CompositeCollider2D.GeometryType.Outlines, "Terrain collision is a merged outline");
             Check(root.GetComponentInChildren<StudioPlacedObject>().data.id == "trigger" && root.GetComponentInChildren<BoxCollider2D>().isTrigger, "Object metadata and trigger regions import");
+            var portalObject = root.GetComponentsInChildren<StudioPlacedObject>().Single(value => value.IsPortal);
+            var wallObject = root.GetComponentsInChildren<StudioPlacedObject>().Single(value => value.IsInvisibleWall);
+            Check(portalObject.GetComponent<BoxCollider2D>().isTrigger && portalObject.GetComponentInChildren<SpriteRenderer>() == null,
+                "Portal imports as an independent trigger collider without automatic event delivery");
+            Check(!wallObject.GetComponent<BoxCollider2D>().isTrigger && wallObject.GetComponent<BoxCollider2D>().size == new Vector2(.5f, 1.5f)
+                && wallObject.GetComponentInChildren<SpriteRenderer>() == null, "Invisible wall imports solid PPU-scaled collision without a renderer");
+            Check(!portalObject.TryRequestTrigger(out _) && !wallObject.TryRequestTrigger(out _), "Standalone objects reject generic event requests");
             var triggers = root.Triggers;
             int delivered = 0;
             triggers.TriggerRequested += info => { delivered++; Check(info.ObjectId == "trigger" && info.RoomX == -4 && info.RoomY == 2 && info.Event == StudioTriggerEvent.Trigger200 && info.Description == "Open gate", "Trigger request payload"); };

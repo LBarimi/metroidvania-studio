@@ -123,6 +123,33 @@
               "value": "Open gate"
             }
           ]
+        },
+        {
+          "id": "wall",
+          "definition": "InvisibleWall",
+          "layer": 2,
+          "x": 8,
+          "y": 1,
+          "width": 2,
+          "height": 3,
+          "rotation": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "nodes": [],
+          "properties": [
+            {
+              "key": "once",
+              "value": "false"
+            },
+            {
+              "key": "event",
+              "value": "Trigger200"
+            },
+            {
+              "key": "desc",
+              "value": "Open gate"
+            }
+          ]
         }
       ]
     }

@@ -46,4 +46,4 @@ Windows compilation and a software-rendered frame are validated. Linux/macOS lau
 
 ## Objects and trigger events
 
-See `TRIGGERS.md` in the package for event requests, one-shot portals, stable IDs and runtime examples. The game decides when to request an event; the integration does not wire collision callbacks.
+See `TRIGGERS.md` in the package for event requests, independent portals, invisible walls, stable IDs and runtime examples. The game decides when to request an event; the integration does not wire collision callbacks.

@@ -32,7 +32,7 @@ int main(int argc, char **argv)
         Require(manager.TryRequest("once", info) && info.roomX == -7 && info.roomY == 3 && info.event == TriggerEvent::Trigger200 && info.description == "Open gate", "Delivery payload.");
         Require(!manager.TryRequest("once", info), "Once delivers once.");
         Require(manager.TryRequest("repeat", info) && manager.TryRequest("repeat", info), "Repeat delivers repeatedly.");
-        Require(manager.TryRequest("portal", info) && info.once && !manager.TryRequest("portal", info), "Portal always one-shot.");
+        Require(!manager.TryGet("portal", info) && !manager.TryRequest("portal", info) && !manager.TryRequest("wall", info), "Portal and wall must not dispatch numbered events.");
         Require(!manager.TryRequest("legacy", info) && !manager.TryRequest("absent", info), "Unassigned requests reject.");
         room.x = 10;
         manager.RegisterRoom(room);
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
         Require(rejected && manager.TryGet("once", info) && info.roomId == room.id, "Duplicate registration is atomic.");
         Require(manager.ResetOnce("once") && manager.TryRequest("once", info), "Reset reactivates.");
         manager.ResetAllOnce();
-        Require(manager.TryRequest("portal", info), "Reset all reactivates.");
+        Require(manager.TryRequest("once", info) && !manager.TryRequest("portal", info), "Reset only reactivates event triggers.");
         for (int i = 1; i <= 200; ++i)
         {
             const auto number = std::to_string(i);
@@ -57,7 +57,24 @@ int main(int argc, char **argv)
             Require(ParseTriggerEvent(value) == TriggerEvent::None, "Invalid event.");
         manager.Clear();
         Require(!manager.TryGet("once", info), "Clear removes state.");
-        Require(delivered == 6, "Expected six successful callbacks.");
+        Require(delivered == 5, "Expected five successful callbacks.");
+        const auto geometry = LoadRoom(ReadText(std::filesystem::u8path(argv[1])), "{\"materials\":[],\"objects\":[]}");
+        int portals = 0, walls = 0;
+        for (const auto &primitive : geometry.primitives)
+        {
+            if (primitive.objectId == "portal")
+            {
+                Require(primitive.trigger && !primitive.solid && primitive.points.size() == 4, "Portal is a standalone overlap region.");
+                ++portals;
+            }
+            if (primitive.objectId == "wall")
+            {
+                Require(primitive.solid && primitive.invisible && !primitive.trigger && primitive.sprite.asset.empty(), "Invisible wall is collision-only.");
+                Require(primitive.points.size() == 4 && primitive.points[0].x == 128 && primitive.points[0].y == 16, "Wall geometry uses authored tile coordinates.");
+                ++walls;
+            }
+        }
+        Require(portals == 1 && walls == 1, "Both standalone object regions import.");
         std::cout << "Trigger requests passed: payload, 200 events, once, portal, reset, reentry and atomic duplicate rejection.\n";
         return 0;
     }

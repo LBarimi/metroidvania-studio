@@ -36,4 +36,4 @@ The build also generates engine adapter DTOs, camera-setting logic and tile-mask
 
 ## Trigger event properties
 
-Triggers and portals use the existing object `id` and `properties` fields. `event` holds `None` or `Trigger001` through `Trigger200`; `once` holds a boolean string; `desc` holds the description. Runtime enum values are 0 through 200 across every engine package. These settings do not change map format 2. Legacy free-text events remain intact and are unassigned at runtime until mapped to a numbered event.
+Triggers use the existing object `id` and `properties` fields. `event` holds `None` or `Trigger001` through `Trigger200`; `once` holds a boolean string; `desc` holds the description. Runtime enum values are 0 through 200 across every engine package. Portals and invisible walls use their object ID, definition, bounds and `desc` property. They are independent of numbered events, and runtime event managers ignore their legacy `event` and `once` properties. These settings do not change map format 2. Legacy free-text events remain intact and are unassigned at runtime until mapped to a numbered event.

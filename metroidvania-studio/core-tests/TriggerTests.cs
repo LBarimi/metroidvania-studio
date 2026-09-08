@@ -18,7 +18,7 @@ internal static class TriggerTests
             properties = new() { new() { key = "event", value = triggerEvent }, new() { key = "once", value = once.ToString() }, new() { key = "desc", value = "Open gate / 문 열기" } }
         };
         var room = new MapRoom { id = "room-a", name = "Entry", x = -7, y = 3,
-            objects = new() { Object("repeat", false), Object("once", true), Object("portal", false, "Portal"), Object("legacy", false, "Area", "old-event") } };
+            objects = new() { Object("repeat", false), Object("once", true), Object("portal", false, "Portal"), Object("wall", false, "InvisibleWall"), Object("legacy", false, "Area", "old-event") } };
         var manager = new StudioTriggerManager(); manager.RegisterRoom(room);
         var deliveries = new List<StudioTriggerInfo>();
         manager.TriggerRequested += info =>
@@ -30,7 +30,7 @@ internal static class TriggerTests
         Check(manager.TryRequest("once", out var info) && !manager.TryRequest("once", out _), "Once delivers once.");
         Check(info.RoomX == -7 && info.RoomY == 3 && info.Event == StudioTriggerEvent.Trigger200 && info.Description == "Open gate / 문 열기", "Authored coordinates, enum, ID and description survive.");
         Check(manager.TryRequest("repeat", out _) && manager.TryRequest("repeat", out _), "Repeat events repeat.");
-        Check(manager.TryRequest("portal", out info) && info.Once && !manager.TryRequest("portal", out _), "Portal is one-shot regardless of property.");
+        Check(!manager.TryGet("portal", out _) && !manager.TryRequest("portal", out _) && !manager.TryRequest("wall", out _), "Portals and invisible walls never dispatch numbered events, including legacy properties.");
         Check(!manager.TryRequest("legacy", out _) && !manager.TryRequest("missing", out _), "No accidental dispatch for unassigned or missing events.");
         room.x = 100; room.objects[1].properties[2].value = "Changed";
         Check(manager.TryGet("once", out info) && info.RoomX == -7, "Registration stores a snapshot.");
@@ -45,7 +45,7 @@ internal static class TriggerTests
         try { manager.RegisterRoom(duplicate); } catch (ArgumentException) { rejected = true; }
         Check(rejected, "Empty IDs reject.");
         Check(manager.ResetOnce("once") && manager.TryRequest("once", out _), "Explicit reset reactivates.");
-        manager.ResetAllOnce(); Check(manager.TryRequest("portal", out _), "All reset reactivates portals.");
+        manager.ResetAllOnce(); Check(manager.TryRequest("once", out _) && !manager.TryRequest("portal", out _), "Reset only reactivates event triggers.");
         manager.Clear(); Check(!manager.TryGet("once", out _), "Clear removes data and session state.");
         manager.RegisterRoom(room); Check(manager.TryRequest("once", out _), "New world starts unconsumed.");
     }

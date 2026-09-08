@@ -1595,7 +1595,7 @@ export class MapCanvas {
     if (!room?.visible || !definition || room.locked || !this.memberEditable(gesture.layer, gesture.groupId, gesture.groupId)) return;
     let start = gesture.points[0], end = gesture.points[gesture.points.length - 1];
     const rectangle = definition.placement === 1;
-    if (rectangle && definitionKey(definition.id) === 'portal') {
+    if (rectangle && ['portal', 'invisiblewall'].includes(definitionKey(definition.id))) {
       if (start.x < 0 || start.y < 0 || start.x >= room.width || start.y >= room.height) return;
       const cell = (point: Point) => ({ x: Math.max(0, Math.min(room.width - 1, Math.floor(point.x))),
         y: Math.max(0, Math.min(room.height - 1, Math.floor(point.y))) });
@@ -1624,6 +1624,7 @@ export class MapCanvas {
   }
   private drawObject(room: Room, object: MapObject): void {
     const key = definitionKey(object.definition), def = this.definitions.get(key), ctx = this.ctx;
+    if (this.cameraPreview && key === 'invisiblewall') return;
     const color = this.definitionColors.get(key) || '#d4ac61';
     const selected = !this.cameraPreview && !this.gameCameraTool && this.selectedObjects.has(object.id);
     const center = this.toScreen({ x: room.x + object.x + object.width / 2, y: room.y + object.y + object.height / 2 });

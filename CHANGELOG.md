@@ -2,6 +2,8 @@
 
 ## 1.3.2 (unreleased)
 
+- Separate portals from numbered trigger events. Import independent portal detection regions and leave contact behavior to the game.
+- Add translucent blue Invisible wall objects with tile-grid rectangle placement, clipping, descriptions and stable IDs. Engine packages import invisible collision geometry.
 - Open the room creation menu on empty-space right clicks with every tool, including Game camera. Keep right-drag panning and in-room erase behavior.
 - Leave Rooms, Selection and Game camera when choosing an editable layer, including the current layer. Select the tile brush or object placement tool so drawing in a new room does not move it.
 - Preserve tile drawing tools when switching between tile layers, and keep visibility and lock controls independent of tool selection.

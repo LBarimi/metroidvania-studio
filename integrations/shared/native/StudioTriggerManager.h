@@ -69,8 +69,7 @@ namespace MetroidvaniaStudio
                 {
                     return c >= 'A' && c <= 'Z' ? static_cast<char>(c + ('a' - 'A')) : static_cast<char>(c);
                 });
-                const bool portal = lower == "portal";
-                if (object.Get("layer").Integer(2) != 3 && !portal)
+                if (lower == "portal" || lower == "invisiblewall" || object.Get("layer").Integer(2) != 3)
                     continue;
                 const auto property = [&](const std::string &key)
                 {
@@ -94,7 +93,7 @@ namespace MetroidvaniaStudio
                 info.objectId = id;
                 info.definition = definition;
                 info.event = ParseTriggerEvent(property("event"));
-                info.once = portal || once == "true";
+                info.once = once == "true";
                 info.description = property("desc");
                 nextEntries.emplace(id, std::move(info));
             }

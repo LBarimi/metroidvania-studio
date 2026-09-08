@@ -1,10 +1,25 @@
 # Objects and trigger events
 
-The Objects palette contains **Spawn**, **Portal**, **Path**, and **Respawn point**. Portals are magenta room-transition regions: choose Portal in the Objects palette, then click for one tile or drag to cover a rectangle. The region snaps to tile cells and stays inside its room. Each drag creates one portal with one ID, regardless of its size. Use the Triggers layer to draw a rectangular event region. Previously placed legacy objects stay in existing maps.
+The Objects palette contains **Spawn**, **Portal**, **Invisible wall**, **Path**, and **Respawn point**. Portals are magenta room-transition regions: choose Portal in the Objects palette, then click for one tile or drag to cover a rectangle. The region snaps to tile cells and stays inside its room. Each drag creates one portal with one ID, regardless of its size. Use the Triggers layer to draw a rectangular event region. Previously placed legacy objects stay in existing maps.
 
 Every placed object, trigger, and decal has a unique ID. IDs are hidden in the inspector and retained in JSON exports. Newly generated IDs contain only decimal digits (up to 16 digits), stored as strings for compatibility. Existing IDs and explicitly supplied script IDs remain unchanged. Copying an object or a room assigns new IDs to the copies. Moving, resizing, saving and reopening keep the original IDs.
 
 Room title handles and resize handles work on every layer. Locked rooms remain protected.
+
+## Portals and invisible walls
+
+Drag either object on the tile grid to place a rectangular region. A click places one tile. The region stays inside its room and keeps one unique ID. Invisible walls are translucent blue in the editor and hidden in Game Preview.
+
+Engine imports preserve each region's ID, definition, bounds and description. Portal detection is independent of numbered trigger events; no room transition or collision callback is installed automatically. Old portal event properties remain in imported data for compatibility but are ignored.
+
+| Engine | Portal | Invisible wall |
+| --- | --- | --- |
+| Unity | Trigger collider with `StudioPlacedObject.IsPortal` | Solid collider with `IsInvisibleWall`; no renderer |
+| Godot | `Area2D` with authored data in `get_meta("object")` | `StaticBody2D` with a collision polygon; no visual |
+| Unreal Engine | Overlap-only collision tagged with the object ID and definition | Blocking collision without a mesh surface |
+| SDL | `Room.primitives` entry with `trigger=true` and `definition="Portal"` | `solid=true`, `invisible=true`; excluded from drawing |
+
+In SDL, use these polygons in your game's collision handling. In every engine, the game owns player filtering and portal behavior.
 
 ## Edit a trigger
 
@@ -13,7 +28,7 @@ Room title handles and resize handles work on every layer. Locked rooms remain p
 3. Once is checked for new triggers. Uncheck it to allow repeated event requests within a manager session. Existing trigger settings are preserved.
 4. Enter a Description and click Apply properties.
 
-Descriptions appear at the center of objects and trigger regions in the map editor. They are hidden in Game view. A portal also has an event and description; portals always use Once.
+Descriptions appear at the center of objects and trigger regions in the map editor. They are hidden in Game view. Portals have a description, but no Event or Once setting. They never dispatch through the trigger manager, including when imported JSON contains old event properties. Your game decides what happens on portal contact.
 
 `None` means unassigned. Old free-text event values remain in imported maps and are shown as existing events. Select a numbered event before requesting them through a runtime manager.
 
@@ -27,8 +42,8 @@ Each successful request supplies:
 | --- | --- |
 | Room ID and name | The authored room containing the object |
 | Room X and Y | The room origin in tile coordinates, X right and Y up |
-| Object ID | The unique ID of the trigger or portal |
-| Definition | For example, `Area` or `Portal` |
+| Object ID | The unique ID of the trigger |
+| Definition | For example, `Area` |
 | Event | Stable enum: `None = 0`, `Trigger001 = 1`, through `Trigger200 = 200` |
 | Once | Whether repeated requests are blocked |
 | Description | The authored description |
@@ -103,7 +118,7 @@ For several rooms, use one `MetroidvaniaStudio::TriggerManager` and call `Regist
 
 ## One-shot lifetime
 
-A manager consumes a Once event before calling the subscriber, so a recursive request cannot deliver it twice. Queries do not consume anything. Unassigned, missing, or already consumed IDs return false without delivery. Portals use this rule even if an old JSON says `once=false`.
+A manager consumes a Once event before calling the subscriber, so a recursive request cannot deliver it twice. Queries do not consume anything. Unassigned, missing, or already consumed IDs return false without delivery. Portals and invisible walls are excluded from this manager.
 
 Re-registering or unregistering a room on the same manager preserves consumed IDs. Use `ResetOnce` / `reset_once` to reactivate one ID, or `ResetAllOnce` / `reset_all_once` for all IDs. `Clear` / `clear` removes registrations and consumed state. A new manager starts a new session; a game that needs persistence across scene changes should keep its world manager alive and save its own progression.
 

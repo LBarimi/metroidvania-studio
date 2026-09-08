@@ -525,7 +525,7 @@ function drawPalette(): void {
       groupSettings: editPaletteGroup, report: toast
     });
   } else {
-    for (const def of [...state.catalog.objects].sort((a, b) => { const order = ['Spawn', 'Portal', 'Path', 'Respawn']; return (order.includes(a.id) ? order.indexOf(a.id) : 99) - (order.includes(b.id) ? order.indexOf(b.id) : 99); }).filter(d => !(d.name === d.id && ['Marker', 'Object'].includes(d.id)) && (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
+    for (const def of [...state.catalog.objects].sort((a, b) => { const order = ['Spawn', 'Portal', 'InvisibleWall', 'Path', 'Respawn']; return (order.includes(a.id) ? order.indexOf(a.id) : 99) - (order.includes(b.id) ? order.indexOf(b.id) : 99); }).filter(d => !(d.name === d.id && ['Marker', 'Object'].includes(d.id)) && (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
   }
   if (!palette.childElementCount) palette.append(text('div', locale.t('noMaterials'), 'empty'));
 }
@@ -730,13 +730,14 @@ function objectInspector(inspector: HTMLElement, selected: MapObject[], expectat
   const fieldInputs = new Map<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>();
   const keys = new Set([...(def?.properties || []).map(p => p.key), ...object.properties.map(p => p.key), 'desc']);
   for (const key of keys) {
+    if (['event', 'once'].includes(key) && selected.some(item => definitionKey(item.definition) === 'portal')) continue;
     if (key !== 'desc' && !selected.every(o => definitionKey(o.definition) === definitionKey(object.definition) || o.properties.some(p => p.key === key))) continue;
     const field = def?.properties.find(p => p.key === key), label = document.createElement('label');
     const localized = ['desc', 'event', 'once'].includes(key) || def?.name === def?.id && ['label', 'name', 'player', 'tint'].includes(key);
     label.append(text('span', localized ? locale.t('builtin.field.' + key) : field?.label || key));
     const fieldValue = (item: MapObject): string => {
       const stored = propObject(item.properties)[key];
-      if (key === 'once' && stored === undefined) return definitionKey(item.definition) === 'portal' ? 'true' : 'false';
+      if (key === 'once' && stored === undefined) return 'false';
       if (key === 'event' && field?.choices?.includes('None') && !stored?.trim()) return 'None';
       return stored ?? field?.defaultValue ?? '';
     };
@@ -744,7 +745,6 @@ function objectInspector(inspector: HTMLElement, selected: MapObject[], expectat
     let input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
     if (field?.kind === 3) {
       const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.checked = value.trim().toLowerCase() === 'true'; checkbox.indeterminate = mixed;
-      if (key === 'once' && definitionKey(object.definition) === 'portal') { checkbox.checked = true; checkbox.disabled = true; }
       checkbox.addEventListener('change', () => checkbox.indeterminate = false); input = checkbox;
     } else if (key === 'desc') { const area = document.createElement('textarea'); area.rows = 2; area.maxLength = 2048; area.value = mixed ? '' : value; if (mixed) area.placeholder = locale.t('mixed'); input = area; }
     else if (field?.choices?.length) {

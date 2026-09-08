@@ -99,11 +99,11 @@ bool AMetroidvaniaStudioRoom::RebuildRoom()
         size_t DrawIndex=0;
         for(const auto& P:Room.primitives) {
             const double DrawDepth=-P.layer-static_cast<double>(DrawIndex++)/(Room.primitives.size()+1);
-            if(P.trigger) {
+            if(P.trigger || P.invisible) {
                 auto* Trigger=NewMesh();TArray<FVector> Convex;
                 for(const auto& V:P.points){Convex.Add(Point(V,Scale,-5));Convex.Add(Point(V,Scale,5));}
-                Trigger->AddCollisionConvexMesh(Convex);Trigger->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-                Trigger->SetCollisionResponseToAllChannels(ECR_Overlap);Trigger->SetGenerateOverlapEvents(true);
+                Trigger->AddCollisionConvexMesh(Convex);Trigger->SetCollisionEnabled(P.invisible ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::QueryOnly);
+                Trigger->SetCollisionResponseToAllChannels(P.invisible ? ECR_Block : ECR_Overlap);Trigger->SetGenerateOverlapEvents(!P.invisible);
                 Trigger->ComponentTags.Add(FName(*FromUtf8(P.objectId)));Trigger->ComponentTags.Add(FName(*FromUtf8(P.definition)));continue;
             }
             const FString Key=FString::FromInt(P.layer)+TEXT(":")+FromUtf8(P.sprite.asset);

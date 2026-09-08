@@ -74,7 +74,9 @@ namespace MetroidvaniaStudio.Integration
                     item.transform.localRotation = Quaternion.Euler(0, 0, data.rotation);
                     item.transform.localScale = new Vector3(data.scaleX, data.scaleY, 1);
                     item.AddComponent<StudioPlacedObject>().data = data;
-                    var sprite = library.ResolveObject(data.definition);
+                    bool portal = string.Equals(data.definition, "Portal", StringComparison.OrdinalIgnoreCase);
+                    bool invisibleWall = string.Equals(data.definition, "InvisibleWall", StringComparison.OrdinalIgnoreCase);
+                    var sprite = portal || invisibleWall ? null : library.ResolveObject(data.definition);
                     if (sprite)
                     {
                         var visual = new GameObject("Visual"); visual.transform.SetParent(item.transform, false);
@@ -82,7 +84,12 @@ namespace MetroidvaniaStudio.Integration
                         var renderer = visual.AddComponent<SpriteRenderer>(); renderer.sprite = sprite;
                         renderer.sortingOrder = data.layer == MapLayer.BackgroundDecals ? -10 : data.layer == MapLayer.ForegroundDecals ? 20 : 10;
                     }
-                    if (data.layer == MapLayer.Triggers) { var trigger = item.AddComponent<BoxCollider2D>(); trigger.isTrigger = true; trigger.size = new Vector2(data.width * unit, data.height * unit); }
+                    if (portal || invisibleWall || data.layer == MapLayer.Triggers)
+                    {
+                        var collider = item.AddComponent<BoxCollider2D>();
+                        collider.isTrigger = !invisibleWall;
+                        collider.size = new Vector2(data.width * unit, data.height * unit);
+                    }
                 }
                 marker.InitializeTriggers(room, triggerManager ?? new StudioTriggerManager());
                 root.SetActive(true); return root;

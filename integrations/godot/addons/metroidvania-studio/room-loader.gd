@@ -229,7 +229,13 @@ func load_room(map_path: String, catalog_path: String, resource_root: String, ro
         var w: float = object.get("width", 1)
         var h: float = object.get("height", 1)
         if not layer in [2,3,4,5] or w <= 0 or h <= 0: return fail(root, "Invalid object dimensions or layer.")
-        var holder: Node2D = Area2D.new() if layer == 3 else Node2D.new()
+        var key := str(object.get("definition", "")).to_lower()
+        var portal := key == "portal"
+        var invisible_wall := key == "invisiblewall"
+        var holder: Node2D
+        if invisible_wall: holder = StaticBody2D.new()
+        elif portal or layer == 3: holder = Area2D.new()
+        else: holder = Node2D.new()
         holder.name = "Object"
         holder.set_meta("object", object)
         holder.position = Vector2(object.get("x",0) + w / 2, -object.get("y",0) - h / 2) * unit
@@ -240,7 +246,7 @@ func load_room(map_path: String, catalog_path: String, resource_root: String, ro
         var points := PackedVector2Array()
         var unit_uv := polygon(0)
         for point in unit_uv: points.append(Vector2((point.x - 0.5)*w, -(point.y-0.5)*h)*unit)
-        if layer == 3:
+        if layer == 3 or portal or invisible_wall:
             var collision := CollisionPolygon2D.new()
             collision.polygon = points
             holder.add_child(collision)
