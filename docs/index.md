@@ -11,6 +11,7 @@ Create connected rooms, paint autotiled terrain, and design minimaps with Metroi
 | [Tile palettes and autotiling](tilesets.md) | Import PNGs and set up 4-tile or 47-tile palettes |
 | [Minimap design](minimap.md) | Set room colors, adjust outlines, and return to a room for editing |
 | [Texture editing](textures.md) | Update shared PNG files and export portable resources |
+| [Project bundles](project-bundles.md) | Download a map with its palettes and textures in one ZIP |
 | [Game Preview](game-preview.md) | Check the selected room while editing |
 | [Merge and split rooms](room-restructuring.md) | Restructure rooms while preserving world contents |
 | [Objects and triggers](objects-and-triggers.md) | Paint object regions and describe triggers |

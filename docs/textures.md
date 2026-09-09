@@ -33,7 +33,7 @@ world/
       palette-id.png
 ```
 
-Choose `world/` as the resource root and `world/.studio/catalog.json` as the catalog in the adapter. Preserve the exact case of paths in the catalog. For a shared file-based workspace, keep the default `Textures/` layout so every loader resolves the same originals. When handing a project to another machine, include all referenced images, including any bundled fallback images, at their catalog paths. A map JSON alone does not contain texture pixels or the sprite mapping. Adding or redrawing a tileset does not require rebuilding the engine package.
+Choose `world/` as the resource root and `world/.studio/catalog.json` as the catalog in the adapter. Preserve the exact case of paths in the catalog. For a shared file-based workspace, keep the default `Textures/` layout so every loader resolves the same originals. To hand the current map to another machine, use **File → Export project bundle…**. It includes the matching catalog, registered palette sources and referenced images, including bundled fallbacks, at their resource paths. See [Project bundles](project-bundles.md). A map JSON alone does not contain texture pixels or the sprite mapping. Adding or redrawing a tileset does not require rebuilding the engine package.
 
 The Unity connection window already downloads catalog textures from the running studio. With **Follow web edits** enabled, the texture revision also requests a resource refresh. For the other adapters, select the matching exported files and use their import/reload action again. Automatic live synchronization is currently provided by the Unity adapter only.
 

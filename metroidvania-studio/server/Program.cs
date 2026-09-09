@@ -127,6 +127,7 @@ app.MapPost("/api/command", async (HttpRequest request) =>
         return Results.Json(workspace.State(!compactDocument && (!executed || before != workspace.DocumentRevision), !executed || catalogBefore != workspace.CatalogRevision, includeSelection));
     }
 });
+app.MapProjectBundles(workspace, files);
 app.MapAutomation(workspace, studioRoot);
 app.MapScriptLibrary(new ScriptLibrary(files.ProjectPath, studioRoot));
 app.MapDocumentation(webRoot);

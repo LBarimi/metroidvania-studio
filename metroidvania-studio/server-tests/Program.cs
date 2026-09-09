@@ -5,6 +5,11 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("project bundle retains editable palettes and exact resources in a fresh workspace", () => Fixture(ProjectBundleTests.RoundTrip)),
+    ("project bundle rejects invalid paths, missing images, limits and stale snapshots", () => Fixture(ProjectBundleTests.Boundaries)),
+    ("project bundle includes installation fallback textures", () => Fixture(ProjectBundleTests.Fallback)),
+    ("project bundle compression does not block editing", () => Fixture(ProjectBundleTests.Concurrency)),
+    ("project bundle rejects textures changed during compression", () => Fixture(ProjectBundleTests.ImageChanges)),
     ("new room defaults follow resolution and retain explicit dimensions", () => Fixture(RoomResolutionFitTests.Defaults)),
     ("resolution fit confirms deletions and rejects stale approval", () => Fixture(RoomResolutionFitTests.Workflow)),
     ("room merge and split preserve selection, autosaved JSON and Undo/Redo", () => Fixture(RoomRestructureTests.Workflow)),

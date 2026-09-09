@@ -2,6 +2,8 @@
 
 ## 1.3.2 (unreleased)
 
+- Export the current map, palette and object definitions, original tileset PNGs and referenced textures as a portable ZIP from File. Build archives off the editing lock, preserve unsaved edits, and reject missing or changing images.
+
 - Update editing guides for current room controls, Game Preview camera positioning and palette groups; keep visual editing guides together in Help.
 
 - Start game camera views at each room's lower-left corner in the web editor and all engine packages. Keep the same source-pixel bounds across PPU settings and preserve the view origin when resolution changes.

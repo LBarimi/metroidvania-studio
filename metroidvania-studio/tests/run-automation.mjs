@@ -67,6 +67,7 @@ try {
   await run('metroidvania-studio/tests/browser-four-defaults.mjs');
   await run('metroidvania-studio/tests/browser-camera-settings.mjs');
   await run('metroidvania-studio/tests/browser-documentation.mjs');
+  await run('metroidvania-studio/tests/browser-project-bundle.mjs');
   await run('metroidvania-studio/tests/browser-sample-world.mjs');
   await run('metroidvania-studio/tests/browser-palettes.mjs');
   await run('metroidvania-studio/tests/browser-palette-groups.mjs');

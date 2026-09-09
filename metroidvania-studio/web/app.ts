@@ -1,3 +1,4 @@
+import { openProjectBundleDialog } from './project-bundle.js';
 import { GamePreview } from './game-preview.js';
 import { renderPaletteGroups, paletteGroupName, expandPaletteGroup } from './palette-groups.js';
 import type { EditorPaletteGroup } from './types.js';
@@ -390,7 +391,12 @@ function drawChrome(): void {
     button(locale.t('addRoom'), roomAddDialog), button(locale.t('importRooms'), importRooms), null,
     button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
-    button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')), null, button(locale.t('storageFolders'), () => openWorkspaceFolders(locale)), scripts]));
+    button(locale.t('exportChanged'), () => fileDialog('exportRooms', 'changed')),
+    button(locale.t('bundleExport'), () => openProjectBundleDialog(async () => {
+      await settleFileSnapshot(); await api.refresh(false);
+      if (!api.state) throw new Error('@bundleFailed');
+      return { instanceId: api.state.instanceId, documentRevision: api.state.documentRevision, catalogRevision: api.state.catalogRevision };
+    }, key => locale.t(key))), null, button(locale.t('storageFolders'), () => openWorkspaceFolders(locale)), scripts]));
   actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null,
     roomRestructureButton('merge', 'room-merge-action'), roomRestructureButton('split', 'room-split-action')]),
     menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('sampleWorld'), openSampleWorld), null, button(locale.t('docs.title'), () => { window.open('/docs/index.html', '_blank', 'noopener'); }), button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }), null, button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));

@@ -18,7 +18,7 @@ Hold **Ctrl** and click rooms to build a selection, then drag a selected room's 
 
 ## Navigate the world
 
-Middle-drag to pan and use the mouse wheel to zoom. Right-drag on empty space also pans; a right click without dragging opens the room creation menu with any tool selected. Use **Frame all** or **Frame room** in the toolbar to focus the editing canvas.
+Middle-drag to pan and use the mouse wheel to zoom. Right-drag on empty space also pans; a right click without dragging opens the room creation menu with any tool selected. Use **Fit map** or **Frame room** in the toolbar to focus the editing canvas.
 
 The **PPU** and **Resolution** toolbar controls set the camera framing in [Game Preview](game-preview.md), the window in the canvas's upper-right corner. Select **Game camera** in Tools to drag its white frame, or turn on **Always show game camera** to see it while painting. The camera starts at the room's lower-left corner; the Center control moves it to the room's center. Imported engine cameras use the same starting corner.
 
