@@ -103,6 +103,10 @@ app.MapGet("/api/state", (long? since, string? instanceId, long? documentRevisio
         return Results.Json(workspace.State(includeDocument, includeCatalog));
     }
 });
+app.MapGet("/api/room-resolution-fit", (string id) =>
+{
+    lock (workspace.Gate) return Results.Json(workspace.PreviewRoomResolutionFit(id));
+});
 app.MapPost("/api/command", async (HttpRequest request) =>
 {
     using var command = await JsonDocument.ParseAsync(request.Body, cancellationToken: request.HttpContext.RequestAborted);

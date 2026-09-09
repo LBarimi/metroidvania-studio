@@ -126,6 +126,11 @@ export class EditorApi extends EventTarget {
     return run.catch(error => { this.dispatchEvent(new CustomEvent('error', { detail: error })); throw error; })
       .finally(() => { this.pending--; this.dispatchEvent(new Event('busy')); });
   };
+  async previewRoomResolutionFit(id: string): Promise<{ instanceId: string; revision: number; roomId: string; width: number; height: number; tiles: number; objects: number }> {
+    const { response, body } = await this.requestJson('/api/room-resolution-fit?id=' + encodeURIComponent(id), { cache: 'no-store' });
+    if (!response.ok) throw new EditorApiError(typeof body?.error === 'string' ? body.error : 'Room preview failed.', response.status);
+    return body;
+  }
   private async requestJson(resource: string, init: RequestInit = {}): Promise<{ response: Response; body: any }> {
     if (this.stopped) throw new Error('The editor connection is closed.');
     const controller = new AbortController(); let timedOut = false;

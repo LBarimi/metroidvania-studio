@@ -82,6 +82,8 @@ try {
     if (-not $SyncOnly -and -not $PerformanceOnly) {
         & node (Join-Path $PSScriptRoot 'browser-room-context-menu.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Room context menu validation failed.' }
+        & node (Join-Path $PSScriptRoot 'browser-room-resolution-fit.mjs')
+        if ($LASTEXITCODE -ne 0) { throw 'Room resolution fit validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-room-workflow.mjs')
         if ($LASTEXITCODE -ne 0) { throw 'Room workflow validation failed.' }
         & node (Join-Path $PSScriptRoot 'browser-object-triggers.mjs')

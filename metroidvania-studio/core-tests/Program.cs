@@ -5,6 +5,7 @@ using MetroidvaniaStudio.Primitives;
 
 var tests = new (string name, Action run)[]
 {
+    ("resolution fit previews crop counts and restores contents and layout", RoomResolutionFitTests.Fit),
     ("object cell brushes follow paths, block overlap and retain one Undo", ObjectBrushTests.Paint),
     ("room merge retains world contents and primary identity with exact Undo", RoomRestructureTests.Merge),
     ("room merge rejects overlap and conflicting metadata atomically", RoomRestructureTests.MergeValidation),

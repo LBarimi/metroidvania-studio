@@ -737,6 +737,11 @@ public sealed partial class EditorWorkspace
                 break;
             case "roomMove": MoveRoom(command); break;
             case "roomResize": Canvas.RoomEditor.Resize(S(command, "id"), new RectInt(I(command, "x"), I(command, "y"), I(command, "width"), I(command, "height")), B(command, "crop")); break;
+            case "roomFitResolution":
+                var fitCamera = MapCameraSettings.Resolve(Session.Document, Catalog.Data.GetProperty("camera").Deserialize<CameraProfile>(Catalog.Json));
+                Canvas.RoomEditor.FitResolution(S(command, "id"), fitCamera.referenceWidth, fitCamera.referenceHeight, B(command, "allowCrop"));
+                Canvas.Deselect();
+                break;
             case "roomDelete": DeleteRoom(command); break;
             case "roomDuplicate": SelectRoomResult(Canvas.RoomEditor.DuplicateSelected()); break;
             case "roomCopy": Canvas.RoomEditor.CopySelected(); break;
@@ -1074,6 +1079,13 @@ public sealed partial class EditorWorkspace
             || string.IsNullOrWhiteSpace(id.GetString()) || id.GetString()!.Length > 128)
             throw new ArgumentException("Every editor command needs a non-empty commandId of at most 128 characters.");
         return id.GetString()!;
+    }
+    public object PreviewRoomResolutionFit(string id)
+    {
+        var camera = MapCameraSettings.Resolve(Session.Document, Catalog.Data.GetProperty("camera").Deserialize<CameraProfile>(Catalog.Json));
+        var plan = Canvas.RoomEditor.PlanResolutionFit(id, camera.referenceWidth, camera.referenceHeight);
+        return new { instanceId = InstanceId, revision = Revision, roomId = id,
+            width = plan.Width, height = plan.Height, tiles = plan.RemovedForeground + plan.RemovedBackground, objects = plan.RemovedObjects };
     }
     private void AppendPlacementPoint(Vector2 point)
     {

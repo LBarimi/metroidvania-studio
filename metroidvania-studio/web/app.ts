@@ -667,7 +667,7 @@ function renderInspector(force = false): void {
   const selection = state.selection, inspectorSelection = [selection.roomId, selection.roomIds, selection.tool, selection.layer, selection.shape,
     selection.material, selection.brushSize, selection.filled, selection.objectDefinition, selection.groupId,
     selection.hiddenLayers, selection.lockedLayers, selection.area, selection.nodes, inspectorSelectionVersion];
-  const key = JSON.stringify([state.instanceId, state.catalogRevision, inspectorSelection, contentKey, languageVersion]); if (!force && lastInspectorKey === key) return; lastInspectorKey = key;
+  const key = JSON.stringify([state.instanceId, state.catalogRevision, inspectorSelection, contentKey, state.camera.referenceWidth, state.camera.referenceHeight, languageVersion]); if (!force && lastInspectorKey === key) return; lastInspectorKey = key;
   inspector.replaceChildren(); const heading = text('div', '', 'inspector-heading'); heading.append(text('strong', locale.t('inspector')), button('×', () => { inspectorHidden = true; updateView(); }, 'ghost icon')); inspector.append(heading);
   if (!room) { inspector.append(text('div', locale.t('noSelection'), 'empty')); return; }
   const expectation = expectedAt(state); if (selected.length) objectInspector(inspector, selected, expectation); else roomInspector(inspector, expectation);
@@ -686,9 +686,28 @@ function renderInspector(force = false): void {
   // rather than retaining the revision from the last inspector render.
   actions.append(button(locale.t('clearLayer'), () => confirmRun(locale.t('confirmClear'), 'clearLayer'), 'danger'), button(locale.t('clearObjects'), () => confirmRun(locale.t('confirmClear'), 'clearObjects'), 'danger')); inspector.append(actions);
 }
+async function fitRoomToResolution(id: string): Promise<void> {
+  await settleFileSnapshot();
+  if (!state || activeRoom(state)?.id !== id || activeRoom(state)?.locked) return;
+  const plan = await api.previewRoomResolutionFit(id);
+  const apply = async () => {
+    await run('roomFitResolution', { id: plan.roomId, allowCrop: plan.tiles + plan.objects > 0 }, { instanceId: plan.instanceId, revision: plan.revision });
+    renderInspector(true);
+  };
+  if (!plan.tiles && !plan.objects) { await apply(); return; }
+  const dialog = showModal(locale.t('roomFitResolution'), body => {
+    body.append(text('p', locale.t('roomFitResolutionWarning').replace('{0}', String(plan.tiles)).replace('{1}', String(plan.objects))));
+    body.append(text('p', locale.t('roomFitResolutionSize').replace('{0}', String(plan.width)).replace('{1}', String(plan.height))));
+  }, apply, 'continue');
+  dialog.id = 'room-fit-resolution-warning';
+}
 function roomInspector(inspector: HTMLElement, expectation: CommandExpectation): void {
   const room = activeRoom(state)!; const content = section(locale.t('rooms')); const [nameLabel, name] = labelInput(locale.t('name'), room.name); content.append(nameLabel);
   const fields = text('div', '', 'fields'), inputs = new Map<string, HTMLInputElement>(); for (const key of ['x', 'y', 'width', 'height'] as const) { const [label, input] = labelInput(key === 'x' || key === 'y' ? key.toUpperCase() : locale.t(key), room[key], 'number'); input.step = '1'; inputs.set(key, input); fields.append(label); } content.append(fields);
+  const fit = button(locale.t('roomFitResolution'), () => fitRoomToResolution(room.id));
+  fit.id = 'room-fit-resolution'; fit.disabled = room.locked;
+  fit.title = locale.t('roomFitResolutionSize').replace('{0}', String(Math.ceil(state!.camera.referenceWidth / 16))).replace('{1}', String(Math.ceil(state!.camera.referenceHeight / 16)));
+  content.append(fit);
   const [visibleLabel, visible] = check(locale.t('visible'), room.visible), [lockedLabel, locked] = check(locale.t('locked'), room.locked); content.append(row(visibleLabel, lockedLabel));
   content.append(check(locale.t('crop'), map.crop, value => map.crop = value)[0]);
   const [colorLabel, color] = labelInput(locale.t('theme'), roomColor(room));

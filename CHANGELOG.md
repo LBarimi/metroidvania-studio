@@ -2,6 +2,7 @@
 
 ## 1.3.2 (unreleased)
 
+- Add Fit to resolution in room properties. Round dimensions up to whole tiles, confirm cropped tiles and objects only when needed, and restore the complete resize with one Undo.
 - Paint Spawn, Respawn, Portal and Invisible wall along the cursor path on the 16-pixel tile grid. Skip occupied object cells, preview the stroke immediately and undo the full stroke together.
 - Separate portals from numbered trigger events. Import independent portal detection regions and leave contact behavior to the game.
 - Add translucent blue Invisible wall objects with tile-grid brush placement, clipping, descriptions and stable IDs. Engine packages import invisible collision geometry.

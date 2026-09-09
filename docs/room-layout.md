@@ -27,3 +27,9 @@ The PPU and resolution controls beside **Game view** define its camera framing. 
 Select a tile palette and paint the room's foreground or background layer. Autotiling updates neighboring tile edges as you draw. Use [tile palette settings](tilesets.md) to choose your source images and connection mode.
 
 Open the [minimap](minimap.md) to review the overall layout. Room adjacency describes the map layout; gameplay transitions are implemented in your game project.
+
+## Fit to resolution
+
+In the room properties, choose **Fit to resolution** to size the room for the current reference resolution. Room dimensions round up to whole 16-pixel tiles: 320 × 180 becomes 20 × 12 tiles. The room keeps its position.
+
+When contents would be removed, a warning shows the number of affected tiles and objects before applying the change. Both tile layers and all object layers are included. An object is deleted entirely if its transformed body or any path node extends outside the new bounds. Cancel keeps everything; Undo restores the room, deleted contents and any attached rooms moved by the resize.
