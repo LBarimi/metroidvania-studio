@@ -1,6 +1,6 @@
 # Changes
 
-## 1.3.2 (unreleased)
+## 1.3.2
 
 - Add a product homepage with editing previews and searchable guides. Keep offline help and published packages free of website-only media.
 

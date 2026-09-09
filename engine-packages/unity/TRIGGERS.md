@@ -28,7 +28,7 @@ In SDL, use these polygons in your game's collision handling. In every engine, t
 3. Once is checked for new triggers. Uncheck it to allow repeated event requests within a manager session. Existing trigger settings are preserved.
 4. Enter a Description and click Apply properties.
 
-Descriptions appear at the center of objects and trigger regions in the map editor. They are hidden in Game view. Portals have a description, but no Event or Once setting. They never dispatch through the trigger manager, including when imported JSON contains old event properties. Your game decides what happens on portal contact.
+Descriptions appear at the center of objects and trigger regions in the map editor. They are hidden in Game Preview. Portals have a description, but no Event or Once setting. They never dispatch through the trigger manager, including when imported JSON contains old event properties. Your game decides what happens on portal contact.
 
 `None` means unassigned. Old free-text event values remain in imported maps and are shown as existing events. Select a numbered event before requesting them through a runtime manager.
 
