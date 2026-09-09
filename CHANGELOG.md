@@ -2,6 +2,8 @@
 
 ## 1.3.2 (unreleased)
 
+- Add a product homepage with editing previews and searchable guides. Keep offline help and published packages free of website-only media.
+
 - Export the current map, palette and object definitions, original tileset PNGs and referenced textures as a portable ZIP from File. Build archives off the editing lock, preserve unsaved edits, and reject missing or changing images.
 
 - Update editing guides for current room controls, Game Preview camera positioning and palette groups; keep visual editing guides together in Help.

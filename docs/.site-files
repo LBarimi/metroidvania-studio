@@ -5,6 +5,8 @@ api--operations.html
 api--queries.html
 assets/api--automation.schema.json
 assets/api--http.openapi.json
+assets/create-and-paint.gif
+assets/design-the-minimap.gif
 assets/examples--connected-rooms.lua
 assets/examples--region-properties.lua
 assets/examples--seeded-platforms.lua
@@ -18,6 +20,8 @@ distribution--publication.html
 docs.css
 docs.js
 game-preview.html
+guides.html
+homepage.css
 index.html
 mcp--setup.html
 mcp--tools.html

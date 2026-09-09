@@ -32,7 +32,9 @@ try {
     }
     $desktopScript = 'const desktopLabels = ' + ($desktopLabels | ConvertTo-Json -Depth 4 -Compress) + ";`n" + [IO.File]::ReadAllText((Join-Path $sourceRoot 'desktop-bridge.js'))
     [IO.File]::AppendAllText($appFile, $desktopScript, [Text.UTF8Encoding]::new($false))
-    foreach ($relative in @('samples', 'docs', 'metroidvania-studio/localization', 'metroidvania-studio/contracts/FORMAT.md', 'metroidvania-studio/contracts/map-format-v2.schema.json')) {
+    & $node (Join-Path $studioRoot 'tools/docs/copy-sources.mjs') (Join-Path $payload 'docs')
+    if ($LASTEXITCODE -ne 0) { throw 'Documentation staging failed.' }
+    foreach ($relative in @('samples', 'metroidvania-studio/localization', 'metroidvania-studio/contracts/FORMAT.md', 'metroidvania-studio/contracts/map-format-v2.schema.json')) {
         $destination = Join-Path $payload $relative
         [IO.Directory]::CreateDirectory((Split-Path $destination -Parent)) | Out-Null
         Copy-Item -LiteralPath (Join-Path $studioRoot $relative) -Destination $destination -Recurse

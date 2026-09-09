@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { copyDocSources } from '../docs/copy-sources.mjs';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -85,7 +86,8 @@ export async function prepareRelease(state, windowsPackage, { candidate = false,
     run(dotnet, ['publish', project, '--no-build', '--no-restore', ...properties, '--output', path.join(common, 'app/metroidvania-studio', component)]);
   }
   run(process.execPath, ['metroidvania-studio/build-web.mjs', path.join(common, 'app/metroidvania-studio/dist')]);
-  for (const relative of ['metroidvania-studio/localization', 'samples', 'docs',
+  copyDocSources(path.join(common, 'app/docs'));
+  for (const relative of ['metroidvania-studio/localization', 'samples',
     'metroidvania-studio/contracts/FORMAT.md', 'metroidvania-studio/contracts/map-format-v2.schema.json']) {
     const destination = path.join(common, 'app', relative);
     mkdirSync(path.dirname(destination), { recursive: true });

@@ -1,9 +1,10 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { homepages, homeMedia, renderHomepage } from './homepage.mjs';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const escape = text => String(text).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-const slug = text => text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const slug = text => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '');
 export function buildDocs(output = path.join(root, 'builds/docs'), { siteUrl } = {}) {
   if (siteUrl) {
     const url = new URL(siteUrl);
@@ -26,12 +27,15 @@ export function buildDocs(output = path.join(root, 'builds/docs'), { siteUrl } =
   sources.push('metroidvania-studio/contracts/FORMAT.md', 'metroidvania-studio/contracts/map-format-v2.schema.json');
   const outputName = name => (siteUrl && !name.endsWith('.md') ? 'assets/' : '') + (name === 'docs/index.md' ? 'index.html' : name.replace(/^docs\//, '').replace(/\//g, '--').replace(/\.md$/, '.html').toLowerCase());
   const names = new Map(sources.map(name => [name, outputName(name)]));
+  const relativeLink = (target, from) => path.posix.relative(path.posix.dirname(names.get(from)), target);
+  const canonicalUrl = page => new URL(page.href.replace(/(?:^|\/)index\.html$/, match => match.startsWith('/') ? '/' : ''), siteUrl).href;
+  const usedMedia = new Set();
   function link(href, from) {
     if (/^https?:\/\//i.test(href) || href.startsWith('#')) return escape(href);
     const [file, hash] = href.split('#');
     const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(from), file));
     if (!names.has(resolved)) throw new Error(`Unknown documentation link: ${from} -> ${href}`);
-    return escape(names.get(resolved) + (hash ? '#' + hash : ''));
+    return escape(relativeLink(names.get(resolved), from) + (hash ? '#' + hash : ''));
   }
   function inline(text, from) {
     const tokens = [];
@@ -53,6 +57,21 @@ export function buildDocs(output = path.join(root, 'builds/docs'), { siteUrl } =
         if (i === lines.length) throw new Error('Unclosed code block: ' + from);
         i++;
         blocks.push(`<div class="code-block"><div class="code-label"><span>${escape(lang || 'text')}</span><button type="button" class="copy">Copy</button></div><pre><code>${escape(code.join('\n'))}</code></pre></div>`); continue;
+      }
+      const picture = /^!\[([^\]]*)\]\(([^\s)]+)\)$/.exec(line);
+      if (picture) {
+        const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(from), picture[2]));
+        const asset = [...homeMedia].find(name => resolved === 'docs/assets/' + path.posix.basename(name));
+        if (!asset) throw new Error('Unknown documentation image: ' + resolved);
+        // Keep release and npm offline guides free of promotional media.
+        if (siteUrl) {
+          const bytes = readFileSync(path.join(root, asset));
+          if (!/^GIF8[79]a$/.test(bytes.subarray(0, 6).toString('ascii'))) throw new Error('Expected a GIF image.');
+          usedMedia.add(asset);
+          const target = 'assets/' + path.posix.basename(asset);
+          blocks.push(`<figure><img src="${escape(relativeLink(target, from))}" width="${bytes.readUInt16LE(6)}" height="${bytes.readUInt16LE(8)}" alt="${escape(picture[1])}" loading="lazy" decoding="async"></figure>`);
+        }
+        i++; continue;
       }
       const heading = /^(#{1,6}) (.+)$/.exec(line);
       if (heading) {
@@ -84,25 +103,32 @@ export function buildDocs(output = path.join(root, 'builds/docs'), { siteUrl } =
     return { html: blocks.join('\n'), toc };
   }
   const pages = sources.filter(name => name.endsWith('.md')).map(name => {
-    const source = readFileSync(path.join(root, name), 'utf8'), title = /^# (.+)$/m.exec(source)?.[1]?.trim() || name;
+    const sourceName = !siteUrl && name === 'docs/index.md' ? 'docs/guides.md' : name;
+    const source = readFileSync(path.join(root, sourceName), 'utf8'), title = /^# (.+)$/m.exec(source)?.[1]?.trim() || name;
     const paragraph = source.replaceAll('\r\n', '\n').split(/\n\s*\n/).find(block => !/^[#|`>\s]|^(?:- |\d+\. )/.test(block)) || title;
     const plain = paragraph.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/[*`]/g, '').replace(/\s+/g, ' ').trim();
     const description = plain.length > 180 ? plain.slice(0, 177).replace(/\s+\S*$/, '') + '…' : plain;
-    return { name, title, description, source, href: names.get(name), ...markdown(source, name) };
+    return { name, title, description, lang: 'en', source, href: names.get(name), ...(siteUrl ? homepages[name] : {}), ...markdown(source, name) };
   });
-  const groups = [['Start here', ['docs/index.md', 'docs/sample-world.md']], ['Map editing', ['docs/room-layout.md', 'docs/tilesets.md', 'docs/objects-and-triggers.md', 'docs/room-restructuring.md', 'docs/minimap.md', 'docs/game-preview.md', 'docs/textures.md', 'docs/project-bundles.md']], ['Automation', ['docs/cli/release-downloads.md', 'docs/cli/quick-start.md', 'docs/mcp/setup.md']], ['Lua scripts', ['docs/scripting/quick-start.md', 'docs/scripting/api-reference.md', 'docs/scripting/execution-limits.md']], ['API reference', ['docs/api/index.md', 'docs/api/operations.md', 'docs/api/queries.md', 'docs/api/live-api.md']], ['Reference & distribution', ['docs/cli/commands.md', 'docs/mcp/tools.md', 'metroidvania-studio/contracts/FORMAT.md', 'docs/distribution/local-package.md', 'docs/distribution/publication.md', 'docs/validation.md']]];
+  const groups = [['Start here', ['docs/index.md', 'docs/guides.md', 'docs/sample-world.md']], ['Map editing', ['docs/room-layout.md', 'docs/tilesets.md', 'docs/objects-and-triggers.md', 'docs/room-restructuring.md', 'docs/minimap.md', 'docs/game-preview.md', 'docs/textures.md', 'docs/project-bundles.md']], ['Automation', ['docs/cli/release-downloads.md', 'docs/cli/quick-start.md', 'docs/mcp/setup.md']], ['Lua scripts', ['docs/scripting/quick-start.md', 'docs/scripting/api-reference.md', 'docs/scripting/execution-limits.md']], ['API reference', ['docs/api/index.md', 'docs/api/operations.md', 'docs/api/queries.md', 'docs/api/live-api.md']], ['Reference & distribution', ['docs/cli/commands.md', 'docs/mcp/tools.md', 'metroidvania-studio/contracts/FORMAT.md', 'docs/distribution/local-package.md', 'docs/distribution/publication.md', 'docs/validation.md']]];
   const assigned = new Set(groups.flatMap(([, files]) => files));
-  const other = pages.filter(p => !assigned.has(p.name)).map(p => p.name); if (other.length) groups.push(['More guides', other]);
+  const other = pages.filter(p => !assigned.has(p.name) && !homepages[p.name]).map(p => p.name); if (other.length) groups.push(['More guides', other]);
   const version = JSON.parse(readFileSync(path.join(root, 'version.json'))).version;
   for (const page of pages) {
+    const prefix = path.posix.relative(path.posix.dirname(page.href), '.') + (page.href.includes('/') ? '/' : '');
+    const isHome = !!siteUrl && !!homepages[page.name];
     const nav = groups.map(([label, files]) => '<section><h2>' + label + '</h2>' + files.map(name => {
       const entry = pages.find(p => p.name === name); if (!entry) return '';
-      return `<a href="${entry.href}"${entry === page ? ' aria-current="page"' : ''}>${escape(entry.title)}</a>`;
+      const label = name === 'docs/index.md' ? (siteUrl ? 'Overview' : 'Documentation') : entry.title;
+      return `<a href="${escape(relativeLink(entry.href, page.name))}"${entry === page ? ' aria-current="page"' : ''}>${escape(label)}</a>`;
     }).join('') + '</section>').join('');
-    const canonical = siteUrl ? new URL(page.href === 'index.html' ? '' : page.href, siteUrl).href : '';
+    const canonical = siteUrl ? canonicalUrl(page) : '';
     const metadata = canonical ? `<link rel="canonical" href="${escape(canonical)}"><meta property="og:type" content="website"><meta property="og:title" content="${escape(page.title)}"><meta property="og:description" content="${escape(page.description)}"><meta property="og:url" content="${escape(canonical)}"><meta property="og:site_name" content="Metroidvania Studio">` : '';
-    const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="${escape(page.description)}">${metadata}<title>${escape(page.title)} · Metroidvania Studio</title><link rel="icon" href="studio-icon.svg"><link rel="stylesheet" href="docs.css"><script src="search-index.js" defer></script><script src="docs.js" defer></script></head><body><a class="skip" href="#content">Skip to content</a><header><a class="brand" href="index.html"><img src="studio-icon.svg" width="28" height="28" alt="">Metroidvania Studio <span>Docs</span></a><span class="version">${escape(version)}</span><a href="https://github.com/LBarimi/metroidvania-studio">GitHub</a></header><div class="layout"><aside class="sidebar"><label for="search">Search documentation</label><input id="search" type="search" placeholder="Rooms, autotiling, Lua…" autocomplete="off"><div id="results" hidden aria-live="polite"></div><nav aria-label="Documentation">${nav}</nav></aside><main id="content">${page.html}<footer>Metroidvania Studio ${escape(version)} · ${siteUrl ? 'Offline guides are available through Help → Documentation in the studio.' : 'Documentation works offline.'}</footer></main><aside class="toc"><span>On this page</span>${page.toc.map(h => `<a href="#${h.id}">${escape(h.text)}</a>`).join('')}</aside></div></body></html>`;
-    writeFileSync(path.join(output, page.href), html);
+    const title = isHome ? page.title : `${page.title} · Metroidvania Studio`;
+    const head = `<!doctype html><html lang="${page.lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="${escape(page.description)}">${metadata}<title>${escape(title)}</title><link rel="icon" href="${prefix}studio-icon.svg"><link rel="stylesheet" href="${prefix}docs.css">${isHome ? `<link rel="stylesheet" href="${prefix}homepage.css">` : `<script src="${prefix}search-index.js" defer></script><script src="${prefix}docs.js" defer></script>`}</head>`;
+    const body = isHome ? renderHomepage(page, { prefix, version, escape }) : `<body><a class="skip" href="#content">Skip to content</a><header><a class="brand" href="${prefix}index.html"><img src="${prefix}studio-icon.svg" width="28" height="28" alt="">Metroidvania Studio <span>Docs</span></a><span class="version">${escape(version)}</span><a href="https://github.com/LBarimi/metroidvania-studio">GitHub</a></header><div class="layout"><aside class="sidebar"><label for="search">Search documentation</label><input id="search" type="search" placeholder="Rooms, autotiling, Lua…" autocomplete="off"><div id="results" hidden aria-live="polite"></div><nav aria-label="Documentation">${nav}</nav></aside><main id="content">${page.html}<footer>Metroidvania Studio ${escape(version)} · ${siteUrl ? 'Offline guides are available through Help → Documentation in the studio.' : 'Documentation works offline.'}</footer></main><aside class="toc"><span>On this page</span>${page.toc.map(h => `<a href="#${h.id}">${escape(h.text)}</a>`).join('')}</aside></div></body>`;
+    mkdirSync(path.dirname(path.join(output, page.href)), { recursive: true });
+    writeFileSync(path.join(output, page.href), head + body + '</html>');
   }
   const index = pages.map(p => ({ title: p.title, href: p.href, text: p.source.replace(/[#*`|]/g, '').replace(/\s+/g, ' ').slice(0, 24000) }));
   writeFileSync(path.join(output, 'search-index.js'), 'window.studioDocs = ' + JSON.stringify(index).replaceAll('<', '\\u003c') + ';\n');
@@ -113,11 +139,12 @@ export function buildDocs(output = path.join(root, 'builds/docs'), { siteUrl } =
     mkdirSync(path.dirname(target), { recursive: true });
     writeFileSync(target, bytes);
   }
-  for (const name of ['docs.css', 'docs.js']) writeFileSync(path.join(output, name), readFileSync(path.join(root, 'tools/docs', name)));
+  for (const name of ['docs.css', 'docs.js', 'homepage.css']) writeFileSync(path.join(output, name), readFileSync(path.join(root, 'tools/docs', name)));
   writeFileSync(path.join(output, 'studio-icon.svg'), readFileSync(path.join(root, 'metroidvania-studio/web/studio-icon.svg')));
   if (siteUrl) {
     writeFileSync(path.join(output, '.nojekyll'), '');
-    const locations = pages.map(page => '<url><loc>' + escape(new URL(page.href === 'index.html' ? '' : page.href, siteUrl).href) + '</loc></url>');
+    for (const asset of usedMedia) writeFileSync(path.join(output, 'assets', path.basename(asset)), readFileSync(path.join(root, asset)));
+    const locations = pages.map(page => '<url><loc>' + escape(canonicalUrl(page)) + '</loc></url>');
     writeFileSync(path.join(output, 'sitemap.xml'), '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + locations.join('') + '</urlset>\n');
   }
   console.log(`Built ${pages.length} ${siteUrl ? 'public' : 'offline'} documentation pages.`);

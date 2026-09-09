@@ -1,4 +1,5 @@
 import { buildDocs } from '../docs/build.mjs';
+import { copyDocSources } from '../docs/copy-sources.mjs';
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync, copyFileSync, chmodSync } from 'node:fs';
 import path from 'node:path';
@@ -88,7 +89,7 @@ export function pack() {
   for (const name of ['LICENSE', 'THIRD-PARTY-NOTICES.md']) copy(path.join(root, name), path.join(stage, name));
   copy(path.join(root, 'tools/mcp/server.json'), path.join(stage, 'server.json'));
   copy(path.join(root, 'tools/npm/README.md'), path.join(stage, 'README.md'));
-  for (const file of files(path.join(root, 'docs'))) copy(file.full, path.join(stage, 'docs', file.name));
+  copyDocSources(path.join(stage, 'docs'));
   for (const name of ['FORMAT.md', 'map-format-v2.schema.json']) copy(path.join(root, 'metroidvania-studio/contracts', name), path.join(stage, 'metroidvania-studio/contracts', name));
   buildDocs(path.join(stage, 'docs/site'));
   const published = { name: manifest.name, version: manifest.version, description: manifest.description, keywords: manifest.keywords, license: manifest.license,
