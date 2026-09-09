@@ -12,6 +12,22 @@ internal static class RoomResolutionFitTests
         foreach (var (key, value) in values) command[key] = value;
         w.Command(JsonSerializer.SerializeToElement(command));
     }
+    public static void Defaults(EditorWorkspace w)
+    {
+        Send(w, "cameraSettings", ("ppu", 32), ("referenceWidth", 640), ("referenceHeight", 360));
+        Send(w, "new", ("name", "Resolution defaults"), ("discard", true));
+        Check(w.Canvas.Room.width == 40 && w.Canvas.Room.height == 23, "New maps use the current reference resolution.");
+        var camera = MapCameraSettings.Resolve(w.Session.Document);
+        Check(camera.ppu == 32 && camera.referenceWidth == 640 && camera.referenceHeight == 360, "New maps preserve camera settings.");
+        Send(w, "cameraSettings", ("ppu", 16), ("referenceWidth", 320), ("referenceHeight", 180));
+        string before = w.Session.CurrentJson;
+        Send(w, "roomAdd", ("x", 100), ("y", 0));
+        Check(w.Canvas.Room.width == 20 && w.Canvas.Room.height == 12, "Omitted API dimensions use the latest resolution.");
+        Check(w.Session.Document.rooms[0].width == 40 && w.Session.Document.rooms[0].height == 23, "Existing rooms keep their dimensions.");
+        Send(w, "undo"); Check(w.Session.CurrentJson == before, "One Undo restores the map before room creation.");
+        Send(w, "roomAdd", ("x", 100), ("y", 0), ("width", 7), ("height", 5));
+        Check(w.Canvas.Room.width == 7 && w.Canvas.Room.height == 5, "Explicit custom dimensions remain available.");
+    }
     public static void Workflow(EditorWorkspace w)
     {
         var room = new MapRoom { id = "fit", name = "fit", width = 40, height = 24,

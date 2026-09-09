@@ -4,7 +4,7 @@ Build a connected world by adding rooms, resizing their bounds, and arranging th
 
 ## Add and select rooms
 
-Right-click empty space in the map editor and choose the room creation action. The new room is placed near that position without overlapping existing rooms.
+Right-click empty space in the map editor and choose the room creation action. The new room is placed near that position without overlapping existing rooms. Its suggested size covers the current reference resolution, rounded up to whole tiles: 320 × 180 starts at 20 × 12 tiles, and 640 × 360 at 40 × 23. You can change the dimensions before creating it. A new blank map also keeps the current camera settings and starts with a room sized to match.
 
 Click a room to select it. While painting, the first click in a different room activates that room; start a new stroke to paint there. The selected room's properties appear in the inspector.
 

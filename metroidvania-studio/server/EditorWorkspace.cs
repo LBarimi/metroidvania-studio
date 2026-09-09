@@ -213,7 +213,17 @@ public sealed partial class EditorWorkspace
             try { return new MapEditSession(LoadSampleWorld()); }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidOperationException) { }
         }
-        return new MapEditSession(MapDocument.CreateDefault());
+        return new MapEditSession(CreateBlankDocument());
+    }
+
+    private MapDocument CreateBlankDocument(MapDocument? source = null)
+    {
+        var camera = MapCameraSettings.Resolve(source ?? new MapDocument(), Catalog.Data.GetProperty("camera").Deserialize<CameraProfile>(Catalog.Json));
+        var document = MapDocument.CreateDefault();
+        MapCameraSettings.Apply(document, camera.ppu, camera.referenceWidth, camera.referenceHeight);
+        document.rooms[0].width = (camera.referenceWidth + MapDocument.RequiredTileSize - 1) / MapDocument.RequiredTileSize;
+        document.rooms[0].height = (camera.referenceHeight + MapDocument.RequiredTileSize - 1) / MapDocument.RequiredTileSize;
+        return document;
     }
 
     private void DocumentChanged()
@@ -733,7 +743,10 @@ public sealed partial class EditorWorkspace
             case "undo": Session.Undo(); break;
             case "redo": Session.Redo(); break;
             case "roomAdd":
-                Canvas.SelectRoom(Canvas.RoomEditor.Create(new RectInt(I(command, "x"), I(command, "y"), I(command, "width", 16), I(command, "height", 10)), command.TryGetProperty("name", out var roomName) ? roomName.GetString() : null));
+                var roomCamera = MapCameraSettings.Resolve(Session.Document, Catalog.Data.GetProperty("camera").Deserialize<CameraProfile>(Catalog.Json));
+                int defaultWidth = (roomCamera.referenceWidth + MapDocument.RequiredTileSize - 1) / MapDocument.RequiredTileSize;
+                int defaultHeight = (roomCamera.referenceHeight + MapDocument.RequiredTileSize - 1) / MapDocument.RequiredTileSize;
+                Canvas.SelectRoom(Canvas.RoomEditor.Create(new RectInt(I(command, "x"), I(command, "y"), I(command, "width", defaultWidth), I(command, "height", defaultHeight)), command.TryGetProperty("name", out var roomName) ? roomName.GetString() : null));
                 break;
             case "roomMove": MoveRoom(command); break;
             case "roomResize": Canvas.RoomEditor.Resize(S(command, "id"), new RectInt(I(command, "x"), I(command, "y"), I(command, "width"), I(command, "height")), B(command, "crop")); break;
@@ -820,7 +833,7 @@ public sealed partial class EditorWorkspace
                 SetDiskHealthNotice(null); break;
             case "new":
                 if (HasUnsavedChanges && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
-                var created = MapDocument.CreateDefault(); created.name = S(command, "name", "Untitled"); Session.New(created);
+                var created = CreateBlankDocument(Session.Document); created.name = S(command, "name", "Untitled"); Session.New(created);
                 InvalidateDiskContentProbe();
                 diskFingerprint = null; observedDiskFingerprint = null; rejectedDiskFingerprint = null; observedDiskMissing = false;
                 SetDiskHealthNotice(null); break;

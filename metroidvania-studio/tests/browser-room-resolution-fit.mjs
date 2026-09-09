@@ -49,6 +49,23 @@ try{
   await page.waitForFunction(()=>document.querySelector('#room-fit-resolution')?.title.includes('40 × 23'));
   await button.click();await until(s=>s.document.rooms[0].width===40&&s.document.rooms[0].height===23);
   assert.equal(await page.locator('dialog[open]').count(),0,'No warning without deleted contents.');
+  await page.locator('#add-room').click();
+  assert.equal(await page.locator('#room-add-width').inputValue(),'40');
+  assert.equal(await page.locator('#room-add-height').inputValue(),'23');
+  await page.keyboard.press('Escape');
+  await page.locator('#camera-resolution').selectOption('320x180');
+  await until(s=>s.camera.referenceWidth===320);
+  await page.locator('#file-menu > button').click();
+  await page.locator('#file-menu').getByRole('menuitem',{name:'Add room',exact:true}).click();
+  assert.equal(await page.locator('#room-add-width').inputValue(),'20');
+  assert.equal(await page.locator('#room-add-height').inputValue(),'12');
+  await page.locator('#room-add-x').fill('100');await page.locator('#room-add-y').fill('0');
+  await page.locator('#room-add-width').fill('7');await page.locator('#room-add-height').fill('5');
+  await page.locator('dialog .accent').click();
+  const custom=await until(s=>s.document.rooms.length===2);
+  assert.deepEqual([custom.document.rooms[1].width,custom.document.rooms[1].height],[7,5]);
+  assert.deepEqual([custom.document.rooms[0].width,custom.document.rooms[0].height],[40,23]);
+  console.log('PASS new room dialog defaults: Add button, File menu, current resolution, whole-tile rounding and editable custom dimensions.');
   assert.deepEqual(errors,[]);
   console.log('PASS room resolution fit: rounding, warning counts, Cancel, stale confirmation, crops, Undo/Redo, PPU and no-deletion resize.');
 }finally{await browser.close();}

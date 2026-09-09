@@ -5,6 +5,7 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("new room defaults follow resolution and retain explicit dimensions", () => Fixture(RoomResolutionFitTests.Defaults)),
     ("resolution fit confirms deletions and rejects stale approval", () => Fixture(RoomResolutionFitTests.Workflow)),
     ("room merge and split preserve selection, autosaved JSON and Undo/Redo", () => Fixture(RoomRestructureTests.Workflow)),
     ("built-in object upgrade preserves custom fields and legacy definitions", BuiltInObjectTests.Upgrade),

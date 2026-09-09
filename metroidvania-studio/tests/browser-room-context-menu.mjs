@@ -31,6 +31,7 @@ const fixture = { ...initial.document, name: 'Room context menu', rooms: [makeRo
 await mkdir(path.join(root, 'Maps'), { recursive: true });
 await writeFile(path.join(root, 'Maps/RoomContextMenu.json'), JSON.stringify(fixture));
 await command('open', { path: 'RoomContextMenu.json', discard: true });
+await command('cameraSettings', { ppu: 16, referenceWidth: 320, referenceHeight: 180 });
 await command('selectRoom', { id: 'A' });
 await command('options', { tool: 3, layer: 0, brushSize: 1, shape: 0, material: 'terrain', groupId: '', hiddenLayers: [], lockedLayers: [] });
 const browser = await chromium.launch({ channel: 'msedge', headless: true, ignoreDefaultArgs: ['--hide-scrollbars'] });
@@ -120,8 +121,8 @@ try {
   await openAt(-2.25, -1.25);
   assert.equal(await page.locator('#room-add-x').inputValue(), '-3');
   assert.equal(await page.locator('#room-add-y').inputValue(), '-2');
-  assert.equal(await page.locator('#room-add-width').inputValue(), '16');
-  assert.equal(await page.locator('#room-add-height').inputValue(), '10');
+  assert.equal(await page.locator('#room-add-width').inputValue(), '20');
+  assert.equal(await page.locator('#room-add-height').inputValue(), '12');
   await page.locator('#room-add-name').fill('New room'); requests.length = 0;
   await page.locator('dialog .accent').click();
   const created = await until(s => s.document.rooms.length === 3);
@@ -132,7 +133,7 @@ try {
   assert.ok(fixture.rooms.some(r => newRoom.x + newRoom.width === r.x || newRoom.x === r.x + r.width || newRoom.y + newRoom.height === r.y || newRoom.y === r.y + r.height));
   assert.deepEqual(requests.map(r => r.action), ['roomAdd']);
   await undoAndFrame(before);
-  checks.push('empty-space menu opens a 16x10 dialog at floored world coordinates; only the new room moves to avoid overlap; one Undo');
+  checks.push('empty-space menu opens a resolution-sized 20x12 dialog at floored world coordinates; only the new room moves to avoid overlap; one Undo');
 
   await openAt(-5.2, 9.3);
   await page.locator('#room-add-width').fill('6'); await page.locator('#room-add-height').fill('4');
@@ -190,8 +191,8 @@ try {
   await page.waitForFunction(() => document.querySelector('dialog .modal-error')?.textContent.length > 0);
   assert.equal(JSON.stringify((await state()).document), before); await page.keyboard.press('Escape');
   await page.locator('#add-room').click(); await page.locator('dialog[open]').waitFor();
-  assert.equal(await page.locator('#room-add-width').inputValue(), '16');
-  assert.equal(await page.locator('#room-add-height').inputValue(), '10'); await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#room-add-width').inputValue(), '20');
+  assert.equal(await page.locator('#room-add-height').inputValue(), '12'); await page.keyboard.press('Escape');
   checks.push('keyboard menu activation works; invalid size preserves the document; ordinary Add retains its defaults');
 
   // Measure the actual hovered tile after panning and zooming, without relying on a fixed camera scale.
@@ -231,4 +232,4 @@ try {
   await page.screenshot({ path: path.join(root, 'room-context-failure.png') });
   console.error(JSON.stringify({ checks, errors, requests: requests.slice(-5), status: await page.locator('.statusbar').innerText().catch(() => '') }));
   throw error;
-} finally { await browser.close(); await command('open', { path: initial.file, discard: true }); }
+} finally { await browser.close(); if (initial.file) await command('open', { path: initial.file, discard: true }); else await command('import', { document: initial.document, discard: true }); }
