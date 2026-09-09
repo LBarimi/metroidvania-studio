@@ -1,6 +1,6 @@
 # Objects and trigger events
 
-The Objects palette contains **Spawn**, **Portal**, **Invisible wall**, **Path**, and **Respawn point**. Portals are magenta room-transition regions: choose Portal in the Objects palette, then click for one tile or drag to cover a rectangle. The region snaps to tile cells and stays inside its room. Each drag creates one portal with one ID, regardless of its size. Use the Triggers layer to draw a rectangular event region. Previously placed legacy objects stay in existing maps.
+The Objects palette contains **Spawn**, **Portal**, **Invisible wall**, **Path**, and **Respawn point**. Portals are magenta room-transition regions: choose Portal in the Objects palette, then click for one tile or drag to paint a path. Use the Triggers layer to draw a rectangular event region. Previously placed legacy objects stay in existing maps.
 
 Every placed object, trigger, and decal has a unique ID. IDs are hidden in the inspector and retained in JSON exports. Newly generated IDs contain only decimal digits (up to 16 digits), stored as strings for compatibility. Existing IDs and explicitly supplied script IDs remain unchanged. Copying an object or a room assigns new IDs to the copies. Moving, resizing, saving and reopening keep the original IDs.
 
@@ -8,7 +8,7 @@ Room title handles and resize handles work on every layer. Locked rooms remain p
 
 ## Portals and invisible walls
 
-Drag either object on the tile grid to place a rectangular region. A click places one tile. The region stays inside its room and keeps one unique ID. Invisible walls are translucent blue in the editor and hidden in Game Preview.
+Spawn, Respawn point, Portal and Invisible wall all paint one object per 16-pixel tile cell along the cursor path. Occupied cells on the same object layer are skipped, including hidden or locked groups. Each cell keeps its own unique ID; one Undo reverses the entire stroke. Painting stays inside the starting room. Existing larger regions remain intact. Invisible walls are translucent blue in the editor and hidden in Game Preview.
 
 Engine imports preserve each region's ID, definition, bounds and description. Portal detection is independent of numbered trigger events; no room transition or collision callback is installed automatically. Old portal event properties remain in imported data for compatibility but are ignored.
 

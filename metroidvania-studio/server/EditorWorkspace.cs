@@ -60,6 +60,7 @@ public sealed partial class EditorWorkspace
     private string? gestureOwner;
     private DateTime gestureAt;
     private Vector2? placementStart;
+    private List<Vector2>? placementPoints;
     private string? notice;
     private string? diskHealthNotice;
     private string? catalogHealthNotice;
@@ -704,19 +705,25 @@ public sealed partial class EditorWorkspace
             case "begin":
                 Cancel(); gestureOwner = owner; gestureAt = DateTime.UtcNow;
                 if (B(command, "erase")) { if (Canvas.IsTileLayer) Canvas.BeginEraseGesture(Cell(command)); else eraser.Begin(Point(command)); }
-                else if (!Canvas.IsTileLayer && Canvas.Tool == MetroidvaniaStudioTool.Placement) placementStart = Point(command);
+                else if (!Canvas.IsTileLayer && Canvas.Tool == MetroidvaniaStudioTool.Placement)
+                {
+                    placementStart = Point(command);
+                    if (MapObjectEditing.IsCellBrushDefinition(Canvas.ObjectDefinition)) placementPoints = new List<Vector2> { placementStart.Value };
+                }
                 else Canvas.BeginGesture(Cell(command));
                 break;
             case "drag":
                 RequireGesture(owner); gestureAt = DateTime.UtcNow;
-                if (eraser.IsActive) eraser.Drag(Point(command)); else if (!placementStart.HasValue) Canvas.DragGesture(Cell(command));
+                if (eraser.IsActive) eraser.Drag(Point(command));
+                else if (placementPoints != null) AppendPlacementPoint(Point(command));
+                else if (!placementStart.HasValue) Canvas.DragGesture(Cell(command));
                 break;
             case "end":
                 RequireGesture(owner);
                 if (eraser.IsActive) { eraser.Drag(Point(command)); eraser.End(); }
                 else if (placementStart.HasValue) Place(Point(command));
                 else Canvas.EndGesture(Cell(command));
-                placementStart = null; gestureOwner = null;
+                placementStart = null; placementPoints = null; gestureOwner = null;
                 break;
             // Explicit cancellation also dismisses selection. Internal gesture cleanup
             // keeps it intact when starting another stroke or recovering from failure.
@@ -896,7 +903,7 @@ public sealed partial class EditorWorkspace
     }
     public void AbortShutdown() => shuttingDown = false;
 
-    public void Cancel() { eraser.Cancel(); Canvas.CancelGesture(); gestureOwner = null; placementStart = null; }
+    public void Cancel() { eraser.Cancel(); Canvas.CancelGesture(); gestureOwner = null; placementStart = null; placementPoints = null; }
     private void TileGesture(JsonElement command, string owner)
     {
         if (!command.TryGetProperty("roomId", out var roomValue) || roomValue.ValueKind != JsonValueKind.String
@@ -977,7 +984,7 @@ public sealed partial class EditorWorkspace
         Canvas.DragGesturePath(rasterPath);
         Canvas.EndGesture(points[^1]);
         gestureOwner = null;
-        placementStart = null;
+        placementStart = null; placementPoints = null;
     }
     private void ObjectGesture(JsonElement command, string owner)
     {
@@ -1005,7 +1012,8 @@ public sealed partial class EditorWorkspace
         if (erase && (long)count * room.objects.Count > MaximumObjectGestureWork)
             throw new ArgumentException($"objectGesture intersection work cannot exceed {MaximumObjectGestureWork} checks.");
 
-        List<Vector2>? points = erase ? new List<Vector2>(count) : null;
+        bool cellBrush = !erase && MapObjectEditing.IsCellBrushDefinition(Canvas.ObjectDefinition);
+        List<Vector2>? points = erase || cellBrush ? new List<Vector2>(count) : null;
         Vector2 firstPoint = default, lastPoint = default;
         int pointIndex = 0;
         foreach (JsonElement point in pointValues.EnumerateArray())
@@ -1030,13 +1038,14 @@ public sealed partial class EditorWorkspace
             if (points!.Count > 1) eraser.DragPath(points);
             eraser.End();
         }
+        else if (cellBrush) Canvas.ObjectEditor.PaintCells(Catalog.Objects[Canvas.ObjectDefinition], points!);
         else
         {
             placementStart = firstPoint;
             Place(lastPoint);
         }
         gestureOwner = null;
-        placementStart = null;
+        placementStart = null; placementPoints = null;
     }
 
     private void RequireBaseRevision(JsonElement command, string action)
@@ -1066,19 +1075,24 @@ public sealed partial class EditorWorkspace
             throw new ArgumentException("Every editor command needs a non-empty commandId of at most 128 characters.");
         return id.GetString()!;
     }
+    private void AppendPlacementPoint(Vector2 point)
+    {
+        if (placementPoints![placementPoints.Count - 1] == point) return;
+        if (placementPoints.Count >= MaximumTileGesturePoints) throw new ArgumentException("Object brush path is too long.");
+        placementPoints.Add(point);
+    }
     private void Place(Vector2 end)
     {
         var room = Canvas.Room;
         if (room == null || !room.visible || room.locked || !Canvas.CanEditMember(Canvas.Layer, Canvas.ActiveGroupId)) return;
         var start = placementStart!.Value;
         var definition = Catalog.Objects.GetValueOrDefault(Canvas.ObjectDefinition) ?? throw new InvalidOperationException("Object definition is missing from the resource catalog.");
-        if (definition.placement == MapPlacementKind.Rectangle && (definition.id.Equals("Portal", StringComparison.OrdinalIgnoreCase)
-            || definition.id.Equals("InvisibleWall", StringComparison.OrdinalIgnoreCase)))
+        if (MapObjectEditing.IsCellBrushDefinition(definition.id))
         {
-            if (start.x < 0 || start.y < 0 || start.x >= room.width || start.y >= room.height) return;
-            // A portal or invisible-wall stroke stays inside the room where the drag started.
-            start = new Vector2(MathEx.Clamp(MathEx.Floor(start.x), 0, room.width - 1), MathEx.Clamp(MathEx.Floor(start.y), 0, room.height - 1));
-            end = new Vector2(MathEx.Clamp(MathEx.Floor(end.x), 0, room.width - 1), MathEx.Clamp(MathEx.Floor(end.y), 0, room.height - 1));
+            placementPoints ??= new List<Vector2> { start };
+            AppendPlacementPoint(end);
+            Canvas.ObjectEditor.PaintCells(definition, placementPoints);
+            return;
         }
         var at = definition.placement == MapPlacementKind.Rectangle
             ? new Vector2(MathEx.Floor(MathEx.Min(start.x, end.x)), MathEx.Floor(MathEx.Min(start.y, end.y)))

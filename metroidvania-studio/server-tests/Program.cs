@@ -111,7 +111,7 @@ var tests = new (string name, Action run)[]
     ("batched tile gesture targets its requested room", () => Fixture(TileGestureRoomSwitch)),
     ("batched object erase follows curves and stays in its requested room", () => Fixture(ObjectGestureErase)),
     ("batched object placement creates one rectangle and one undo", () => Fixture(ObjectGesturePlacement)),
-    ("portal strokes snap, clip, undo and retain runtime identity", () => Fixture(PortalGesturePlacement)),
+    ("object brushes snap, avoid overlap and retain runtime identity", () => Fixture(PortalGesturePlacement)),
     ("node placement keeps its dragged endpoint", () => Fixture(ObjectGestureNodePlacement)),
     ("invalid batched object gesture is atomic", () => Fixture(ObjectGestureInvalid)),
     ("object gesture intersection work is bounded atomically", () => Fixture(ObjectGestureWorkBoundary))
@@ -2009,43 +2009,29 @@ static void PortalGesturePlacement(EditorWorkspace w)
     Directory.CreateDirectory(Path.GetDirectoryName(w.Files.CatalogPath)!);
     File.Copy(Path.Combine(studio, "samples", "catalog.json"), w.Files.CatalogPath, true);
     Check(w.Catalog.Refresh(), "Portal catalog loads.");
-    Send(w, "options", ("tool", (int)MetroidvaniaStudioTool.Placement), ("layer", (int)MapLayer.Entities), ("objectDefinition", "Portal"));
     var room = w.Canvas.Room;
-    ObjectGesture(w, room.id, false, Points((2.2f, 3.8f), (5.9f, 6.1f)));
-    var portal = room.objects.Single();
-    Check(portal.x == 2 && portal.y == 3 && portal.width == 4 && portal.height == 4, "A stroke spans whole inclusive tile cells.");
-    string id = portal.id;
-    var exported = MapDocumentStore.Deserialize(Snapshot(w));
-    var saved = exported.rooms.Single(r => r.id == room.id).objects.Single();
-    Check(saved.id == id && saved.width == 4 && saved.height == 4, "Export retains the region and its single identity.");
-    var manager = new StudioTriggerManager();
-    manager.RegisterRoom(exported.rooms.Single(r => r.id == room.id));
-    Check(!manager.TryGet(id, out _) && !manager.TryRequest(id, out _), "Portal regions are independent from numbered trigger events.");
-    Send(w, "undo");
-    Check(w.Canvas.Room.objects.Count == 0, "One undo removes the entire portal stroke.");
-    Send(w, "redo");
-    Check(w.Canvas.Room.objects.Single().id == id, "Redo keeps the portal identity.");
-    Send(w, "undo");
-    ObjectGesture(w, room.id, false, Points((5.9f, 6.1f), (2.2f, 3.8f)));
-    portal = w.Canvas.Room.objects.Single();
-    Check(portal.x == 2 && portal.y == 3 && portal.width == 4 && portal.height == 4, "Reverse drags cover the same cells.");
-    Send(w, "undo");
-    ObjectGesture(w, room.id, false, Points((2.8f, 3.2f)));
-    portal = w.Canvas.Room.objects.Single();
-    Check(portal.x == 2 && portal.y == 3 && portal.width == 1 && portal.height == 1, "A click places one snapped portal cell.");
-    Send(w, "undo");
-    ObjectGesture(w, room.id, false, Points((room.width - 1.2f, 3.2f), (room.width + 4.5f, -2.1f)));
-    portal = w.Canvas.Room.objects.Single();
-    Check(portal.x == room.width - 2 && portal.y == 0 && portal.width == 2 && portal.height == 4, "A stroke is clipped to the starting room.");
-    Send(w, "undo");
-    Send(w, "options", ("objectDefinition", "InvisibleWall"));
-    ObjectGesture(w, room.id, false, Points((room.width - 1.2f, 3.2f), (room.width + 4.5f, -2.1f)));
-    var wall = w.Canvas.Room.objects.Single();
-    Check(wall.definition == "InvisibleWall" && wall.x == room.width - 2 && wall.y == 0 && wall.width == 2 && wall.height == 4,
-        "Invisible walls use the same snapped and clipped placement geometry.");
-    Check(wall.properties.All(value => value.key != "event" && value.key != "once"), "Invisible walls have no event controls.");
-    var savedWallMap = MapDocumentStore.Deserialize(Snapshot(w));
-    Check(savedWallMap.rooms.Single(r => r.id == room.id).objects.Single().id == wall.id, "Invisible wall ID survives JSON round trip.");
+    foreach (string definition in new[] { "Spawn", "Respawn", "Portal", "InvisibleWall" })
+    {
+        Send(w, "options", ("tool", (int)MetroidvaniaStudioTool.Placement), ("layer", (int)MapLayer.Entities), ("objectDefinition", definition));
+        string before = Snapshot(w);
+        ObjectGesture(w, room.id, false, Points((2.2f, 3.8f), (5.9f, 3.1f), (5.1f, 6.1f)));
+        var objects = w.Canvas.Room.objects;
+        Check(objects.Count == 7 && objects.All(o => o.definition == definition && o.width == 1 && o.height == 1), "An object brush follows every segment with tile-sized bodies.");
+        Check(objects.Select(o => o.id).Distinct().Count() == 7 && objects.All(o => o.x == MathF.Floor(o.x) && o.y == MathF.Floor(o.y)), "Brush IDs are unique and positions are snapped.");
+        string painted = Snapshot(w);
+        ObjectGesture(w, room.id, false, Points((2.9f, 3.5f), (5.1f, 3.8f)));
+        Check(Snapshot(w) == painted, "Retracing does not stack objects.");
+        Send(w, "undo"); Check(Snapshot(w) == before, "One Undo removes the full stroke, with no extra overlap edit.");
+        Send(w, "redo"); Check(Snapshot(w) == painted, "Redo preserves IDs.");
+        var exported = MapDocumentStore.Deserialize(Snapshot(w));
+        Check(exported.rooms.Single(r => r.id == room.id).objects.Count == 7, "JSON exports every brush cell.");
+        Send(w, "undo");
+        Send(w, "begin", ("x", 2.2f), ("y", 3.8f));
+        Send(w, "drag", ("x", 5.9f), ("y", 3.1f));
+        Send(w, "end", ("x", 5.1f), ("y", 6.1f));
+        Check(w.Canvas.Room.objects.Count == 7, "Streaming begin/drag/end follows the same path.");
+        Send(w, "undo");
+    }
 }
 static void ObjectGestureNodePlacement(EditorWorkspace w)
 {

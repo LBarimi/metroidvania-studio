@@ -27,7 +27,7 @@ public static class BuiltInObjects
                 continue;
             }
             if (existing["name"]?.GetValue<string>() != existing["id"]?.GetValue<string>() || existing["properties"] is not JsonArray fields) continue;
-            if (name == "Portal" && existing["placement"]?.GetValue<int>() == 0
+            if (MapObjectEditing.IsCellBrushDefinition(name) && existing["placement"]?.GetValue<int>() == 1
                 && new[] { "layer", "width", "height", "minimumWidth", "minimumHeight", "resizable", "minimumNodes", "maximumNodes" }
                     .All(key => JsonNode.DeepEquals(existing[key], bundled[key])))
             {

@@ -28,6 +28,9 @@ interface TileGesture {
   size: { counter: TileByteCounter; version: number; bytes: number; count: number; baseCount: number; properties: number; applied?: boolean };
 }
 interface ObjectGesture {
+  cells?: Map<string, Point>;
+  visited?: Set<string>;
+  rasterLength: number;
   roomId: string;
   erase: boolean;
   baseRevision: number;
@@ -106,6 +109,7 @@ function contains(rect: Rect, point: Point): boolean { return point.x >= rect.x 
 function box(a: Point, b: Point): Rect { const x = Math.min(Math.floor(a.x), Math.floor(b.x)), y = Math.min(Math.floor(a.y), Math.floor(b.y)); return { x, y, width: Math.max(Math.floor(a.x), Math.floor(b.x)) - x + 1, height: Math.max(Math.floor(a.y), Math.floor(b.y)) - y + 1 }; }
 function cell(point: Point): Point { return { x: Math.floor(point.x), y: Math.floor(point.y) }; }
 function definitionKey(value: string): string { return value.toLowerCase(); }
+function objectCellBrush(value: string): boolean { return ['spawn', 'respawn', 'portal', 'invisiblewall'].includes(definitionKey(value)); }
 function chunkKey(x: number, y: number): string { return `${Math.floor(x / TILE_CHUNK_SIZE)},${Math.floor(y / TILE_CHUNK_SIZE)}`; }
 function overlaps(a: Rect, b: Rect): boolean { return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y; }
 function segmentIntersectsRect(from: Point, to: Point, rect: Rect): boolean {
@@ -329,6 +333,13 @@ export class MapCanvas {
       if (state.document === this.indexedDocument && this.tileCommitPending && this.tileOverlay) return;
       this.documentToken = nextDocumentToken; this.rebuildDocument(state);
       if (this.objectOverlay?.erase) this.refreshObjectErasePreview(state, this.objectOverlay);
+      else if (this.objectOverlay?.cells) {
+        const gesture = this.objectOverlay, room = state.document.rooms.find(room => room.id === gesture.roomId);
+        if (room) {
+          const visited = [...gesture.visited!]; gesture.visited!.clear(); gesture.cells!.clear();
+          for (const key of visited) { const [x, y] = key.split(',').map(Number); this.stampObjectCell(room, gesture, { x, y }); }
+        }
+      }
     }
   }
   private rebuildCatalog(state: State): void {
@@ -885,19 +896,21 @@ export class MapCanvas {
   private beginObjectGesture(g: Gesture, point: Point, erase: boolean, selection: State['selection']): void {
     const object: ObjectGesture = {
       roomId: g.room.id, erase, baseRevision: this.state!.revision, baseInstanceId: this.state!.instanceId,
-      points: [{ ...point }], hidden: new Set(),
+      points: [!erase && objectCellBrush(selection.objectDefinition) ? cell(point) : { ...point }], hidden: new Set(), rasterLength: 1,
       definition: selection.objectDefinition, layer: selection.layer, groupId: selection.groupId, tool: selection.tool,
       rebaseAfterPending: this.objectCommitsPending > 0, overflow: false,
     };
     if (erase && g.room.objects.length > MAX_OBJECT_GESTURE_WORK) object.overflow = true;
     g.object = object; this.objectOverlay = object;
+    if (!erase && objectCellBrush(object.definition)) { object.cells = new Map(); object.visited = new Set(); this.stampObjectCell(g.room, object, cell(point)); }
     if (erase && !object.overflow) this.hideObjectAt(g.room, object, point);
   }
   private extendObjectGesture(g: Gesture, point: Point): void {
     const object = g.object!; if (object.overflow || !Number.isFinite(point.x) || !Number.isFinite(point.y)) { object.overflow = true; return; }
     const previous = object.points[object.points.length - 1];
     if (previous.x === point.x && previous.y === point.y) return;
-    const next = { ...point };
+    const next = object.cells ? cell(point) : { ...point };
+    if (object.cells) { this.extendObjectBrush(g.room, object, previous, next); return; }
     if (!object.erase) {
       if (object.points.length === 1) object.points.push(next); else object.points[1] = next;
       return;
@@ -908,6 +921,36 @@ export class MapCanvas {
     }
     if (object.points.length >= MAX_TILE_GESTURE_POINTS || g.room.objects.length * (object.points.length + 1) > MAX_OBJECT_GESTURE_WORK) { object.overflow = true; return; }
     object.points.push(next);
+  }
+  private extendObjectBrush(room: Room, gesture: ObjectGesture, previous: Point, next: Point): void {
+    const length = Math.max(Math.abs(next.x - previous.x), Math.abs(next.y - previous.y));
+    if (!length) return;
+    if (gesture.rasterLength + length > MAX_TILE_GESTURE_POINTS) { gesture.overflow = true; return; }
+    gesture.rasterLength += length; gesture.points.push(next);
+    let x = previous.x, y = previous.y;
+    const dx = Math.abs(next.x - x), dy = Math.abs(next.y - y), sx = x < next.x ? 1 : -1, sy = y < next.y ? 1 : -1;
+    let error = dx - dy;
+    for (let i = 0; i < length; i++) {
+      const twice = error * 2;
+      if (twice > -dy) { error -= dy; x += sx; }
+      if (twice < dx) { error += dx; y += sy; }
+      this.stampObjectCell(room, gesture, { x, y });
+    }
+  }
+  private stampObjectCell(room: Room, gesture: ObjectGesture, point: Point): void {
+    if (point.x < 0 || point.y < 0 || point.x >= room.width || point.y >= room.height) return;
+    const key = point.x + ',' + point.y;
+    if (gesture.visited!.has(key)) return;
+    gesture.visited!.add(key);
+    const a = { x: point.x + .00001, y: point.y + .00001 }, b = { x: point.x + .99999, y: point.y + .99999 };
+    const corners = [a, { x: b.x, y: a.y }, b, { x: a.x, y: b.y }];
+    const rect = { ...a, width: b.x - a.x, height: b.y - a.y };
+    for (const { object } of this.objectCandidates(room, [gesture.layer], rect)) {
+      if (Math.abs(object.scaleX) < .000001 || Math.abs(object.scaleY) < .000001) continue;
+      if (contains(rect, { x: object.x + object.width / 2, y: object.y + object.height / 2 })
+        || corners.some((corner, i) => this.objectSegmentHit(object, corner, corners[(i + 1) % 4]))) return;
+    }
+    gesture.cells!.set(key, point);
   }
   private collinearContinuation(a: Point, b: Point, c: Point): boolean {
     const abX = b.x - a.x, abY = b.y - a.y, bcX = c.x - b.x, bcY = c.y - b.y;
@@ -1593,14 +1636,17 @@ export class MapCanvas {
   private drawObjectPlacementPreview(gesture: ObjectGesture): void {
     const room = this.state?.document.rooms.find(candidate => candidate.id === gesture.roomId), definition = this.definitions.get(definitionKey(gesture.definition));
     if (!room?.visible || !definition || room.locked || !this.memberEditable(gesture.layer, gesture.groupId, gesture.groupId)) return;
+    if (gesture.cells) {
+      const view = this.visibleWorldBounds();
+      for (const point of gesture.cells.values()) {
+        if (!overlaps({ x: room.x + point.x, y: room.y + point.y, width: 1, height: 1 }, view)) continue;
+        this.drawObject(room, { id: '', definition: definition.id, layer: gesture.layer, groupId: gesture.groupId,
+          ...point, width: 1, height: 1, rotation: 0, scaleX: 1, scaleY: 1, nodes: [], properties: [] });
+      }
+      return;
+    }
     let start = gesture.points[0], end = gesture.points[gesture.points.length - 1];
     const rectangle = definition.placement === 1;
-    if (rectangle && ['portal', 'invisiblewall'].includes(definitionKey(definition.id))) {
-      if (start.x < 0 || start.y < 0 || start.x >= room.width || start.y >= room.height) return;
-      const cell = (point: Point) => ({ x: Math.max(0, Math.min(room.width - 1, Math.floor(point.x))),
-        y: Math.max(0, Math.min(room.height - 1, Math.floor(point.y))) });
-      start = cell(start); end = cell(end);
-    }
     const snap = (value: number) => Math.round(value * 16) / 16;
     const x = rectangle ? Math.floor(Math.min(start.x, end.x)) : snap(start.x);
     const y = rectangle ? Math.floor(Math.min(start.y, end.y)) : snap(start.y);

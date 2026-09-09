@@ -49,18 +49,19 @@ try {
     await page.mouse.move(end.x,end.y,{steps:12}); await paint();
     assert.equal((await state()).document.rooms[0].objects.length,1,'Dragging previews one area without placing per-pointer objects.');
     await page.mouse.up();
-    const placed=(await until(s=>s.document.rooms[0].objects.length===2)).document.rooms[0].objects.find(o=>o.id!==portal.id);
-    assert.deepEqual(bounds(placed),expected);
+    const placed=(await until(s=>s.document.rooms[0].objects.length===expected.length+1)).document.rooms[0].objects.filter(o=>o.id!==portal.id);
+    assert.deepEqual(placed.map(o=>[o.x,o.y]),expected);
+    assert.ok(placed.every(o=>o.width===1&&o.height===1));
     await command('undo'); await settle();
     assert.equal((await state()).document.rooms[0].objects.length,1);
-    return placed;
+    return placed[0];
   }
-  const drawn=await stroke([6.2,3.8],[8.7,6.2],[6,3,3,4]);
+  const drawn=await stroke([6.2,3.2],[8.7,3.2],[[6,3],[7,3],[8,3]]);
   await command('redo'); await settle();
-  assert.equal((await state()).document.rooms[0].objects.find(o=>o.id===drawn.id)?.width,3);
+  assert.equal((await state()).document.rooms[0].objects.find(o=>o.id===drawn.id)?.width,1);
   await command('undo'); await settle();
-  await stroke([8.7,6.2],[6.2,3.8],[6,3,3,4]);
-  await stroke([14.2,3.8],[17.2,6.2],[14,3,2,4]);
+  await stroke([8.7,3.2],[6.2,3.2],[[8,3],[7,3],[6,3]]);
+  await stroke([14.2,3.2],[17.2,3.2],[[14,3],[15,3]]);
   p=await at(10.2,3.8); const cancelled=await at(12.7,6.2);
   await page.mouse.move(p.x,p.y); await page.mouse.down(); await page.mouse.move(cancelled.x,cancelled.y,{steps:4});
   await page.keyboard.press('Escape'); await page.mouse.up(); await settle();
@@ -134,14 +135,14 @@ try {
   await page.mouse.move(10,10); await paint();
   const previewImage = () => page.locator('#game-preview-canvas').evaluate(c=>c.toDataURL());
   const beforeWall = await previewImage();
-  const startWall=await at(8.2,1.2),endWall=await at(10.8,3.8);
+  const startWall=await at(8.2,1.2),endWall=await at(10.8,1.2);
   await page.mouse.move(startWall.x,startWall.y); await page.mouse.down();
   await page.mouse.move(endWall.x,endWall.y,{steps:8});
   assert.equal((await state()).document.rooms[0].objects.length,0);
   await page.mouse.up();
-  s=await until(s=>s.document.rooms[0].objects.length===1);
+  s=await until(s=>s.document.rooms[0].objects.length===3);
   const wall=s.document.rooms[0].objects[0];
-  assert.equal(wall.definition,'InvisibleWall'); assert.deepEqual(bounds(wall),[8,1,3,3]);
+  assert.equal(wall.definition,'InvisibleWall'); assert.deepEqual(bounds(wall),[8,1,1,1]);
   assert.ok(wall.id); assert.deepEqual(wall.properties.map(p=>p.key),['desc']);
   await page.mouse.move(10,10); await paint();
   assert.equal(await previewImage(),beforeWall,'Invisible walls never cover the Game Preview.');
@@ -157,8 +158,30 @@ try {
   assert.equal((await state()).document.rooms[0].objects[0].id,wall.id);
   const savedWall=(await state()).document;
   await command('import',{document:savedWall,discard:true}); await settle();
-  assert.deepEqual(bounds((await state()).document.rooms[0].objects[0]),[8,1,3,3]);
+  assert.deepEqual(bounds((await state()).document.rooms[0].objects[0]),[8,1,1,1]);
 
+
+  for (const definition of ['Spawn','Respawn','Portal','InvisibleWall']) {
+    await command('import',{document:{...initial.document,rooms:[room],layerGroups:[],stylegrounds:[],properties:[]},discard:true});
+    await command('selectRoom',{id:room.id});
+    await command('options',{layer:2,tool:1,objectDefinition:definition}); await settle();
+    const a=await at(3.3,2.2), b=await at(7.3,2.2), c=await at(7.3,4.2);
+    await page.mouse.move(a.x,a.y); await page.mouse.down();
+    await page.mouse.move(b.x,b.y,{steps:8}); await page.mouse.move(c.x,c.y,{steps:6}); await paint();
+    assert.equal((await state()).document.rooms[0].objects.length,0,'A held stroke previews without per-cell network writes.');
+    await page.mouse.up();
+    s=await until(s=>s.document.rooms[0].objects.length===7);
+    assert.deepEqual(s.document.rooms[0].objects.map(o=>[o.x,o.y]),[[3,2],[4,2],[5,2],[6,2],[7,2],[7,3],[7,4]],definition+' follows the full bent path.');
+    assert.ok(s.document.rooms[0].objects.every(o=>o.definition===definition&&o.width===1&&o.height===1));
+    assert.equal(new Set(s.document.rooms[0].objects.map(o=>o.id)).size,7);
+    await command('options',{objectDefinition:definition==='Portal'?'Spawn':'Portal'}); await settle();
+    const revision=(await state()).revision;
+    await page.mouse.click(a.x,a.y);
+    await until(s=>s.revision>revision);
+    assert.equal((await state()).document.rooms[0].objects.length,7,'Cross-type overpainting is ignored.');
+    await command('undo'); await settle();
+    assert.equal((await state()).document.rooms[0].objects.length,0,'One Undo removes the entire stroke.');
+  }
   assert.deepEqual(errors,[]);
   console.log('Object UI passed: five palette items, portal color catalog, hidden numeric IDs, copy IDs, 200 events, checkbox, descriptions, undo/redo and legacy values.');
 } finally {

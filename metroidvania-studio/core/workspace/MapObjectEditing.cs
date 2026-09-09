@@ -163,6 +163,11 @@ namespace MetroidvaniaStudio
             string group = controller.ActiveGroupId;
             if (!ActualObjectLayer(layer)) throw new ArgumentException("Object placement requires an object layer.");
             if (!controller.CanEditMember(layer, group)) return null;
+            if (IsCellBrushDefinition(definition.id))
+            {
+                var ids = PaintCells(definition, new[] { position });
+                return ids.Count == 0 ? null : ids[0];
+            }
             MapObject item = definition.Create(Snap(position), Snap(size), layer, group);
             if (nodeEnd.HasValue)
             {
