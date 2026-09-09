@@ -2,6 +2,8 @@
 
 ## 1.3.2 (unreleased)
 
+- Update editing guides for current room controls, Game Preview camera positioning and palette groups; keep visual editing guides together in Help.
+
 - Start game camera views at each room's lower-left corner in the web editor and all engine packages. Keep the same source-pixel bounds across PPU settings and preserve the view origin when resolution changes.
 - Default new rooms to the current reference resolution, rounded up to whole tiles. New blank maps preserve the current camera settings.
 - Add Fit to resolution in room properties. Round dimensions up to whole tiles, confirm cropped tiles and objects only when needed, and restore the complete resize with one Undo.

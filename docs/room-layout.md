@@ -6,21 +6,21 @@ Build a connected world by adding rooms, resizing their bounds, and arranging th
 
 Right-click empty space in the map editor and choose the room creation action. The new room is placed near that position without overlapping existing rooms. Its suggested size covers the current reference resolution, rounded up to whole tiles: 320 × 180 starts at 20 × 12 tiles, and 640 × 360 at 40 × 23. You can change the dimensions before creating it. A new blank map also keeps the current camera settings and starts with a room sized to match.
 
-Click a room to select it. While painting, the first click in a different room activates that room; start a new stroke to paint there. The selected room's properties appear in the inspector.
+Click a room to select it. While painting, the first left or right click in a different room only activates it. Start another stroke to paint or erase there. The selected room's properties appear in the inspector.
 
 ## Move and resize
 
-Drag a room's title strip to move it. Bring room edges together to snap them into place. Drag the outer resize handles to change the room's bounds; the inspector also provides room dimensions and rotation controls.
+Drag a room's title strip to move it. Bring room edges together to snap them into place. Drag the outer resize handles to change the room's bounds. These handles work with every tool and layer, including Game camera. The inspector also provides dimensions, rotation and reflection controls.
 
-When shrinking a room, existing contents limit how far its bounds can move inward. Rooms touching a resized edge may move with it to preserve their layout.
+When shrinking a room, existing contents limit how far its bounds can move inward. Rooms touching a resized edge may move with it to preserve their layout. Rooms separated by a gap stay in place; a resize stops if it would overlap them.
 
 Hold **Ctrl** and click rooms to build a selection, then drag a selected room's title strip to move the selection together. Click empty space to clear the multiple selection. Use **Edit → Undo** to undo a layout change.
 
 ## Navigate the world
 
-Middle-drag to pan and use the mouse wheel to zoom. Right-drag on empty space also pans. Switch between the whole-world view, room view, and game view using the toolbar.
+Middle-drag to pan and use the mouse wheel to zoom. Right-drag on empty space also pans; a right click without dragging opens the room creation menu with any tool selected. Use **Frame all** or **Frame room** in the toolbar to focus the editing canvas.
 
-The PPU and resolution controls beside **Game view** define its camera framing. The game camera starts at the selected room’s lower-left corner. Drag it to inspect another area; the Center control still centers the view. Imported engine cameras use the same starting corner. Room positions and dimensions remain part of the map document.
+The **PPU** and **Resolution** toolbar controls set the camera framing in [Game Preview](game-preview.md), the window in the canvas's upper-right corner. Select **Game camera** in Tools to drag its white frame, or turn on **Always show game camera** to see it while painting. The camera starts at the room's lower-left corner; the Center control moves it to the room's center. Imported engine cameras use the same starting corner.
 
 ## Paint connected spaces
 

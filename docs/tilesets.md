@@ -6,7 +6,7 @@ Open **…** beside a palette in the left sidebar. The same settings apply to it
 
 ## Palette groups
 
-The folder-plus button beside **Palette** adds a group. Existing palettes appear in **Default**. Click a group title to fold or expand it.
+Use **+ Group** below the brush controls to add a group. Built-in palettes are organized into **Default colors** and **Default themes**; the **+** beside **Palette** adds a palette. Click a group title to fold or expand it.
 
 Drag a palette above or below another palette to change its order. Drop it on a group title or empty group to move it there. Drag a group by its handle to reorder the groups. Search finds both palette and group names.
 
@@ -45,7 +45,7 @@ Custom palettes use readable folders such as `Textures/palettes/stage-1/`, with 
 
 ## Original images and engine resources
 
-Imports copy source PNGs into `Textures/palettes/<palette-name>/` beside the launcher or at the source project root. **Storage folders** opens that location or copies its path. In a browser, select the folder once with **Set file dialog folder** to remember it for PNG open/save dialogs; the Windows application sets it automatically. The **Source image** field displays that workspace resource path after saving and reopening the dialog. Edit this copy to receive live updates; the initially selected external file is not watched.
+Imports copy source PNGs into `Textures/palettes/<palette-name>/` beside the launcher or at the source project root. **Open folder** in palette settings opens the selected texture's folder. **File → Storage folders** also provides folder shortcuts and path copying. Where browser file pickers are available, **Set file dialog folder** remembers the directory for open/save dialogs. The **Source image** field displays that workspace resource path after saving and reopening the dialog. Edit this copy to receive live updates; the initially selected external file is not watched.
 
 The studio builds a generated atlas when you apply settings or save an original image. Incomplete image writes retain the previous atlas until a complete replacement is available. Composition runs on image changes, not on paint gestures.
 

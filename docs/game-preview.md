@@ -13,10 +13,10 @@ Game Preview sits in the upper-right corner of the map canvas. It shows the sele
 
 Preview preserves the full camera aspect ratio. It uses integer magnification when space allows and nearest-neighbor reduction when the reference resolution exceeds the window size. Maximize it to inspect more detail. Panning or maximizing Preview leaves your editing camera unchanged.
 
-Selecting another room recenters Preview. Collapsing it or switching to the minimap pauses its rendering. The collapsed setting is remembered on this browser. Preview does not run game logic or simulate a player.
+Selecting another room starts Preview at that room's lower-left corner. Collapsing it or switching to the minimap pauses its rendering. The collapsed setting is remembered on this browser. Preview does not run game logic or simulate a player.
 
 Held tile strokes update Preview once per animation frame. At native or integer magnification with Pixel Perfect enabled, only changed regions and their neighboring tiles are redrawn. Reduced or smooth views reuse the full-frame rendering path to preserve pixel edges. Camera, room, texture and viewport changes refresh the whole view.
 
-The camera stops at the room edges in either mode. If a room is narrower or shorter than the camera, that axis stays centered: the editor clips the white box to the room, while Preview keeps the full resolution and shows empty space beyond it.
+The camera stops at the room edges in either mode. If a room is narrower or shorter than the camera, that axis stays at the room's left or bottom edge. The editor clips the white box to the room; Preview keeps the full resolution and shows empty space to the right or above it.
 
 Camera positioning is a local viewing aid and does not modify map JSON or Undo history. Choose another tool or press **Esc** to leave Game camera. It is available on every layer, including locked layers and rooms. Resizing a room or changing resolution clamps the camera to the updated bounds.

@@ -11,6 +11,9 @@ Create connected rooms, paint autotiled terrain, and design minimaps with Metroi
 | [Tile palettes and autotiling](tilesets.md) | Import PNGs and set up 4-tile or 47-tile palettes |
 | [Minimap design](minimap.md) | Set room colors, adjust outlines, and return to a room for editing |
 | [Texture editing](textures.md) | Update shared PNG files and export portable resources |
+| [Game Preview](game-preview.md) | Check the selected room while editing |
+| [Merge and split rooms](room-restructuring.md) | Restructure rooms while preserving world contents |
+| [Objects and triggers](objects-and-triggers.md) | Paint object regions and describe triggers |
 
 ## Scripts and automation
 
@@ -23,9 +26,6 @@ Lua scripts, the headless CLI, the local MCP server, and the editing API use the
 | [CLI quick start](cli/quick-start.md) | Edit, validate, export, and preview maps without a browser |
 | [MCP setup](mcp/setup.md) | Give an agent local map editing tools |
 | [Building from source](building.md) | Build, run, and refresh local web bundles |
-| [Game Preview](game-preview.md) | Check the selected room while editing |
-| [Merge and split rooms](room-restructuring.md) | Restructure rooms while preserving world contents |
-| [Objects and triggers](objects-and-triggers.md) | Place portals, describe objects and connect runtime events |
 | [Editing API](api/index.md) | Apply structured, atomic operation batches |
 | [Live web API](api/live-api.md) | Work on the document currently open in the studio |
 | [Local npm package](distribution/local-package.md) | Build and test an installable package from source |
