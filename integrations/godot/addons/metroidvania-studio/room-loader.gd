@@ -268,7 +268,7 @@ func load_room(map_path: String, catalog_path: String, resource_root: String, ro
     view_camera.pixels_per_unit = ppu
     view_camera.reference_resolution = reference
     view_camera.name = "RoomCamera"
-    view_camera.position = Vector2(width, -height) * unit * 0.5
+    view_camera.position = Vector2(reference.x, -reference.y) / (2.0 * ppu)
     view_camera.zoom = Vector2(ppu, ppu)
     root.add_child(view_camera)
     view_camera.owner = root

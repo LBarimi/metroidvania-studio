@@ -8,6 +8,7 @@ func _initialize() -> void:
         quit(1)
         return
     assert(room.get_meta("ppu") == 16)
+    assert(room.get_node("RoomCamera").position == Vector2(10, -5.625))
     assert(room.get_node("Foreground").surfaces.size() > 0)
     assert(room.get_node("TerrainCollision").get_child_count() > 0)
     var count := 0
@@ -27,6 +28,7 @@ func _initialize() -> void:
     assert(coverage.get_meta("ppu") == 32)
     assert(coverage.get_meta("reference_resolution") == Vector2i(640,360))
     assert(coverage.position == Vector2(-3.5,-1.5))
+    assert(coverage.get_node("RoomCamera").position == Vector2(10, -5.625))
     assert(coverage.get_node("Foreground").surfaces.size() == 5)
     assert(coverage.get_node("TerrainCollision").get_child_count() == 5)
     var triangles := 0

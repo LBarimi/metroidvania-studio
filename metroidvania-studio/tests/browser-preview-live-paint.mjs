@@ -73,7 +73,7 @@ map.renderGamePreview = function (...args) {
     }
     await command('options', { tool: 3, layer: 0, material: 'biome-grassland', brushSize: 1, hiddenLayers: [], lockedLayers: [] });
     await page.goto(base); await page.locator('#room-list button').first().waitFor(); await page.waitForFunction(() => window.__map?.state);
-    await page.evaluate(() => { const m = window.__map; m.pixelScale = 1; m.center = { x: 64, y: 40 }; m.requestDraw(); });
+    await page.evaluate(() => { const m = window.__map; m.pixelScale = 1; m.center = { x: 64, y: 40 }; m.moveGameCamera({ x: 64, y: 40 }); m.requestDraw(); });
     await page.waitForTimeout(200);
     for (const [layer, button] of [[0, 'left'], [0, 'right'], [1, 'left']]) {
       await command('options', { tool: 3, layer, material: 'biome-grassland', brushSize: 1 }); await settled();

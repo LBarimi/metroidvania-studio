@@ -28,7 +28,7 @@ Imported textures, sprites and tile resources are saved under `Assets/Metroidvan
 - Room, cell, object and trigger coordinates use the same conversion.
 - Camera size is `referenceHeight / (2 × PPU)`. Defaults are PPU 16 and 320×180.
 - `StudioPixelCamera` owns orthographic size and an integer-scaled viewport. Screens smaller than the reference resolution use integer downsampling.
-- Load centers the scene's main camera on the room, or creates a camera if none exists. An existing pixel-camera controller on that camera is disabled to avoid competing projection settings.
+- Load places the bottom-left of the scene's main camera view at the room's bottom-left corner, or creates a camera if none exists. An existing pixel-camera controller on that camera is disabled to avoid competing projection settings.
 
 Terrain uses persistent Tilemap resources, the shared eight-neighbor mask, boundary continuation, slope sprites, and a merged CompositeCollider2D outline. Objects carry `StudioPlacedObject` metadata; sprite definitions are displayed and trigger rectangles become trigger colliders. Game behavior and custom background effects remain the consuming project's responsibility. The selected room and shared authored metadata are retained on `StudioImportedRoom`.
 

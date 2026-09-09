@@ -67,10 +67,24 @@ public static class StudioIntegrationValidation
             Check(!root.GetComponentInChildren<StudioPlacedObject>().TryRequestTrigger(out _) && delivered == 1, "Once prevents repeat delivery");
             triggers.RegisterRoom(parsed.rooms[0]); Check(!triggers.TryRequest("trigger", out _), "Room reload retains consumed events");
             Check(triggers.ResetOnce("trigger") && triggers.TryRequest("trigger", out _), "Explicit reset reactivates event");
-            Check(camera.orthographicSize == 3.5f && camera.transform.position.x == -1 && camera.transform.position.y == 1.75f, "Camera centers on the scaled room");
+            Check(camera.orthographicSize == 3.5f && camera.transform.position.x == 4.25f && camera.transform.position.y == 4.5f, "Camera view starts at the scaled room origin");
             var renderTexture = new RenderTexture(1000, 600, 16); camera.targetTexture = renderTexture; camera.GetComponent<StudioPixelCamera>().Apply();
             Check(Mathf.Approximately(camera.rect.width, .8f) && Mathf.Approximately(camera.rect.height, 448f / 600), "Camera viewport uses integer pixel magnification");
             Check(Mathf.Approximately(camera.pixelRect.x, 100) && Mathf.Approximately(camera.pixelRect.y, 76), "Camera viewport is centered on whole pixels");
+            var lower = camera.ViewportToWorldPoint(new Vector3(0, 0, 10));
+            var upper = camera.ViewportToWorldPoint(new Vector3(1, 1, 10));
+            Check(Vector3.Distance(lower, root.transform.position) < .0001f, "Viewport lower-left matches the room origin");
+            Check(Mathf.Approximately(upper.x - lower.x, 400f / 32) && Mathf.Approximately(upper.y - lower.y, 224f / 32), "Unity viewport has exactly the exported source-pixel dimensions");
+            foreach (int ppu in new[] { 6, 12, 16, 32, 128 })
+            {
+                var comparison = new CameraProfile { ppu = ppu, referenceWidth = 320, referenceHeight = 180 };
+                camera.GetComponent<StudioPixelCamera>().Configure(comparison);
+                lower = camera.ViewportToWorldPoint(new Vector3(0, 0, 10));
+                upper = camera.ViewportToWorldPoint(new Vector3(1, 1, 10));
+                Check(Mathf.Abs((upper.x - lower.x) * ppu / 16 - 20) < .0001f && Mathf.Abs((upper.y - lower.y) * ppu / 16 - 11.25f) < .0001f,
+                    "Unity matches the web camera tile footprint at PPU " + ppu);
+            }
+            camera.GetComponent<StudioPixelCamera>().Configure(profile);
             camera.targetTexture = null; UnityEngine.Object.DestroyImmediate(renderTexture);
             var pixel = camera.GetComponent<StudioPixelCamera>(); pixel.referenceWidth = 401; pixel.referenceHeight = 225;
             pixel.SendMessage("LateUpdate");

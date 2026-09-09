@@ -14,7 +14,7 @@ The preview builds directly from `src-sample`. The same source files are provide
 
 | File | Start here to understand |
 | --- | --- |
-| `src-sample/sample-room.cpp` | Loading JSON and textures, centering the camera, drawing each frame |
+| `src-sample/sample-room.cpp` | Loading JSON and textures, positioning the camera at the lower-left room corner, drawing each frame |
 | `src-sample/sample-room.h` | Input paths and the small reusable `SampleRoom` class |
 | `src-sample/main.cpp` | Creating SDL, handling input, running the loop and releasing resources |
 

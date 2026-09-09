@@ -27,7 +27,7 @@ namespace MetroidvaniaStudio.Integration.Editor
                     var cameraObject = new GameObject("Studio Camera"); cameraObject.transform.SetParent(prepared.transform, false); cameraObject.tag = "MainCamera";
                     camera = cameraObject.AddComponent<Camera>(); camera.clearFlags = CameraClearFlags.SolidColor; camera.backgroundColor = Color.black;
                 }
-                if (recordUndo) { Undo.RecordObject(camera, "Configure studio camera"); Undo.RecordObject(camera.transform, "Center studio camera"); }
+                if (recordUndo) { Undo.RecordObject(camera, "Configure studio camera"); Undo.RecordObject(camera.transform, "Position studio camera"); }
                 // Only one component may own this camera's projection.
                 var previousPixelCamera = camera.GetComponent("PixelPerfectCamera") as Behaviour;
                 if (previousPixelCamera) { if (recordUndo) Undo.RecordObject(previousPixelCamera, "Configure studio camera"); previousPixelCamera.enabled = false; }
@@ -36,7 +36,7 @@ namespace MetroidvaniaStudio.Integration.Editor
                 if (recordUndo) Undo.RecordObject(pixel, "Configure studio camera");
                 pixel.Configure(profile);
                 var room = document.rooms.Find(value => value.id == roomId); float unit = 16f / profile.ppu;
-                camera.transform.position = new Vector3((room.x + room.width * .5f) * unit, (room.y + room.height * .5f) * unit, camera.transform.position.z == 0 ? -10 : camera.transform.position.z);
+                camera.transform.position = new Vector3(room.x * unit + profile.referenceWidth / (2f * profile.ppu), room.y * unit + profile.referenceHeight / (2f * profile.ppu), camera.transform.position.z == 0 ? -10 : camera.transform.position.z);
                 camera.transform.rotation = Quaternion.identity;
                 Physics2D.SyncTransforms();
                 foreach (var collider in prepared.GetComponentsInChildren<CompositeCollider2D>()) collider.GenerateGeometry();

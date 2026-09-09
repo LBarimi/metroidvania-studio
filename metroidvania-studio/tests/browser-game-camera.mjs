@@ -59,7 +59,7 @@ try {
   const original = await state(); await page.locator('#game-camera-tool').click();
   assert.equal(await preview.isVisible(), true); assert.equal(await page.locator('#game-camera-tool').getAttribute('aria-pressed'), 'true');
   assert.equal(await page.locator('#tools [data-tool].active').count(), 0);
-  assert.deepEqual(await frame(), { x: 10, y: 6.375, width: 20, height: 11.25 });
+  assert.deepEqual(await frame(), { x: 0, y: 0, width: 20, height: 11.25 });
   const cameraCenter = await screen(await position()); await page.mouse.move(cameraCenter.x, cameraCenter.y);
   assert.equal(await page.locator('#map-canvas').evaluate(c => c.style.cursor), 'grab');
   const cross = await page.evaluate(() => {
@@ -67,7 +67,7 @@ try {
     return [...canvas.getContext('2d').getImageData(Math.round(p.x * devicePixelRatio), Math.round(p.y * devicePixelRatio), 1, 1).data];
   });
   assert.deepEqual(cross, [255,255,255,255]);
-  const beforePixels = await pixels(); await drag({ x: 20, y: 12 }, { x: 24, y: 15 }, true);
+  const beforePixels = await pixels(); await drag(await position(), { x: 24, y: 15 }, true);
   assert.equal(await page.locator('#map-canvas').evaluate(c => c.style.cursor), 'grabbing');
   assert.deepEqual(await position(), { x: 24, y: 15 }); assert.notEqual(await pixels(), beforePixels);
   assert.deepEqual(await page.evaluate(() => window.__previewPosition), await position());
@@ -138,7 +138,7 @@ try {
   await page.evaluate(() => window.__cameraMap.fit()); await page.waitForTimeout(80);
   const smallCenter = await screen({ x: 51, y: 4 }); await page.mouse.click(smallCenter.x, smallCenter.y); await settled();
   assert.equal((await state()).selection.roomId, 'small');
-  assert.deepEqual(await position(), { x: 51, y: 4 });
+  assert.deepEqual(await position(), { x: 55, y: 5.625 });
   checks.push('Resolution changes cancel either drag safely; clicking a different room in the canvas selects it without painting');
   for (const language of ['KR','EN','JA','ZH_CN','ZH_TW','RU']) {
     await page.locator('#language').selectOption(language);

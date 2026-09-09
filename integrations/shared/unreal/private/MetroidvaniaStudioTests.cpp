@@ -24,6 +24,11 @@ bool FStudioImportTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Import sample"),Room->ImportRoom());TestEqual(TEXT("PPU"),Room->PixelsPerUnit,16);
     TestTrue(TEXT("Embedded images"),Room->Images.Num()>0);TestTrue(TEXT("Forget local source paths"),Room->MapFile.FilePath.IsEmpty());
     TestTrue(TEXT("Rebuild embedded data"),Room->RebuildRoom());
+    const auto CameraLocation = Room->RoomCamera->GetRelativeLocation();
+    const double PixelUnit = Room->UnitsPerWorldUnit / Room->PixelsPerUnit;
+    TestTrue(TEXT("Camera view begins at room lower-left"), FMath::IsNearlyEqual(static_cast<double>(CameraLocation.X), Room->ReferenceResolution.X * 0.5 * PixelUnit)
+        && FMath::IsNearlyEqual(static_cast<double>(CameraLocation.Z), Room->ReferenceResolution.Y * 0.5 * PixelUnit));
+    TestTrue(TEXT("Camera width matches source pixels"), FMath::IsNearlyEqual(static_cast<double>(Room->RoomCamera->OrthoWidth), Room->ReferenceResolution.X * PixelUnit));
     Room->ClearRoom();TestTrue(TEXT("Clear data"),Room->MapDocumentJson.IsEmpty());
     int32 Count=0;for(int32 Mask=0;Mask<256;++Mask)if(MetroidvaniaStudio::NormalizeMask(Mask)==Mask)++Count;
     TestEqual(TEXT("Normalized masks"),Count,47);

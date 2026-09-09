@@ -10,8 +10,8 @@ SampleRoom::SampleRoom(SDL_Renderer *renderer, const RoomFiles &files) : rendere
     // 1. Read the room and resolve its textures through the catalog.
     Reload();
 
-    // 2. Center the camera. A tile is 16 source pixels; PPU converts to world units.
-    camera_ = {room_.data.width * 8.0 / room_.data.ppu, room_.data.height * 8.0 / room_.data.ppu};
+    // 2. Start the view at the lower-left room corner. PPU converts pixels to world units.
+    camera_ = {room_.data.referenceWidth * 0.5 / room_.data.ppu, room_.data.referenceHeight * 0.5 / room_.data.ppu};
 }
 
 void SampleRoom::Reload()

@@ -54,6 +54,7 @@ map.drawScene = function (...args) {
       await page.goto(base); await page.locator('#room-list button').first().waitFor(); await page.locator('#language').selectOption('EN');
       const checkbox = page.getByRole('checkbox', { name: 'Pixel Perfect', exact: true });
       assert.equal(await checkbox.isChecked(), true);
+      await page.locator('#preview-center').click();
       await page.locator('#game-camera-tool').click(); await tick();
       const snapped = await center(); await dragFrame(.01); closeTo((await center()).x, snapped.x);
       await checkbox.uncheck(); await dragFrame(.01);

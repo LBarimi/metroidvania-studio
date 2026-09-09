@@ -76,8 +76,8 @@ int main(int argc, char **argv)
         // Read dimensions before creating SDL's output surface or window.
         const auto initial = MetroidvaniaStudio::LoadRoom(MetroidvaniaStudio::ReadText(files.map),
                                                           MetroidvaniaStudio::ReadText(files.catalog), files.roomId);
-        int width = smoke ? initial.width * 16 : initial.referenceWidth;
-        int height = smoke ? initial.height * 16 : initial.referenceHeight;
+        int width = initial.referenceWidth;
+        int height = initial.referenceHeight;
 
         if (smoke)
         {

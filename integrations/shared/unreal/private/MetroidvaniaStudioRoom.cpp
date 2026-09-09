@@ -138,7 +138,7 @@ bool AMetroidvaniaStudioRoom::RebuildRoom()
         SetActorLocation(FVector(static_cast<double>(Room.x)*16*Scale,GetActorLocation().Y,static_cast<double>(Room.y)*16*Scale));
         PixelsPerUnit=Room.ppu;ReferenceResolution=FIntPoint(Room.referenceWidth,Room.referenceHeight);RoomName=FromUtf8(Room.name);
         RoomCamera->OrthoWidth=Room.referenceWidth*Scale;RoomCamera->AspectRatio=static_cast<float>(Room.referenceWidth)/Room.referenceHeight;
-        RoomCamera->SetRelativeLocation(FVector(Room.width*8*Scale,1000,Room.height*8*Scale));
+        RoomCamera->SetRelativeLocation(FVector(Room.referenceWidth*0.5*Scale,1000,Room.referenceHeight*0.5*Scale));
         if (auto* PixelCamera = Cast<UMetroidvaniaStudioPixelCamera>(RoomCamera))
         {
             PixelCamera->PixelsPerUnit = PixelsPerUnit;

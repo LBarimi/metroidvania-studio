@@ -33,14 +33,14 @@ export class GameCamera {
       this.room = null; this.key = ''; this.position = { x: 0, y: 0 }; this.revision++; return true;
     }
     const key = instanceId + ':' + room.id, previous = this.room;
-    const height = camera.orthographicSize * 2 * camera.ppu / 16;
-    const width = height * camera.referenceWidth / camera.referenceHeight;
+    const height = camera.referenceHeight / 16;
+    const width = camera.referenceWidth / 16;
     const changed = this.key !== key || !previous || previous.x !== room.x || previous.y !== room.y
       || previous.width !== room.width || previous.height !== room.height || this.width !== width || this.height !== height;
     if (!changed) return false;
     const center = this.key === key && previous
-      ? { x: this.position.x + room.x - previous.x, y: this.position.y + room.y - previous.y }
-      : { x: room.x + room.width / 2, y: room.y + room.height / 2 };
+      ? { x: this.position.x + room.x - previous.x + (width - this.width) / 2, y: this.position.y + room.y - previous.y + (height - this.height) / 2 }
+      : { x: room.x + width / 2, y: room.y + height / 2 };
     this.key = key; this.room = { x: room.x, y: room.y, width: room.width, height: room.height };
     this.width = width; this.height = height; this.position = this.clamp(center); this.revision++; return true;
   }
@@ -57,7 +57,7 @@ export class GameCamera {
   private clamp(center: Point): Point {
     const room = this.room!;
     const axis = (center: number, start: number, length: number, frame: number) => {
-      if (length <= frame) return start + length / 2;
+      if (length <= frame) return start + frame / 2;
       // Snap the frame origin, rather than its center, to source pixels. This
       // also keeps odd reference resolutions aligned to the tile pixel grid.
       const rawOrigin = center - frame / 2;

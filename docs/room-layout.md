@@ -20,7 +20,7 @@ Hold **Ctrl** and click rooms to build a selection, then drag a selected room's 
 
 Middle-drag to pan and use the mouse wheel to zoom. Right-drag on empty space also pans. Switch between the whole-world view, room view, and game view using the toolbar.
 
-The PPU and resolution controls beside **Game view** define its camera framing. Room positions and dimensions remain part of the map document.
+The PPU and resolution controls beside **Game view** define its camera framing. The game camera starts at the selected room’s lower-left corner. Drag it to inspect another area; the Center control still centers the view. Imported engine cameras use the same starting corner. Room positions and dimensions remain part of the map document.
 
 ## Paint connected spaces
 
