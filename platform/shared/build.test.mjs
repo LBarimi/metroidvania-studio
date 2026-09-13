@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import { after, test } from 'node:test';
 import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync, unlinkSync, utimesSync, writeFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, fork } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { once } from 'node:events';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { acquireBuildLock, buildStudio, checkedInputs, runCommand } from './build.mjs';
@@ -217,21 +219,115 @@ test('check only is read-only and validates SDK and Git without build output', (
   assert.throws(() => buildStudio({ ...options(checkout, () => '9.0.100'), checkOnly: true }), /SDK 10/);
   assert.throws(() => buildStudio({ ...options(checkout, (command, args) => args[0] === '--list-sdks' ? '10.0.100' : ''), checkOnly: true }), /Git is required/);
 });
-test('build lock refuses active, stale and unreadable owners without deleting them', () => {
+test('build lock refuses active and unreadable owners without deleting them', () => {
   const checkout = fixture(), local = path.join(checkout, '.local'), lock = path.join(local, 'build-v2.lock');
   const release = acquireBuildLock(local);
   const active = readFileSync(lock);
   assert.throws(() => acquireBuildLock(local), /Another build/);
   assert.deepEqual(readFileSync(lock), active);
   release(); assert.equal(existsSync(lock), false);
-  put(lock, JSON.stringify({ pid: 2147483647, token: 'interrupted' }));
-  const stale = readFileSync(lock);
-  assert.throws(() => acquireBuildLock(local), /interrupted build/);
-  assert.deepEqual(readFileSync(lock), stale);
-  put(lock, 'partial');
-  assert.throws(() => acquireBuildLock(local), /unreadable/);
-  assert.equal(readFileSync(lock, 'utf8'), 'partial');
+  for (const invalid of ['', 'partial', 'null', '{}', JSON.stringify({ pid: -1, token: 'bad' }), JSON.stringify({ pid: 2147483647 })]) {
+    put(lock, invalid);
+    assert.throws(() => acquireBuildLock(local), /unreadable|Invalid build lock/);
+    assert.equal(readFileSync(lock, 'utf8'), invalid);
+  }
 });
+
+test('a build resumes after its lock owner exits without releasing the lock', () => {
+  const checkout = fixture(), local = path.join(checkout, '.local'), lock = path.join(local, 'build-v2.lock');
+  const moduleUrl = new URL('./build.mjs', import.meta.url).href;
+  execFileSync(process.execPath, ['--input-type=module', '-e',
+    'import { acquireBuildLock } from ' + JSON.stringify(moduleUrl) + '; acquireBuildLock(process.argv[1]); process.exit(0);', local], { windowsHide: true });
+  const abandoned = readFileSync(lock);
+  assert.throws(() => process.kill(JSON.parse(abandoned).pid, 0), { code: 'ESRCH' });
+  const output = buildStudio(options(checkout, buildRunner(checkout).runner));
+  assert.equal(currentBuild(checkout).output, output);
+  assert.equal(existsSync(lock), false);
+});
+
+test('stale-lock recovery still preserves the previous build on a later compile failure', () => {
+  const checkout = fixture(), { runner } = buildRunner(checkout);
+  const good = buildStudio(options(checkout, runner));
+  const pointer = path.join(checkout, 'builds/latest.json'), before = readFileSync(pointer);
+  const lock = path.join(checkout, '.local/build-v2.lock');
+  put(lock, JSON.stringify({ pid: 2147483647, token: 'interrupted' }));
+  assert.throws(() => buildStudio({ ...options(checkout, buildRunner(checkout, 'Launcher').runner), rebuild: true }), /publish failure/);
+  assert.deepEqual(readFileSync(pointer), before);
+  assert.ok(existsSync(path.join(good, 'metroidvania-studio/server/MetroidvaniaStudio.Server.dll')));
+  assert.equal(existsSync(lock), false);
+});
+
+test('inaccessible process status cannot authorize lock recovery', t => {
+  const checkout = fixture(), local = path.join(checkout, '.local'), lock = path.join(local, 'build-v2.lock');
+  const original = JSON.stringify({ pid: 2147483647, token: 'protected' });
+  put(lock, original);
+  t.mock.method(process, 'kill', () => { throw Object.assign(new Error('Cannot inspect process'), { code: 'EPERM' }); });
+  assert.throws(() => acquireBuildLock(local), /Another build/);
+  assert.equal(readFileSync(lock, 'utf8'), original);
+});
+
+test('recovery rechecks a changed owner before deleting the old lock', t => {
+  const checkout = fixture(), local = path.join(checkout, '.local'), lock = path.join(local, 'build-v2.lock');
+  put(lock, JSON.stringify({ pid: 2147483647, token: 'interrupted' }));
+  const replacement = JSON.stringify({ pid: process.pid, token: 'new-owner' });
+  const kill = process.kill.bind(process);
+  t.mock.method(process, 'kill', (pid, signal) => {
+    if (pid === 2147483647) {
+      put(lock, replacement);
+      throw Object.assign(new Error('Previous owner exited'), { code: 'ESRCH' });
+    }
+    return kill(pid, signal);
+  });
+  assert.throws(() => acquireBuildLock(local), /Another build/);
+  assert.equal(readFileSync(lock, 'utf8'), replacement);
+});
+
+test('an existing recovery claim prevents two processes from deleting the same lock', () => {
+  const checkout = fixture(), local = path.join(checkout, '.local'), lock = path.join(local, 'build-v2.lock');
+  const content = JSON.stringify({ pid: 2147483647, token: 'interrupted' });
+  const claim = path.join(local, 'build-recovery-' + createHash('sha256').update(content).digest('hex') + '.lock');
+  put(lock, content); put(claim);
+  assert.throws(() => acquireBuildLock(local), /recovery is in progress/);
+  assert.equal(readFileSync(lock, 'utf8'), content);
+  assert.ok(existsSync(claim));
+  unlinkSync(claim);
+  const release = acquireBuildLock(local);
+  assert.equal(existsSync(claim), false);
+  release();
+});
+
+test('simultaneous starts recover a stale lock with only one active owner', { timeout: 15000 }, async t => {
+  const checkout = fixture(), local = path.join(checkout, '.local'), lock = path.join(local, 'build-v2.lock');
+  put(lock, JSON.stringify({ pid: 2147483647, token: 'interrupted' }));
+  const moduleUrl = new URL('./build.mjs', import.meta.url).href;
+  const worker = [
+    'import { acquireBuildLock } from ' + JSON.stringify(moduleUrl) + ';',
+    'let release;',
+    'process.on("message", message => {',
+    '  if (message === "release") { release?.(); process.disconnect(); return; }',
+    '  try { release = acquireBuildLock(process.argv[1]); process.send({ acquired: true, pid: process.pid }); }',
+    '  catch (error) { process.send({ acquired: false, error: error.message }); }',
+    '});',
+    'process.send("ready");'
+  ].join('\n');
+  const children = Array.from({ length: 4 }, () => fork('--eval', [worker, local], {
+    execArgv: ['--input-type=module'], windowsHide: true, stdio: ['ignore', 'ignore', 'pipe', 'ipc']
+  }));
+  t.after(() => { for (const child of children) if (child.exitCode === null) child.kill(); });
+  await Promise.all(children.map(child => once(child, 'message')));
+  const results = await Promise.all(children.map(child => {
+    const response = once(child, 'message'); child.send('acquire'); return response;
+  }));
+  const winners = results.map(([result]) => result).filter(result => result.acquired);
+  assert.equal(winners.length, 1, JSON.stringify(results));
+  assert.equal(JSON.parse(readFileSync(lock)).pid, winners[0].pid);
+  assert.throws(() => acquireBuildLock(local), /Another build/);
+  await Promise.all(children.map(child => {
+    const exited = once(child, 'exit'); child.send('release'); return exited;
+  }));
+  assert.equal(existsSync(lock), false);
+});
+
 test('build lock release does not remove a replacement owner', () => {
   const checkout = fixture(), local = path.join(checkout, '.local'), lock = path.join(local, 'build-v2.lock');
   const release = acquireBuildLock(local);

@@ -1,5 +1,9 @@
 # Changes
 
+## Unreleased
+
+- Recover source builds after an interrupted build leaves a lock behind. Preserve active build locks and the previous successful output.
+
 ## 1.3.2
 
 - Add a product homepage with editing previews and searchable guides. Keep offline help and published packages free of website-only media.

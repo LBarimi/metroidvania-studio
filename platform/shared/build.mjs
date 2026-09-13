@@ -1,6 +1,6 @@
 import { closeSync, copyFileSync, cpSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { currentBuild, sourceState } from './build-state.mjs';
@@ -26,32 +26,67 @@ export function writeAtomic(target, value) {
     if (existsSync(temporary)) unlinkSync(temporary);
   }
 }
+function readBuildLock(lockPath) {
+  let content;
+  try { content = readFileSync(lockPath, 'utf8'); }
+  catch (error) { if (error.code === 'ENOENT') return null; throw error; }
+  let owner;
+  try { owner = JSON.parse(content); }
+  catch { throw new Error('A build lock is being created or is unreadable. Retry after the current build finishes.'); }
+  if (!Number.isSafeInteger(owner?.pid) || owner.pid <= 0 || owner.pid > 2147483647 || typeof owner.token !== 'string' || !owner.token)
+    throw new Error('Invalid build lock. Check that no build is running before removing .local/build-v2.lock.');
+  return { content, owner };
+}
+function ownerHasExited(pid) {
+  try { process.kill(pid, 0); return false; }
+  catch (error) { return error.code === 'ESRCH'; }
+}
+function recoverBuildLock(localRoot, lockPath, recorded) {
+  // Only one contender may remove this exact stale record. Rechecking without
+  // an exclusive claim could delete a new owner's lock during simultaneous starts.
+  const digest = createHash('sha256').update(recorded.content).digest('hex');
+  const claimPath = path.join(localRoot, 'build-recovery-' + digest + '.lock');
+  let descriptor;
+  try { descriptor = openSync(claimPath, 'wx'); }
+  catch (error) {
+    if (error.code !== 'EEXIST') throw error;
+    throw new Error('Build lock recovery is in progress or was interrupted. Retry; if it persists, confirm no build is running before removing .local/build-recovery-*.lock.');
+  }
+  try {
+    const current = readBuildLock(lockPath);
+    if (!current || current.content !== recorded.content) return;
+    // Permission errors and reused live PIDs are deliberately treated as busy.
+    if (!ownerHasExited(current.owner.pid)) throw new Error('Another build is running. Wait for it to finish.');
+    unlinkSync(lockPath);
+    console.log('Recovered the lock from an interrupted build.');
+  } finally {
+    closeSync(descriptor);
+    unlinkSync(claimPath);
+  }
+}
 export function acquireBuildLock(localRoot) {
   mkdirSync(localRoot, { recursive: true });
   const lockPath = path.join(localRoot, 'build-v2.lock');
   const token = randomBytes(12).toString('hex');
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const descriptor = openSync(lockPath, 'wx');
-      try { writeFileSync(descriptor, JSON.stringify({ pid: process.pid, token })); } finally { closeSync(descriptor); }
-      return () => {
-        try { if (JSON.parse(readFileSync(lockPath, 'utf8')).token === token) unlinkSync(lockPath); }
-        catch (error) { if (error.code !== 'ENOENT') throw error; }
-      };
-    } catch (error) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    let descriptor;
+    try { descriptor = openSync(lockPath, 'wx'); }
+    catch (error) {
       if (error.code !== 'EEXIST') throw error;
-      let recorded;
-      try { recorded = JSON.parse(readFileSync(lockPath, 'utf8')); }
-      catch { throw new Error('A build lock is being created or is unreadable. Retry after the current build finishes.'); }
-      if (!Number.isInteger(recorded.pid) || recorded.pid <= 0) throw new Error('Invalid build lock. Check that no build is running before removing .local/build-v2.lock.');
-      try { process.kill(recorded.pid, 0); }
-      catch (check) {
-        if (check.code === 'ESRCH') throw new Error('An interrupted build left .local/build-v2.lock. Confirm no build is running, then remove that local lock and retry.');
-      }
-      throw new Error('Another build is running. Wait for it to finish.');
+      const recorded = readBuildLock(lockPath);
+      if (!recorded) continue;
+      if (!ownerHasExited(recorded.owner.pid)) throw new Error('Another build is running. Wait for it to finish.');
+      recoverBuildLock(localRoot, lockPath, recorded);
+      continue;
     }
+    try { writeFileSync(descriptor, JSON.stringify({ pid: process.pid, token })); }
+    finally { closeSync(descriptor); }
+    return () => {
+      try { if (JSON.parse(readFileSync(lockPath, 'utf8')).token === token) unlinkSync(lockPath); }
+      catch (error) { if (error.code !== 'ENOENT') throw error; }
+    };
   }
-  throw new Error('Could not acquire the build lock.');
+  throw new Error('Could not acquire the build lock. Retry after the current build finishes.');
 }
 export function checkedInputs(studioRoot) {
   const inputs = JSON.parse(readFileSync(path.join(studioRoot, 'tools/build/package-inputs.json'), 'utf8'));
