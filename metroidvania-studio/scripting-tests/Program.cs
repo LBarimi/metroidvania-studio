@@ -6,6 +6,7 @@ using MetroidvaniaStudio.Scripting;
 var tests = new (string Name, Action Body)[]
 {
     ("deterministic connected rooms and layered painting", ConnectedRooms),
+    ("minimap placement returns a room ID for subsequent edits", MinimapPlacement),
     ("read-only snapshots and deterministic random", Inspection),
     ("missing host capabilities cannot be reached", DeniedCapabilities),
     ("infinite loops stop within a bounded time", InfiniteLoop),
@@ -31,6 +32,18 @@ foreach (var test in tests)
 }
 Console.WriteLine($"Lua regression: {tests.Length - failed}/{tests.Length} passed.");
 return failed == 0 ? 0 : 1;
+
+static void MinimapPlacement()
+{
+    var result = LuaScriptRunner.Run(Empty(), """
+        local room = studio.minimap.place { chip = "16x8", x = -1, y = 2, regionColor = "#34899f" }
+        studio.room.update { roomId = room, name = "West corridor" }
+        print(room)
+        """);
+    var placed = MapDocumentStore.Deserialize(result.DocumentJson).rooms.Single();
+    Check(placed.name == "West corridor" && placed.id == result.Logs.Single(), "Lua receives the editable room ID.");
+    Check(placed.x == -8 && placed.y == 0 && placed.properties.Single().value == "#34899f", "Chip position and color persist.");
+}
 
 static void NumericObjectIds()
 {

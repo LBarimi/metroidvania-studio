@@ -20,6 +20,7 @@ Each method accepts exactly one table. The table fields match the common automat
 | Lua method | Required fields | Common optional fields |
 | --- | --- | --- |
 | `studio.room.add` | `x, y, width, height` | `id, name` |
+| `studio.minimap.place` | `chip, x, y` | `id, name, regionColor` |
 | `studio.room.update` | `roomId` | `name, visible` |
 | `studio.room.move` | `roomId, x, y` | |
 | `studio.room.resize` | `roomId, width, height` | `x, y, crop, keepLocalContents` |
@@ -37,7 +38,7 @@ Each method accepts exactly one table. The table fields match the common automat
 | `studio.object.delete` | `roomId, objectId` | |
 | `studio.rename` | `name` | |
 
-`studio.room.add`, `studio.room.duplicate`, and `studio.object.add` return the created ID. Pass explicit IDs when another script or external system needs stable names. Otherwise the runner assigns IDs without colliding with existing rooms or objects.
+`studio.minimap.place`, `studio.room.add`, `studio.room.duplicate`, and `studio.object.add` return the created ID. Pass explicit IDs when another script or external system needs stable names. Otherwise the runner assigns IDs without colliding with existing rooms or objects.
 
 `studio.apply { op = "room.add", ... }` accepts the common operation form directly. It has the same limits and validation as named methods. Use `studio.rename { name = "World" }` for the `document.update` operation.
 

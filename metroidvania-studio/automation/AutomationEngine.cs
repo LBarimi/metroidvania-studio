@@ -53,6 +53,7 @@ public static partial class AutomationEngine
     {
         MapDocument document = Read(documentJson, cancellationToken);
         var bounds = MiniMapGeometry.GetBounds(document);
+        var grid = MapMinimapChips.Grid(document.rooms);
         var connections = MiniMapGeometry.GetConnections(document, MiniMapGeometry.DefaultMaximumConnections, out bool truncated);
         cancellationToken.ThrowIfCancellationRequested();
         var camera = MapCameraSettings.Resolve(document);
@@ -70,6 +71,7 @@ public static partial class AutomationEngine
             }),
             minimap = new
             {
+                grid = new { x = grid.X, y = grid.Y, step = grid.Step },
                 bounds = new { empty = bounds.IsEmpty, x = bounds.XMin, y = bounds.YMin, width = bounds.Width, height = bounds.Height },
                 connections = connections.Select(connection => new
                 {
@@ -142,6 +144,7 @@ public static partial class AutomationEngine
             switch (op)
             {
                 case "room.add": AddRoom(operation); break;
+                case "minimap.place": PlaceChip(operation); break;
                 case "room.update": UpdateRoom(operation); break;
                 case "room.move": MoveRoom(operation); break;
                 case "room.resize": ResizeRoom(operation); break;
@@ -259,6 +262,25 @@ public static partial class AutomationEngine
             string created = "";
             CoreRoom(null, rooms => created = rooms.Create(bounds, name));
             Room(created, false).id = id;
+        }
+
+        private void PlaceChip(JsonElement operation)
+        {
+            Fields(operation, "op", "chip", "x", "y", "id", "name", "regionColor");
+            if (Document.rooms.Count >= MapDocument.MaximumRoomCount) throw new ArgumentException("The map has reached its room limit.");
+            Charge(4L * Document.rooms.Count + 1);
+            var bounds = MapMinimapChips.BoundsAt(Text(operation, "chip"), Integer(operation, "x"), Integer(operation, "y"), Document.rooms);
+            string? name = operation.TryGetProperty("name", out _) ? Text(operation, "name") : null;
+            string color = OptionalText(operation, "regionColor", MapMinimapChips.DefaultColor);
+            try
+            {
+                Document.rooms.Add(MapRoomEditing.PrepareRoom(Document.rooms, NewId(operation), bounds, name,
+                    minimapShape: null, minimapColor: color, exactPosition: true));
+            }
+            catch (InvalidOperationException error) when (error.Message == "@chipOverlap")
+            {
+                throw new ArgumentException($"The minimap chip at ({bounds.x}, {bounds.y}) overlaps an existing room.", error);
+            }
         }
 
         private void UpdateRoom(JsonElement operation)

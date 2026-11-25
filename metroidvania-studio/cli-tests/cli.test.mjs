@@ -127,6 +127,38 @@ test('atomic batch, dry-run, revision conflict, room export, SVG preview', async
   assert.equal((await cli(workspace, ['preview', '--map', 'world.json', '--output', 'world.json', '--force'])).code, 2);
 });
 
+test('CLI recreates the documented 102-room minimap with connected empty rooms in six regions', async t => {
+  const workspace = await fixture(t);
+  const batch = await readFile(join(root, 'docs/examples/minimap-world.json'), 'utf8');
+  const { operations } = JSON.parse(batch);
+  await writeFile(join(workspace, 'route.json'), batch);
+  const result = await cli(workspace, ['apply', '--map', 'world.json', '--batch', 'route.json']);
+  assert.equal(result.code, 0, result.out);
+  assert.equal(result.json.operationCount, 102);
+  const { document } = (await cli(workspace, ['inspect', '--map', 'world.json'])).json;
+  const colors = new Set();
+  for (const [i, room] of document.rooms.entries()) {
+    const placed = operations[i];
+    assert.deepEqual([room.roomId, room.x, room.y, room.width + 'x' + room.height], [placed.id, placed.x, placed.y, placed.chip]);
+    assert.equal(room.foregroundCount + room.backgroundCount + room.objectCount, 0);
+    assert.equal(room.properties['mapMaker.minimapRegionColor'], placed.regionColor);
+    colors.add(placed.regionColor);
+  }
+  assert.equal(colors.size, 6);
+  const adjacent = new Map(document.rooms.map(room => [room.roomId, []]));
+  for (const { roomAId, roomBId } of document.minimap.connections) {
+    adjacent.get(roomAId).push(roomBId);
+    adjacent.get(roomBId).push(roomAId);
+  }
+  const visited = new Set([document.rooms[0].roomId]);
+  for (const id of visited) for (const neighbor of adjacent.get(id)) visited.add(neighbor);
+  assert.equal(visited.size, 102);
+  const preview = await cli(workspace, ['preview', '--map', 'world.json', '--output', 'route.svg']);
+  assert.equal(preview.code, 0, preview.out);
+  const svg = (await readFile(join(workspace, 'route.svg'), 'utf8')).toLowerCase();
+  for (const color of colors) assert.ok(svg.includes('fill="' + color + '"'));
+});
+
 test('failed batch rolls back and Lua worker reports useful errors without a save', async t => {
   const workspace = await fixture(t);
   const original = await readFile(join(workspace, 'world.json'), 'utf8');

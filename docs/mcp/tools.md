@@ -20,7 +20,7 @@ With `--url`, use `map: "@active"` for the currently open web document. Live ins
 
 For an edit, `expectedRevision` must be the 64-character SHA-256 value returned by `studio_inspect`. A stale revision returns `conflict` and writes nothing. Read the latest state before deciding whether to retry; do not automatically replace the revision on an old destructive operation.
 
-Batch example:
+To place two connected minimap chips on an empty map, check that `studio_capabilities` lists `minimap.place`. This operation is available starting in 1.3.3. See the [minimap guide](../minimap.md#place-chips-with-the-cli-or-mcp) for the source build. Call `studio_inspect` and use its revision in this request. Set `dryRun` to `false` to commit. The same batch works with `map: "@active"` in connected mode.
 
 ```json
 {
@@ -32,7 +32,8 @@ Batch example:
     "batch": {
       "apiVersion": 1,
       "operations": [
-        { "op": "room.add", "id": "hall", "name": "Hall", "x": 0, "y": 0, "width": 24, "height": 12 }
+        { "op": "minimap.place", "id": "hall", "chip": "16x8", "x": 0, "y": 0, "regionColor": "#438c66" },
+        { "op": "minimap.place", "id": "lift", "chip": "8x24", "x": 16, "y": 0, "regionColor": "#34899f" }
       ]
     }
   }
