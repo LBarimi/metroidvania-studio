@@ -14,7 +14,7 @@ Alternatively, build from source using the [CLI guide](../cli/quick-start.md). C
 metroidvania-studio mcp --workspace workspace
 ```
 
-For clients that launch npm packages through `npx`, pin the version in the configuration:
+For clients that launch npm packages through `npx`, pin a published version. This example uses 1.3.2. For the 1.3.3 minimap tools, use the [local package](../distribution/local-package.md) or run the CLI built from this checkout.
 
 ```json
 {

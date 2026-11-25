@@ -66,6 +66,85 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+              "chip": {
+                "type": "string",
+                "enum": [
+                  "16x8",
+                  "24x8",
+                  "32x16",
+                  "48x24",
+                  "8x16",
+                  "8x24",
+                  "16x32",
+                  "24x48",
+                  "8x8",
+                  "16x16",
+                  "24x24",
+                  "32x32",
+                  "48x48",
+                  "64x64",
+                  "24x16",
+                  "32x24",
+                  "40x24",
+                  "48x32",
+                  "64x32",
+                  "16x24",
+                  "24x32",
+                  "24x40",
+                  "32x48",
+                  "32x64",
+                  "32x8",
+                  "48x8",
+                  "64x8",
+                  "96x8",
+                  "64x16",
+                  "8x32",
+                  "8x48",
+                  "8x64",
+                  "8x96",
+                  "16x64"
+                ]
+              },
+              "x": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "y": {
+                "type": "integer",
+                "minimum": -2147483648,
+                "maximum": 2147483647
+              },
+              "regionColor": {
+                "type": "string",
+                "pattern": "^#[0-9A-Fa-f]{6}$",
+                "default": "#c72b36"
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "op": {
+                "const": "minimap.place"
+              }
+            },
+            "required": [
+              "op",
+              "chip",
+              "x",
+              "y"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
               "roomId": {
                 "type": "string",
                 "minLength": 1,
