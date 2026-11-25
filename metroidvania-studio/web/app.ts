@@ -15,12 +15,16 @@ import type { Language } from './locale.js';
 import { syncLabels } from './sync-status.js';
 import { MapCanvas } from './map-canvas.js';
 import { MiniMap, roomColor } from './minimap.js';
+import { chipGroups, type MinimapEditTools } from './minimap-drawing.js';
+import { defaultMinimapColor, minimapColorProperty, minimapRegionColorProperty } from './minimap-shape.js';
 import { activeRoom, colorCss, tileLayer, TOOLS, LAYERS, SHAPES, MAX_BRUSH_SIZE } from './types.js';
 import type { State, Room, Point, SpriteRect, Property, MapObject, CommandExpectation, CommandValues, Definition, Material } from './types.js';
 
 const api = new EditorApi(), locale = new Locale();
 let standalone = new URLSearchParams(location.search).get('view') === 'minimap';
-let miniMode = standalone, inspectorHidden = localStorage.getItem('mapstudio.inspectorHidden') === 'true';
+type ViewMode = 'map' | 'minimap' | 'drawing';
+let viewMode: ViewMode = standalone ? 'minimap' : 'map';
+let inspectorHidden = localStorage.getItem('mapstudio.inspectorHidden') === 'true';
 let lastNotice = '';
 let clipboardScope: 'room' | 'content' = 'content';
 let inspectorSelectionKey = '';
@@ -81,14 +85,170 @@ el('map-canvas').parentElement!.append(preview.element);
 const mini = new MiniMap(el('mini-canvas'),
   id => { void run('selectRoom', { id }).catch(() => undefined); },
   id => { void editMiniRoom(id).catch(error => toast(error)); });
+const drawingCanvas = document.createElement('canvas');
+drawingCanvas.id = 'minimap-drawing-canvas'; drawingCanvas.className = 'mini-canvas'; drawingCanvas.tabIndex = 0; drawingCanvas.hidden = true;
+el('mini-canvas').after(drawingCanvas);
+const drawingPanel = text('aside', '', 'inspector minimap-drawing-panel'); drawingPanel.hidden = true;
+el('inspector').after(drawingPanel);
+const chipPalette = text('aside', '', 'minimap-chip-palette');
+chipPalette.hidden = true;
+el('workspace').querySelector('.content')!.before(chipPalette);
+const chipTools: MinimapEditTools = {
+  chip: chipGroups[0].chips[0],
+  color: defaultMinimapColor,
+  place(bounds, snapshot) {
+    const color = chipTools.color;
+    void run('roomAdd', () => {
+      if (state?.instanceId !== snapshot.instanceId) throw new Error('@writerBusy');
+      return { ...bounds, minimapColor: color, exactPosition: true };
+    }).catch(error => toast(error));
+  },
+  move(id, dx, dy, snapshot) {
+    void run('roomMove', { id, dx, dy }, expectedAt(snapshot)).catch(error => toast(error));
+  },
+  remove(id, snapshot) {
+    void run('roomDelete', { id }, expectedAt(snapshot)).catch(error => toast(error));
+  }
+};
+const drawing = new MiniMap(drawingCanvas,
+  id => { if (state?.selection.roomId !== id) void run('selectRoom', { id }).catch(error => toast(error)); },
+  id => { void editMiniRoom(id).catch(error => toast(error)); }, chipTools);
+
+const regionPresetKey = 'mapstudio.minimap.regionColorPresets';
+type ColorPreset = [color: string, name: string];
+function savedRegionPresets(): ColorPreset[] {
+  try {
+    const list: unknown = JSON.parse(localStorage.getItem(regionPresetKey) || '[]');
+    return Array.isArray(list) ? list.filter((p): p is ColorPreset => Array.isArray(p) && typeof p[0] === 'string'
+      && /^#[0-9a-f]{6}$/.test(p[0]) && typeof p[1] === 'string' && p[1].trim().length > 0) : [];
+  } catch { return []; }
+}
+function regionPresets(): Map<string, string> {
+  const presets = new Map([[defaultMinimapColor, locale.t('defaultRegionColor')]]);
+  for (const material of state?.catalog.materials || []) {
+    const color = material.color.slice(0, 7).toLowerCase();
+    if (/^#[0-9a-f]{6}$/.test(color) && !presets.has(color)) presets.set(color, materialName(material));
+  }
+  for (const [color, name] of savedRegionPresets()) presets.set(color, name);
+  return presets;
+}
+function refreshPresetLists(): void {
+  for (const list of document.querySelectorAll('.region-presets select')) list.dispatchEvent(new Event('refresh-presets'));
+}
+window.addEventListener('storage', event => {
+  if (event.key === regionPresetKey || event.key === null) refreshPresetLists();
+});
+function regionPresetField(picker: HTMLInputElement): HTMLElement {
+  const field = text('div', '', 'region-presets'), label = document.createElement('label'), list = document.createElement('select');
+  list.id = picker.id + '-preset'; list.disabled = picker.disabled;
+  const save = button('+', () => {
+    const color = picker.value, saved = savedRegionPresets().find(([value]) => value === color);
+    const [nameField, name] = labelInput(locale.t('name'), saved?.[1] || color.toUpperCase());
+    showModal(locale.t('saveRegionPreset'), body => body.append(nameField), async () => {
+      const caption = name.value.trim();
+      if (!caption) throw new Error(locale.t('required'));
+      if ([...regionPresets()].some(([value, name]) => value !== color && name.toLowerCase() === caption.toLowerCase()))
+        throw new Error(locale.t('presetDuplicateName'));
+      const entries = savedRegionPresets().filter(([value]) => value !== color);
+      entries.push([color, caption]);
+      localStorage.setItem(regionPresetKey, JSON.stringify(entries));
+      refreshPresetLists();
+    }, 'saveRegionPreset');
+    name.select();
+  }, 'icon');
+  save.title = locale.t('saveRegionPreset'); save.setAttribute('aria-label', save.title);
+  const sync = () => {
+    list.value = picker.value;
+    if (!list.value) list.value = '';
+    save.disabled = picker.disabled;
+  };
+  const populate = () => {
+    list.replaceChildren(new Option(locale.t('customRegionColor'), ''));
+    list.options[0].disabled = true;
+    for (const [color, name] of regionPresets()) list.add(new Option(name, color));
+    sync();
+  };
+  list.addEventListener('refresh-presets', populate);
+  picker.addEventListener('input', sync);
+  picker.addEventListener('sync-preset', sync);
+  list.addEventListener('change', () => {
+    picker.value = list.value;
+    picker.dispatchEvent(new Event('input', { bubbles: true }));
+    picker.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  label.append(text('span', locale.t('regionPreset')), list); field.append(label, save); populate();
+  return field;
+}
+
+function drawDrawingPanel(): void {
+  drawingCanvas.setAttribute('aria-label', locale.t('minimapDraw'));
+  const palette = section(locale.t('chipPalette')), list = text('div', '', 'minimap-chip-list');
+  for (const { label, chips } of chipGroups) {
+    const group = document.createElement('fieldset');
+    group.append(text('legend', locale.t(label)));
+    for (const chip of chips) {
+      const size = chip.width + ' × ' + chip.height;
+      const control = button('', () => {
+        chipTools.chip = chip;
+        for (const other of list.querySelectorAll('button')) other.setAttribute('aria-pressed', String(other === control));
+        drawing.requestDraw();
+      });
+      control.dataset.chip = chip.width + 'x' + chip.height;
+      control.setAttribute('aria-pressed', String(chip === chipTools.chip));
+      control.setAttribute('aria-label', locale.t(label) + ' ' + size);
+      const icon = text('span', '', 'minimap-chip-icon'), scale = Math.min(1, 32 / Math.max(chip.width, chip.height));
+      icon.style.width = chip.width * scale + 'px'; icon.style.height = chip.height * scale + 'px';
+      const preview = text('span', '', 'minimap-chip-preview'); preview.append(icon);
+      control.append(preview, text('small', size)); group.append(control);
+    }
+    list.append(group);
+  }
+  palette.append(list); chipPalette.replaceChildren(palette);
+  const panel = section(locale.t('placementChip'));
+  const [label, picker] = labelInput(locale.t('theme'), chipTools.color, 'color');
+  picker.id = 'minimap-drawing-color';
+  picker.addEventListener('input', () => { chipTools.color = picker.value; drawing.requestDraw(); });
+  panel.append(label, regionPresetField(picker));
+  const selected = text('section', '', 'section'); selected.id = 'minimap-selected-room';
+  drawingPanel.replaceChildren(panel, selected);
+  updateDrawingControls();
+}
+
+function updateDrawingControls(): void {
+  const panel = el('minimap-selected-room'), room = activeRoom(state);
+  const key = room ? JSON.stringify([room.id, room.name, roomColor(room), room.locked, room.width, room.height]) : '';
+  if (panel.dataset.room === key) return;
+  panel.dataset.room = key; panel.hidden = !room; panel.replaceChildren();
+  if (!room) return;
+  panel.append(text('div', room.name, 'section-title'), text('small', room.width + ' × ' + room.height));
+  const [label, picker] = labelInput(locale.t('theme'), roomColor(room).slice(0, 7), 'color');
+  picker.id = 'minimap-room-color'; picker.disabled = room.locked;
+  picker.addEventListener('change', () => {
+    const target = activeRoom(state);
+    if (!state || !target || target.id !== room.id || target.locked) return;
+    const properties = target.properties.filter(p => p.key !== minimapRegionColorProperty);
+    properties.push({ key: minimapRegionColorProperty, value: picker.value + roomColor(target).slice(7) });
+    void run('roomProperties', { id: target.id, properties }, expectedAt(state)).catch(error => {
+      delete panel.dataset.room; updateDrawingControls(); toast(error);
+    });
+  });
+  const open = button(locale.t('editor'), () => showRoomInEditor(room.id));
+  const remove = button(locale.t('deleteRoom'), () => confirmRun(locale.t('confirmClear'), 'roomDelete', { id: room.id }), 'danger');
+  remove.disabled = room.locked;
+  panel.append(label, regionPresetField(picker), row(open, remove));
+}
+
 async function editMiniRoom(id: string): Promise<void> {
   const selected = await run('selectRoom', { id });
-  if (!miniMode || selected.selection.roomId !== id || state?.selection.roomId !== id) return;
+  if (viewMode === 'map' || selected.selection.roomId !== id || state?.selection.roomId !== id) return;
   if (standalone) {
     standalone = false;
     const url = new URL(location.href); url.searchParams.delete('view'); history.replaceState(null, '', url);
   }
-  miniMode = false; map.gameView(false); map.selectRoomTarget(id); updateView();
+  showRoomInEditor(id);
+}
+function showRoomInEditor(id: string): void {
+  viewMode = 'map'; map.gameView(false); map.selectRoomTarget(id); updateView();
   map.frameRoom(true); el('map-canvas').focus();
 }
 function expectedAt(value: State): CommandExpectation { return { instanceId: value.instanceId, revision: value.revision }; }
@@ -189,7 +349,7 @@ async function openSampleWorld(): Promise<void> {
   if (snapshot.dirty && !await confirmAction(locale.t('confirmDiscard'))) return;
   await run('sampleWorld', { discard: true }, expectedAt(snapshot));
   if (standalone) { standalone = false; const url = new URL(location.href); url.searchParams.delete('view'); history.replaceState(null, '', url); }
-  miniMode = false; map.gameView(false); updateView();
+  viewMode = 'map'; map.gameView(false); updateView();
   requestAnimationFrame(() => { map.fit(); mini.fit(); });
 }
 function importDocument(): void {
@@ -326,7 +486,7 @@ window.addEventListener('blur', closeMenus);
 window.addEventListener('resize', closeMenus);
 el('map-canvas').addEventListener('wheel', closeMenus, { passive: true });
 function roomContextMenu(point: Point, client: Point): void {
-  if (!state || miniMode || map.cameraPreview) return;
+  if (!state || viewMode !== 'map' || map.cameraPreview) return;
   closeMenus();
   const instance = state.instanceId, documentRevision = state.documentRevision ?? state.revision;
   const root = text('div', '', 'menu canvas-context-menu'); root.id = 'room-context-menu';
@@ -400,18 +560,43 @@ function drawChrome(): void {
   actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null,
     roomRestructureButton('merge', 'room-merge-action'), roomRestructureButton('split', 'room-split-action')]),
     menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('sampleWorld'), openSampleWorld), null, button(locale.t('docs.title'), () => { window.open('/docs/index.html', '_blank', 'noopener'); }), button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }), null, button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
-  const tabs = el('tabs'); tabs.replaceChildren(button(locale.t('editor'), () => { miniMode = false; updateView(); }), button(locale.t('minimap'), () => { if (map.cameraPreview) map.gameView(false); miniMode = true; updateView(); mini.fit(); }), button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
+  const editorTab = button(locale.t('editor'), () => switchView('map')); editorTab.id = 'map-tab';
+  const drawingTab = button(locale.t('minimapDraw'), () => switchView('drawing')); drawingTab.id = 'minimap-drawing-tab';
+  const minimapTab = button(locale.t('minimap'), () => switchView('minimap')); minimapTab.id = 'minimap-tab';
+  const tabs = el('tabs'); tabs.replaceChildren(editorTab, drawingTab, minimapTab,
+    button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
+  drawDrawingPanel();
   updateView(); drawPanels(true); renderInspector(true);
+}
+async function switchView(next: ViewMode): Promise<void> {
+  if (next !== 'map' && map.cameraPreview) map.gameView(false);
+  const fromChips = viewMode === 'drawing';
+  viewMode = next; updateView();
+  if (next === 'minimap') mini.fit();
+  if (next === 'drawing') drawing.fit();
+  if (fromChips && next === 'map') {
+    await api.settled();
+    if (viewMode === 'map' && state?.selection.roomId) { map.selectRoomTarget(state.selection.roomId); map.frameRoom(true); }
+  }
 }
 function updateView(): void {
   app.classList.toggle('standalone-app', standalone);
-  const cameraPreview = !miniMode && map.cameraPreview;
-  const viewOnly = miniMode || cameraPreview;
-  const workspace = el('workspace'); workspace.classList.toggle('inspector-hidden', inspectorHidden); workspace.classList.toggle('minimap-mode', miniMode); workspace.classList.toggle('standalone', standalone); workspace.classList.toggle('camera-preview', cameraPreview);
+  const miniMode = viewMode === 'minimap', drawingMode = viewMode === 'drawing', mapMode = viewMode === 'map';
+  const cameraPreview = mapMode && map.cameraPreview;
+  const viewOnly = !mapMode || cameraPreview;
+  const workspace = el('workspace'); workspace.classList.toggle('inspector-hidden', inspectorHidden); workspace.classList.toggle('minimap-mode', miniMode); workspace.classList.toggle('minimap-drawing-mode', drawingMode); workspace.classList.toggle('standalone', standalone); workspace.classList.toggle('camera-preview', cameraPreview);
   el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
-  el<HTMLCanvasElement>('map-canvas').hidden = miniMode; el<HTMLCanvasElement>('mini-canvas').hidden = !miniMode;
-  map.setActive(!miniMode); mini.setActive(miniMode); preview.setVisible(!miniMode); preview.updateLabels();
-  const tabButtons = el('tabs').querySelectorAll('button'); tabButtons[0]?.classList.toggle('active', !miniMode); tabButtons[1]?.classList.toggle('active', miniMode);
+  el<HTMLCanvasElement>('map-canvas').hidden = !mapMode; el<HTMLCanvasElement>('mini-canvas').hidden = !miniMode;
+  drawingCanvas.hidden = !drawingMode; drawingPanel.hidden = !drawingMode; chipPalette.hidden = !drawingMode;
+  map.setActive(mapMode); mini.setActive(miniMode); drawing.setActive(drawingMode); preview.setVisible(mapMode); preview.updateLabels();
+  for (const [id, selected] of [['map-tab', mapMode], ['minimap-tab', miniMode], ['minimap-drawing-tab', drawingMode]] as const) {
+    const tab = el(id); tab.classList.toggle('active', selected); tab.setAttribute('aria-pressed', String(selected));
+  }
+  el<HTMLButtonElement>('undo').disabled = (miniMode || cameraPreview) || !state?.canUndo;
+  el<HTMLButtonElement>('redo').disabled = (miniMode || cameraPreview) || !state?.canRedo;
+  el<HTMLButtonElement>('room-merge-action').disabled = !canRestructureRoom('merge');
+  el<HTMLButtonElement>('room-split-action').disabled = !canRestructureRoom('split');
+  if (drawingMode) { cameraControls = undefined; drawStatus(); return; }
   const toolbar = el('view-toolbar'); toolbar.replaceChildren(button('⊞ ' + locale.t('fit'), () => { if (miniMode) mini.fit(); else if (map.cameraPreview) { map.gameView(false); updateView(); requestAnimationFrame(() => map.fit()); } else map.fit(); }), button('⌾ ' + locale.t('frameRoom'), () => miniMode ? mini.frameRoom() : map.frameRoom()));
   cameraControls = undefined;
   if (!miniMode) {
@@ -439,13 +624,12 @@ function updateView(): void {
   if (miniMode) {
     const width = select(Array.from({ length: 20 }, (_, i) => [String(i + 1), locale.t('outline') + ' ' + (i + 1)] as [string, string]), String(mini.outlineWidth));
     width.id = 'minimap-outline-width'; width.style.width = 'auto'; width.setAttribute('aria-label', locale.t('outline')); width.title = locale.t('outlineHelp');
-    width.addEventListener('change', () => { mini.outlineWidth = Number(width.value); mini.requestDraw(); });
+    width.addEventListener('change', () => { drawing.outlineWidth = mini.outlineWidth = Number(width.value); mini.requestDraw(); });
     const entrance = select(Array.from({ length: 40 }, (_, i) => [String(i + 1), locale.t('entranceLength') + ' ' + (i + 1)] as [string, string]), String(mini.entranceLength));
     entrance.id = 'minimap-entrance-length'; entrance.style.width = 'auto'; entrance.setAttribute('aria-label', locale.t('entranceLength')); entrance.title = locale.t('entranceLengthHelp');
-    entrance.addEventListener('change', () => { mini.entranceLength = Number(entrance.value); mini.requestDraw(); });
+    entrance.addEventListener('change', () => { drawing.entranceLength = mini.entranceLength = Number(entrance.value); mini.requestDraw(); });
     toolbar.append(width, entrance);
   }
-  const undo = el<HTMLButtonElement>('undo'), redo = el<HTMLButtonElement>('redo'); undo.disabled = viewOnly || !state?.canUndo; redo.disabled = viewOnly || !state?.canRedo;
   map.requestDraw(); mini.requestDraw(); drawStatus();
 }
 function panelKey(value: State): string {
@@ -468,11 +652,11 @@ function drawPanels(force = false): void {
   const key = panelKey(state) + ':' + map.gameCameraTool; if (!force && key === lastPanelKey) { drawStatus(); renderInspector(); return; } lastPanelKey = key;
   const s = state.selection;
   el('project-name').replaceChildren(text('span', state.dirty ? '●' : '', 'dirty-dot'), document.createTextNode(state.document.name)); el('project-name').title = state.file || state.document.name;
-  const viewOnly = miniMode || map.cameraPreview;
+  const viewOnly = viewMode !== 'map' || map.cameraPreview;
   el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
   el<HTMLButtonElement>('room-merge-action').disabled = !canRestructureRoom('merge');
   el<HTMLButtonElement>('room-split-action').disabled = !canRestructureRoom('split');
-  el<HTMLButtonElement>('undo').disabled = viewOnly || !state.canUndo; el<HTMLButtonElement>('redo').disabled = viewOnly || !state.canRedo;
+  el<HTMLButtonElement>('undo').disabled = (viewMode === 'minimap' || map.cameraPreview) || !state.canUndo; el<HTMLButtonElement>('redo').disabled = (viewMode === 'minimap' || map.cameraPreview) || !state.canRedo;
   const connection = el('connection'); connection.textContent = locale.t(api.online ? 'studioConnected' : 'serverOffline'); connection.classList.toggle('online', api.online);
   el('room-count').textContent = s.roomIds.length > 1 ? `${s.roomIds.length} / ${state.document.rooms.length}` : String(state.document.rooms.length);
   el('room-count').title = locale.t('selectedRooms').replace('{0}', String(s.roomIds.length));
@@ -626,7 +810,7 @@ async function editSelection(action: string, values: object = {}, inspector = fa
   renderInspector(true);
 }
 function canRestructureRoom(action: 'merge' | 'split'): boolean {
-  if (!state || miniMode || map.cameraPreview) return false;
+  if (!state || viewMode !== 'map' || map.cameraPreview) return false;
   const selection = state.selection, room = activeRoom(state);
   if (action === 'merge') return selection.roomIds.length >= 2
     && !state.document.rooms.some(candidate => selection.roomIds.includes(candidate.id) && candidate.locked);
@@ -730,12 +914,18 @@ function roomInspector(inspector: HTMLElement, expectation: CommandExpectation):
     color.value = picker.value.toUpperCase() + alpha;
   };
   picker.addEventListener('input', pickColor); picker.addEventListener('change', pickColor);
+  const presets = regionPresetField(picker);
+  color.addEventListener('input', () => picker.dispatchEvent(new Event('sync-preset')));
   const colorField = text('div', '', 'room-color-field'), colorInputs = text('div', '', 'room-color-inputs');
-  colorInputs.append(color, picker); colorField.append(colorLabel, colorInputs); content.append(colorField);
+  colorInputs.append(color, picker); colorField.append(colorLabel, colorInputs, presets); content.append(colorField);
   const area = document.createElement('textarea'); area.value = JSON.stringify(propObject(room.properties), null, 2); const details = document.createElement('details'); details.append(text('summary', locale.t('properties')), area); content.append(details);
   content.append(button(locale.t('apply'), async () => {
     const values = numberValues(inputs), { x, y, width, height } = values;
-    const props = properties(JSON.parse(area.value)), colorValue = color.value.trim(); if (colorValue !== roomColor(room)) { const found = props.find(p => p.key === 'mapMaker.minimapColor'); if (found) found.value = colorValue; else props.push({ key: 'mapMaker.minimapColor', value: colorValue }); }
+    const props = properties(JSON.parse(area.value)), colorValue = color.value.trim();
+    if (colorValue !== roomColor(room)) {
+      const key = room.properties.some(p => p.key === minimapRegionColorProperty) ? minimapRegionColorProperty : minimapColorProperty;
+      const found = props.find(p => p.key === key); if (found) found.value = colorValue; else props.push({ key, value: colorValue });
+    }
     await run('roomProperties', { id: room.id, x, y, width, height, crop: map.crop, name: name.value, visible: visible.checked, locked: locked.checked, properties: props }, expectation); renderInspector(true);
   }, 'accent'));
   content.append(button(locale.t('deleteRoom'), () => confirmRun(locale.t('confirmClear'), 'roomDelete', { id: room.id }, expectation), 'danger')); inspector.append(content);
@@ -826,7 +1016,7 @@ function renderStatus(point: Point): void {
   const sizeHint = locale.t('statusSizeHint') + (sizesPending ? '\n' + locale.t('statusSizePending') : '');
   if (sizes.title !== sizeHint) sizes.title = sizeHint;
   const view = map.viewportSize, scale = map.overview ? map.pixelScale.toFixed(2) : String(map.pixelScale), camera = map.cameraProfile;
-  if (miniMode) statusText('status-camera', locale.t('minimap'));
+  if (viewMode !== 'map') statusText('status-camera', locale.t(viewMode === 'drawing' ? 'minimapDraw' : 'minimap'));
   else if (map.cameraPreview && camera) statusText('status-camera', `${locale.t('camera')} · ${camera.referenceWidth}×${camera.referenceHeight} · ×${scale} · ${locale.t('cameraSize')} ${camera.orthographicSize.toFixed(3)} · PPU ${camera.ppu}`);
   else statusText('status-camera', `${map.overview ? locale.t('overview') : locale.t('editView')} · ×${scale} · ${locale.t('visibleArea')} ${view.x.toFixed(2)}×${view.y.toFixed(2)} · PPU ${camera?.ppu || 16}`);
   const revision = el('status-revision');
@@ -834,16 +1024,19 @@ function renderStatus(point: Point): void {
   if (state) { if (revision.dataset.instanceId !== state.instanceId) revision.dataset.instanceId = state.instanceId; }
   else if (revision.dataset.instanceId !== undefined) delete revision.dataset.instanceId;
   const zoom = el('view-toolbar').querySelector('.zoom-readout'); if (zoom && zoom.textContent !== `×${scale}`) zoom.textContent = `×${scale}`;
-  statusText('canvas-help', locale.t(miniMode ? 'minimapHelp' : map.gameCameraTool ? (map.gameCamera.clipped ? 'gameCameraSmallRoom' : 'gameCameraHelp') : map.cameraPreview ? 'cameraHelp' : state?.selection.tool === 0 ? 'roomHelp' : tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'selectionHelp' : state?.selection.tool === 1 ? 'placementHelp' : !tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'objectHelp' : 'help'));
+  statusText('canvas-help', locale.t(viewMode === 'drawing' ? 'minimapDrawHelp' : viewMode === 'minimap' ? 'minimapHelp' : map.gameCameraTool ? (map.gameCamera.clipped ? 'gameCameraSmallRoom' : 'gameCameraHelp') : map.cameraPreview ? 'cameraHelp' : state?.selection.tool === 0 ? 'roomHelp' : tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'selectionHelp' : state?.selection.tool === 1 ? 'placementHelp' : !tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'objectHelp' : 'help'));
 }
 function stateChanged(): void {
+  const previous = state;
   state = api.state; if (!state) return;
+  if (previous?.instanceId !== state.instanceId || previous.catalogRevision !== state.catalogRevision) refreshPresetLists();
+  updateDrawingControls();
   if (attachedFile && (attachedFile.instanceId !== state.instanceId || attachedFile.id !== state.browserFileId)) attachedFile = undefined;
   if (state.notice && state.notice !== lastNotice) toast(state.notice);
   else if (!state.notice && lastNotice && el('toast').textContent === lastNotice) {
     el('toast').hidden = true; clearTimeout(toastTimer);
   }
-  lastNotice = state.notice || ''; map.setState(state); mini.setState(state); cameraControls?.update(map.cameraProfile); queuePanels(); drawStatus();
+  lastNotice = state.notice || ''; map.setState(state); mini.setState(state); drawing.setState(state); cameraControls?.update(map.cameraProfile); queuePanels(); drawStatus();
 }
 api.addEventListener('state', stateChanged); api.addEventListener('busy', () => drawStatus()); api.addEventListener('error', event => toast((event as CustomEvent).detail));
 api.addEventListener('connection', () => drawStatus()); api.addEventListener('offline', () => drawStatus());
@@ -863,10 +1056,20 @@ document.addEventListener('keydown', event => {
   const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || (event.target as HTMLElement)?.isContentEditable;
   if (typing && !(event.key.toLowerCase() === 's' && (event.ctrlKey || event.metaKey))) return;
   const key = event.key.toLowerCase(), mod = event.ctrlKey || event.metaKey;
+  if (viewMode === 'drawing') {
+    if (key === 'escape') { event.preventDefault(); drawing.cancelInteraction(); return; }
+    if (mod && ['z', 'y'].includes(key)) {
+      event.preventDefault();
+      if (!drawing.interacting) void run(key === 'y' || event.shiftKey ? 'redo' : 'undo').catch(error => toast(error));
+      return;
+    }
+  }
   if (map.gameCameraTool && key === 'escape') { event.preventDefault(); map.setGameCameraTool(false); drawPanels(true); return; }
   if (map.gameCameraTool && authoringShortcut(key, mod) && (mod || !toolKeys.includes(key))) { event.preventDefault(); return; }
   const recognized = authoringShortcut(key, mod) || mod && key === 's' || !mod && key === 'f';
-  if (((miniMode || map.cameraPreview) && authoringShortcut(key, mod)) || ((map.interacting || mini.interacting) && key !== 'escape' && recognized)) { event.preventDefault(); return; }
+  if (((viewMode !== 'map' || map.cameraPreview) && authoringShortcut(key, mod))
+    || (viewMode === 'drawing' && !mod && key === 'f')
+    || ((map.interacting || mini.interacting || drawing.interacting) && key !== 'escape' && recognized)) { event.preventDefault(); return; }
   let action: (() => unknown) | undefined;
   if (mod && key === 's') action = () => save(event.shiftKey);
   else if (mod && key === 'z') action = () => run(event.shiftKey ? 'redo' : 'undo');
@@ -881,8 +1084,8 @@ document.addEventListener('keydown', event => {
     if (id || state?.selection.tool === 0) { await run('roomDeleteSelected', {}, expectation); map.selectRoomTarget(null); }
     else await run('delete', {}, expectation);
   };
-  else if (key === 'escape') action = () => { if (!miniMode && map.cameraPreview) { map.gameView(false); updateView(); } else if (miniMode) mini.cancelInteraction(); else { map.selectRoomTarget(null); map.cancel(); void run('cancel').catch(() => undefined); } };
-  else if (!mod && key === 'f') action = () => miniMode ? mini.frameRoom() : map.frameRoom();
+  else if (key === 'escape') action = () => { if (viewMode === 'map' && map.cameraPreview) { map.gameView(false); updateView(); } else if (viewMode === 'minimap') mini.cancelInteraction(); else { map.selectRoomTarget(null); map.cancel(); void run('cancel').catch(() => undefined); } };
+  else if (!mod && key === 'f') action = () => viewMode === 'minimap' ? mini.frameRoom() : map.frameRoom();
   else if (!mod && key === 'b') action = () => option({ tool: 3,
     ...(!tileLayer(state?.selection.layer ?? 0) ? { layer: 0, groupId: '' } : {}) });
   else if (!mod && toolKeys.includes(key) && toolAvailable(toolKeys.indexOf(key), state?.selection.layer ?? 0)) action = () => option({ tool: toolKeys.indexOf(key) });
@@ -895,7 +1098,7 @@ window.addEventListener('pagehide', event => {
   // A persisted page remains live in the back-forward cache. For a real unload,
   // stop polling and rendering without aborting an edit request already in flight.
   if (event.persisted) return;
-  cancelAnimationFrame(uiRaf); cancelAnimationFrame(statusRaf); api.stop(false); preview.dispose(); map.dispose(); mini.dispose();
+  cancelAnimationFrame(uiRaf); cancelAnimationFrame(statusRaf); api.stop(false); preview.dispose(); map.dispose(); mini.dispose(); drawing.dispose();
 });
 drawChrome();
 void locale.load().then(() => { languageVersion++; drawChrome(); }).catch(error => toast(error));

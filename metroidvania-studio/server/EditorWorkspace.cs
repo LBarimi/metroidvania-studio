@@ -746,7 +746,10 @@ public sealed partial class EditorWorkspace
                 var roomCamera = MapCameraSettings.Resolve(Session.Document, Catalog.Data.GetProperty("camera").Deserialize<CameraProfile>(Catalog.Json));
                 int defaultWidth = (roomCamera.referenceWidth + MapDocument.RequiredTileSize - 1) / MapDocument.RequiredTileSize;
                 int defaultHeight = (roomCamera.referenceHeight + MapDocument.RequiredTileSize - 1) / MapDocument.RequiredTileSize;
-                Canvas.SelectRoom(Canvas.RoomEditor.Create(new RectInt(I(command, "x"), I(command, "y"), I(command, "width", defaultWidth), I(command, "height", defaultHeight)), command.TryGetProperty("name", out var roomName) ? roomName.GetString() : null));
+                var roomBounds = new RectInt(I(command, "x"), I(command, "y"), I(command, "width", defaultWidth), I(command, "height", defaultHeight));
+                Canvas.SelectRoom(Canvas.RoomEditor.Create(roomBounds, command.TryGetProperty("name", out var roomName) ? roomName.GetString() : null,
+                    command.TryGetProperty("minimapShape", out var minimapShape) ? minimapShape.GetString() : null,
+                    command.TryGetProperty("minimapColor", out var minimapColor) ? minimapColor.GetString() : null, B(command, "exactPosition")));
                 break;
             case "roomMove": MoveRoom(command); break;
             case "roomResize": Canvas.RoomEditor.Resize(S(command, "id"), new RectInt(I(command, "x"), I(command, "y"), I(command, "width"), I(command, "height")), B(command, "crop")); break;

@@ -59,6 +59,7 @@ var tests = new (string name, Action run)[]
     ("expired gesture releases ownership and cancels unfinished paint", () => Fixture(ExpiredGesture)),
     ("multi-room selection, collision, history and exports stay atomic", () => Fixture(MultiRoomSelection)),
     ("named room creation is one undo", () => Fixture(RoomAdd)),
+    ("drawn minimap shape and region color are saved with one room", () => Fixture(RoomAddMinimap)),
     ("room addition avoids overlap and redo restores adjusted bounds", () => Fixture(RoomAddCollision)),
     ("invalid room name never leaves a created room", () => Fixture(InvalidRoomAdd)),
     ("recovery write failure keeps committed edit and fresh revision", () => Fixture(RecoveryFailure)),
@@ -622,6 +623,26 @@ static void RoomAdd(EditorWorkspace w)
     Send(w, "roomAdd", ("x", 60), ("y", 0), ("name", "named room"));
     Check(w.Session.Document.rooms.Count == 2 && w.Canvas.Room.name == "named room", "Room created with intended name.");
     Send(w, "undo"); Check(w.Session.Document.rooms.Count == 1 && !w.Session.CanUndo, "Named room must disappear after one Undo.");
+}
+static void RoomAddMinimap(EditorWorkspace w)
+{
+    string before = Snapshot(w);
+    Throws<ArgumentException>(() => Send(w, "roomAdd", ("x", 60), ("y", 0), ("width", 3), ("height", 2),
+        ("minimapShape", "111/10x"), ("minimapColor", "#3478ab")));
+    Check(Snapshot(w) == before && !w.Session.CanUndo, "An invalid drawing must not add a room.");
+    Send(w, "roomAdd", ("x", 60), ("y", 0), ("width", 3), ("height", 2),
+        ("minimapShape", "111/100"), ("minimapColor", "#3478ab"));
+    string id = w.Canvas.Room.id;
+    string added = Snapshot(w);
+    MapRoom room = MapJson.FromJson<MapDocument>(added).rooms.Single(r => r.id == id);
+    Check(room.width == 3 && room.height == 2 && room.foreground.Count == 0, "Drawing creates one empty room sized to its bounds.");
+    Check(room.properties.Single(p => p.key == MapMinimapShape.ShapeProperty).value == "111/100"
+        && room.properties.Single(p => p.key == MapMinimapShape.RegionColorProperty).value == "#3478ab", "Both drawing and region color round-trip in map JSON.");
+    Send(w, "roomRotate", ("clockwise", true));
+    Check(w.Canvas.Room.properties.Single(p => p.key == MapMinimapShape.ShapeProperty).value == "10/10/11", "The drawing rotates with the room.");
+    Send(w, "undo"); Check(Snapshot(w) == added, "Undo restores the shape before rotation.");
+    Send(w, "undo"); Check(Snapshot(w) == before, "One Undo removes the entire drawn room.");
+    Send(w, "redo"); Check(Snapshot(w) == added, "Redo restores the drawing and its color together.");
 }
 static void RoomAddCollision(EditorWorkspace w)
 {

@@ -2,12 +2,12 @@ import assert from 'node:assert/strict';
 
 export async function verifyMiniMap(page) {
   const documentBefore = await page.evaluate(async () => JSON.stringify((await (await fetch('/api/state')).json()).document));
-  await page.locator('#tabs button').nth(1).click();
+  await page.locator('#minimap-tab').click();
   const outline = page.locator('#minimap-outline-width'), entrance = page.locator('#minimap-entrance-length');
   assert.equal(await outline.inputValue(), '9'); assert.equal(await entrance.inputValue(), '15');
   assert.ok(await entrance.getAttribute('aria-label'));
   await outline.selectOption('6'); await entrance.selectOption('25');
-  await page.locator('#tabs button').nth(0).click(); await page.locator('#tabs button').nth(1).click();
+  await page.locator('#map-tab').click(); await page.locator('#minimap-tab').click();
   assert.equal(await outline.inputValue(), '6'); assert.equal(await entrance.inputValue(), '25');
   await outline.selectOption('9'); await entrance.selectOption('15');
   await page.locator('#tabs button').nth(0).click();

@@ -89,6 +89,7 @@ namespace MetroidvaniaStudio
                 long y = rotate ? bottom + (clockwise ? width - rx - w : rx) : horizontal ? source.y : bottom + height - ry - h;
                 copy.width = rotate ? h : w; copy.height = rotate ? w : h;
                 ValidateBounds(x, y, copy.width, copy.height); copy.x = (int)x; copy.y = (int)y;
+                MapMinimapShape.Transform(copy, horizontal, rotate, clockwise);
                 foreach (var cell in copy.foreground.Concat(copy.background))
                 {
                     int cx = cell.x, cy = cell.y;

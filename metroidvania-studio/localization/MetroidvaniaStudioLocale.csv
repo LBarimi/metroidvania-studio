@@ -104,7 +104,24 @@ external.save,맵 저장,Save map,マップを保存,保存地图,儲存地圖,�
 external.saveAs,맵 다른 이름으로 저장,Save map as,マップを別名で保存,地图另存为,地圖另存新檔,Сохранить карту как
 external.export,방별 JSON 내보내기,Export rooms JSON,部屋のJSONを書き出す,导出房间 JSON,匯出房間 JSON,Экспорт комнат в JSON
 external.editor,맵 편집,Map editor,マップ編集,地图编辑,地圖編輯,Редактор карты
-external.minimap,미니맵,MiniMap,ミニマップ,小地图,小地圖,Мини-карта
+external.minimap,미니맵 보기,View minimap,ミニマップ表示,查看小地图,檢視小地圖,Просмотр мини-карты
+external.minimapDraw,미니맵 편집,Edit minimap,ミニマップ編集,编辑小地图,編輯小地圖,Редактор мини-карты
+external.chipPalette,맵칩,Room chips,マップチップ,房间图块,房間圖塊,Шаблоны комнат
+external.chipHorizontal,가로,Horizontal,横型,横向,橫向,Горизонтальная
+external.chipVertical,세로,Vertical,縦型,纵向,縱向,Вертикальная
+external.chipWideHorizontal,가로 넓은,Wide horizontal,横広型,横向加宽,橫向加寬,Широкая горизонтальная
+external.chipWideVertical,세로 넓은,Wide vertical,縦広型,纵向加宽,縱向加寬,Широкая вертикальная
+external.chipLongVertical,세로 긴,Long vertical,縦長型,纵向细长,縱向細長,Длинная вертикальная
+external.chipLongHorizontal,가로 긴,Long horizontal,横長型,横向细长,橫向細長,Длинная горизонтальная
+external.chipOverlap,다른 방과 겹치는 위치입니다.,Another room occupies this space.,他の部屋と重なっています。,此位置与其他房间重叠。,此位置與其他房間重疊。,Здесь уже есть комната.
+external.chipSquare,정사각형,Square,正方形,正方形,正方形,Квадрат
+external.placementChip,배치할 맵칩,New room chip,配置するチップ,待放置图块,待放置圖塊,Новая комната
+external.defaultRegionColor,기본 빨강,Default red,既定の赤,默认红色,預設紅色,Красный по умолчанию
+external.regionPreset,지역색 프리셋,Region color preset,エリア色のプリセット,区域颜色预设,區域顏色預設,Пресет цвета области
+external.customRegionColor,직접 지정,Custom color,カスタム色,自定义颜色,自訂顏色,Свой цвет
+external.saveRegionPreset,프리셋 저장,Save preset,プリセットを保存,保存预设,儲存預設,Сохранить пресет
+external.presetDuplicateName,이미 사용 중인 프리셋 이름입니다.,A preset already uses that name.,同名のプリセットがあります。,此预设名称已被使用。,此預設名稱已被使用。,Это имя пресета уже занято.
+external.minimapDrawHelp,클릭: 배치 · 드래그: 이동 · 우클릭: 삭제 · Ctrl+Z: 복원 · 더블클릭: 맵 편집,Click to place · Drag to move · Right-click to delete · Ctrl+Z to undo · Double-click to edit,クリックで配置 · ドラッグで移動 · 右クリックで削除 · Ctrl+Zで元に戻す · ダブルクリックで編集,点击放置 · 拖动移动 · 右键删除 · Ctrl+Z 撤销 · 双击编辑,點擊放置 · 拖曳移動 · 右鍵刪除 · Ctrl+Z 復原 · 按兩下編輯,Щелчок: разместить · Перетаскивание: переместить · Правая кнопка: удалить · Ctrl+Z: отменить · Двойной щелчок: изменить
 external.popout,별도 창,Open separate view,別ウィンドウで開く,在独立窗口打开,在獨立視窗開啟,Открыть в отдельном окне
 external.inspector,속성,Inspector,プロパティ,属性,屬性,Свойства
 external.rooms,방,Rooms,部屋,房间,房間,Комнаты

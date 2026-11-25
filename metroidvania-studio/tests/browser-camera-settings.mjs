@@ -115,7 +115,7 @@ try {
     }
   }
   await page.locator('#language').selectOption('EN'); await page.setViewportSize({ width: 1440, height: 900 });
-  await page.locator('#tabs > button').nth(1).click();
+  await page.locator('#minimap-tab').click();
   assert.equal(await page.locator('#camera-ppu, #camera-resolution').count(), 0);
   assert.equal(await page.locator('#minimap-outline-width, #minimap-entrance-length').count(), 2);
   await page.locator('#tabs > button').first().click(); await applied(24, 427, 239);
