@@ -26,8 +26,6 @@ Metroidvania Studio is a free, open-source 2D level editor for metroidvania game
 
 ### Drawing Your Minimap
 
-Place room chips across six colored regions in **Edit minimap**, then switch to **Map editor** to see all 102 rooms as empty outlines.
-
 ![Room chips snap into a 102-room minimap, followed by the same empty room boundaries in Map editor](media/readme/design-the-minimap.gif)
 
 ## Explore with Game Preview
