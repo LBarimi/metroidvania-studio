@@ -4,7 +4,7 @@ Metroidvania Studio is a free, open-source 2D level editor for metroidvania game
 
 [Get started](#get-started) · [Website](https://lbarimi.github.io/metroidvania-studio/) · [Documentation](https://lbarimi.github.io/metroidvania-studio/guides.html) · [Release notes](CHANGELOG.md)
 
-This checkout builds **1.3.3**, with the minimap chip editor and the `minimap.place` command for CLI, MCP and Lua. [Build the editor](#build-from-source) or [install the CLI from source](#scripts--automation). The current public release is **1.3.2** on [GitHub Releases](https://github.com/LBarimi/metroidvania-studio/releases/tag/v1.3.2) and [npm](https://www.npmjs.com/package/metroidvania-studio/v/1.3.2).
+**Metroidvania Studio 1.3.3** includes the minimap chip editor and the `minimap.place` command for CLI, MCP and Lua. [Download 1.3.3 from GitHub Releases](https://github.com/LBarimi/metroidvania-studio/releases/tag/v1.3.3) or [build from source](#build-from-source). The [public npm package](https://www.npmjs.com/package/metroidvania-studio/v/1.3.2) is at **1.3.2**.
 
 **Automate your workflow:** [Lua scripts](docs/scripting/quick-start.md), a [headless CLI](docs/cli/quick-start.md), and a [local MCP server for AI agents](docs/mcp/setup.md).
 
@@ -112,7 +112,7 @@ Use **File → Scripts** to generate rooms or repeat editing tasks. Run the same
 
 The npm CLI and MCP server require **Node.js 24+** and the **.NET 10 runtime**. To install the published version, run `npm install --global metroidvania-studio`.
 
-To use `minimap.place` with **1.3.3**, run these commands from the root of this checkout with npm and the [.NET 10 SDK](#build-from-source).
+The **1.3.3** release ZIPs include a [CLI launcher](docs/cli/release-downloads.md) with `minimap.place`. To install the same CLI through npm from this source checkout, run these commands from the repository root with npm and the [.NET 10 SDK](#build-from-source).
 
 ```sh
 npm run pack:local
