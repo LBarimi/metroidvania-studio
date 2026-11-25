@@ -24,11 +24,16 @@ sh run.sh on Linux/macOS. src-sample needs the package's include, src,
 CMakeLists.txt and samples; it is not a separate standalone download.
 
 Start the web studio
-Run the script for your operating system from the studio distribution folder.
-When the browser opens, edit your map and export room JSON.
+Extract the studio release ZIP and open the launcher at its top level.
+  Windows (win ZIP): metroidvania-studio.exe
+  Windows (web ZIP): metroidvania-studio.bat
+  macOS: metroidvania-studio.command
+  Linux: bash ./metroidvania-studio.sh
+For a Git source checkout, use the platform script.
   Windows: platform/win/web/run.bat
   Linux  : bash platform/linux/run.sh
   macOS  : platform/mac/run.command
+Edit the map and export the room JSON from the studio.
 
 Try your own JSON
 The default input paths are relative to the extracted package:

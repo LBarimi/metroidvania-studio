@@ -2,11 +2,16 @@
 - 本插件适用于 Godot 4。请先解压整个 ZIP 文件。
 
 启动网页编辑器
-在编辑器发行目录中，运行对应操作系统的脚本。
-浏览器打开后，即可编辑地图并导出房间 JSON。
+完整解压编辑器发行版 ZIP，从解压后的顶层目录启动。
+  Windows (win ZIP): metroidvania-studio.exe
+  Windows (web ZIP): metroidvania-studio.bat
+  macOS: metroidvania-studio.command
+  Linux: bash ./metroidvania-studio.sh
+如果使用 Git 源码，请运行以下脚本。
   Windows: platform/win/web/run.bat
   Linux  : bash platform/linux/run.sh
   macOS  : platform/mac/run.command
+在编辑器中编辑地图并导出房间 JSON。
 
 Windows 安装
 1. 关闭目标 Godot 项目。

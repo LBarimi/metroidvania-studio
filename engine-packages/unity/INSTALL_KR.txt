@@ -9,7 +9,12 @@
    INSTALL_*.txt 파일도 이 폴더에 있습니다.
 
 웹 스튜디오 실행
-1. 스튜디오 폴더에서 운영체제에 맞는 실행 파일을 사용합니다.
+스튜디오 배포 ZIP의 압축을 모두 풀고 최상위 폴더에서 실행하세요.
+  Windows (win ZIP): metroidvania-studio.exe
+  Windows (web ZIP): metroidvania-studio.bat
+  macOS: metroidvania-studio.command
+  Linux: bash ./metroidvania-studio.sh
+Git으로 받은 소스에서는 아래 스크립트를 실행하세요.
    Windows: platform/win/web/run.bat
    Linux  : bash platform/linux/run.sh
    macOS  : platform/mac/run.command

@@ -3,11 +3,16 @@
 - ZIP 전체를 먼저 압축 해제하세요. addons 폴더 전체가 필요합니다.
 
 웹 스튜디오 실행
-스튜디오 배포본 폴더에서 운영체제에 맞는 스크립트를 실행합니다.
-브라우저가 열리면 맵을 편집하고 방 JSON을 내보냅니다.
+스튜디오 배포 ZIP의 압축을 모두 풀고 최상위 폴더에서 실행하세요.
+  Windows (win ZIP): metroidvania-studio.exe
+  Windows (web ZIP): metroidvania-studio.bat
+  macOS: metroidvania-studio.command
+  Linux: bash ./metroidvania-studio.sh
+Git으로 받은 소스에서는 아래 스크립트를 실행하세요.
   Windows: platform/win/web/run.bat
   Linux  : bash platform/linux/run.sh
   macOS  : platform/mac/run.command
+스튜디오에서 맵을 편집하고 방 JSON을 내보내세요.
 
 Windows 설치
 1. 설치할 Godot 프로젝트를 닫습니다.

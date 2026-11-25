@@ -4,7 +4,7 @@ This directory contains the C# WebView2 application, desktop UI extensions, and 
 
 ## Build
 
-- Install Node.js 24+ and .NET SDK 10.
+- Use a Git checkout on Windows with Node.js 24+, .NET SDK 10 and Git on the command path. [Build requirements](../../../../README.md#build-from-source)
 - Run `build.bat` to produce `builds/win/program/metroidvania-studio.exe` at the repository root. The first build downloads dependencies.
 - Run `build.bat -IncludeRuntime` for a larger build that includes .NET.
 
@@ -15,7 +15,7 @@ This directory contains the C# WebView2 application, desktop UI extensions, and 
 - The runtime-included build carries .NET with it; Microsoft WebView2 Runtime remains required.
 - Running either build does not require a repository checkout or Node.js.
 - Use `metroidvania-studio.exe --project <folder>` to select a workspace.
-- A local build shares `Maps`, `Textures` and `.studio` at the project root. A distributed application stores them beside the executable. Palette settings are managed in `.studio/catalog.json`. Legacy default storage is copied once, preserving its original files.
+- A local build shares `Maps`, `Textures`, `.studio` and the `Scripts` library at the project root. A distributed application stores them beside the executable. Palette settings are managed in `.studio/catalog.json`. Legacy default storage is copied once, preserving its original files.
 - A browser server is reused only when its workspace matches. Closing the application leaves a reused server running.
 - An owned server stops after pending edits and recovery/export writes finish.
 
