@@ -24,11 +24,16 @@ sh build.sh → sh run.sh で再実行します。src-sample だけではビル�
 パッケージの include、src、CMakeLists.txt、samples も必要です。
 
 Web スタジオの起動
-スタジオの配布フォルダーで、OS に対応するスクリプトを実行します。
-ブラウザーが開いたら、マップを編集して部屋の JSON をエクスポートします。
+スタジオの配布 ZIP をすべて展開し、最上位フォルダーから起動します。
+  Windows (win ZIP): metroidvania-studio.exe
+  Windows (web ZIP): metroidvania-studio.bat
+  macOS: metroidvania-studio.command
+  Linux: bash ./metroidvania-studio.sh
+Git で取得したソースでは、次のスクリプトを実行します。
   Windows: platform/win/web/run.bat
   Linux  : bash platform/linux/run.sh
   macOS  : platform/mac/run.command
+スタジオでマップを編集し、部屋の JSON をエクスポートします。
 
 自分の JSON に切り替える
 標準の入力は以下のとおりです。パスは展開したフォルダーが基準です。

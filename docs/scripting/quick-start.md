@@ -2,7 +2,7 @@
 
 Lua scripts can create rooms, paint terrain, place objects, and adjust map properties in one operation. The editor, command line, and MCP tools use the same editing API.
 
-Open **Edit > Scripts**, paste a script, and choose **Preview**. Review the result, then run the script to apply it. A successful script creates one undo step. Cancellation, script errors, invalid edits, or a map changed during execution leave the original map unchanged.
+Open **File → Scripts**, paste a script, select **Dry run** and click **Run**. Review the result, clear **Dry run** and click **Run** to apply it. A successful edit creates one undo step. The editor discards the batch on cancellation, script errors, invalid edits or a concurrent change to the map.
 
 ```lua
 local rooms = studio.rooms()

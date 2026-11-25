@@ -88,7 +88,9 @@ export function pack() {
   chmodSync(path.join(stage, 'bin/metroidvania-studio.mjs'), 0o755);
   for (const name of ['LICENSE', 'THIRD-PARTY-NOTICES.md']) copy(path.join(root, name), path.join(stage, name));
   copy(path.join(root, 'tools/mcp/server.json'), path.join(stage, 'server.json'));
-  copy(path.join(root, 'tools/npm/README.md'), path.join(stage, 'README.md'));
+  // The README moves from tools/npm to the package root alongside its offline guides.
+  const readme = readFileSync(path.join(root, 'tools/npm/README.md'), 'utf8');
+  writeFileSync(path.join(stage, 'README.md'), readme.replaceAll('](../../docs/', '](docs/'));
   copyDocSources(path.join(stage, 'docs'));
   for (const name of ['FORMAT.md', 'map-format-v2.schema.json']) copy(path.join(root, 'metroidvania-studio/contracts', name), path.join(stage, 'metroidvania-studio/contracts', name));
   buildDocs(path.join(stage, 'docs/site'));

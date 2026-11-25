@@ -6,4 +6,10 @@ The model uses tile units with positive Y pointing upward. Tile textures are 16 
 
 `MapJson` writes public data fields with the standard JSON attribute rules; calculated properties and transient state are excluded. Version 2 map files retain their field names, numeric enum values and coordinates. Unknown custom object and styleground data survives round trips.
 
-Run the regression suite with `dotnet run --project metroidvania-studio/core-tests/MetroidvaniaStudio.Core.Tests.csproj` from the repository root.
+Run the regression suite with .NET SDK 10 from the repository root.
+
+```sh
+dotnet run --project metroidvania-studio/core-tests/MetroidvaniaStudio.Core.Tests.csproj
+```
+
+The wire format and v1 migration rules are documented in the [map format reference](../contracts/FORMAT.md).

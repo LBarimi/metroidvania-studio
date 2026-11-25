@@ -9,7 +9,12 @@ Requirements and installation
    The INSTALL_*.txt files are also in this folder.
 
 Start the web studio
-1. Start the studio using the launcher for your operating system in the studio folder:
+Extract the studio release ZIP and open the launcher at its top level.
+  Windows (win ZIP): metroidvania-studio.exe
+  Windows (web ZIP): metroidvania-studio.bat
+  macOS: metroidvania-studio.command
+  Linux: bash ./metroidvania-studio.sh
+For a Git source checkout, use the platform script.
    Windows: platform/win/web/run.bat
    Linux  : bash platform/linux/run.sh
    macOS  : platform/mac/run.command

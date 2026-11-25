@@ -3,11 +3,16 @@
 - 請解壓縮整個 ZIP 檔案，保留 .uplugin 檔案及其 Source 資料夾。
 
 啟動網頁編輯器
-在編輯器發行資料夾中，執行對應作業系統的指令碼。
-瀏覽器開啟後，即可編輯地圖並匯出房間 JSON。
+完整解壓縮編輯器發行版 ZIP，從解壓縮後的最上層資料夾啟動。
+  Windows (win ZIP): metroidvania-studio.exe
+  Windows (web ZIP): metroidvania-studio.bat
+  macOS: metroidvania-studio.command
+  Linux: bash ./metroidvania-studio.sh
+若使用 Git 原始碼，請執行下列指令碼。
   Windows: platform/win/web/run.bat
   Linux  : bash platform/linux/run.sh
   macOS  : platform/mac/run.command
+在編輯器中編輯地圖並匯出房間 JSON。
 
 Windows 安裝
 1. 關閉目標 Unreal 專案。

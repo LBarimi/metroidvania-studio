@@ -9,7 +9,12 @@
    INSTALL_*.txt 文件也位于此目录。
 
 启动网页编辑器
-1. 在编辑器发行目录中，使用对应操作系统的启动脚本：
+完整解压编辑器发行版 ZIP，从解压后的顶层目录启动。
+  Windows (win ZIP): metroidvania-studio.exe
+  Windows (web ZIP): metroidvania-studio.bat
+  macOS: metroidvania-studio.command
+  Linux: bash ./metroidvania-studio.sh
+如果使用 Git 源码，请运行以下脚本。
    Windows: platform/win/web/run.bat
    Linux  : bash platform/linux/run.sh
    macOS  : platform/mac/run.command

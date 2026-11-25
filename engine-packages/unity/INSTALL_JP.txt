@@ -9,7 +9,12 @@
    INSTALL_*.txt ファイルもこのフォルダーにあります。
 
 Web スタジオの起動
-1. スタジオのフォルダーから、OS に対応するランチャーで起動します。
+スタジオの配布 ZIP をすべて展開し、最上位フォルダーから起動します。
+  Windows (win ZIP): metroidvania-studio.exe
+  Windows (web ZIP): metroidvania-studio.bat
+  macOS: metroidvania-studio.command
+  Linux: bash ./metroidvania-studio.sh
+Git で取得したソースでは、次のスクリプトを実行します。
    Windows: platform/win/web/run.bat
    Linux  : bash platform/linux/run.sh
    macOS  : platform/mac/run.command

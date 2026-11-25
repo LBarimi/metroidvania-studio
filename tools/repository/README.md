@@ -5,13 +5,11 @@ names, comparison notes and reference downloads out of source, UI strings,
 documentation, filenames and commit messages. Required dependency licenses
 remain separate obligations and must not be stripped by a cleanup.
 
-Run `node tools/repository/check-text.mjs` for tracked and untracked project
-files that are not ignored. The web build runs this check automatically.
-Git hook and workflow configurations are optional local files and are excluded from this repository. Run the checker explicitly before committing; the web build also runs it.
+From a Git checkout with Node.js 24+, run `node tools/repository/check-text.mjs` before committing. It checks tracked files and untracked files that Git has not ignored. The web build also runs this check. Git hook and workflow configurations are optional local files.
 
-The pre-commit hook inspects the complete staged snapshot, including paths and
-binary literal strings; unstaged edits cannot hide a staged violation. The
-commit-msg hook checks the proposed message. The policy stores normalized
+Use `node tools/repository/check-text.mjs --staged` to inspect the complete staged
+snapshot, including paths and binary literal strings. A local commit-msg hook
+can run `node tools/repository/check-text.mjs --message <file>` on the proposed message. The policy stores normalized
 length/rolling-hash/SHA-256 fingerprints, without retaining the restricted
 words themselves. SHA-256 confirms rolling-hash matches before rejecting text.
 
@@ -20,8 +18,9 @@ New rules can be computed with the exported `fingerprint()` function in memory;
 do not commit the original term as a fixture or explanatory example.
 
 The checker catches the registered text, including case/Unicode compatibility
-variants and substrings. It cannot identify arbitrary new game names or text
-compressed into images, PDFs or archives. Review those assets before publishing.
+variants and substrings. It also inspects GIF and PNG metadata and text inside
+supported ZIP, TAR and gzip archives. Text drawn into image pixels and content
+inside PDFs still need manual review.
 Hooks are local safeguards and can be bypassed by Git options; keep the build
 check and the project instructions in use too.
 
