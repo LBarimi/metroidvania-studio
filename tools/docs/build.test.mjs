@@ -96,6 +96,9 @@ test('English homepage keeps search metadata and previews without language varia
   const ids = [...source.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]);
   assert.equal(new Set(ids).size, ids.length);
   assert.ok(ids.every(Boolean));
+  const minimap = readFileSync(path.join(output, 'minimap.html'), 'utf8');
+  assert.ok(source.includes('src="assets/design-the-minimap.gif"'));
+  assert.ok(minimap.includes('src="assets/design-the-minimap.gif"'));
   for (const name of ['create-and-paint.gif', 'design-the-minimap.gif']) {
     assert.deepEqual(readFileSync(path.join(output, 'assets', name)), readFileSync(path.join(root, 'media/readme', name)));
   }
@@ -114,6 +117,8 @@ test('packaged source guides retain local links without website previews or gene
   const names = readdirSync(path.join(output, 'docs'), { recursive: true }).map(name => name.replaceAll('\\', '/'));
   assert.ok(!names.some(name => /(?:^|\/)assets(?:\/|$)|\.(gif|html|css|js)$/.test(name)));
   assert.equal(readFileSync(path.join(output, 'docs/index.md'), 'utf8'), readFileSync(path.join(root, 'docs/guides.md'), 'utf8'));
+  const minimap = readFileSync(path.join(output, 'docs/minimap.md'), 'utf8');
+  assert.ok(minimap.includes('Place a route and see its outline') && !minimap.includes('](assets/'));
   const entries = names.filter(name => /\.(md|lua|json)$/.test(name)).map(name => ({ name: 'docs/' + name, bytes: readFileSync(path.join(output, 'docs', name)) }));
   for (const name of ['metroidvania-studio/contracts/FORMAT.md', 'metroidvania-studio/contracts/map-format-v2.schema.json']) entries.push({ name, bytes: readFileSync(path.join(root, name)) });
   validateDocumentLinks(entries);

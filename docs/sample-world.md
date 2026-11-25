@@ -8,7 +8,8 @@ A fresh workspace opens **Starter World**. To reopen it later, choose **Help →
 2. **Explore Canopy.** Select the second room. Toggle the background layer's eye icon to compare its terrain with the backdrop.
 3. **Arrange the upper route.** Ctrl-click Sky Bridge and Lift Shaft. Drag a selected room's title strip to move the pair together. Undo, then try resizing a room using its outer handles or rotating it in the inspector.
 4. **Visit Foundry.** Select the objects or triggers layer, then move the marker or resize the trigger rectangle. These are sample data for editing; they do not implement game behavior.
-5. **Read the minimap.** Follow the loop from Landing through Canopy, Lift Shaft, Sky Bridge and Lookout. Double-click a room to return to the map editor at that room.
+5. **Extend the upper route.** In **Edit minimap**, pick **Ice cavern** under **New room chip** and place a horizontal chip above Lookout. Place a vertical chip against its right edge, then a **32 × 16** chip against the vertical one. Switch to **Map editor**. The new room is empty and shares a wall with its neighbor. [Minimap walkthrough](minimap.md#place-a-route-and-see-its-outline)
+6. **Read the minimap.** Open **View minimap** to follow the loop from Landing through Canopy, Lift Shaft, Sky Bridge and Lookout. Look for the entrances to your new route. Double-click a room to return to its tiles.
 
 ## Keep experimenting
 

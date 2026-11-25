@@ -8,6 +8,8 @@ Right-click empty space in the map editor and choose the room creation action. T
 
 Click a room to select it. While painting, the first left or right click in a different room only activates it. Start another stroke to paint or erase there. The selected room's properties appear in the inspector.
 
+For a route made from preset room sizes, switch to **Edit minimap**. Each chip places one room. Switch back to **Map editor** to inspect the selected room or change its dimensions. **Fit map** shows the entire layout. [Place rooms on the minimap](minimap.md#place-a-route-and-see-its-outline)
+
 ## Move and resize
 
 Drag a room's title strip to move it. Bring room edges together to snap them into place. Drag the outer resize handles to change the room's bounds. These handles work with every tool and layer, including Game camera. The inspector also provides dimensions, rotation and reflection controls.

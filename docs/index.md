@@ -8,6 +8,14 @@ Runs locally on Windows, macOS, and Linux. No game engine installation is requir
 
 Automate map creation with [Lua scripts](scripting/quick-start.md), a [headless CLI](cli/quick-start.md), and a [local MCP server for AI agents](mcp/setup.md).
 
+## Design your minimap
+
+Lay out corridors and shafts one click at a time in **Edit minimap**. The recording builds a 102-room world across six regions. Switch to **Map editor** and use **Fit map** to see the same layout with every room still empty.
+
+![Quickly place 102 room chips, view the connected world, then see its empty room outlines in Map editor](assets/design-the-minimap.gif)
+
+[Minimap editing guide](minimap.md) · [Try the sample world](sample-world.md)
+
 ## Create connected rooms
 
 Use the room-based map editor to paint terrain, connect passages, and adjust your layout. Move, resize, or rotate rooms as your world takes shape.
@@ -15,14 +23,6 @@ Use the room-based map editor to paint terrain, connect passages, and adjust you
 ![Add a room, paint rock terrain, and connect it to a neighboring room](assets/create-and-paint.gif)
 
 [Room layout guide](room-layout.md) · [4-tile and 47-tile autotiling](tilesets.md)
-
-## Design your minimap
-
-Give each area a color, adjust room outlines and entrances, and see how the world connects. Double-click a room in the minimap to return to editing it.
-
-![Explore a connected minimap, open a room, and zoom out in the map editor](assets/design-the-minimap.gif)
-
-[Minimap guide](minimap.md) · [Check your framing with Game Preview](game-preview.md)
 
 ## Get started
 

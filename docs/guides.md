@@ -9,7 +9,7 @@ Create connected rooms, paint autotiled terrain, and design minimaps with Metroi
 | [Sample world](sample-world.md) | Try painting, arranging rooms, and navigating the minimap |
 | [Room layout](room-layout.md) | Add rooms, resize them, and move selected rooms together |
 | [Tile palettes and autotiling](tilesets.md) | Import PNGs and set up 4-tile or 47-tile palettes |
-| [Minimap design](minimap.md) | Set room colors, adjust outlines, and return to a room for editing |
+| [Minimap design](minimap.md) | Place room chips, connect their edges, and inspect their outlines in Map editor |
 | [Texture editing](textures.md) | Update shared PNG files and export portable resources |
 | [Project bundles](project-bundles.md) | Download a map with its palettes and textures in one ZIP |
 | [Game Preview](game-preview.md) | Check the selected room while editing |
@@ -53,7 +53,7 @@ The CLI emits JSON on stdout. MCP uses stdio; it does not expose a network port.
 
 ## Data compatibility
 
-Automation API version **1**, studio version **1.3.2**, and map format version **2** are separate version numbers. Existing map files and engine packages continue using [map format 2](../metroidvania-studio/contracts/FORMAT.md). Lua scripts are editing tools and are not embedded in exported game data.
+Automation API version **1**, studio version **1.3.3**, and map format version **2** are separate version numbers. Existing map files and engine packages continue using [map format 2](../metroidvania-studio/contracts/FORMAT.md). Lua scripts are editing tools and are not embedded in exported game data.
 
 See [validation commands and platform coverage](validation.md) to run the checks locally.
 
