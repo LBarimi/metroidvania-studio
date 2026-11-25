@@ -8,14 +8,6 @@ Metroidvania Studio is a free, open-source 2D level editor for metroidvania game
 
 **Automate your workflow:** [Lua scripts](docs/scripting/quick-start.md), a [headless CLI](docs/cli/quick-start.md), and a [local MCP server for AI agents](docs/mcp/setup.md).
 
-## Design Your Minimap
-
-Click once per room in **Edit minimap** to join corridors, shafts and chambers. Watch 102 rooms take shape across six colored regions, then switch to **Map editor** to see the same world as empty room outlines. [Minimap editing guide](docs/minimap.md)
-
-![Room chips snap into a 102-room minimap, followed by the same empty room boundaries in Map editor](media/readme/design-the-minimap.gif)
-
-Recreate the layout with the headless CLI or MCP by applying the [102-room minimap batch](docs/examples/minimap-world.json). [Run the example](docs/minimap.md#place-chips-with-the-cli-or-mcp)
-
 ## Add Rooms & Paint Tiles
 
 ![Add a second room, paint rock tiles, then pan back and connect the first room](media/readme/create-and-paint.gif)
@@ -27,6 +19,16 @@ Recreate the layout with the headless CLI or MCP by applying the [102-room minim
 ## Resize, Rotate & Connect Rooms
 
 ![Resize, rotate, and connect three ice cavern rooms](media/readme/resize-rotate-and-connect.gif)
+
+## Design Your Minimap
+
+![Explore a world of five terrain themes, double-click an ice cavern to edit it, then zoom out](media/readme/explore-the-minimap.gif)
+
+### Drawing Your Minimap
+
+Place room chips across six colored regions in **Edit minimap**, then switch to **Map editor** to see all 102 rooms as empty outlines.
+
+![Room chips snap into a 102-room minimap, followed by the same empty room boundaries in Map editor](media/readme/design-the-minimap.gif)
 
 ## Explore with Game Preview
 
@@ -109,6 +111,8 @@ Each engine folder includes translated installation guides. Maps use JSON format
 ## Scripts & Automation
 
 Use **File → Scripts** to generate rooms or repeat editing tasks. Run the same operations headlessly through the **CLI**, or connect an **AI agent** through the local **MCP server**. Dry runs, atomic updates, and revision checks keep scripted edits reviewable.
+
+Recreate the layout with the headless CLI or MCP by applying the [102-room minimap batch](docs/examples/minimap-world.json). [Run the example](docs/minimap.md#place-chips-with-the-cli-or-mcp)
 
 The npm CLI and MCP server require **Node.js 24+** and the **.NET 10 runtime**. To install the published version, run `npm install --global metroidvania-studio`.
 
