@@ -16,7 +16,11 @@ export function copyDocSources(output) {
       const source = name === 'index.md' ? 'guides.md' : name;
       const target = path.join(output, name);
       mkdirSync(path.dirname(target), { recursive: true });
-      writeFileSync(target, readFileSync(path.join(root, 'docs', source)));
+      const contents = readFileSync(path.join(root, 'docs', source));
+      // Packaged Markdown keeps the walkthrough, while its demonstration GIFs ship on the public site.
+      writeFileSync(target, name.endsWith('.md')
+        ? contents.toString('utf8').replace(/^!\[[^\]\r\n]*\]\(assets\/[\w-]+\.gif\)\r?\n(?:\r?\n)?/gm, '')
+        : contents);
     }
   }
   walk();

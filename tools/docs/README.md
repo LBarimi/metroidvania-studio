@@ -7,9 +7,11 @@ The public website is generated into `docs/` for GitHub Pages. Building locally 
 - `tools/docs/homepage.mjs`: page titles, descriptions, and landing-page layout.
 - `tools/docs/homepage.css`: responsive landing-page styles.
 
-The existing README recordings are copied into the public site's `docs/assets/` during generation. Offline documentation keeps its searchable guide entry and does not include these promotional GIFs.
+The public site copies the README recordings listed in `tools/docs/homepage.mjs` into `docs/assets/`. Offline documentation keeps its searchable guide entry and omits these promotional GIFs.
 
 ## Preview and validate
+
+Run these commands with Node.js 24+ from the repository root.
 
 ```sh
 node tools/docs/build-pages.mjs
