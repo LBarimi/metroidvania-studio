@@ -4,12 +4,12 @@
 <div class="code-block"><div class="code-label"><span>sh</span><button type="button" class="copy">Copy</button></div><pre><code>npm install --global metroidvania-studio</code></pre></div>
 <p>Alternatively, build from source using the <a href="cli--quick-start.html">CLI guide</a>. Configure a client to run:</p>
 <div class="code-block"><div class="code-label"><span>sh</span><button type="button" class="copy">Copy</button></div><pre><code>metroidvania-studio mcp --workspace workspace</code></pre></div>
-<p>For clients that launch npm packages through <code>npx</code>, pin a published version. This example uses 1.3.2. For the 1.3.3 minimap tools, use the <a href="cli--release-downloads.html#use-an-mcp-client">CLI launcher in the GitHub release</a> or build the <a href="distribution--local-package.html">local package</a>.</p>
+<p>For clients that launch npm packages through <code>npx</code>, pin version 1.3.3 to use <code>minimap.place</code>. You can also connect through the <a href="cli--release-downloads.html#use-an-mcp-client">CLI launcher in the GitHub release</a>.</p>
 <div class="code-block"><div class="code-label"><span>json</span><button type="button" class="copy">Copy</button></div><pre><code>{
   &quot;mcpServers&quot;: {
     &quot;metroidvania-studio&quot;: {
       &quot;command&quot;: &quot;npx&quot;,
-      &quot;args&quot;: [&quot;-y&quot;, &quot;metroidvania-studio@1.3.2&quot;, &quot;mcp&quot;, &quot;--workspace&quot;, &quot;workspace&quot;]
+      &quot;args&quot;: [&quot;-y&quot;, &quot;metroidvania-studio@1.3.3&quot;, &quot;mcp&quot;, &quot;--workspace&quot;, &quot;workspace&quot;]
     }
   }
 }</code></pre></div>

@@ -14,14 +14,14 @@ Alternatively, build from source using the [CLI guide](../cli/quick-start.md). C
 metroidvania-studio mcp --workspace workspace
 ```
 
-For clients that launch npm packages through `npx`, pin a published version. This example uses 1.3.2. For the 1.3.3 minimap tools, use the [CLI launcher in the GitHub release](../cli/release-downloads.md#use-an-mcp-client) or build the [local package](../distribution/local-package.md).
+For clients that launch npm packages through `npx`, pin version 1.3.3 to use `minimap.place`. You can also connect through the [CLI launcher in the GitHub release](../cli/release-downloads.md#use-an-mcp-client).
 
 ```json
 {
   "mcpServers": {
     "metroidvania-studio": {
       "command": "npx",
-      "args": ["-y", "metroidvania-studio@1.3.2", "mcp", "--workspace", "workspace"]
+      "args": ["-y", "metroidvania-studio@1.3.3", "mcp", "--workspace", "workspace"]
     }
   }
 }
