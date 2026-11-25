@@ -35,7 +35,7 @@ export async function verifyMiniMapNavigation(page) {
     assert.equal(await view.locator('#map-canvas').getAttribute('data-view-mode'), 'edit');
   }
 
-  await page.locator('#tabs button').nth(1).click(); await wait();
+  await page.locator('#minimap-tab').click(); await wait();
   const bounds = await page.locator('#mini-canvas').boundingBox();
   await page.mouse.dblclick(bounds.x + 8, bounds.y + 8); await wait();
   assert.ok(await page.locator('#mini-canvas').isVisible(), 'Empty space must not open the editor.');

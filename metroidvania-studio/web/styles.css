@@ -799,6 +799,36 @@ dialog::backdrop { background: #050505b8; }
 .workspace.standalone,
 .workspace.camera-preview { grid-template-columns: minmax(0, 1fr); }
 
+.workspace.minimap-drawing-mode { grid-template-columns: clamp(96px, 14vw, 180px) minmax(0, 1fr) clamp(112px, 18vw, 220px); }
+.workspace.minimap-drawing-mode .sidebar,
+.workspace.minimap-drawing-mode #inspector,
+.workspace.minimap-drawing-mode .view-toolbar,
+.workspace .minimap-drawing-panel[hidden] { display: none; }
+.workspace.minimap-drawing-mode .minimap-drawing-panel:not([hidden]) {
+  display: block;
+  position: static;
+  width: auto;
+  box-shadow: none;
+}
+.minimap-chip-palette { background: var(--panel); border-right: 1px solid var(--line); overflow: auto; }
+.minimap-chip-list { display: grid; gap: 10px; }
+.minimap-chip-list fieldset { margin: 0; padding: 0; min-width: 0; border: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(54px,100%), 1fr)); gap: 3px; }
+.minimap-chip-list legend { padding: 0 0 4px; color: var(--muted); font-size: 11px; }
+.minimap-chip-list button { display: grid; justify-items: center; gap: 3px; padding: 4px 1px; min-width: 0; }
+.minimap-chip-list button[aria-pressed="true"] { background: #263944; border-color: #7cb2cb; }
+.minimap-chip-preview { display: grid; height: 32px; place-items: center; }
+.minimap-chip-icon { display: block; border: 1px solid #d1e1e7; background: #557888; }
+.minimap-chip-list small { color: #b5c2ca; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.region-presets { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 4px; }
+.region-presets .icon { min-height: 25px; }
+.minimap-drawing-panel input[type="color"] { width: 100%; height: 32px; }
+.minimap-drawing-panel .row { flex-wrap: wrap; margin-top: 10px; }
+#minimap-drawing-canvas { cursor: crosshair; }
+#minimap-drawing-canvas.chip-blocked { cursor: not-allowed; }
+.minimap-drawing-mode + .statusbar #status-coordinates,
+.minimap-drawing-mode + .statusbar #status-layer,
+.minimap-drawing-mode + .statusbar #status-room-sizes { display: none; }
+
 /* Compact menus preserve workspace space and remain available at narrow widths. */
 .menu { position: relative; }
 .menu-popup { position: absolute; top: calc(100% + 5px); left: 0; z-index: 100; min-width: 230px; max-width: min(360px, 90vw); padding: 5px; background: #222; border: 1px solid #484848; box-shadow: 0 8px 28px #0009; }

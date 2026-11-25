@@ -142,7 +142,7 @@ try {
   await page.locator('#camera-resolution').selectOption('320x180'); await settled();
   const pixels = await png(); await page.locator('#camera-ppu').selectOption('16'); await settled();
   assert.equal(await png(), pixels, 'PPU changes world units rather than source pixels.');
-  await page.locator('#tabs > button').nth(1).click(); assert.equal(await page.locator('#game-preview').isVisible(), false);
+  await page.locator('#minimap-tab').click(); assert.equal(await page.locator('#game-preview').isVisible(), false);
   const paused = await page.evaluate(() => window.__previewRenders);
   await page.waitForTimeout(150); assert.equal(await page.evaluate(() => window.__previewRenders), paused);
   await page.locator('#tabs > button').first().click(); await page.waitForTimeout(80);

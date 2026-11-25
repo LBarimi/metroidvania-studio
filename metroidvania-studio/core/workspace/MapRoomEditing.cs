@@ -72,7 +72,7 @@ namespace MetroidvaniaStudio
             PrimaryId = null;
         }
 
-        public string Create(RectInt worldBounds, string name = null)
+        public string Create(RectInt worldBounds, string name = null, string minimapShape = null, string minimapColor = null, bool exactPosition = false)
         {
             RequireIdle();
             ValidateBounds(worldBounds.x, worldBounds.y, worldBounds.width, worldBounds.height);
@@ -84,8 +84,10 @@ namespace MetroidvaniaStudio
                 id = NewId(AllIds()), name = name ?? "room_" + number.ToString("00"),
                 x = worldBounds.x, y = worldBounds.y, width = worldBounds.width, height = worldBounds.height
             };
+            MapMinimapShape.Apply(room, minimapShape, minimapColor);
             // Keep existing rooms fixed, including hidden and locked rooms.
             var offset = MapRoomCollision.Resolve(room, Vector2Int.zero, session.Document.rooms);
+            if (exactPosition && offset != Vector2Int.zero) throw new InvalidOperationException("@chipOverlap");
             room.x = checked(room.x + offset.x); room.y = checked(room.y + offset.y);
             session.Execute("Create room", document => document.rooms.Add(room));
             ReplaceSelection(new[] { room.id });

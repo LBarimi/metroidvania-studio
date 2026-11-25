@@ -284,7 +284,7 @@ try {
   await page.keyboard.press('Escape'); await nextPaint();
   assert.equal(await page.locator('#preview-maximize').getAttribute('aria-pressed'), 'false');
   assert.deepEqual(await page.locator('#map-canvas').boundingBox(), editCanvas);
-  await page.locator('#tabs button').nth(1).click();
+  await page.locator('#minimap-tab').click();
   assert.equal(await page.locator('#game-preview').isVisible(), false);
   await page.locator('#tabs button').first().click();
   assert.equal(await page.locator('#game-preview').isVisible(), true);

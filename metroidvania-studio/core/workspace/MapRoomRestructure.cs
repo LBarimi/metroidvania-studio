@@ -39,7 +39,8 @@ namespace MetroidvaniaStudio
                 foreach (MapProperty property in source.properties)
                 {
                     // A merged room has one region color, taken from the active room.
-                    if (property.key == "mapMaker.minimapColor" || property.key == "color") continue;
+                    if (property.key == MapRoomTheme.ColorProperty || property.key == "color"
+                        || property.key == MapMinimapShape.RegionColorProperty || property.key == MapMinimapShape.ShapeProperty) continue;
                     if (properties.TryGetValue(property.key, out string existing))
                     {
                         if (existing != property.value) throw new InvalidOperationException("@roomMergeProperties");
@@ -188,7 +189,8 @@ namespace MetroidvaniaStudio
         {
             id = id, name = name, x = bounds.x, y = bounds.y, width = bounds.width, height = bounds.height,
             visible = source.visible, locked = source.locked,
-            properties = source.properties.Select(p => new MapProperty { key = p.key, value = p.value }).ToList()
+            properties = source.properties.Where(p => p.key != MapMinimapShape.ShapeProperty)
+                .Select(p => new MapProperty { key = p.key, value = p.value }).ToList()
         };
 
         private static MapCell ShiftCell(MapCell cell, long dx, long dy) => new MapCell
