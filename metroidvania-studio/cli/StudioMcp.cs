@@ -58,7 +58,7 @@ internal sealed class StudioMcp(StudioService service)
         => Result(() => service.Validate(map));
 
     [McpServerTool(Name = "studio_apply", Destructive = true, OpenWorld = false)]
-    [Description("Apply a versioned operation batch atomically. Pass {apiVersion:1,operations:[...]} using schemas from studio_capabilities. A failed or cancelled batch saves nothing.")]
+    [Description("Apply a versioned operation batch atomically. Use minimap.place to stamp room chips with region colors. Pass {apiVersion:1,operations:[...]} using schemas from studio_capabilities. A failed or cancelled batch saves nothing.")]
     public Task<CallToolResult> Apply([Description("Existing map JSON path relative to the workspace, or @active in connected mode.")] string map,
         [Description("The complete API operation envelope.")] JsonElement batch,
         [Description("SHA-256 revision returned by studio_inspect. A mismatch refuses the edit.")] string expectedRevision,

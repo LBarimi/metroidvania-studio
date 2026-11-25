@@ -104,6 +104,7 @@ public static partial class LuaScriptRunner
             foreach (var group in new Dictionary<string, string[]>
             {
                 ["room"] = ["add", "update", "move", "resize", "rotate", "duplicate", "delete"],
+                ["minimap"] = ["place"],
                 ["tiles"] = ["paint", "erase", "rectangle", "fill"],
                 ["properties"] = ["set"], ["camera"] = ["set"],
                 ["object"] = ["add", "update", "delete"]
@@ -173,7 +174,7 @@ public static partial class LuaScriptRunner
             }
             else operation = data.GetValueOrDefault("op") as string ?? throw new LuaScriptException("Operation requires op.");
             string? createdId = null;
-            if (operation is "room.add" or "room.duplicate" or "object.add")
+            if (operation is "room.add" or "room.duplicate" or "minimap.place" or "object.add")
             {
                 if (!data.ContainsKey("id"))
                 {

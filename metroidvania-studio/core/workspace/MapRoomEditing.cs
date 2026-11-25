@@ -75,23 +75,38 @@ namespace MetroidvaniaStudio
         public string Create(RectInt worldBounds, string name = null, string minimapShape = null, string minimapColor = null, bool exactPosition = false)
         {
             RequireIdle();
+            var room = PrepareRoom(session.Document.rooms, NewId(AllIds()), worldBounds, name, minimapShape, minimapColor, exactPosition);
+            session.Execute("Create room", document => document.rooms.Add(room));
+            ReplaceSelection(new[] { room.id });
+            return room.id;
+        }
+
+        // Both an interactive edit and an atomic automation batch can commit this room to their own transaction.
+        public static MapRoom PrepareRoom(IReadOnlyList<MapRoom> rooms, string id, RectInt worldBounds, string name,
+            string minimapShape, string minimapColor, bool exactPosition)
+        {
             ValidateBounds(worldBounds.x, worldBounds.y, worldBounds.width, worldBounds.height);
-            var names = new HashSet<string>(session.Document.rooms.Select(room => room.name), StringComparer.Ordinal);
+            var names = new HashSet<string>(rooms.Select(room => room.name), StringComparer.Ordinal);
             int number = 0;
             while (names.Contains("room_" + number.ToString("00"))) number++;
             var room = new MapRoom
             {
-                id = NewId(AllIds()), name = name ?? "room_" + number.ToString("00"),
+                id = id, name = name ?? "room_" + number.ToString("00"),
                 x = worldBounds.x, y = worldBounds.y, width = worldBounds.width, height = worldBounds.height
             };
             MapMinimapShape.Apply(room, minimapShape, minimapColor);
             // Keep existing rooms fixed, including hidden and locked rooms.
-            var offset = MapRoomCollision.Resolve(room, Vector2Int.zero, session.Document.rooms);
-            if (exactPosition && offset != Vector2Int.zero) throw new InvalidOperationException("@chipOverlap");
-            room.x = checked(room.x + offset.x); room.y = checked(room.y + offset.y);
-            session.Execute("Create room", document => document.rooms.Add(room));
-            ReplaceSelection(new[] { room.id });
-            return room.id;
+            if (exactPosition)
+            {
+                if (rooms.Any(r => worldBounds.Overlaps(new RectInt(r.x, r.y, r.width, r.height))))
+                    throw new InvalidOperationException("@chipOverlap");
+            }
+            else
+            {
+                var offset = MapRoomCollision.Resolve(room, Vector2Int.zero, rooms);
+                room.x = checked(room.x + offset.x); room.y = checked(room.y + offset.y);
+            }
+            return room;
         }
 
         /// <summary>Copies the selected group to its right, keeping its relative room layout.</summary>

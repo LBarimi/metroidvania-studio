@@ -1,22 +1,9 @@
 import type { Connection, Rect, Room, State } from './types.js';
+import { MINIMAP_CHIP_GROUPS, MINIMAP_CHIP_UNIT } from './contracts.generated.js';
 
-// Chip dimensions are multiples of eight map tiles. Existing rooms can use any tile bounds.
-export const chipUnit = 8;
+export const chipUnit: number = MINIMAP_CHIP_UNIT;
+export const chipGroups = MINIMAP_CHIP_GROUPS;
 export interface MapChip { width: number; height: number }
-type ChipGroup = { label: string; chips: MapChip[] };
-
-function group(label: string, sizes: [number, number][], rotate = false): ChipGroup {
-  return { label, chips: sizes.map(([w, h]) => ({ width: (rotate ? h : w) * chipUnit, height: (rotate ? w : h) * chipUnit })) };
-}
-const horizontal: [number, number][] = [[2, 1], [3, 1], [4, 2], [6, 3]];
-const wide: [number, number][] = [[3, 2], [4, 3], [5, 3], [6, 4], [8, 4]];
-const long: [number, number][] = [[4, 1], [6, 1], [8, 1], [12, 1], [8, 2]];
-export const chipGroups: ChipGroup[] = [
-  group('chipHorizontal', horizontal), group('chipVertical', horizontal, true),
-  group('chipSquare', [[1, 1], [2, 2], [3, 3], [4, 4], [6, 6], [8, 8]]),
-  group('chipWideHorizontal', wide), group('chipWideVertical', wide, true),
-  group('chipLongHorizontal', long), group('chipLongVertical', long, true)
-];
 
 export function roomGrid(rooms: readonly Rect[]) {
   const origin = rooms[0] ?? { x: 0, y: 0 };

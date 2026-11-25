@@ -40,6 +40,10 @@ public static partial class AutomationEngine
         }
         Add("room.add", "Create a room and resolve overlap against existing rooms.", new[] { "x", "y", "width", "height" },
             ("id", String()), ("name", String()), ("x", Integer()), ("y", Integer()), ("width", Integer(1, 1024)), ("height", Integer(1, 1024)));
+        Add("minimap.place", "Place an empty room chip at world tile x,y snapped down to the minimap grid. Overlap rejects the batch.",
+            ["chip", "x", "y"], ("chip", Enum(MapMinimapChips.ById.Keys.ToArray())), ("x", Integer()), ("y", Integer()),
+            ("regionColor", new JsonObject { ["type"] = "string", ["pattern"] = "^#[0-9A-Fa-f]{6}$", ["default"] = MapMinimapChips.DefaultColor }),
+            ("id", String()), ("name", String()));
         Add("room.update", "Change room name or visibility.", new[] { "roomId" }, ("roomId", String()), ("name", String()), ("visible", Bool(true)));
         Add("room.move", "Move to absolute tile coordinates; overlap resolves to the nearest free edge.", new[] { "roomId", "x", "y" },
             ("roomId", String()), ("x", Integer()), ("y", Integer()));
@@ -95,7 +99,7 @@ public static partial class AutomationEngine
         return JsonSerializer.SerializeToElement(new JsonObject
         {
             ["apiVersion"] = ApiVersion, ["formatVersion"] = MapDocument.CurrentFormatVersion,
-            ["capabilities"] = new JsonArray("atomic-batch", "explicit-identities", "indexed-tiles", "room-layout", "objects", "custom-properties", "camera", "minimap-query", "bounded-tile-query", "cancellation"),
+            ["capabilities"] = new JsonArray("atomic-batch", "explicit-identities", "indexed-tiles", "room-layout", "objects", "custom-properties", "camera", "minimap-query", "minimap-placement", "bounded-tile-query", "cancellation"),
             ["limits"] = new JsonObject { ["operations"] = MaximumOperations, ["visitedCells"] = MaximumCellVisits,
                 ["workUnits"] = MaximumWorkUnits, ["requestBytes"] = MaximumRequestBytes, ["documentBytes"] = MaximumDocumentBytes,
                 ["queryCells"] = MaximumQueryCells, ["roomCount"] = MapDocument.MaximumRoomCount, ["roomDimension"] = MapDocument.MaximumRoomDimension,

@@ -58,6 +58,11 @@ AppendEnum<MetroidvaniaStudioTool>("TOOLS"); AppendEnum<MapLayer>("LAYERS"); App
 result.Append($"export const MAX_BRUSH_SIZE = {MapBrushGeometry.MaximumBrushSize};\n");
 result.Append($"export const MAP_FORMAT_VERSION = {MapDocument.CurrentFormatVersion};\n");
 result.Append($"export const TILE_SIZE = {MapDocument.RequiredTileSize};\n");
+var chipGroups = MapMinimapChips.Groups.Select(group => new { label = group.Label,
+    chips = group.Chips.Select(chip => new { width = chip.Width, height = chip.Height }) });
+result.Append($"export const MINIMAP_CHIP_GROUPS = {JsonSerializer.Serialize(chipGroups)};\n");
+result.Append($"export const MINIMAP_CHIP_UNIT = {MapMinimapChips.Unit};\n");
+result.Append($"export const DEFAULT_MINIMAP_COLOR = {JsonSerializer.Serialize(MapMinimapChips.DefaultColor)};\n");
 string generated = result.ToString();
 if (!IntegrationContracts.Write(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output))!, "../..")), check)) return 1;
 bool schemaCurrent = MapSchema.Write(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output))!, "../contracts/map-format-v2.schema.json")), check);

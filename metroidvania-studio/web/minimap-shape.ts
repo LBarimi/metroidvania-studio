@@ -3,7 +3,7 @@ import type { Point, Room } from './types.js';
 export const minimapShapeProperty = 'mapMaker.minimapShape';
 export const minimapRegionColorProperty = 'mapMaker.minimapRegionColor';
 export const minimapColorProperty = 'mapMaker.minimapColor';
-export const defaultMinimapColor = '#c72b36';
+export { DEFAULT_MINIMAP_COLOR as defaultMinimapColor } from './contracts.generated.js';
 export const minimapGridSize = 1024;
 
 export interface MinimapEdge { vertical: boolean; coordinate: number; start: number; end: number }

@@ -120,7 +120,9 @@ internal static class MiniMapSvg
         svg.Append(CultureInfo.InvariantCulture, $"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"{-margin} {-margin} {width + margin * 2} {height + margin * 2}\" width=\"960\" height=\"640\" role=\"img\" aria-label=\"Room layout\"><rect x=\"{-margin}\" y=\"{-margin}\" width=\"{width + margin * 2}\" height=\"{height + margin * 2}\" fill=\"#15171b\"/>");
         foreach (var room in map.rooms)
         {
-            string color = MapRoomTheme.TryGetColor(room, out Color theme) ? "#" + ColorText.ToHtmlStringRGB(theme) : "#3879ad";
+            string? region = room.properties.Find(p => p.key == MapMinimapShape.RegionColorProperty)?.value;
+            string color = ColorText.TryParseHtmlString(region, out Color theme) || MapRoomTheme.TryGetColor(room, out theme)
+                ? "#" + ColorText.ToHtmlStringRGB(theme) : "#3879ad";
             svg.Append(CultureInfo.InvariantCulture, $"<g><title>{SecurityElement.Escape(room.name)}</title><rect x=\"{(double)room.x - bounds.XMin}\" y=\"{bounds.YMax - room.y - room.height}\" width=\"{room.width}\" height=\"{room.height}\" fill=\"{color}\" stroke=\"#ffffff\" stroke-width=\"{stroke}\"/></g>");
         }
         svg.Append("</svg>");

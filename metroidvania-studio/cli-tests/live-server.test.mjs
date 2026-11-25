@@ -104,4 +104,25 @@ test('actual web server accepts CLI/MCP live edits, shares Undo and exports, and
   assert.equal(lua.result.isError, false, JSON.stringify(lua));
   assert.deepEqual(lua.result.structuredContent.logs, ['live done']);
   assert.equal((await json(url, '/api/v1/document')).document.name, 'MCP live edit');
+
+  const inspectActive = async () => (await request('tools/call', { name: 'studio_inspect', arguments: { map: '@active' } })).result.structuredContent;
+  const before = await inspectActive();
+  const stamp = { op: 'minimap.place', chip: '8x24', x: 21, y: 3, id: 'shaft', regionColor: '#34899f' };
+  const place = async (operations, dryRun = false) => (await request('tools/call', { name: 'studio_apply',
+    arguments: { map: '@active', expectedRevision: before.revision, batch: { apiVersion: 1, operations }, dryRun } })).result;
+  assert.equal((await place([stamp], true)).isError, false);
+  assert.equal((await place([stamp, { ...stamp, id: 'overlap' }])).isError, true);
+  assert.equal((await inspectActive()).revision, before.revision);
+  const placed = await place([stamp]);
+  assert.equal(placed.isError, false, JSON.stringify(placed));
+  const after = await inspectActive();
+  const shaft = after.document.rooms.find(room => room.roomId === 'shaft');
+  assert.deepEqual([shaft.x, shaft.y, shaft.width, shaft.height], [20, 0, 8, 24]);
+  assert.equal(shaft.foregroundCount + shaft.backgroundCount + shaft.objectCount, 0);
+  assert.equal(shaft.properties['mapMaker.minimapRegionColor'], '#34899f');
+  assert.equal(after.document.minimap.connections.length, 1);
+  const editor = await json(url, '/api/state');
+  assert.equal(editor.document.rooms.find(room => room.id === 'shaft').width, 8);
+  await json(url, '/api/command', { action: 'undo', clientId: 'cli-live-test', commandId: 'undo-minimap', expectedInstanceId: editor.instanceId, expectedRevision: editor.revision });
+  assert.deepEqual((await inspectActive()).document, before.document);
 });

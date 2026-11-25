@@ -7,6 +7,7 @@ All operations are objects with an `op` string. Required fields appear first bel
 | Operation | Required fields | Optional fields |
 | --- | --- | --- |
 | `room.add` | `x`, `y`, `width`, `height` | `id`, `name` |
+| `minimap.place` | `chip`, `x`, `y` | `id`, `name`, `regionColor` |
 | `room.update` | `roomId` | `name`, `visible` |
 | `room.move` | `roomId`, `x`, `y` | — |
 | `room.resize` | `roomId`, `width`, `height` | `x`, `y`, `crop: false`, `keepLocalContents: false` |
@@ -15,6 +16,10 @@ All operations are objects with an `op` string. Required fields appear first bel
 | `room.delete` | `roomId` | — |
 
 `room.add`, `room.move`, and `room.duplicate` resolve an overlapping destination against existing rooms. They place the moved or created room at a free boundary and keep other rooms fixed. Inspect the returned document to obtain its final coordinates.
+
+`minimap.place` uses the **Edit minimap** palette. `chip` is a size in map tiles such as `"16x8"` or `"8x24"`. `capabilities` lists all supported sizes. The chip's bottom-left corner snaps down on both axes from the supplied world tile coordinates. `inspect` returns the current offset and spacing under `document.minimap.grid`. An empty map uses an eight-tile grid with origin `(0, 0)`. Existing room edges can shift the origin or reduce the spacing.
+
+The new room has empty foreground, background and object layers. Its `regionColor` accepts `#RRGGBB` and defaults to `#c72b36`. Shared edges connect rooms. Overlap with any room, including an earlier chip in the same batch, rejects the whole edit. [Full minimap batch example](../minimap.md#place-chips-with-the-cli-or-mcp)
 
 `room.resize` uses the same contact layout as manual editing: attached rooms can move with the changed edge, while rooms separated by a gap stay fixed. A new overlap with a detached room rejects the operation. Without `crop`, the bounds stop at existing terrain. With `crop`, out-of-bounds target-room terrain is removed. By default, existing contents keep their world position when the origin changes; `keepLocalContents: true` keeps their local coordinates instead. This matches the editor's size fields. Existing object and node positions follow that resize behavior; crop removes terrain only.
 

@@ -222,11 +222,45 @@ Test("unknown map fields are rejected instead of silently discarded", () =>
     string extended = Doc()[..^1] + ",\"customExtension\":42}";
     Reject(() => Apply(extended), "Unknown field");
 });
+Test("minimap places every editor chip on the empty map grid with an empty interior", () =>
+{
+    string empty = MapDocumentStore.Serialize(new MapDocument());
+    var operation = AutomationEngine.Describe().GetProperty("operations").EnumerateArray().Single(o => o.GetProperty("name").GetString() == "minimap.place");
+    var chips = operation.GetProperty("schema").GetProperty("properties").GetProperty("chip").GetProperty("enum");
+    Check(chips.GetArrayLength() == 34);
+    foreach (JsonElement size in chips.EnumerateArray())
+    {
+        string chip = size.GetString()!;
+        var result = Apply(empty, new { op = "minimap.place", chip, x = -1, y = 7 });
+        var room = First(result);
+        Check(room.id == result.CreatedIds.Single() && room.x == -8 && room.y == 0 && $"{room.width}x{room.height}" == chip);
+        Check(room.foreground.Count + room.background.Count + room.objects.Count == 0);
+        Check(room.properties.Single().key == MapMinimapShape.RegionColorProperty && room.properties.Single().value == "#c72b36");
+    }
+});
+Test("offset legacy rooms determine the snap grid and block overlapping minimap chips", () =>
+{
+    var legacy = new MapRoom { id = "old", x = -13, y = 5, width = 14, height = 18, visible = false, locked = true };
+    string input = MapDocumentStore.Serialize(new MapDocument { rooms = [legacy] });
+    var grid = AutomationEngine.Inspect(input).GetProperty("minimap").GetProperty("grid");
+    Check(grid.GetProperty("x").GetInt32() == 1 && grid.GetProperty("y").GetInt32() == 1 && grid.GetProperty("step").GetInt32() == 2);
+    var result = Apply(input, new { op = "minimap.place", chip = "8x24", id = "lift", name = "Lift", regionColor = "#34899f", x = 2, y = 6 });
+    var lift = Read(result).rooms[1];
+    Check(lift.x == 1 && lift.y == 5 && lift.width == 8 && lift.height == 24 && lift.name == "Lift");
+    Check(lift.id == "lift" && lift.properties.Single().value == "#34899f");
+    var overlap = new { op = "minimap.place", chip = "16x8", x = -1, y = 5 };
+    Reject(() => Apply(input, overlap), "overlaps");
+    Reject(() => Apply(input, new { op = "minimap.place", chip = "8x8", x = 2, y = 6 }, overlap), "Operation 1");
+    Reject(() => Apply(input, new { op = "minimap.place", chip = "8x8", x = int.MinValue, y = 0 }));
+    Reject(() => Apply(input, new { op = "minimap.place", chip = "8x8", x = int.MaxValue, y = 0 }));
+    Reject(() => Apply(input, new { op = "minimap.place", chip = "12x9", x = 40, y = 0 }), "Unknown minimap chip");
+    Reject(() => Apply(input, new { op = "minimap.place", chip = "8x8", x = 40, y = 0, regionColor = "green" }), "color");
+});
 Test("schema exposes every operation and bounded atomic request", () =>
 {
     var description = AutomationEngine.Describe();
     var operations = description.GetProperty("operations");
-    Check(operations.GetArrayLength() == 17 && description.GetProperty("requestSchema").GetProperty("additionalProperties").ValueKind == JsonValueKind.False);
+    Check(operations.GetArrayLength() == 18 && description.GetProperty("requestSchema").GetProperty("additionalProperties").ValueKind == JsonValueKind.False);
     foreach (JsonElement operation in operations.EnumerateArray())
         Check(operation.GetProperty("schema").GetProperty("properties").GetProperty("op").GetProperty("const").GetString() == operation.GetProperty("name").GetString());
 });
