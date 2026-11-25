@@ -1,5 +1,11 @@
 # Changes
 
+## 1.3.3
+
+- Place empty rooms in **Edit minimap** using 34 chip sizes and region color presets. Chip previews and placements align to the grid of existing maps. Switch to **Map editor** to edit the same rooms, or right-click a chip to delete it and use Undo to restore it.
+- Place the same chips through the headless CLI, MCP and Lua with `minimap.place`. The [102-room example](docs/examples/minimap-world.json) recreates the six-region layout from the README.
+- Add `platform/win/web/rebuild_run.bat` to stop, rebuild and relaunch the Windows web editor in one step. Document the launchers and runtime requirements for each download.
+
 ## 1.3.2
 
 - Add a product homepage with editing previews and searchable guides. Keep offline help and published packages free of website-only media.
