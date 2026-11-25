@@ -4,7 +4,7 @@ Metroidvania Studio is a free, open-source 2D level editor for metroidvania game
 
 [Get started](#get-started) · [Website](https://lbarimi.github.io/metroidvania-studio/) · [Documentation](https://lbarimi.github.io/metroidvania-studio/guides.html) · [Release notes](CHANGELOG.md)
 
-**Metroidvania Studio 1.3.3** includes the minimap chip editor and the `minimap.place` command for CLI, MCP and Lua. [Download 1.3.3 from GitHub Releases](https://github.com/LBarimi/metroidvania-studio/releases/tag/v1.3.3) or [build from source](#build-from-source). The [public npm package](https://www.npmjs.com/package/metroidvania-studio/v/1.3.2) is at **1.3.2**.
+**Metroidvania Studio 1.3.3** includes the minimap chip editor and the `minimap.place` command for CLI, MCP and Lua. [Download the editor](https://github.com/LBarimi/metroidvania-studio/releases/tag/v1.3.3), [install the CLI and MCP server from npm](https://www.npmjs.com/package/metroidvania-studio/v/1.3.3), or [build from source](#build-from-source).
 
 **Automate your workflow:** [Lua scripts](docs/scripting/quick-start.md), a [headless CLI](docs/cli/quick-start.md), and a [local MCP server for AI agents](docs/mcp/setup.md).
 
