@@ -10,6 +10,7 @@ export const homepages = {
 export const homeMedia = new Set([
   'media/readme/create-and-paint.gif',
   'media/readme/design-the-minimap.gif',
+  'media/readme/generate-minimap-walkthrough.gif',
   'media/readme/generate-minimap-64.gif',
   'media/readme/generate-minimap-128.gif',
   'media/readme/generate-minimap-512.gif',

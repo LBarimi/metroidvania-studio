@@ -32,6 +32,8 @@ Metroidvania Studio is a free, open-source 2D level editor for metroidvania game
 
 ---
 
+![Open Procedural generation, set the room count to 128 and the seed to 42, and watch the minimap grow](media/readme/generate-minimap-walkthrough.gif)
+
 <a href="media/readme/generate-minimap-64.gif"><img src="media/readme/generate-minimap-64.gif" width="49%" alt="Generating a 64-room minimap"></a>
 <a href="media/readme/generate-minimap-128.gif"><img src="media/readme/generate-minimap-128.gif" width="49%" alt="Generating a 128-room minimap"></a>
 

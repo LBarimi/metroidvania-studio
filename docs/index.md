@@ -18,6 +18,8 @@ Lay out corridors and shafts one click at a time in **Edit minimap**. The record
 
 ## Generate your minimap
 
+![Open Procedural generation, set the room count to 128 and the seed to 42, and watch the minimap grow](assets/generate-minimap-walkthrough.gif)
+
 ![Generating a 64-room minimap](assets/generate-minimap-64.gif)
 ![Generating a 128-room minimap](assets/generate-minimap-128.gif)
 ![Generating a 512-room minimap](assets/generate-minimap-512.gif)
