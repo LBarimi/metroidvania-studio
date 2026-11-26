@@ -47,6 +47,7 @@ export function buildDocs(output = path.join(root, 'builds/docs'), { siteUrl } =
   function markdown(source, from) {
     const lines = source.replaceAll('\r\n', '\n').split('\n');
     const blocks = [], toc = [], counts = new Map();
+    const imageLine = /^!\[([^\]]*)\]\(([^\s)]+)\)$/;
     let i = 0;
     while (i < lines.length) {
       const line = lines[i];
@@ -58,20 +59,25 @@ export function buildDocs(output = path.join(root, 'builds/docs'), { siteUrl } =
         i++;
         blocks.push(`<div class="code-block"><div class="code-label"><span>${escape(lang || 'text')}</span><button type="button" class="copy">Copy</button></div><pre><code>${escape(code.join('\n'))}</code></pre></div>`); continue;
       }
-      const picture = /^!\[([^\]]*)\]\(([^\s)]+)\)$/.exec(line);
-      if (picture) {
-        const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(from), picture[2]));
-        const asset = [...homeMedia].find(name => resolved === 'docs/assets/' + path.posix.basename(name));
-        if (!asset) throw new Error('Unknown documentation image: ' + resolved);
-        // Keep release and npm offline guides free of promotional media.
-        if (siteUrl) {
+      if (imageLine.test(line)) {
+        const figures = [];
+        let picture;
+        while ((picture = imageLine.exec(lines[i] ?? ''))) {
+          i++;
+          const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(from), picture[2]));
+          const asset = [...homeMedia].find(name => resolved === 'docs/assets/' + path.posix.basename(name));
+          if (!asset) throw new Error('Unknown documentation image: ' + resolved);
+          // Keep release and npm offline guides free of promotional media.
+          if (!siteUrl) continue;
           const bytes = readFileSync(path.join(root, asset));
           if (!/^GIF8[79]a$/.test(bytes.subarray(0, 6).toString('ascii'))) throw new Error('Expected a GIF image.');
           usedMedia.add(asset);
           const target = 'assets/' + path.posix.basename(asset);
-          blocks.push(`<figure><img src="${escape(relativeLink(target, from))}" width="${bytes.readUInt16LE(6)}" height="${bytes.readUInt16LE(8)}" alt="${escape(picture[1])}" loading="lazy" decoding="async"></figure>`);
+          figures.push(`<figure><img src="${escape(relativeLink(target, from))}" width="${bytes.readUInt16LE(6)}" height="${bytes.readUInt16LE(8)}" alt="${escape(picture[1])}" loading="lazy" decoding="async"></figure>`);
         }
-        i++; continue;
+        if (figures.length > 1) blocks.push(`<div class="media-gallery">${figures.join('')}</div>`);
+        else blocks.push(...figures);
+        continue;
       }
       const heading = /^(#{1,6}) (.+)$/.exec(line);
       if (heading) {

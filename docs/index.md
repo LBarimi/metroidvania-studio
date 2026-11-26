@@ -16,6 +16,13 @@ Lay out corridors and shafts one click at a time in **Edit minimap**. The record
 
 [Minimap editing guide](minimap.md) · [Try the sample world](sample-world.md)
 
+## Generate your minimap
+
+![Generating a 64-room minimap](assets/generate-minimap-64.gif)
+![Generating a 128-room minimap](assets/generate-minimap-128.gif)
+![Generating a 512-room minimap](assets/generate-minimap-512.gif)
+![Generating a 1,024-room minimap](assets/generate-minimap-1024.gif)
+
 ## Create connected rooms
 
 Use the room-based map editor to paint terrain, connect passages, and adjust your layout. Move, resize, or rotate rooms as your world takes shape.

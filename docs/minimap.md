@@ -21,6 +21,11 @@ Enter a **Room count** from 1 to 1,024 and click **Generate minimap**. By defaul
 
 In **Edit minimap**, watch the rooms appear in placement order over one second. Routes branch with open space between them. Where a chip can bridge two rooms that are at least five passages apart, the generator can reconnect them with a two-passage shortcut, including across region colors. Switch to **Map editor** to see the whole layout as empty room outlines, or double-click a room to work on it.
 
+![Generating a 64-room minimap](assets/generate-minimap-64.gif)
+![Generating a 128-room minimap](assets/generate-minimap-128.gif)
+![Generating a 512-room minimap](assets/generate-minimap-512.gif)
+![Generating a 1,024-room minimap](assets/generate-minimap-1024.gif)
+
 ## Adjust a room
 
 Choose from 34 chip sizes, including squares, wide rooms and long shafts. The grid uses smaller subdivisions when an existing room needs them. In Starter World, the 14-tile-wide Lift Shaft and the 18-tile-high Landing fit the two-tile grid.
