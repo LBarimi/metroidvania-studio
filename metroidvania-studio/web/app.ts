@@ -16,6 +16,8 @@ import { syncLabels } from './sync-status.js';
 import { MapCanvas } from './map-canvas.js';
 import { MiniMap, roomColor } from './minimap.js';
 import { chipGroups, type MinimapEditTools } from './minimap-drawing.js';
+import { generationSettings } from './minimap-generation.js';
+import { MINIMAP_SEED_PROPERTY } from './contracts.generated.js';
 import { defaultMinimapColor, minimapColorProperty, minimapRegionColorProperty } from './minimap-shape.js';
 import { activeRoom, colorCss, tileLayer, TOOLS, LAYERS, SHAPES, MAX_BRUSH_SIZE } from './types.js';
 import type { State, Room, Point, SpriteRect, Property, MapObject, CommandExpectation, CommandValues, Definition, Material } from './types.js';
@@ -24,6 +26,7 @@ const api = new EditorApi(), locale = new Locale();
 let standalone = new URLSearchParams(location.search).get('view') === 'minimap';
 type ViewMode = 'map' | 'minimap' | 'drawing';
 let viewMode: ViewMode = standalone ? 'minimap' : 'map';
+let fitGeneratedMap = false;
 let inspectorHidden = localStorage.getItem('mapstudio.inspectorHidden') === 'true';
 let lastNotice = '';
 let clipboardScope: 'room' | 'content' = 'content';
@@ -88,6 +91,9 @@ const mini = new MiniMap(el('mini-canvas'),
 const drawingCanvas = document.createElement('canvas');
 drawingCanvas.id = 'minimap-drawing-canvas'; drawingCanvas.className = 'mini-canvas'; drawingCanvas.tabIndex = 0; drawingCanvas.hidden = true;
 el('mini-canvas').after(drawingCanvas);
+const generateButton = button('', prepareMinimapGeneration);
+generateButton.id = 'minimap-generate'; generateButton.hidden = true;
+drawingCanvas.after(generateButton);
 const drawingPanel = text('aside', '', 'inspector minimap-drawing-panel'); drawingPanel.hidden = true;
 el('inspector').after(drawingPanel);
 const chipPalette = text('aside', '', 'minimap-chip-palette');
@@ -182,6 +188,7 @@ function regionPresetField(picker: HTMLInputElement): HTMLElement {
 
 function drawDrawingPanel(): void {
   drawingCanvas.setAttribute('aria-label', locale.t('minimapDraw'));
+  generateButton.textContent = locale.t('proceduralGeneration');
   const palette = section(locale.t('chipPalette')), list = text('div', '', 'minimap-chip-list');
   for (const { label, chips } of chipGroups) {
     const group = document.createElement('fieldset');
@@ -248,6 +255,7 @@ async function editMiniRoom(id: string): Promise<void> {
   showRoomInEditor(id);
 }
 function showRoomInEditor(id: string): void {
+  fitGeneratedMap = false;
   viewMode = 'map'; map.gameView(false); map.selectRoomTarget(id); updateView();
   map.frameRoom(true); el('map-canvas').focus();
 }
@@ -281,14 +289,13 @@ function isExistingTargetConflict(error: unknown): error is EditorApiError {
   return error instanceof EditorApiError && (error.status === 400 || error.status === 409)
     && /already exists|exists at|confirm overwrite|이미\s*있|덮어쓰/iu.test(error.message);
 }
-async function runFileAction(action: 'save' | 'exportRooms', values: Record<string, unknown>, expectation: CommandExpectation | undefined, target: string): Promise<boolean> {
-  try { await run(action, values, expectation); }
+async function runFileAction(action: 'save' | 'exportRooms', values: Record<string, unknown>, expectation: CommandExpectation | undefined, target: string): Promise<State | false> {
+  try { return await run(action, values, expectation); }
   catch (error) {
     if (!isExistingTargetConflict(error)) throw error;
     if (!await confirmAction(`${locale.t('confirmOverwrite')}\n${target}`)) return false;
-    await run(action, { ...values, overwrite: true }, expectation);
+    return await run(action, { ...values, overwrite: true }, expectation);
   }
-  return true;
 }
 async function fileDialog(action: string, scope = 'all'): Promise<void> {
   await settleFileSnapshot();
@@ -324,7 +331,7 @@ async function openMap(): Promise<void> {
   } catch (error) { if (!choosing || !canceledFileDialog(error)) toast(error); }
   finally { fileBusy = false; }
 }
-async function save(saveAs = false): Promise<void> {
+async function save(saveAs = false, requireSavedFile = false): Promise<CommandExpectation | undefined> {
   if (fileBusy || !state) return;
   fileBusy = true; let choosing = true;
   try {
@@ -334,14 +341,60 @@ async function save(saveAs = false): Promise<void> {
     const hash = previous?.hash ?? (handle ? await fileHash(await handle.getFile()) : '');
     await settleFileSnapshot(); const snapshot = state;
     const json = JSON.stringify(snapshot.document);
-    if (!handle) { downloadMap(json, fileName); toast(locale.t('fileDownloadStarted'), true); return; }
+    if (!handle) {
+      if (!requireSavedFile) { downloadMap(json, fileName); toast(locale.t('fileDownloadStarted'), true); return; }
+      const path = (!snapshot.browserFileId && snapshot.file) || fileName;
+      const saved = await runFileAction('save', { path }, expectedAt(snapshot), path);
+      if (!saved) return;
+      toast(locale.t('saved') + ' · ' + saved.file, true);
+      return expectedAt(saved);
+    }
     const savedHash = await writeMapFile(handle, json, hash);
     if (previous) previous.hash = savedHash;
     const next = await run('browserSave', { fileName: handle.name, browserFileId: previous?.id ?? null }, expectedAt(snapshot));
     attachedFile = { instanceId: next.instanceId, id: next.browserFileId!, handle, hash: savedHash };
     toast(locale.t('saved'), true);
-  } catch (error) { if (!choosing || !canceledFileDialog(error)) toast(error); }
+    return expectedAt(next);
+  } catch (error) {
+    if (choosing && canceledFileDialog(error)) return;
+    if (requireSavedFile) throw error;
+    toast(error);
+  }
   finally { fileBusy = false; }
+}
+
+async function prepareMinimapGeneration(): Promise<void> {
+  await settleFileSnapshot();
+  if (!state || fileBusy || viewMode !== 'drawing' || document.querySelector('dialog[open]')) return;
+  drawing.cancelInteraction();
+  const original = expectedAt(state);
+  const dialog = showModal(locale.t('proceduralGeneration'), body => body.append(text('p', locale.t('generationSavePrompt'))), async () => {
+    discard.disabled = true;
+    try {
+      const saved = await save(false, true);
+      if (saved && dialog.open) configure(saved, false);
+    } finally { discard.disabled = false; }
+    return false;
+  }, 'generationSave');
+  const discard = button(locale.t('generationDiscard'), () => configure(original, true));
+  dialog.querySelector('.dialog-footer .accent')!.before(discard);
+
+  function configure(expected: CommandExpectation, discardChanges: boolean) {
+    dialog.close();
+    const previousSeed = state?.document.properties.find(p => p.key === MINIMAP_SEED_PROPERTY)?.value;
+    const settings = generationSettings(regionPresets(), key => locale.t(key), previousSeed);
+    const config = showModal(locale.t('proceduralGeneration'), body => body.append(settings.form), async () => {
+      const options = settings.read();
+      await run('generateMinimap', { ...options, discard: discardChanges }, expected);
+      attachedFile = undefined;
+      drawing.fit(); mini.fit(); fitGeneratedMap = true;
+      toast(locale.t('generationSeed') + ' · ' + options.seed, true);
+    }, 'generationCreate');
+    settings.count.addEventListener('keydown', event => {
+      if (event.key === 'Enter') { event.preventDefault(); config.querySelector<HTMLButtonElement>('.dialog-footer .accent')!.click(); }
+    });
+    settings.count.focus(); settings.count.select();
+  }
 }
 
 async function openSampleWorld(): Promise<void> {
@@ -574,7 +627,9 @@ async function switchView(next: ViewMode): Promise<void> {
   viewMode = next; updateView();
   if (next === 'minimap') mini.fit();
   if (next === 'drawing') drawing.fit();
-  if (fromChips && next === 'map') {
+  if (next === 'map' && fitGeneratedMap) {
+    map.fit(); fitGeneratedMap = false;
+  } else if (fromChips && next === 'map') {
     await api.settled();
     if (viewMode === 'map' && state?.selection.roomId) { map.selectRoomTarget(state.selection.roomId); map.frameRoom(true); }
   }
@@ -588,6 +643,7 @@ function updateView(): void {
   el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
   el<HTMLCanvasElement>('map-canvas').hidden = !mapMode; el<HTMLCanvasElement>('mini-canvas').hidden = !miniMode;
   drawingCanvas.hidden = !drawingMode; drawingPanel.hidden = !drawingMode; chipPalette.hidden = !drawingMode;
+  generateButton.hidden = !drawingMode;
   map.setActive(mapMode); mini.setActive(miniMode); drawing.setActive(drawingMode); preview.setVisible(mapMode); preview.updateLabels();
   for (const [id, selected] of [['map-tab', mapMode], ['minimap-tab', miniMode], ['minimap-drawing-tab', drawingMode]] as const) {
     const tab = el(id); tab.classList.toggle('active', selected); tab.setAttribute('aria-pressed', String(selected));

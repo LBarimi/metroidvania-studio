@@ -835,8 +835,19 @@ public sealed partial class EditorWorkspace
                 diskFingerprint = null; observedDiskFingerprint = null; rejectedDiskFingerprint = null; observedDiskMissing = false;
                 SetDiskHealthNotice(null); break;
             case "new":
+            case "generateMinimap":
                 if (HasUnsavedChanges && !B(command, "discard")) throw new WorkspaceConflict("Save current changes first, or confirm discarding them.");
-                var created = CreateBlankDocument(Session.Document); created.name = S(command, "name", "Untitled"); Session.New(created);
+                var created = CreateBlankDocument(Session.Document);
+                created.name = S(command, "name", "Untitled");
+                if (action == "generateMinimap")
+                {
+                    if (!command.TryGetProperty("seed", out var seedValue) || seedValue.ValueKind != JsonValueKind.Number || !seedValue.TryGetInt32(out int seed))
+                        throw new ArgumentException("@generationInvalidSeed");
+                    created.rooms = MapMinimapGenerator.Generate(I(command, "roomCount"), Read<string[]>(command.GetProperty("chipIds")),
+                        Read<string[]>(command.GetProperty("colors")), B(command, "automaticThemes"), seed);
+                    created.properties.Add(new MapProperty { key = MapMinimapGenerator.SeedProperty, value = seed.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+                }
+                Session.New(created);
                 InvalidateDiskContentProbe();
                 diskFingerprint = null; observedDiskFingerprint = null; rejectedDiskFingerprint = null; observedDiskMissing = false;
                 SetDiskHealthNotice(null); break;

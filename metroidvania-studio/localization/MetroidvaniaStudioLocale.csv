@@ -107,6 +107,24 @@ external.editor,맵 편집,Map editor,マップ編集,地图编辑,地圖編輯,
 external.minimap,미니맵 보기,View minimap,ミニマップ表示,查看小地图,檢視小地圖,Просмотр мини-карты
 external.minimapDraw,미니맵 편집,Edit minimap,ミニマップ編集,编辑小地图,編輯小地圖,Редактор мини-карты
 external.chipPalette,맵칩,Room chips,マップチップ,房间图块,房間圖塊,Шаблоны комнат
+external.proceduralGeneration,절차적 생성,Procedural generation,自動生成,程序化生成,程序化生成,Процедурная генерация
+external.generationSavePrompt,새 미니맵을 생성하기 전에 현재 맵을 저장할까요?,Save the current map before generating a new minimap?,新しいミニマップを生成する前に現在のマップを保存しますか？,要在生成新的小地图前保存当前地图吗？,要在產生新的小地圖前儲存目前的地圖嗎？,Сохранить текущую карту перед генерацией новой мини-карты?
+external.generationSave,저장하고 계속,Save and continue,保存して続ける,保存并继续,儲存並繼續,Сохранить и продолжить
+external.generationDiscard,저장하지 않고 계속,Continue without saving,保存せずに続ける,不保存并继续,不儲存並繼續,Продолжить без сохранения
+external.generationRooms,방 개수,Room count,部屋数,房间数量,房間數量,Количество комнат
+external.generationSeed,시드,Seed,シード,种子,種子,Сид
+external.generationRandomSeed,무작위 시드,Random seed,ランダムシード,随机种子,隨機種子,Случайный сид
+external.generationInvalidSeed,시드는 -2147483648~2147483647 사이의 정수로 입력하세요.,Enter a seed from -2147483648 to 2147483647 using whole numbers.,シードには-2147483648から2147483647までの整数を入力してください。,请输入 -2147483648 到 2147483647 之间的整数作为种子。,請輸入 -2147483648 到 2147483647 之間的整數作為種子。,Введите целое число от -2147483648 до 2147483647.
+external.generationAll,모든 맵칩 사용,Use all chips,すべてのチップを使う,使用全部图块,使用全部圖塊,Все шаблоны
+external.generationInclude,선택한 맵칩만 사용,Use only selected chips,選んだチップのみ使う,仅使用选中的图块,僅使用選取的圖塊,Только выбранные шаблоны
+external.generationExclude,선택한 맵칩 제외,Exclude selected chips,選んだチップを除外する,排除选中的图块,排除選取的圖塊,Исключить выбранные шаблоны
+external.generationAutoColors,자동 배정,Assign automatically,自動で割り当てる,自动分配,自動分配,Назначить автоматически
+external.generationChooseColors,프리셋에서 선택,Choose from presets,プリセットから選ぶ,从预设中选择,從預設中選擇,Выбрать из палитры
+external.generationCreate,미니맵 생성,Generate minimap,ミニマップを生成,生成小地图,產生小地圖,Создать мини-карту
+external.generationRoomRange,방 개수는 1~{0} 사이의 정수로 입력하세요.,Enter a whole number from 1 to {0}.,部屋数は1から{0}までの整数を入力してください。,请输入 1 到 {0} 之间的整数。,請輸入 1 到 {0} 之間的整數。,Введите целое число от 1 до {0}.
+external.generationChipsRequired,사용할 맵칩을 하나 이상 남겨 주세요.,Allow at least one room chip.,使えるチップを1つ以上残してください。,请至少保留一种可用图块。,請至少保留一種可用圖塊。,Оставьте хотя бы один шаблон комнаты.
+external.generationColorsRequired,지역색을 하나 이상 선택하세요.,Choose at least one region color.,エリアの色を1つ以上選んでください。,请至少选择一种区域颜色。,請至少選擇一種區域顏色。,Выберите хотя бы один цвет области.
+external.generationTooManyColors,지역색 수가 방 개수보다 많습니다.,Choose no more colors than rooms.,エリアの色数が部屋数を超えています。,区域颜色数不能超过房间数。,區域顏色數不能超過房間數。,Цветов не может быть больше чем комнат.
 external.chipHorizontal,가로,Horizontal,横型,横向,橫向,Горизонтальная
 external.chipVertical,세로,Vertical,縦型,纵向,縱向,Вертикальная
 external.chipWideHorizontal,가로 넓은,Wide horizontal,横広型,横向加宽,橫向加寬,Широкая горизонтальная

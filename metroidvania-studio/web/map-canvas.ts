@@ -435,7 +435,8 @@ export class MapCanvas {
     for (const room of rooms) { left = Math.min(left, room.x); bottom = Math.min(bottom, room.y); right = Math.max(right, room.x + room.width); top = Math.max(top, room.y + room.height); }
     this.center = { x: (left + right) / 2, y: (bottom + top) / 2 };
     this.overview = true;
-    this.pixelScale = Math.max(.000001, Math.min(32, Math.min((this.width - 50) * this.dpr / ((right - left) * 16), (this.height - 50) * this.dpr / ((top - bottom) * 16)))); this.requestDraw(); this.onHover(this.hover);
+    const bounds = this.canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    this.pixelScale = Math.max(.000001, Math.min(32, Math.min((bounds.width - 50) * dpr / ((right - left) * 16), (bounds.height - 50) * dpr / ((top - bottom) * 16)))); this.requestDraw(); this.onHover(this.hover);
   }
   gameView(enabled = !this.cameraPreview): void {
     const camera = this.cameraProfile; if (!camera || enabled === this.cameraPreview) return;

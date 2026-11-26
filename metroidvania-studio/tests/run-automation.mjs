@@ -78,6 +78,7 @@ try {
   await run('metroidvania-studio/tests/browser-storage-workflow.mjs');
   await run('metroidvania-studio/tests/browser-authoring.mjs');
   await run('metroidvania-studio/tests/browser-automation.mjs');
+  await run('metroidvania-studio/tests/browser-minimap-generation.mjs');
   if (args.includes('--performance')) {
     await run('metroidvania-studio/tests/browser-brush-latency.mjs');
     await run('metroidvania-studio/tests/browser-tile-scaling.mjs');

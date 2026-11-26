@@ -62,6 +62,8 @@ var chipGroups = MapMinimapChips.Groups.Select(group => new { label = group.Labe
     chips = group.Chips.Select(chip => new { width = chip.Width, height = chip.Height }) });
 result.Append($"export const MINIMAP_CHIP_GROUPS = {JsonSerializer.Serialize(chipGroups)};\n");
 result.Append($"export const MINIMAP_CHIP_UNIT = {MapMinimapChips.Unit};\n");
+result.Append($"export const MAX_MINIMAP_ROOMS = {MapDocument.MaximumRoomCount};\n");
+result.Append($"export const MINIMAP_SEED_PROPERTY = {JsonSerializer.Serialize(MapMinimapGenerator.SeedProperty)};\n");
 result.Append($"export const DEFAULT_MINIMAP_COLOR = {JsonSerializer.Serialize(MapMinimapChips.DefaultColor)};\n");
 string generated = result.ToString();
 if (!IntegrationContracts.Write(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(output))!, "../..")), check)) return 1;

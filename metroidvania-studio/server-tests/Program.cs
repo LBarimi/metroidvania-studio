@@ -5,6 +5,7 @@ using MetroidvaniaStudio;
 
 var tests = new (string name, Action run)[]
 {
+    ("procedural minimaps use connected empty chips and contiguous regions up to the document limit", MinimapGenerationTests.Layouts),
     ("project bundle retains editable palettes and exact resources in a fresh workspace", () => Fixture(ProjectBundleTests.RoundTrip)),
     ("project bundle rejects invalid paths, missing images, limits and stale snapshots", () => Fixture(ProjectBundleTests.Boundaries)),
     ("project bundle includes installation fallback textures", () => Fixture(ProjectBundleTests.Fallback)),

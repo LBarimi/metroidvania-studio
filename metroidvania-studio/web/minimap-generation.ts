@@ -1,0 +1,88 @@
+import { MAX_MINIMAP_ROOMS, MINIMAP_CHIP_GROUPS } from './contracts.generated.js';
+
+export function generationSettings(presets: Map<string, string>, t: (key: string) => string, previousSeed?: string) {
+  const form = document.createElement('div');
+  form.className = 'generation-settings';
+
+  function field(key: string, control: HTMLInputElement | HTMLSelectElement) {
+    const label = document.createElement('label'), caption = document.createElement('span');
+    caption.id = 'generation-label-' + key; caption.textContent = t(key);
+    control.setAttribute('aria-labelledby', caption.id);
+    label.append(caption, control);
+    form.append(label);
+  }
+  function mode(key: string, choices: string[]) {
+    const list = document.createElement('select');
+    for (const choice of choices) list.add(new Option(t(choice), choice));
+    field(key, list);
+    return list;
+  }
+  function checkbox(group: HTMLElement, value: string, caption: string, color?: string) {
+    const label = document.createElement('label'), input = document.createElement('input');
+    input.type = 'checkbox'; input.value = value;
+    label.append(input);
+    if (color) {
+      const swatch = document.createElement('span');
+      swatch.className = 'generation-swatch'; swatch.style.backgroundColor = color; label.append(swatch);
+    }
+    label.append(caption); group.append(label);
+    return input;
+  }
+  const count = document.createElement('input');
+  count.type = 'number'; count.min = '1'; count.max = String(MAX_MINIMAP_ROOMS); count.step = '1'; count.value = '32';
+  field('generationRooms', count);
+
+  const seed = document.createElement('input');
+  seed.type = 'number'; seed.min = '-2147483648'; seed.max = '2147483647'; seed.step = '1';
+  const randomSeed = () => String(crypto.getRandomValues(new Int32Array(1))[0]);
+  seed.value = randomSeed(); seed.disabled = true;
+  field('generationSeed', seed);
+  const randomLabel = document.createElement('label'), random = document.createElement('input');
+  random.type = 'checkbox'; random.checked = true;
+  randomLabel.append(random, t('generationRandomSeed')); seed.parentElement!.after(randomLabel);
+  let manualSeed = previousSeed;
+  random.addEventListener('change', () => {
+    if (random.checked) { manualSeed = seed.value; seed.value = randomSeed(); }
+    else { seed.value = manualSeed ?? seed.value; }
+    seed.disabled = random.checked;
+    if (!random.checked) { seed.focus(); seed.select(); }
+  });
+
+  const chipMode = mode('chipPalette', ['generationAll', 'generationInclude', 'generationExclude']);
+  const chips = document.createElement('div'), chipInputs: HTMLInputElement[] = [];
+  chips.className = 'generation-chips'; chips.hidden = true;
+  for (const { label, chips: sizes } of MINIMAP_CHIP_GROUPS) {
+    const group = document.createElement('fieldset'), legend = document.createElement('legend');
+    legend.textContent = t(label); group.append(legend);
+    for (const { width, height } of sizes) chipInputs.push(checkbox(group, width + 'x' + height, width + ' × ' + height));
+    chips.append(group);
+  }
+  form.append(chips);
+  chipMode.addEventListener('change', () => { chips.hidden = chipMode.value === 'generationAll'; });
+
+  const themeMode = mode('theme', ['generationAutoColors', 'generationChooseColors']);
+  const colors = document.createElement('div'); colors.className = 'generation-colors'; colors.hidden = true;
+  const colorInputs = [...presets].map(([color, name]) => checkbox(colors, color, name, color));
+  form.append(colors);
+  themeMode.addEventListener('change', () => { colors.hidden = themeMode.value === 'generationAutoColors'; });
+
+  function read() {
+    const roomCount = count.valueAsNumber;
+    if (!Number.isInteger(roomCount) || roomCount < 1 || roomCount > MAX_MINIMAP_ROOMS) {
+      count.focus(); throw new Error('@generationRoomRange:' + MAX_MINIMAP_ROOMS);
+    }
+    const seedValue = seed.valueAsNumber;
+    if (!Number.isInteger(seedValue) || seedValue < -2147483648 || seedValue > 2147483647) {
+      seed.focus(); throw new Error('@generationInvalidSeed');
+    }
+    const chipIds = chipInputs.filter(input => chipMode.value === 'generationAll'
+      || input.checked === (chipMode.value === 'generationInclude')).map(input => input.value);
+    if (!chipIds.length) throw new Error('@generationChipsRequired');
+    const automaticThemes = themeMode.value === 'generationAutoColors';
+    const selected = colorInputs.filter(input => automaticThemes || input.checked).map(input => input.value);
+    if (!selected.length) throw new Error('@generationColorsRequired');
+    if (!automaticThemes && selected.length > roomCount) throw new Error('@generationTooManyColors');
+    return { roomCount, seed: seedValue, chipIds, colors: selected, automaticThemes };
+  }
+  return { form, count, read };
+}

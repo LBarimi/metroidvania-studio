@@ -11,6 +11,16 @@ Each chip in **Edit minimap** places one room. You can lay out an entire world h
 
 ![Rapidly place room chips, review all 102 connected rooms by region, then open Map editor and fit the empty room outlines](assets/design-the-minimap.gif)
 
+## Generate a minimap
+
+In **Edit minimap**, click **Procedural generation** in the upper-right corner of the grid. Choose **Save and continue** to keep the current map, or **Continue without saving** to go straight to the settings. You can cancel the settings and keep editing the current layout.
+
+Enter a **Room count** from 1 to 1,024 and click **Generate minimap**. By default, the generator uses the full chip palette and assigns region colors automatically. To make a world of narrow shafts, choose **Use only selected chips** and pick vertical sizes. To keep everything except a few shapes, choose **Exclude selected chips**. Under **Region color**, choose **Choose from presets** to set the colors yourself. Each chosen color forms a connected region.
+
+**Random seed** is checked by default. Clear it to enter a numeric **Seed**. The same seed, room count, chips and color settings reproduce the same layout and regions. The map stores its seed, so clearing **Random seed** the next time you open the dialog recalls it.
+
+The new layout opens in **Edit minimap**. Switch to **Map editor** to see the whole layout as empty room outlines, or double-click a room to work on it.
+
 ## Adjust a room
 
 Choose from 34 chip sizes, including squares, wide rooms and long shafts. The grid uses smaller subdivisions when an existing room needs them. In Starter World, the 14-tile-wide Lift Shaft and the 18-tile-high Landing fit the two-tile grid.
