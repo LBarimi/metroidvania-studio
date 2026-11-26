@@ -65,16 +65,50 @@ try {
   await skipSave(); await randomSeed.uncheck(); await seed.fill('-123');
   await count.fill('0'); await press('Generate minimap');
   assert.match(await dialog.locator('.modal-error').innerText(), /1024/);
-  await count.fill('14'); await chips.selectOption('generationInclude'); await press('Generate minimap');
+  await count.fill('1024'); await chips.selectOption('generationInclude'); await press('Generate minimap');
   assert.match(await dialog.locator('.modal-error').innerText(), /at least one room chip/);
   await dialog.locator('.generation-chips input[value="8x96"]').check();
   await dialog.getByLabel('Region color', { exact: true }).selectOption('generationChooseColors');
   await press('Generate minimap'); assert.match(await dialog.locator('.modal-error').innerText(), /region color/);
   await dialog.locator('.generation-colors input').first().check();
   const color = await dialog.locator('.generation-colors input').first().inputValue();
-  const manual = await submit();
+  // Sample the actual canvas paints at exact elapsed times, independent of the browser's frame rate.
+  const probe = await page.evaluateHandle(color => {
+    const ctx = document.querySelector('#minimap-drawing-canvas').getContext('2d');
+    const fill = ctx.fillRect, origin = performance.now();
+    let elapsed = 0, rooms = [];
+    performance.now = () => origin + elapsed;
+    const dim = '#' + color.slice(1).match(/../g).map(s => Math.round(parseInt(s, 16) * .6).toString(16).padStart(2, '0')).join('');
+    ctx.fillRect = function(x, y, w, h) {
+      if (this.fillStyle === '#000000' && x === 0 && y === 0) rooms = [];
+      if (this.fillStyle === color || this.fillStyle === dim) rooms.push([x, y, w, h]);
+      fill.call(this, x, y, w, h);
+    };
+    return {
+      async frame(ms) {
+        elapsed = ms;
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        return rooms.slice();
+      },
+      restore() { delete performance.now; ctx.fillRect = fill; }
+    };
+  }, color);
+  let manual;
+  try {
+    manual = await submit();
+    const frame = ms => probe.evaluate((p, t) => p.frame(t), ms);
+    assert.equal((await frame(0)).length, 0);
+    const half = await frame(500);
+    assert.equal(half.length, 512);
+    const [x, y, w, h] = half[0];
+    await page.mouse.click(canvas.x + x + w / 2, canvas.y + y + h / 2, { button: 'right' });
+    const almost = await frame(990), full = await frame(1000);
+    assert.equal(almost.length, 1014); assert.equal(full.length, 1024);
+    assert.deepEqual(half, full.slice(0, 512), 'Placed rooms keep their final positions as the layout grows.');
+    assert.deepEqual(await frame(1200), full);
+  } finally { await probe.evaluate(p => p.restore()); await probe.dispose(); }
   assert.ok(manual.document.properties.some(p => p.key === 'mapMaker.minimapGenerationSeed' && p.value === '-123'));
-  assert.equal(manual.document.rooms.length, 14);
+  assert.equal(manual.document.rooms.length, 1024);
   assert.ok(manual.document.rooms.every(r => r.width === 8 && r.height === 96 && r.properties.some(p => p.value === color)));
 
   await skipSave(); await count.fill('5'); await chips.selectOption('generationExclude');

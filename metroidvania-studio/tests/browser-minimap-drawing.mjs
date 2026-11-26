@@ -44,7 +44,7 @@ try {
     await interact();
     const r = await response; assert.ok(r.ok(), await r.text());
     const current = await state();
-    await page.waitForFunction(rev => document.querySelector('#status-revision')?.textContent === 'r' + rev
+    await page.waitForFunction(rev => Number(document.querySelector('#status-revision')?.textContent.slice(1)) >= rev
       && !document.querySelector('#status-state').classList.contains('working'), current.revision);
     await frame();
     return current;

@@ -387,7 +387,7 @@ async function prepareMinimapGeneration(): Promise<void> {
       const options = settings.read();
       await run('generateMinimap', { ...options, discard: discardChanges }, expected);
       attachedFile = undefined;
-      drawing.fit(); mini.fit(); fitGeneratedMap = true;
+      drawing.showGeneration(); mini.fit(); fitGeneratedMap = true;
       toast(locale.t('generationSeed') + ' · ' + options.seed, true);
     }, 'generationCreate');
     settings.count.addEventListener('keydown', event => {

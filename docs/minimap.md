@@ -19,7 +19,7 @@ Enter a **Room count** from 1 to 1,024 and click **Generate minimap**. By defaul
 
 **Random seed** is checked by default. Clear it to enter a numeric **Seed**. The same seed, room count, chips and color settings reproduce the same layout and regions. The map stores its seed, so clearing **Random seed** the next time you open the dialog recalls it.
 
-The new layout opens in **Edit minimap**. Switch to **Map editor** to see the whole layout as empty room outlines, or double-click a room to work on it.
+In **Edit minimap**, watch the rooms appear in placement order over one second. Switch to **Map editor** to see the whole layout as empty room outlines, or double-click a room to work on it.
 
 ## Adjust a room
 

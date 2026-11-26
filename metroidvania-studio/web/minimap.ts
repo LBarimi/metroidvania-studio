@@ -6,6 +6,7 @@ import type { MinimapShape } from './minimap-shape.js';
 
 // Style values are measured at five screen pixels per tile, then zoom with the map.
 const STYLE_SCALE = 5, MIN_SCALE = .00000001, MAX_SCALE = 80;
+const GENERATION_DURATION_MS = 1000;
 const MAX_PASSAGE_GAP = 4; // Map tiles; long shared boundaries retain a compact central opening.
 const regionColorKeys = [minimapRegionColorProperty, minimapColorProperty, 'color'];
 
@@ -45,6 +46,7 @@ export class MiniMap {
   private raf = 0;
   private initialized = false;
   private active = false;
+  private generationStart: number | null = null;
   private drag: { id: number; point: Point; center: Point } | null = null;
   private wheelDelta = 0;
   private wheelDirection = 0;
@@ -58,7 +60,7 @@ export class MiniMap {
     canvas.tabIndex = 0;
     canvas.addEventListener('contextmenu', e => e.preventDefault(), options);
     canvas.addEventListener('pointerdown', e => {
-      if (!this.active || this.interacting || ![0, 1, 2].includes(e.button)) return;
+      if (!this.active || this.generationStart !== null || this.interacting || ![0, 1, 2].includes(e.button)) return;
       e.preventDefault(); canvas.focus();
       const point = this.point(e);
       if (e.button === 1 || (e.button === 0 && e.altKey)) {
@@ -83,7 +85,7 @@ export class MiniMap {
       if (edit) this.requestDraw();
     }, options);
     canvas.addEventListener('pointermove', e => {
-      if (!this.active || (!edit && !this.drag)) return;
+      if (!this.active || this.generationStart !== null || (!edit && !this.drag)) return;
       const p = this.point(e);
       if (this.drag?.id === e.pointerId) {
         e.preventDefault();
@@ -110,7 +112,7 @@ export class MiniMap {
     canvas.addEventListener('lostpointercapture', cancel, options);
     window.addEventListener('blur', () => this.cancelInteraction(), options);
     canvas.addEventListener('dblclick', e => {
-      if (!this.active || this.drag || e.button !== 0 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (!this.active || this.generationStart !== null || this.drag || e.button !== 0 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
       const room = this.roomAt(this.world(this.point(e))); if (!room) return;
       e.preventDefault(); open(room.id);
     }, options);
@@ -121,7 +123,7 @@ export class MiniMap {
   setActive(active: boolean): void {
     if (active === this.active) return;
     this.active = active;
-    if (!active) { this.cancelInteraction(); this.resetWheel(); cancelAnimationFrame(this.raf); this.raf = 0; return; }
+    if (!active) { this.generationStart = null; this.cancelInteraction(); this.resetWheel(); cancelAnimationFrame(this.raf); this.raf = 0; return; }
     if (this.edit && this.state) this.grid = roomGrid(this.state.document.rooms);
     if (!this.initialized && this.state?.document.rooms.length) { this.initialized = true; this.fit(); }
     else this.requestDraw();
@@ -134,7 +136,7 @@ export class MiniMap {
   }
   private wheel(event: WheelEvent): void {
     event.preventDefault();
-    if (!this.active || this.interacting || !Number.isFinite(event.deltaY) || !event.deltaY) { if (this.drag) this.resetWheel(); return; }
+    if (!this.active || this.generationStart !== null || this.interacting || !Number.isFinite(event.deltaY) || !event.deltaY) { if (this.drag) this.resetWheel(); return; }
     const direction = Math.sign(event.deltaY);
     if (direction !== this.wheelDirection) { this.wheelDelta = 0; this.wheelDirection = direction; }
     clearTimeout(this.wheelReset);
@@ -150,10 +152,16 @@ export class MiniMap {
   setState(state: State): void {
     const previous = this.state, changed = !previous || previous.instanceId !== state.instanceId
       || previous.documentRevision !== state.documentRevision || previous.selection.roomId !== state.selection.roomId;
+    if (previous?.instanceId !== state.instanceId || previous?.documentRevision !== state.documentRevision) this.generationStart = null;
     this.state = state;
     if (this.edit && this.active && previous?.document.rooms !== state.document.rooms) this.grid = roomGrid(state.document.rooms);
     if (this.active && !this.initialized && state.document.rooms.length) { this.initialized = true; this.fit(); }
     else if (changed) this.requestDraw();
+  }
+  showGeneration(): void {
+    this.cancelInteraction();
+    this.fit();
+    if (this.active && this.state?.document.rooms.length) this.generationStart = performance.now();
   }
   fit(): void {
     if (!this.active) { this.initialized = false; return; }
@@ -245,12 +253,28 @@ export class MiniMap {
     const dpr = window.devicePixelRatio || 1; this.width = r.width; this.height = r.height; this.pixelRatio = dpr;
     const width = Math.round(r.width * dpr), height = Math.round(r.height * dpr); if (this.canvas.width !== width || this.canvas.height !== height) { this.canvas.width = width; this.canvas.height = height; }
     const ctx = this.ctx; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, this.width, this.height); if (!this.state) return;
-    if (this.edit) this.drawGrid();
-    const rooms = new Map(this.state.document.rooms.map(room => [room.id, room]));
-    const bounds = this.drag ? null : this.chipBounds();
+    let visible = this.state.document.rooms, connections = this.state.connections;
+    let arriving: Room | undefined;
+    if (this.generationStart !== null) {
+      const progress = (performance.now() - this.generationStart) / GENERATION_DURATION_MS;
+      if (progress >= 1) this.generationStart = null;
+      else {
+        const position = progress * visible.length, index = Math.floor(position), size = position - index;
+        const room = visible[index];
+        visible = visible.slice(0, index);
+        if (size > 0) arriving = { ...room, x: room.x + room.width * (1 - size) / 2, y: room.y + room.height * (1 - size) / 2,
+          width: room.width * size, height: room.height * size };
+        this.requestDraw();
+      }
+    }
+    if (this.edit) this.drawGrid(visible);
+    const rooms = new Map(visible.map(room => [room.id, room]));
+    if (this.generationStart !== null) connections = connections.filter(c => rooms.has(c.roomAId) && rooms.has(c.roomBId));
+    if (arriving) rooms.set(arriving.id, arriving);
+    const bounds = this.drag || this.generationStart !== null ? null : this.chipBounds();
     const blocked = bounds !== null && !this.free(bounds, this.moving?.room.id);
     this.canvas.classList.toggle('chip-blocked', blocked);
-    let selection = this.state.selection.roomId, connections = this.state.connections;
+    let selection = this.state.selection.roomId;
     if (this.edit && bounds && !blocked) {
       const original = this.moving?.room;
       const chip: Room = original ? { ...original, ...bounds } : {
@@ -264,7 +288,7 @@ export class MiniMap {
       connections = existing.concat(previewConnections(chip, rooms.values()));
       selection = chip.id;
     }
-    const hasDrawing = this.state.document.rooms.some(room => this.shape(room));
+    const hasDrawing = visible.some(room => this.shape(room));
     if (hasDrawing) connections = connections.flatMap(connection => this.clipConnection(connection, rooms));
     const spans = connections.map(connection => this.span(connection)), roomSpans = new Map<string, Span[]>();
     for (const span of spans) for (const id of [span.connection.roomAId, span.connection.roomBId]) {
@@ -319,7 +343,7 @@ export class MiniMap {
     ctx.fillStyle = '#ffffff'; ctx.fill(walls);
     if (this.showNames) { ctx.font = '11px system-ui'; ctx.textAlign = 'center'; for (const room of rooms.values()) { const p = this.anchor(room); ctx.fillStyle = '#000c'; ctx.fillRect(p.x - ctx.measureText(room.name).width / 2 - 4, p.y - 8, ctx.measureText(room.name).width + 8, 16); ctx.fillStyle = dimColor('#ffffff', opacity(room)); ctx.fillText(room.name, p.x, p.y + 4); } }
     ctx.globalAlpha = 1;
-    const selected = rooms.get(selection || ''); if (selected) { const p = this.anchor(selected); ctx.fillStyle = '#000'; ctx.fillRect(p.x - 4, p.y - 4, 8, 8); ctx.fillStyle = '#fff16c'; ctx.fillRect(p.x - 3, p.y - 3, 6, 6); }
+    const selected = rooms.get(selection || ''); if (selected && selected !== arriving) { const p = this.anchor(selected); ctx.fillStyle = '#000'; ctx.fillRect(p.x - 4, p.y - 4, 8, 8); ctx.fillStyle = '#fff16c'; ctx.fillRect(p.x - 3, p.y - 3, 6, 6); }
     if (bounds && blocked) {
       const rect = this.rect(bounds);
       ctx.save(); ctx.strokeStyle = '#ff7474'; ctx.fillStyle = 'rgba(224,84,84,.24)'; ctx.lineWidth = 2;
@@ -346,7 +370,7 @@ export class MiniMap {
       && !this.state.document.rooms.some(room => room.id !== exceptId && bounds.x < room.x + room.width &&
         bounds.x + bounds.width > room.x && bounds.y < room.y + room.height && bounds.y + bounds.height > room.y);
   }
-  private drawGrid(): void {
+  private drawGrid(rooms: Room[]): void {
     const ctx = this.ctx, lower = this.world({ x: 0, y: this.height }), upper = this.world({ x: this.width, y: 0 });
     let visibleStep = this.grid.step;
     while (visibleStep * this.scale * this.pixelRatio < 3) visibleStep *= 2;
@@ -365,7 +389,7 @@ export class MiniMap {
       if (visibleStep === this.grid.step) continue;
       // At distant zoom, retain guides for actual room edges between the visible grid lines.
       const edges = new Set<number>();
-      for (const room of this.state!.document.rooms) {
+      for (const room of rooms) {
         edges.add(room[axis]); edges.add(room[axis] + (axis === 'x' ? room.width : room.height));
       }
       ctx.fillStyle = '#242424';
