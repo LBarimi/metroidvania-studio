@@ -57,7 +57,7 @@ namespace MetroidvaniaStudio
             var neighbors = new List<int>[count];
             var rooms = GrowRoutes(chips, seed, random, neighbors);
 
-            // Flood each theme from a distinct room along actual shared edges.
+            // Keep regions contiguous along their original routes. A later shortcut may cross a region boundary.
             var seeds = Enumerable.Range(0, count).ToArray();
             random.Shuffle(seeds);
             var queue = new Queue<int>();
@@ -84,12 +84,15 @@ namespace MetroidvaniaStudio
             const int unit = MapMinimapChips.Unit;
             var rooms = new List<MapRoom>(neighbors.Length);
             var occupied = new Dictionary<(int X, int Y), int>();
+            var passages = new List<int>[neighbors.Length];
             int heading = random.Next(4), remaining = 0;
+            int nextShortcut = 8, extraPassages = 0;
             for (int i = 0; i < neighbors.Length; i++)
             {
                 var chip = chips[random.Next(chips.Length)];
-                int width = chip.Width / unit, height = chip.Height / unit, x = 0, y = 0;
+                int x = 0, y = 0;
                 neighbors[i] = new List<int>();
+                passages[i] = new List<int>();
                 if (i > 0)
                 {
                     int parent = i - 1;
@@ -103,12 +106,29 @@ namespace MetroidvaniaStudio
                         remaining = 3 + random.Next(6);
                     }
                     else if (random.Next(3) == 0) heading = (heading < 2 ? 2 : 0) + random.Next(2);
-                    var next = FindAttachment(rooms, occupied, width, height, parent, heading, random);
+                    Attachment? shortcut = null;
+                    if (i >= nextShortcut)
+                    {
+                        shortcut = FindShortcut(rooms, occupied, chip, passages, random);
+                        if (shortcut == null && chips.Length > 1)
+                        {
+                            var alternate = chips[random.Next(chips.Length)];
+                            if (alternate != chip) shortcut = FindShortcut(rooms, occupied, alternate, passages, random);
+                            if (shortcut.HasValue) chip = alternate;
+                        }
+                        nextShortcut = i + (shortcut.HasValue ? 6 + random.Next(5) : 2);
+                    }
+                    var next = shortcut ?? FindAttachment(rooms, occupied, chip.Width / unit, chip.Height / unit,
+                        parent, heading, extraPassages > i / 4, random);
                     neighbors[i].Add(next.Parent);
                     neighbors[next.Parent].Add(i);
                     (x, y, heading) = (next.X, next.Y, next.Side);
                     remaining--;
                 }
+                int width = chip.Width / unit, height = chip.Height / unit;
+                CollectContacts(occupied, x, y, width, height, passages[i]);
+                foreach (int other in passages[i]) passages[other].Add(i);
+                if (i > 0) extraPassages += passages[i].Count - 1;
                 rooms.Add(new MapRoom { id = FormattableString.Invariant($"gen_{unchecked((uint)seed):x8}_{i:x3}"),
                     name = FormattableString.Invariant($"room_{i:00}"), x = x * unit, y = y * unit, width = chip.Width, height = chip.Height });
                 for (int dx = 0; dx < width; dx++)
@@ -118,9 +138,8 @@ namespace MetroidvaniaStudio
         }
 
         private static Attachment FindAttachment(List<MapRoom> rooms, Dictionary<(int X, int Y), int> occupied,
-            int width, int height, int preferredParent, int heading, LayoutRandom random)
+            int width, int height, int preferredParent, int heading, bool avoidExtraContacts, LayoutRandom random)
         {
-            const int unit = MapMinimapChips.Unit;
             int start = random.Next(rooms.Count), bestCost = int.MaxValue;
             Attachment best = default;
             // Try other anchors when a tip runs into a cluster. An outermost face always has space.
@@ -128,49 +147,29 @@ namespace MetroidvaniaStudio
             {
                 int parent = attempt == 0 ? preferredParent : (start + attempt - 1) % rooms.Count;
                 if (attempt > 0 && parent == preferredParent) continue;
-                MapRoom anchor = rooms[parent];
-                for (int side = 0; side < 4; side++)
+                foreach (var candidate in Candidates(rooms[parent], parent, width, height, 4, random))
                 {
-                    bool horizontal = side < 2;
-                    int span = horizontal ? height : width;
-                    int anchorSpan = (horizontal ? anchor.height : anchor.width) / unit;
-                    int offsets = anchorSpan + span - 1, first = random.Next(offsets), samples = Math.Min(offsets, 4);
-                    for (int s = 0; s < samples; s++)
-                    {
-                        int offset = (first + s * offsets / samples) % offsets - span + 1;
-                        int x = anchor.x / unit + (horizontal ? (side == 0 ? -width : anchor.width / unit) : offset);
-                        int y = anchor.y / unit + (horizontal ? offset : (side == 2 ? -height : anchor.height / unit));
-                        int cost = side == heading ? 0 : side == (heading ^ 1) ? 14 : 5;
-                        cost += random.Next(6);
-                        if (cost >= bestCost || !Fits(x, y)) continue;
-                        // Count nearby cells from other rooms. A shared wall costs more than a narrow gap.
-                        cost += ClearanceCost(x, y, parent);
-                        if (cost >= bestCost) continue;
-                        bestCost = cost;
-                        best = new Attachment(parent, side, x, y);
-                    }
+                    int cost = candidate.Side == heading ? 0 : candidate.Side == (heading ^ 1) ? 14 : 5;
+                    cost += random.Next(6);
+                    if (cost >= bestCost || !Fits(occupied, candidate, width, height)) continue;
+                    cost += ClearanceCost(candidate.X, candidate.Y, parent);
+                    if (cost >= bestCost) continue;
+                    bestCost = cost;
+                    best = candidate;
                 }
-                // Keep an open route on its chosen anchor. In tight quarters compare up to eight
-                // alternatives, continuing the search only if the chip still has nowhere to fit.
-                if (bestCost <= 10 || (attempt >= 8 && bestCost < int.MaxValue)) return best;
+                // When the graph already has plenty of loops, look farther for a clear route
+                // instead of filling every remaining gap with incidental passages.
+                if (bestCost <= 14 || (attempt >= (avoidExtraContacts ? 8 : 3) && bestCost < int.MaxValue)) return best;
             }
             if (bestCost < int.MaxValue) return best;
             throw new InvalidOperationException("No exterior room edge found.");
-
-            bool Fits(int x, int y)
-            {
-                for (int dx = 0; dx < width; dx++)
-                    for (int dy = 0; dy < height; dy++)
-                        if (occupied.ContainsKey((x + dx, y + dy))) return false;
-                return true;
-            }
 
             int ClearanceCost(int x, int y, int parent)
             {
                 int cost = 0;
                 for (int distance = 1; distance <= 2; distance++)
                 {
-                    int weight = distance == 1 ? 6 : 2;
+                    int weight = distance == 2 ? 1 : avoidExtraContacts ? 24 : 3;
                     for (int dx = 0; dx < width; dx++)
                     {
                         if (OtherRoom(x + dx, y - distance)) cost += weight;
@@ -184,6 +183,92 @@ namespace MetroidvaniaStudio
                 }
                 return cost;
                 bool OtherRoom(int cx, int cy) => occupied.TryGetValue((cx, cy), out int owner) && owner != parent;
+            }
+        }
+
+        private static Attachment? FindShortcut(List<MapRoom> rooms, Dictionary<(int X, int Y), int> occupied,
+            MapMinimapChips.Chip chip, List<int>[] passages, LayoutRandom random)
+        {
+            int width = chip.Width / MapMinimapChips.Unit, height = chip.Height / MapMinimapChips.Unit;
+            int start = random.Next(rooms.Count), anchors = Math.Min(24, rooms.Count);
+            var contacts = new List<int>();
+            Attachment? best = null;
+            int longestDetour = 4;
+            for (int i = 0; i < anchors; i++)
+            {
+                int parent = (start + i * rooms.Count / anchors) % rooms.Count;
+                int[] distances = null;
+                foreach (var candidate in Candidates(rooms[parent], parent, width, height, int.MaxValue, random))
+                {
+                    if (!Fits(occupied, candidate, width, height)) continue;
+                    CollectContacts(occupied, candidate.X, candidate.Y, width, height, contacts);
+                    if (contacts.Count != 2) continue;
+                    int other = contacts[0] == parent ? contacts[1] : contacts[0];
+                    distances ??= PassageDistances(passages, rooms.Count, parent);
+                    int detour = distances[other];
+                    // Replace at least five existing passages with two; touching a sibling alone is no shortcut.
+                    if (detour <= longestDetour) continue;
+                    longestDetour = detour;
+                    best = candidate;
+                    if (detour >= 10) return best;
+                }
+            }
+            return best;
+        }
+
+        private static int[] PassageDistances(List<int>[] passages, int count, int start)
+        {
+            var distances = new int[count];
+            Array.Fill(distances, -1);
+            var queue = new Queue<int>();
+            distances[start] = 0;
+            queue.Enqueue(start);
+            while (queue.TryDequeue(out int room))
+                foreach (int other in passages[room])
+                    if (distances[other] < 0)
+                    {
+                        distances[other] = distances[room] + 1;
+                        queue.Enqueue(other);
+                    }
+            return distances;
+        }
+
+        private static IEnumerable<Attachment> Candidates(MapRoom anchor, int parent, int width, int height,
+            int samplesPerSide, LayoutRandom random)
+        {
+            const int unit = MapMinimapChips.Unit;
+            for (int side = 0; side < 4; side++)
+            {
+                bool horizontal = side < 2;
+                int span = horizontal ? height : width;
+                int anchorSpan = (horizontal ? anchor.height : anchor.width) / unit;
+                int offsets = anchorSpan + span - 1, first = random.Next(offsets), samples = Math.Min(offsets, samplesPerSide);
+                for (int s = 0; s < samples; s++)
+                {
+                    int offset = (first + s * offsets / samples) % offsets - span + 1;
+                    int x = anchor.x / unit + (horizontal ? (side == 0 ? -width : anchor.width / unit) : offset);
+                    int y = anchor.y / unit + (horizontal ? offset : (side == 2 ? -height : anchor.height / unit));
+                    yield return new Attachment(parent, side, x, y);
+                }
+            }
+        }
+
+        private static bool Fits(Dictionary<(int X, int Y), int> occupied, Attachment candidate, int width, int height)
+        {
+            for (int dx = 0; dx < width; dx++)
+                for (int dy = 0; dy < height; dy++)
+                    if (occupied.ContainsKey((candidate.X + dx, candidate.Y + dy))) return false;
+            return true;
+        }
+
+        private static void CollectContacts(Dictionary<(int X, int Y), int> occupied, int x, int y, int width, int height, List<int> contacts)
+        {
+            contacts.Clear();
+            for (int dx = 0; dx < width; dx++) { Visit(x + dx, y - 1); Visit(x + dx, y + height); }
+            for (int dy = 0; dy < height; dy++) { Visit(x - 1, y + dy); Visit(x + width, y + dy); }
+            void Visit(int cx, int cy)
+            {
+                if (occupied.TryGetValue((cx, cy), out int owner) && !contacts.Contains(owner)) contacts.Add(owner);
             }
         }
     }

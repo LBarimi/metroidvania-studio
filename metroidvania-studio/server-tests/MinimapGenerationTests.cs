@@ -70,10 +70,64 @@ internal static class MinimapGenerationTests
             double coverage = (double)rooms.Sum(r => r.width * r.height) / (width * height);
             var passages = MiniMapGeometry.GetConnections(new MapDocument { rooms = rooms });
             int junctions = passages.SelectMany(p => new[] { p.RoomAId, p.RoomBId }).GroupBy(id => id).Count(g => g.Count() >= 3);
-            // Bounding-box coverage detects tightly packed worlds. Extra side contacts catch a
-            // dense central cluster with a long outlying branch that inflates the bounding box.
-            if (coverage > .45 || passages.Length - (count - 1) > count / 4 || junctions < 4)
+            var (shortcuts, _) = CountShortcuts(rooms, passages);
+            // Allow useful loops in addition to the original limit on incidental side contacts.
+            int incidental = passages.Length - (count - 1) - shortcuts;
+            if (coverage > .45 || incidental > count / 4 || junctions < 4 || shortcuts == 0)
                 throw new Exception($"Expected spaced, branching routes for seed {seed} ({chips[0]}, {chips.Length} chip sizes): coverage {coverage:P0}, {passages.Length} passages, {junctions} junctions.");
         }
+    }
+
+    public static void RegionalShortcuts()
+    {
+        string[] colors = ["#985082", "#449eaa", "#ad7555", "#728b54", "#d09e45", "#6273b0"];
+        foreach (int count in new[] { 32, 96 })
+        foreach (int seed in new[] { 17, 42 })
+        {
+            var rooms = MapMinimapGenerator.Generate(count, MapMinimapChips.ById.Keys.ToArray(), colors, true, seed);
+            var passages = MiniMapGeometry.GetConnections(new MapDocument { rooms = rooms });
+            var (useful, crossRegion) = CountShortcuts(rooms, passages);
+            if (useful < count / 32 || crossRegion == 0)
+                throw new Exception($"Expected alternate routes between regions for {count} rooms, seed {seed}. Found {useful} shortcuts and {crossRegion} between colors.");
+        }
+    }
+
+    // Measure the final geometry independently. Removing a connector must leave a longer,
+    // traversable route between two rooms that already existed when it was placed.
+    private static (int Useful, int CrossRegion) CountShortcuts(List<MapRoom> rooms, MiniMapConnection[] passages)
+    {
+        var indices = rooms.Select((room, index) => (room.id, index)).ToDictionary(p => p.id, p => p.index);
+        var links = rooms.Select(_ => new List<int>()).ToArray();
+        foreach (var passage in passages)
+        {
+            int a = indices[passage.RoomAId], b = indices[passage.RoomBId];
+            links[a].Add(b); links[b].Add(a);
+        }
+        var colors = rooms.Select(r => r.properties.Single(p => p.key == MapMinimapShape.RegionColorProperty).value).ToArray();
+        int useful = 0, crossRegion = 0;
+        for (int room = 0; room < rooms.Count; room++)
+        {
+            var earlier = links[room].Where(i => i < room).ToArray();
+            bool bypass = false, crosses = false;
+            for (int i = 0; i + 1 < earlier.Length; i++)
+            {
+                int start = earlier[i];
+                var distances = Enumerable.Repeat(-1, rooms.Count).ToArray();
+                var queue = new Queue<int>();
+                distances[start] = 0; queue.Enqueue(start);
+                while (queue.TryDequeue(out int here))
+                    foreach (int next in links[here])
+                        if (next != room && distances[next] < 0) { distances[next] = distances[here] + 1; queue.Enqueue(next); }
+                foreach (int end in earlier.Skip(i + 1))
+                {
+                    if (distances[end] < 5) continue;
+                    bypass = true;
+                    crosses |= colors[start] != colors[end];
+                }
+            }
+            if (bypass) useful++;
+            if (crosses) crossRegion++;
+        }
+        return (useful, crossRegion);
     }
 }

@@ -7,6 +7,7 @@ var tests = new (string name, Action run)[]
 {
     ("procedural minimaps use connected empty chips and contiguous regions up to the document limit", MinimapGenerationTests.Layouts),
     ("procedural minimap routes branch and leave open space with mixed or uniform chips", MinimapGenerationTests.RouteSpacing),
+    ("procedural shortcuts save multiple passages and can reconnect different color regions", MinimapGenerationTests.RegionalShortcuts),
     ("project bundle retains editable palettes and exact resources in a fresh workspace", () => Fixture(ProjectBundleTests.RoundTrip)),
     ("project bundle rejects invalid paths, missing images, limits and stale snapshots", () => Fixture(ProjectBundleTests.Boundaries)),
     ("project bundle includes installation fallback textures", () => Fixture(ProjectBundleTests.Fallback)),

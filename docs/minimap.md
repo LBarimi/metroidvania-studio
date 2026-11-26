@@ -19,7 +19,7 @@ Enter a **Room count** from 1 to 1,024 and click **Generate minimap**. By defaul
 
 **Random seed** is checked by default. Clear it to enter a numeric **Seed**. The same seed, room count, chips and color settings reproduce the same layout and regions. The map stores its seed, so clearing **Random seed** the next time you open the dialog recalls it.
 
-In **Edit minimap**, watch the rooms appear in placement order over one second. The generator extends a route for several rooms before starting a branch, leaving open space between nearby paths. Switch to **Map editor** to see the whole layout as empty room outlines, or double-click a room to work on it.
+In **Edit minimap**, watch the rooms appear in placement order over one second. Routes branch with open space between them. Where a chip can bridge two rooms that are at least five passages apart, the generator can reconnect them with a two-passage shortcut, including across region colors. Switch to **Map editor** to see the whole layout as empty room outlines, or double-click a room to work on it.
 
 ## Adjust a room
 
