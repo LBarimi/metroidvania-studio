@@ -56,4 +56,24 @@ internal static class MinimapGenerationTests
             throw new Exception("Unexpected region palette.");
         foreach (var group in regions.GroupBy(pair => pair.Value)) Connected(group.Select(pair => pair.Key));
     }
+
+    public static void RouteSpacing()
+    {
+        const int count = 96;
+        string[][] palettes = [MapMinimapChips.ById.Keys.ToArray(), ["8x8"], ["8x96"], ["96x8"]];
+        foreach (var chips in palettes)
+        foreach (int seed in new[] { 0, 17, -42 })
+        {
+            var rooms = MapMinimapGenerator.Generate(count, chips, ["#123456"], true, seed);
+            int width = rooms.Max(r => r.x + r.width) - rooms.Min(r => r.x);
+            int height = rooms.Max(r => r.y + r.height) - rooms.Min(r => r.y);
+            double coverage = (double)rooms.Sum(r => r.width * r.height) / (width * height);
+            var passages = MiniMapGeometry.GetConnections(new MapDocument { rooms = rooms });
+            int junctions = passages.SelectMany(p => new[] { p.RoomAId, p.RoomBId }).GroupBy(id => id).Count(g => g.Count() >= 3);
+            // Bounding-box coverage detects tightly packed worlds. Extra side contacts catch a
+            // dense central cluster with a long outlying branch that inflates the bounding box.
+            if (coverage > .45 || passages.Length - (count - 1) > count / 4 || junctions < 4)
+                throw new Exception($"Expected spaced, branching routes for seed {seed} ({chips[0]}, {chips.Length} chip sizes): coverage {coverage:P0}, {passages.Length} passages, {junctions} junctions.");
+        }
+    }
 }
