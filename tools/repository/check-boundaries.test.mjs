@@ -21,6 +21,13 @@ test('detects concrete machine paths in UTF-8, UTF-16, escaped JSON and commit m
     assert.ok(inspectBoundaries([{ name: 'settings.json', bytes }]).some(x => x.rule === 'machine-path'));
   }
 });
+test('distinguishes a null-terminated drive prefix in compiled code from an embedded file path', () => {
+  const instructions = Buffer.from([0x07, 0x72, 0x3a, 0x2f, 0x00, 0x70, 0x28]);
+  const scan = bytes => inspectBoundaries([{ name: 'program.dll', bytes }]);
+  assert.deepEqual(scan(instructions), []);
+  assert.ok(scan(Buffer.concat([instructions, Buffer.from([0]), Buffer.from(privatePath)]))
+    .some(issue => issue.rule === 'machine-path'));
+});
 test('keeps portable environment paths, web routes and normal engine discussion valid', () => {
   for (const value of ['$env:ProgramFiles/dotnet/dotnet.exe', 'process.env.LOCALAPPDATA',
     '/api/state', 'https://example.invalid/docs', '../MyWorkspace', 'No engine installation is required.']) {

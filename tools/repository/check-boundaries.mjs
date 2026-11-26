@@ -8,7 +8,7 @@ const engineRoot = /^(?:Assets|Packages|ProjectSettings|Library|Temp|UserSetting
 const sourceFile = /\.(?:cs|csproj|props|targets|ts|js|mjs|cjs|cpp|h|hpp|ps1|py)$/i;
 const engineCode = /\b(?:using|namespace)\s+(?:static\s+)?(?:\w+\s*=\s*)?(?:UnityEngine|UnityEditor|Godot)\b|\b(?:UnityEngine|UnityEditor|Godot)\.[A-Za-z_]|:\s*(?:[M]onoBehaviour|[S]criptableObject)\b|#\s*include\s*[<"](?:CoreMinimal\.h|Engine\/|GameFramework\/|UObject\/|SDL3\/)/;
 const engineReference = /<(?:Reference|PackageReference)\b[^>]*\bInclude\s*=\s*["'](?:Unity|Godot)[^"']*["']/i;
-const windowsPath = /(?:^|[^A-Za-z0-9])([A-Za-z]:[\\/][^\s"'<>`]+)/;
+const windowsPath = /(?:^|[^A-Za-z0-9])([A-Za-z]:[\\/][^\x00-\x1f\s"'<>`]+)/;
 const homePath = /\/(?:Users|home|mnt|media|Volumes)\/[^/\\\s"'<>]+\//;
 const uncPath = /(?:^|[^\\])\\\\[A-Za-z0-9_.-]+\\[A-Za-z0-9_.-]+/;
 const absoluteAsset = /^(?:[A-Za-z]:|\/|\\)/;
