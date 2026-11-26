@@ -1,5 +1,11 @@
 # Changes
 
+## 1.3.4
+
+- Generate a connected layout of 1 to 1,024 rooms in **Edit minimap**. Choose which room chips to include or exclude, pick region colors, and use a random or fixed numeric seed. The same settings and seed reproduce the layout.
+- Watch the rooms appear over one second. Branches can reconnect through shortcuts, including across region boundaries. Switch to **Map editor** to fill the empty rooms with terrain.
+- [Watch the 128-room walkthrough and compare four map sizes](https://lbarimi.github.io/metroidvania-studio/#generate-your-minimap).
+
 ## 1.3.3
 
 - Place empty rooms in **Edit minimap** using 34 chip sizes and region color presets. Chip previews and placements align to the grid of existing maps. Switch to **Map editor** to edit the same rooms, or right-click a chip to delete it and use Undo to restore it.

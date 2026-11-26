@@ -4,7 +4,7 @@ Metroidvania Studio is a free, open-source 2D level editor for metroidvania game
 
 [Get started](#get-started) · [Website](https://lbarimi.github.io/metroidvania-studio/) · [Documentation](https://lbarimi.github.io/metroidvania-studio/guides.html) · [Release notes](CHANGELOG.md)
 
-**Metroidvania Studio 1.3.3** includes the minimap chip editor and the `minimap.place` command for CLI, MCP and Lua. [Download the editor](https://github.com/LBarimi/metroidvania-studio/releases/tag/v1.3.3), [install the CLI and MCP server from npm](https://www.npmjs.com/package/metroidvania-studio/v/1.3.3), or [build from source](#build-from-source).
+**Metroidvania Studio 1.3.4** adds seeded minimap generation for up to 1,024 rooms, with branching routes and shortcuts between regions. [Download the editor](https://github.com/LBarimi/metroidvania-studio/releases/tag/v1.3.4), [install the CLI and MCP server from npm](https://www.npmjs.com/package/metroidvania-studio/v/1.3.3), or [build from source](#build-from-source).
 
 **Automate your workflow:** [Lua scripts](docs/scripting/quick-start.md), a [headless CLI](docs/cli/quick-start.md), and a [local MCP server for AI agents](docs/mcp/setup.md).
 
@@ -126,11 +126,11 @@ Recreate the layout with the headless CLI or MCP by applying the [102-room minim
 
 The npm CLI and MCP server require **Node.js 24+** and the **.NET 10 runtime**. To install the published version, run `npm install --global metroidvania-studio`.
 
-The **1.3.3** release ZIPs include a [CLI launcher](docs/cli/release-downloads.md) with `minimap.place`. To install the same CLI through npm from this source checkout, run these commands from the repository root with npm and the [.NET 10 SDK](#build-from-source).
+The **1.3.4** release ZIPs include a [CLI launcher](docs/cli/release-downloads.md) with `minimap.place`. To install the same CLI through npm from this source checkout, run these commands from the repository root with npm and the [.NET 10 SDK](#build-from-source).
 
 ```sh
 npm run pack:local
-npm install --global ./builds/npm/metroidvania-studio-1.3.3.tgz
+npm install --global ./builds/npm/metroidvania-studio-1.3.4.tgz
 metroidvania-studio version
 metroidvania-studio capabilities
 ```
