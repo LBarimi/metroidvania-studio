@@ -16,6 +16,10 @@ Lay out corridors and shafts one click at a time in **Edit minimap**. The record
 
 [Minimap editing guide](minimap.md) · [Try the sample world](sample-world.md)
 
+## Generate your map
+
+![Generate 48 connected rooms in Map editor, then zoom in to see the terrain and portals](assets/generate-map-walkthrough.gif)
+
 ## Generate your minimap
 
 ![Open Procedural generation, set the room count to 128 and the seed to 42, and watch the minimap grow](assets/generate-minimap-walkthrough.gif)

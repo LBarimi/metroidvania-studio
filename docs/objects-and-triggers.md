@@ -1,6 +1,6 @@
 # Objects and trigger events
 
-The Objects palette contains **Spawn**, **Portal**, **Invisible wall**, **Path**, and **Respawn point**. Portals are magenta room-transition regions: choose Portal in the Objects palette, then click for one tile or drag to paint a path. Use the Triggers layer to draw a rectangular event region. Previously placed legacy objects stay in existing maps.
+Select the **Entities** layer to see **Spawn**, **Portal**, **Invisible wall**, **Path**, and **Respawn point** in the palette. To place a magenta room-transition region, choose **Portal** and click for one tile or drag to paint a path. Use the **Triggers** layer to draw a rectangular event region. Previously placed legacy objects stay in existing maps.
 
 Every placed object, trigger, and decal has a unique ID. IDs are hidden in the inspector and retained in JSON exports. Newly generated IDs contain only decimal digits (up to 16 digits), stored as strings for compatibility. Existing IDs and explicitly supplied script IDs remain unchanged. Copying an object or a room assigns new IDs to the copies. Moving, resizing, saving and reopening keep the original IDs.
 

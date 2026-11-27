@@ -30,6 +30,12 @@ Local LLMs with shell access can use the CLI to generate seeded tilemaps and dri
 
 ![Room chips snap into a 102-room minimap, followed by the same empty room boundaries in Map editor](media/readme/design-the-minimap.gif)
 
+### Generate Your Map
+
+---
+
+![Generate 48 connected rooms in Map editor, then zoom in to see the terrain and portals](media/readme/generate-map-walkthrough.gif)
+
 ### Generate Your Minimap
 
 ---

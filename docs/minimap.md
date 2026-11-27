@@ -11,9 +11,15 @@ Each chip in **Edit minimap** places one room. You can lay out an entire world h
 
 ![Rapidly place room chips, review all 102 connected rooms by region, then open Map editor and fit the empty room outlines](assets/design-the-minimap.gif)
 
+## Generate a map
+
+In **Map editor**, click **Procedural generation** above Game Preview. Leave **Generate tilemap** checked to fill the rooms with terrain and place portals at their connections. The walkthrough uses 48 rooms and seed 42, then zooms in on one room.
+
+![Generate 48 connected rooms in Map editor, then zoom in to see the terrain and portals](assets/generate-map-walkthrough.gif)
+
 ## Generate a minimap
 
-In **Map editor**, click **Procedural generation** above Game Preview. In **Edit minimap**, the same button is in the upper-right corner of the grid. Choose **Save and continue** to keep the current map, or **Continue without saving** to go straight to the settings. You can cancel the settings and keep editing the current layout.
+In **Edit minimap**, click **Procedural generation** in the upper-right corner of the grid. In either editor, choose **Save and continue** to keep the current map, or **Continue without saving** to go straight to the settings. You can cancel the settings and keep editing the current layout.
 
 Enter a **Room count** from 1 to 1,024 and click **Generate**. Both editors frame the whole layout and reveal the rooms in placement order over one second. **Map editor** shows each room with its terrain and portals as it appears. **Edit minimap** shows the room chips and their connections.
 
@@ -34,7 +40,7 @@ Routes branch with open space between them. Where a chip can bridge two rooms th
 
 Use the same generator from a shell with `generate --rooms 48 --seed 42 --tiles`. [Headless generation options](cli/headless-editor.md#generate-a-playable-layout)
 
-**Generate tilemap** is checked by default in the editor. Clear it to generate empty rooms. With it checked, horizontal rooms can have a walkable ridge, a hollow, or a bridge over a ravine with a lower return route. Tall shafts use staggered landings and short climbs. A dead end can open into a sheltered alcove. Each passage, including shortcuts, gets a matching [Portal object](objects-and-triggers.md#portals-and-invisible-walls) on each side. In **Map editor**, use the Objects layer to select, resize or delete a portal. Side openings are three tiles high and shaft openings are two tiles wide.
+**Generate tilemap** is checked by default in the editor. Clear it to generate empty rooms. With it checked, horizontal rooms can have a walkable ridge, a hollow, or a bridge over a ravine with a lower return route. Tall shafts use staggered landings and short climbs. A dead end can open into a sheltered alcove. Each passage, including shortcuts, gets a matching [Portal object](objects-and-triggers.md#portals-and-invisible-walls) on each side. In **Map editor**, use the **Entities** layer to select, resize or delete a portal. Side openings are three tiles high and shaft openings are two tiles wide.
 
 **Match region color** picks the closest bundled biome, or you can select one terrain palette for the whole map. Ice has thin shelves, volcanic ground has raised outcrops, and ruins use stepped banks. **Easy** provides continuous bridges and ladder climbs. **Normal** and **Hard** leave wider bridge gaps and replace some climbs with short jumps. **Progressive** sets the difficulty by passage distance from the starting room, counting shortcuts. The same seed, palette and settings reproduce the tiles.
 

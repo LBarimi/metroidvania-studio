@@ -10,6 +10,8 @@ Click a room to select it. While painting, the first left or right click in a di
 
 For a route made from preset room sizes, switch to **Edit minimap**. Each chip places one room. Switch back to **Map editor** to inspect the selected room or change its dimensions. **Fit map** shows the entire layout. [Place rooms on the minimap](minimap.md#place-a-route-and-see-its-outline)
 
+To create connected rooms with terrain and portals in one step, open **Procedural generation** above Game Preview. [Generate a map in Map editor](minimap.md#generate-a-map)
+
 ## Move and resize
 
 Drag a room's title strip to move it. Bring room edges together to snap them into place. Drag the outer resize handles to change the room's bounds. These handles work with every tool and layer, including Game camera. The inspector also provides dimensions, rotation and reflection controls.
@@ -22,7 +24,7 @@ Hold **Ctrl** and click rooms to build a selection, then drag a selected room's 
 
 Middle-drag to pan and use the mouse wheel to zoom. Right-drag on empty space also pans; a right click without dragging opens the room creation menu with any tool selected. Use **Fit map** or **Frame room** in the toolbar to focus the editing canvas.
 
-The **PPU** and **Resolution** toolbar controls set the camera framing in [Game Preview](game-preview.md), the window in the canvas's upper-right corner. Select **Game camera** in Tools to drag its white frame, or turn on **Always show game camera** to see it while painting. The camera starts at the room's lower-left corner; the Center control moves it to the room's center. Imported engine cameras use the same starting corner.
+The **PPU** and **Resolution** toolbar controls set the camera framing in [Game Preview](game-preview.md), the window in the canvas's upper-right corner. Select **Game camera** in Tools to drag its white frame, or turn on **Always show game camera** to see it while painting. The camera starts at the room's lower-left corner. Choose **Center camera on room** in Game Preview to move it to the room's center. Imported engine cameras use the same starting corner.
 
 ## Paint connected spaces
 

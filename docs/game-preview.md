@@ -7,7 +7,7 @@ Game Preview sits in the upper-right corner of the map canvas. It shows the sele
 - Select **Game camera** in the left Tools panel to show a white camera frame and central crosshair in the active room. Drag anywhere inside that frame to move the camera; the pointer becomes a hand and Preview follows immediately.
 - Turn on **Always show game camera** beside **Frame room** to keep the frame visible while painting or using other tools. This viewing preference is remembered locally; the frame does not intercept those tools.
 - Drag the room's title strip to move it, or its outer handles to resize it, with any tool selected, including Game camera. Locked rooms remain protected.
-- Drag inside Preview to move the same camera. Press **F** while it is focused, or use the center button, to return to the selected room's center.
+- Drag inside Preview to move the camera. Choose **Center camera on room** or press **F** while Preview has focus to return the camera to the selected room's center.
 - **Pixel Perfect** snaps camera movement to source-pixel steps. Uncheck it for smooth movement in both Preview and the white camera frame. It starts checked and remembers your choice in this browser.
 - Change **PPU** or **Resolution** in the main toolbar. Preview updates automatically. Source tiles remain 16 pixels wide, so changing PPU changes world units rather than the number of tiles in a fixed pixel resolution.
 

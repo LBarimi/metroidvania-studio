@@ -11,6 +11,7 @@ assets/examples--connected-rooms.lua
 assets/examples--minimap-world.json
 assets/examples--region-properties.lua
 assets/examples--seeded-platforms.lua
+assets/generate-map-walkthrough.gif
 assets/generate-minimap-1024.gif
 assets/generate-minimap-128.gif
 assets/generate-minimap-512.gif

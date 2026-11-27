@@ -85,7 +85,7 @@ test('English homepage keeps search metadata and previews without language varia
   assert.equal([...source.matchAll(/rel="canonical"/g)].length, 1);
   assert.ok(source.includes(`rel="canonical" href="${siteUrl}"`));
   assert.ok(source.includes('releases/latest'));
-  assert.equal([...source.matchAll(/<figure>/g)].length, 7);
+  assert.equal([...source.matchAll(/<figure>/g)].length, 8);
   assert.ok(!source.includes('hreflang=') && !source.includes('class="language"'));
   assert.ok(!existsSync(path.join(output, 'ko')));
   assert.ok(!readFileSync(path.join(output, 'sitemap.xml'), 'utf8').includes('/ko/'));
@@ -100,15 +100,19 @@ test('English homepage keeps search metadata and previews without language varia
   assert.ok(source.includes('src="assets/design-the-minimap.gif"'));
   assert.ok(minimap.includes('src="assets/design-the-minimap.gif"'));
   const generationGifs = [64, 128, 512, 1024].map(count => `generate-minimap-${count}.gif`);
+  const mapWalkthrough = 'generate-map-walkthrough.gif';
   const walkthrough = 'generate-minimap-walkthrough.gif';
   for (const html of [source, minimap]) {
+    const mapPreview = `src="assets/${mapWalkthrough}"`;
+    assert.equal(html.split(mapPreview).length - 1, 1);
+    assert.ok(html.indexOf(mapPreview) < html.indexOf(`src="assets/${walkthrough}"`));
     const gallery = /<div class="media-gallery">(.*?)<\/div>/s.exec(html);
     assert.ok(gallery);
     assert.ok(html.slice(0, gallery.index).trimEnd().endsWith('</figure>'));
     assert.ok(html.slice(0, gallery.index).split('<figure>').at(-1).includes(`src="assets/${walkthrough}"`));
     assert.deepEqual([...gallery[1].matchAll(/src="assets\/([^"]+)"/g)].map(match => match[1]), generationGifs);
   }
-  for (const name of ['create-and-paint.gif', 'design-the-minimap.gif', walkthrough, ...generationGifs]) {
+  for (const name of ['create-and-paint.gif', 'design-the-minimap.gif', mapWalkthrough, walkthrough, ...generationGifs]) {
     assert.deepEqual(readFileSync(path.join(output, 'assets', name)), readFileSync(path.join(root, 'media/readme', name)));
   }
   const offline = mkdtempSync(path.join(local, 'offline-home-'));
