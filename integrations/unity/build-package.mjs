@@ -43,7 +43,7 @@ export function buildPackage(destination) {
   }
   visit(source);
   const guides = new Map();
-  const guideSources = ['KR', 'EN', 'JP', 'CN', 'TW'].map(language => [`INSTALL_${language}.txt`, `engine-packages/unity/INSTALL_${language}.txt`]);
+  const guideSources = ['KR', 'EN', 'JP', 'CN', 'TW', 'RU'].map(language => [`INSTALL_${language}.txt`, `engine-packages/unity/INSTALL_${language}.txt`]);
   guideSources.push(['TRIGGERS.md', 'docs/objects-and-triggers.md']);
   for (const [name, sourcePath] of guideSources) {
     const relative = `Assets/MetroidvaniaStudioIntegration/${name}`;

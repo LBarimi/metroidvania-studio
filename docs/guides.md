@@ -8,6 +8,7 @@ Create connected rooms, paint autotiled terrain, and design minimaps with Metroi
 | --- | --- |
 | [Sample world](sample-world.md) | Try painting, arranging rooms, and navigating the minimap |
 | [Room layout](room-layout.md) | Add rooms, resize them, and move selected rooms together |
+| [Keyboard shortcuts](shortcuts.md) | Look up editor keys, mouse gestures and minimap controls |
 | [Tile palettes and autotiling](tilesets.md) | Import PNGs and set up 4-tile or 47-tile palettes |
 | [Minimap design](minimap.md) | Place room chips, connect their edges, and inspect their outlines in Map editor |
 | [Texture editing](textures.md) | Update shared PNG files and export portable resources |

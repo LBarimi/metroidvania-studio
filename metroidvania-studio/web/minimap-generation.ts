@@ -1,6 +1,10 @@
 import { MAX_MINIMAP_ROOMS, MINIMAP_CHIP_GROUPS } from './contracts.generated.js';
 
-export function generationSettings(presets: Map<string, string>, t: (key: string) => string, previousSeed?: string) {
+export function generationProgress(start: number): number {
+  return Math.min(1, Math.max(0, (performance.now() - start) / 1000));
+}
+
+export function generationSettings(presets: Map<string, string>, t: (key: string) => string, previousSeed?: string, terrain: [string, string][] = []) {
   const form = document.createElement('div');
   form.className = 'generation-settings';
 
@@ -37,9 +41,14 @@ export function generationSettings(presets: Map<string, string>, t: (key: string
   const randomSeed = () => String(crypto.getRandomValues(new Int32Array(1))[0]);
   seed.value = randomSeed(); seed.disabled = true;
   field('generationSeed', seed);
-  const randomLabel = document.createElement('label'), random = document.createElement('input');
-  random.type = 'checkbox'; random.checked = true;
-  randomLabel.append(random, t('generationRandomSeed')); seed.parentElement!.after(randomLabel);
+  const toggles = document.createElement('div');
+  toggles.className = 'generation-toggles';
+  const random = checkbox(toggles, 'randomSeed', t('generationRandomSeed'));
+  random.checked = true;
+  const generateTiles = checkbox(toggles, 'generateTiles', t('generationTiles'));
+  generateTiles.id = 'generation-tiles';
+  generateTiles.checked = true;
+  form.append(toggles);
   let manualSeed = previousSeed;
   random.addEventListener('change', () => {
     if (random.checked) { manualSeed = seed.value; seed.value = randomSeed(); }
@@ -66,6 +75,18 @@ export function generationSettings(presets: Map<string, string>, t: (key: string
   form.append(colors);
   themeMode.addEventListener('change', () => { colors.hidden = themeMode.value === 'generationAutoColors'; });
 
+  const terrainTheme = document.createElement('select');
+  terrainTheme.add(new Option(t('generationMatchRegion'), 'auto'));
+  for (const [id, name] of terrain) terrainTheme.add(new Option(name, id));
+  field('generationTerrain', terrainTheme);
+  const difficulty = document.createElement('select');
+  for (const level of ['progressive', 'easy', 'normal', 'hard']) difficulty.add(new Option(t('generationDifficulty.' + level), level));
+  field('generationDifficulty', difficulty);
+  function showTileFields() {
+    terrainTheme.parentElement!.hidden = difficulty.parentElement!.hidden = !generateTiles.checked;
+  }
+  generateTiles.addEventListener('change', showTileFields); showTileFields();
+
   function read() {
     const roomCount = count.valueAsNumber;
     if (!Number.isInteger(roomCount) || roomCount < 1 || roomCount > MAX_MINIMAP_ROOMS) {
@@ -82,7 +103,8 @@ export function generationSettings(presets: Map<string, string>, t: (key: string
     const selected = colorInputs.filter(input => automaticThemes || input.checked).map(input => input.value);
     if (!selected.length) throw new Error('@generationColorsRequired');
     if (!automaticThemes && selected.length > roomCount) throw new Error('@generationTooManyColors');
-    return { roomCount, seed: seedValue, chipIds, colors: selected, automaticThemes };
+    return { roomCount, seed: seedValue, chipIds, colors: selected, automaticThemes,
+      ...(generateTiles.checked ? { generateTiles: true, tileTheme: terrainTheme.value, tileDifficulty: difficulty.value } : {}) };
   }
   return { form, count, read };
 }

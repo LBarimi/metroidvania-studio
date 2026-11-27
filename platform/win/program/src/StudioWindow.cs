@@ -12,6 +12,7 @@ internal sealed class StudioWindow : Form
     private readonly ServerSession session;
     private readonly bool child;
     private readonly Uri? initialUri;
+    private string language = MetroidvaniaStudioLocale.Column;
     private readonly WebView2 web = new() { Dock = DockStyle.Fill, DefaultBackgroundColor = Color.FromArgb(24, 24, 24) };
     private readonly Label message = new() { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleCenter,
         ForeColor = Color.Gainsboro, BackColor = Color.FromArgb(24, 24, 24), Text = "Metroidvania Studio…" };
@@ -31,7 +32,7 @@ internal sealed class StudioWindow : Form
     public StudioWindow(DesktopOptions options, ServerSession? shared = null, Uri? uri = null)
     {
         this.options = options; child = shared != null; session = shared ?? new ServerSession(options); initialUri = uri;
-        Text = child ? uri?.AbsolutePath.StartsWith("/docs", StringComparison.Ordinal) == true ? "Metroidvania Studio · Documentation" : "Metroidvania Studio · MiniMap" : "Metroidvania Studio";
+        Text = "Metroidvania Studio";
         BackColor = Color.FromArgb(24, 24, 24); ClientSize = new Size(1440, 900); MinimumSize = new Size(900, 600);
         StartPosition = FormStartPosition.CenterScreen;
         if (options.Background)
@@ -61,6 +62,11 @@ internal sealed class StudioWindow : Form
             if (options.Background) environmentOptions.AdditionalBrowserArguments = "--disable-background-timer-throttling --disable-renderer-backgrounding";
             var environment = await CoreWebView2Environment.CreateAsync(null, options.UserData, environmentOptions);
             await web.EnsureCoreWebView2Async(environment);
+            if (child) web.CoreWebView2.DocumentTitleChanged += (_, _) =>
+            {
+                string title = web.CoreWebView2.DocumentTitle;
+                if (!string.IsNullOrWhiteSpace(title) && LocalPage(web.CoreWebView2.Source)) Text = title;
+            };
             // Use packaged UI modules even when sharing an already-running browser server.
             // API and asset requests keep using the verified workspace server.
             web.CoreWebView2.AddWebResourceRequestedFilter(session.Url + "*", CoreWebView2WebResourceContext.All);
@@ -70,14 +76,17 @@ internal sealed class StudioWindow : Form
                 string name = uri.AbsolutePath == "/" ? "index.html" : uri.AbsolutePath.TrimStart('/');
                 bool documentation = name == "docs" || name.StartsWith("docs/", StringComparison.Ordinal);
                 if (name is "docs" or "docs/") name = "docs/index.html";
-                string leaf = documentation ? name[5..] : name;
+                bool localeTable = name == "api/locale";
+                string leaf = localeTable ? "MetroidvaniaStudioLocale.csv" : documentation ? name[5..] : name;
                 if (!LocalPage(e.Request.Uri) || leaf.Contains('/') || leaf.Contains('\\') || leaf.Contains("..")) return;
-                string? mime = Path.GetExtension(name) switch
+                string? mime = Path.GetExtension(leaf) switch
                 {
                     ".html" => "text/html", ".js" => "text/javascript", ".css" => "text/css",
+                    ".csv" when localeTable => "text/csv",
                     ".svg" => "image/svg+xml", ".json" when name == "build-info.json" || documentation => "application/json", ".lua" when documentation => "text/plain", _ => null
                 };
-                string file = Path.Combine(options.Payload, "metroidvania-studio/dist", name);
+                string file = localeTable ? Path.Combine(options.Payload, "metroidvania-studio/localization", leaf)
+                    : Path.Combine(options.Payload, "metroidvania-studio/dist", name);
                 if (mime == null || !File.Exists(file)) return;
                 e.Response = environment.CreateWebResourceResponse(new MemoryStream(File.ReadAllBytes(file)), 200, "OK",
                     "Content-Type: " + mime + "; charset=utf-8\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\n" +
@@ -88,7 +97,14 @@ internal sealed class StudioWindow : Form
                 if (!LocalPage(e.Source) || new Uri(e.Source).AbsolutePath != "/") return;
                 try
                 {
-                    if (e.TryGetWebMessageAsString() != "studio-workspace-folders") return;
+                    string request = e.TryGetWebMessageAsString();
+                    const string languagePrefix = "studio-language:";
+                    if (request.StartsWith(languagePrefix, StringComparison.Ordinal))
+                    {
+                        language = request[languagePrefix.Length..];
+                        return;
+                    }
+                    if (request != "studio-workspace-folders") return;
                     var folders = new MetroidvaniaStudio.Server.ProjectFiles(options.Workspace);
                     Directory.CreateDirectory(folders.TexturesPath);
                     var maps = environment.CreateWebFileSystemDirectoryHandle(folders.MapsPath, CoreWebView2FileSystemHandlePermission.ReadOnly);
@@ -110,21 +126,21 @@ internal sealed class StudioWindow : Form
             {
                 e.Handled = true;
                 if (!LocalPage(e.Uri)) return;
-                var mini = new StudioWindow(options, session, new Uri(e.Uri));
+                var mini = new StudioWindow(options, session, new Uri(e.Uri)) { language = this.language };
                 children.Add(mini); mini.FormClosed += (_, _) => children.Remove(mini);
                 mini.Show(this);
             };
             web.CoreWebView2.ProcessFailed += (_, e) =>
             {
                 if (allowClose) return;
-                ExitCode = 1; message.Text = "The editor display stopped. Close and reopen the program.\n" + e.ProcessFailedKind;
+                ExitCode = 1; message.Text = MetroidvaniaStudioLocale.Text("desktopDisplayStopped", language) + "\n" + e.ProcessFailedKind;
                 message.BringToFront();
             };
             var navigation = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
             web.CoreWebView2.NavigationCompleted += (_, e) =>
             {
                 if (e.IsSuccess) navigation.TrySetResult();
-                else navigation.TrySetException(new IOException("The editor page could not load: " + e.WebErrorStatus));
+                else navigation.TrySetException(new IOException(MetroidvaniaStudioLocale.Text("desktopLoadFailed", language) + "\n" + e.WebErrorStatus));
             };
             web.CoreWebView2.Navigate((initialUri ?? new Uri(session.Url, options.Background ? "/?desktop-test=1" : "/")).ToString());
             await navigation.Task.WaitAsync(TimeSpan.FromSeconds(30));
@@ -193,7 +209,7 @@ internal sealed class StudioWindow : Form
                 try { await session.Stop(); } catch { }
                 CloseImmediately();
             }
-            else MessageBox.Show(this, error.Message + "\n\nThe window remains open so your work can be saved.",
+            else MessageBox.Show(this, MetroidvaniaStudioLocale.Text("desktopCloseFailed", language) + "\n\n" + error.Message,
                 "Metroidvania Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
@@ -220,6 +236,10 @@ internal sealed class StudioWindow : Form
         await children[0].initialized.Task.WaitAsync(TimeSpan.FromSeconds(25));
         var miniVisible = await children[0].Evaluate("return document.querySelector('#mini-canvas').getBoundingClientRect().width > 0;");
         if (!miniVisible.GetBoolean()) throw new InvalidOperationException("The minimap canvas has no size.");
+        string miniTitle = "Metroidvania Studio · " + MetroidvaniaStudioLocale.Text("external.minimap", language);
+        deadline = DateTime.UtcNow.AddSeconds(5);
+        while (children[0].Text != miniTitle && DateTime.UtcNow < deadline) await Task.Delay(50);
+        if (children[0].Text != miniTitle) throw new InvalidOperationException("The minimap window title does not match the editor language.");
         children[0].CloseImmediately();
         Close();
     }

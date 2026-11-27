@@ -68,6 +68,12 @@ test('installed local package runs CLI, Lua and MCP without a source checkout', 
     { cwd: directory, env, encoding: 'utf8', windowsHide: true, timeout: 30000 });
   assert.equal(executable.status, 0, executable.stdout + executable.stderr);
   assert.equal(JSON.parse(executable.stdout).version, json(path.join(root, 'version.json')).version);
+  assert.match(cli(['editor-help']).markdown, /generate --workspace/);
+  const generated = cli(['generate', '--workspace', workspace, '--map', 'Maps/seed.map.json', '--rooms', '5', '--tiles', '--seed', '42']);
+  assert.equal(generated.roomCount, 5);
+  assert.ok(generated.foregroundCells > 0);
+  writeFileSync(path.join(workspace, 'inspect-session.json'), JSON.stringify({action:'inspect'}));
+  assert.equal(cli(['editor', '--workspace', workspace, '--commands', 'inspect-session.json']).result.rooms.length, 5);
   cli(['--workspace', workspace, 'init', '--map', 'world.map.json', '--name', 'World & 한글']);
   const batch = { apiVersion: 1, operations: [
     { op: 'room.add', id: 'a', name: 'Room & 한글', x: 0, y: 0, width: 16, height: 12 },

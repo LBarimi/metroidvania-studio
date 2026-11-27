@@ -1,0 +1,40 @@
+Установка в Godot 4
+Распакуйте ZIP целиком. Файл настроек плагина — addons/metroidvania-studio/plugin.cfg.
+
+Запуск Metroidvania Studio
+Распакуйте архив редактора целиком. Запустите файл в корне архива:
+  Windows (архив win) : metroidvania-studio.exe
+  Windows (архив web) : metroidvania-studio.bat
+  macOS               : metroidvania-studio.command
+  Linux               : bash ./metroidvania-studio.sh
+Если вы скачали исходный код из Git, используйте скрипт для своей ОС:
+  Windows : platform/win/web/run.bat
+  Linux   : bash platform/linux/run.sh
+  macOS   : platform/mac/run.command
+
+Установка плагина
+В Windows закройте проект Godot, запустите install.bat из распакованной папки и выберите файл project.godot. Установщик скопирует и включит плагин. Снова откройте проект.
+Для ручной установки в Windows, Linux или macOS скопируйте папку metroidvania-studio из addons архива в addons проекта. Включите Metroidvania Studio в Project > Project Settings > Plugins.
+
+Импорт примера
+На панели Metroidvania Studio укажите пути относительно распакованного архива:
+  1. Map JSON        : samples/maps/Sample.map.json
+  2. Catalog JSON    : samples/catalog.json
+  3. Resource folder : samples
+Выберите комнату и нажмите Import / Reload room. Плагин сохранит и откроет сцену .tscn в res://metroidvania-studio-imports. Добавьте экземпляр этой сцены в свою игровую сцену.
+
+Импорт своей карты
+Выберите JSON карты, соответствующий catalog.json и корневую папку ресурсов. Путь asset в каталоге отсчитывается от этой папки. Например, для textures/Terrain.png выберите родительскую папку textures. Сохраняйте регистр букв в именах файлов.
+После изменения карты снова нажмите Import / Reload room. Повторный импорт заменяет сцену с тем же ID комнаты. Храните игровую логику в отдельной сцене. Текстуры встраиваются в созданную сцену, а скрипт времени выполнения плагина нужен и в готовой игре.
+
+Отображение пикселей
+При импорте флажок Configure pixel-perfect display применяет reference_resolution (по умолчанию 320×180), режим отображения через viewport и целочисленное масштабирование в настройках проекта. Снимите флажок, если настраиваете отображение вручную.
+RoomCamera использует экспортированный PPU (по умолчанию 16) и привязывает изображение к исходным пикселям, сохраняя положение узла камеры. Для смещения кадра задайте view_offset. Сглаживание этой камеры отключено. Белые границы комнат видны только в 2D-редакторе.
+
+Где найти файлы редактора
+В меню «Файл» выберите «Папки хранения», чтобы увидеть пути к Maps и Textures.
+По умолчанию они находятся рядом с программой запуска или в корне проекта с исходным кодом:
+  JSON комнаты    : Maps/AutoExport/<папка карты>/<имя комнаты>.json
+  Каталог         : .studio/catalog.json
+  Каталог ресурсов: папка, содержащая Maps и Textures
+При переносе на другой компьютер скопируйте JSON, каталог и текстуры.

@@ -18,4 +18,5 @@ export function colorCss(value: Color | undefined, fallback = '#c72b36'): string
   return `rgba(${Math.round(value.r * 255)},${Math.round(value.g * 255)},${Math.round(value.b * 255)},${value.a ?? 1})`;
 }
 export function activeRoom(state: State | null): Room | undefined { return state?.document.rooms.find(room => room.id === state.selection.roomId); }
+export function isTraversalMaterial(id: string): boolean { return id === 'traversal-ladder' || id === 'traversal-floor'; }
 export function tileLayer(layer: number): boolean { return layer === 0 || layer === 1; }

@@ -23,9 +23,12 @@ assert.equal((await request('/docs/missing-page.html')).status, 404);
 const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : undefined, headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, locale: 'ko-KR' });
+  await page.addInitScript(() => Object.defineProperty(navigator, 'platform', { value: 'MacIntel' }));
   const errors = []; page.context().on('page', opened => opened.on('pageerror', error => errors.push(error.message)));
   await page.goto(base); await page.locator('#room-list button').first().waitFor();
   await page.locator('#language').selectOption('EN');
+  assert.match(await page.locator('#undo').textContent(), /⌘\+Z/);
+  assert.match(await page.locator('#status-state').getAttribute('title'), /⌘\+S/);
   for (const [menuItem, target] of [['Documentation', '/docs/index.html'], ['API reference', '/docs/api--index.html']]) {
     await page.locator('#help-menu-button').click();
     const popup = page.waitForEvent('popup'); await page.getByRole('menuitem', { name: menuItem, exact: true }).click();
@@ -38,6 +41,33 @@ try {
     if (await link.count()) { await link.click(); await document.locator('main h1').waitFor(); assert.equal(new URL(document.url()).origin, new URL(base).origin); }
     await document.close();
   }
+  for (const [language, label, tag, search, empty] of [
+    ['KR', '단축키', 'ko', '문서 검색', '검색 결과가 없습니다'],
+    ['EN', 'Shortcuts', 'en', 'Search documentation', 'No matching pages'],
+    ['JA', 'ショートカット', 'ja', 'ドキュメントを検索', '該当するページはありません'],
+    ['ZH_CN', '快捷键', 'zh-hans', '搜索文档', '没有找到匹配的页面'],
+    ['ZH_TW', '快速鍵', 'zh-hant-tw', '搜尋說明文件', '找不到符合的頁面'],
+    ['RU', 'Горячие клавиши', 'ru', 'Поиск по документации', 'Страницы не найдены']
+  ]) {
+    await page.locator('#language').selectOption(language);
+    if (language === 'RU') {
+      const canvas = page.locator('#map-canvas');
+      await canvas.dispatchEvent('keydown', { key: 'р', code: 'KeyH', altKey: true, isComposing: true });
+      assert.equal(await page.locator('#help-menu-button').getAttribute('aria-expanded'), 'false');
+      await canvas.dispatchEvent('keydown', { key: 'р', code: 'KeyH', altKey: true });
+    } else await page.locator('#help-menu-button').click();
+    const popup = page.waitForEvent('popup');
+    await page.getByRole('menuitem', { name: label, exact: true }).click();
+    const guide = await popup; await guide.waitForLoadState('load');
+    assert.equal(new URL(guide.url()).pathname, tag === 'en' ? '/docs/shortcuts.html' : '/docs/shortcuts--' + tag + '.html');
+    assert.equal(await guide.locator('html').getAttribute('lang'), tag);
+    assert.equal(await guide.locator('main table').count(), 6);
+    assert.ok(await guide.getByRole('columnheader', { name: 'macOS', exact: true }).isVisible());
+    assert.equal(await guide.locator('nav a[aria-current="page"]').count(), 1);
+    await guide.getByRole('searchbox', { name: search }).fill('studio-missing-entry-12345');
+    await guide.getByText(empty, { exact: true }).waitFor();
+    await guide.close();
+  }
   assert.deepEqual(errors, []);
-  console.log('PASS: documentation aliases terminate, HTML/assets load, and both Help links open usable local documentation.');
+  console.log('Help opens local documentation, the API reference and shortcut tables in all six editor languages.');
 } finally { await browser.close(); }

@@ -6,15 +6,22 @@ namespace MetroidvaniaStudio.Server;
 /// <summary>Adds bundled themes without replacing workspace palettes or their placement.</summary>
 public static class BuiltInPalettes
 {
+    public static bool IsBundledGroup(string? id) => id is "default-themes" or "traversal";
     public static void Prepare(ProjectFiles files, string studioRoot)
     {
         string sample = Path.Combine(studioRoot, "samples", "catalog.json");
         if (!File.Exists(sample)) return;
         var bundled = JsonNode.Parse(File.ReadAllText(sample));
-        if (bundled?["materials"] is not JsonArray definitions
-            || bundled["editorPaletteGroups"] is not JsonArray groups
-            || groups.OfType<JsonObject>().FirstOrDefault(g => g["id"]?.GetValue<string>() == "default-themes") is not { } themeGroup) return;
-        var ids = themeGroup["materials"]!.AsArray().Select(n => n!.GetValue<string>()).ToHashSet(StringComparer.Ordinal);
+        if (bundled?["materials"] is not JsonArray definitions || bundled["editorPaletteGroups"] is not JsonArray groups) return;
+        foreach (var group in groups.OfType<JsonObject>())
+            if (IsBundledGroup(group["id"]?.GetValue<string>()))
+                PrepareGroup(files, definitions, group);
+    }
+
+    private static void PrepareGroup(ProjectFiles files, JsonArray definitions, JsonObject group)
+    {
+        string groupId = group["id"]!.GetValue<string>(), groupName = group["name"]!.GetValue<string>();
+        var ids = group["materials"]!.AsArray().Select(n => n!.GetValue<string>()).ToHashSet(StringComparer.Ordinal);
         var themes = definitions.OfType<JsonObject>().Where(m => ids.Contains(m["id"]!.GetValue<string>())).ToArray();
         // Resolve every source and destination through the existing resource boundary.
         foreach (var material in themes)
@@ -37,7 +44,7 @@ public static class BuiltInPalettes
         var existingGroups = catalog.PaletteGroups;
         var missing = themes.Where(t => !catalog.Materials.ContainsKey(t["id"]!.GetValue<string>())).ToArray();
         if (missing.Length == 0 || catalog.Materials.Count + missing.Length > Catalog.MaximumMaterialDefinitions) return;
-        var targetGroup = existingGroups.FirstOrDefault(g => g.id == "default-themes");
+        var targetGroup = existingGroups.FirstOrDefault(g => g.id == groupId);
         if (targetGroup == null && existingGroups.Length >= 128) return;
         var next = JsonNode.Parse(catalog.Data.GetRawText())!;
         var materials = next["materials"]!.AsArray();
@@ -46,9 +53,9 @@ public static class BuiltInPalettes
         var additions = missing.Select(t => t["id"]!.GetValue<string>()).ToArray();
         if (targetGroup == null)
         {
-            string name = "Default themes";
-            for (int i = 2; nextGroups.Any(g => g.name.Equals(name, StringComparison.OrdinalIgnoreCase)); i++) name = "Default themes " + i;
-            nextGroups.Add(new("default-themes", name, additions));
+            string name = groupName;
+            for (int i = 2; nextGroups.Any(g => g.name.Equals(name, StringComparison.OrdinalIgnoreCase)); i++) name = groupName + " " + i;
+            nextGroups.Add(new(groupId, name, additions));
         }
         else nextGroups[nextGroups.IndexOf(targetGroup)] = targetGroup with { materials = targetGroup.materials.Concat(additions).ToArray() };
         next["editorPaletteGroups"] = JsonSerializer.SerializeToNode(nextGroups);

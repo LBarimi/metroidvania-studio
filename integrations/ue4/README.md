@@ -1,6 +1,6 @@
 # Unreal Engine 4 integration
 
-Installation guides: [한국어](../../engine-packages/ue4/INSTALL_KR.txt) · [English](../../engine-packages/ue4/INSTALL_EN.txt) · [日本語](../../engine-packages/ue4/INSTALL_JP.txt) · [简体中文](../../engine-packages/ue4/INSTALL_CN.txt) · [繁體中文](../../engine-packages/ue4/INSTALL_TW.txt).
+Installation guides: [한국어](../../engine-packages/ue4/INSTALL_KR.txt) · [English](../../engine-packages/ue4/INSTALL_EN.txt) · [日本語](../../engine-packages/ue4/INSTALL_JP.txt) · [简体中文](../../engine-packages/ue4/INSTALL_CN.txt) · [繁體中文](../../engine-packages/ue4/INSTALL_TW.txt) · [Русский](../../engine-packages/ue4/INSTALL_RU.txt).
 
 Developed for Unreal Engine 4.27. The plugin uses the shared Unreal room loader and pixel camera.
 

@@ -14,6 +14,12 @@ export const nativeMapDialogs = (): boolean => info?.nativeMapDialogs === true &
 export const workspaceFolder = (kind: FolderKind): string => info?.[kind] || '';
 export const folderStartIn = (kind: FolderKind): { startIn?: DirectoryHandle } => directories[kind] ? { startIn: directories[kind] } : {};
 
+async function readFolderInfo(): Promise<FolderInfo> {
+  const response = await fetch('/api/workspace-folders').catch(() => null);
+  if (!response?.ok) throw new Error('@storageUnavailable');
+  return response.json();
+}
+
 async function database(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('metroidvania-studio-file-folders', 1);
@@ -33,9 +39,7 @@ async function remember(kind: FolderKind, handle: DirectoryHandle): Promise<void
 }
 export function initializeWorkspaceFolders(): Promise<void> {
   return ready ??= (async () => {
-    const response = await fetch('/api/workspace-folders');
-    if (!response.ok) throw new Error('Storage folder information is unavailable.');
-    info = await response.json() as FolderInfo;
+    info = await readFolderInfo();
     const bridge = host.chrome?.webview;
     if (bridge) {
       bridge.addEventListener('message', event => {
@@ -68,14 +72,16 @@ export function openWorkspaceFolders(locale: Locale, focus: FolderKind = 'maps')
     const button = document.createElement('button'); button.type = 'button'; button.textContent = locale.t(caption);
     button.onclick = () => { try { void Promise.resolve(run()).catch(report); } catch (e) { report(e); } }; return button;
   };
-  function report(e: unknown): void { if (e instanceof DOMException && e.name === 'AbortError') return; error.textContent = e instanceof Error ? e.message : String(e); }
+  function report(e: unknown): void {
+    if (e instanceof DOMException && e.name === 'AbortError') return;
+    const message = e instanceof Error ? e.message : String(e);
+    error.textContent = message.startsWith('@') ? locale.t(message.slice(1)) : message;
+  }
   body.append(error);
   heading.append(action('external.close', () => dialog.close())); dialog.append(heading, body); document.body.append(dialog); dialog.showModal();
   dialog.addEventListener('close', () => dialog.remove(), { once: true });
   void initializeWorkspaceFolders().then(async () => {
-    const latest = await fetch('/api/workspace-folders');
-    if (!latest.ok) throw new Error('Storage folder information is unavailable.');
-    info = await latest.json() as FolderInfo;
+    info = await readFolderInfo();
     if (!dialog.open) return;
     for (const kind of ['maps', 'textures'] as const) {
       const section = document.createElement('section'), title = document.createElement('strong'), field = document.createElement('input');

@@ -39,7 +39,7 @@ AMetroidvaniaStudioRoom::AMetroidvaniaStudioRoom()
 void AMetroidvaniaStudioRoom::DestroyGenerated()
 {
     for(auto* Mesh : GeneratedMeshes) if(IsValid(Mesh)) Mesh->DestroyComponent();
-    GeneratedMeshes.Reset(); bBuilt=false;
+    GeneratedMeshes.Reset(); Traversal.Reset(); bBuilt=false;
 #if WITH_EDITORONLY_DATA
     if (RoomOutline) RoomOutline->SetBoxExtent(FVector::ZeroVector);
 #endif
@@ -153,8 +153,20 @@ bool AMetroidvaniaStudioRoom::RebuildRoom()
         }
 #endif
         MetroidvaniaStudio::Require(TriggerManager->RegisterRoom(MapDocumentJson, FromUtf8(Room.id)), ToUtf8(TriggerManager->LastError));
+        Traversal = MakeShared<MetroidvaniaStudio::TraversalGrid>(Room.traversal);
         LastError.Empty();bBuilt=true;return true;
     } catch(const std::exception& Error){LastError=FromUtf8(Error.what());UE_LOG(LogTemp,Error,TEXT("MetroidvaniaStudio: %s"),*LastError);return false;}
 }
 void AMetroidvaniaStudioRoom::OnConstruction(const FTransform& Transform) {Super::OnConstruction(Transform);if(!MapDocumentJson.IsEmpty())RebuildRoom();}
 void AMetroidvaniaStudioRoom::BeginPlay() {Super::BeginPlay();if(!bBuilt&&!MapDocumentJson.IsEmpty())RebuildRoom();}
+bool AMetroidvaniaStudioRoom::IsClimbable(FVector2D TilePosition) const
+{
+    return Traversal.IsValid() && Traversal->IsClimbable({TilePosition.X, TilePosition.Y});
+}
+bool AMetroidvaniaStudioRoom::FindFloorLanding(FVector2D PreviousFeet, FVector2D NextFeet, bool DropThrough, float& LandingHeight) const
+{
+    double height = 0;
+    bool landed = Traversal.IsValid() && Traversal->FindLanding({PreviousFeet.X, PreviousFeet.Y}, {NextFeet.X, NextFeet.Y}, DropThrough, height);
+    LandingHeight = static_cast<float>(height);
+    return landed;
+}

@@ -42,6 +42,16 @@ public static class StudioIntegrationValidation
             var library = StudioResourceImport.Create(catalog, profile.ppu, textures);
             Check(library.tiles.Count > 0 && library.tiles.All(entry => entry.tile.sprite.pixelsPerUnit == 32), "Atlas sprites use selected PPU");
             Check(StudioResourceImport.Create(catalog, profile.ppu, textures) == library, "Unchanged resource imports reuse persistent assets");
+            var movement = new MapRoom { id = "movement", width = 4, height = 4 };
+            movement.foreground.Add(new MapCell { x = 1, y = 1, material = "traversal-ladder" });
+            movement.foreground.Add(new MapCell { x = 2, y = 1, material = "traversal-floor" });
+            var movementDoc = new MapDocument(); movementDoc.rooms.Add(movement);
+            var movementRoot = StudioRoomBuilder.Build(movementDoc, movement.id, library);
+            Check(movementRoot.GetComponentsInChildren<BoxCollider2D>().Any(c => c.name == "Ladder" && c.isTrigger), "Ladder is an overlap zone");
+            var floor = movementRoot.GetComponentInChildren<PlatformEffector2D>();
+            Check(floor && floor.useOneWay && floor.GetComponent<BoxCollider2D>().usedByEffector, "Floor uses one-way contacts");
+            Check(library.ResolveTile("traversal-floor", 0, TileShape.Solid).colliderType == Tile.ColliderType.None, "Floor is excluded from solid terrain");
+            UnityEngine.Object.DestroyImmediate(movementRoot);
             parsed.rooms[0].foreground.Find(cell => cell.x == 3 && cell.y == 2).shape = TileShape.BottomLeft;
             var camera = new GameObject("Camera").AddComponent<Camera>(); camera.tag = "MainCamera"; camera.transform.position = new Vector3(0, 0, -10);
             var root = StudioSceneImport.Load(parsed, room.id, library, profile, scene, camera, false);

@@ -58,6 +58,8 @@ test('actual web server accepts CLI/MCP live edits, shares Undo and exports, and
     await wait(50);
   }
   assert.equal(health.processId, server.pid, logs);
+  assert.equal(resolve(health.runtimePath), resolve(serverDll), 'launcher identifies the server executable assembly');
+  assert.equal((await cli(['editor', '--workspace', workspace])).code, 4, 'headless session respects the web editor writer lock');
   const inspected = await cli(['inspect', '--url', url, '--map', '@active']);
   assert.equal(inspected.code, 0, inspected.out);
   assert.equal(inspected.json.document.name, 'Live source');

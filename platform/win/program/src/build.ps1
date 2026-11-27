@@ -28,7 +28,7 @@ try {
     $appFile = Join-Path $payload 'metroidvania-studio/dist/app.js'
     $desktopLabels = @{}
     foreach ($row in (Import-Csv -LiteralPath (Join-Path $sourceRoot 'desktop-locale.csv') -Encoding UTF8)) {
-        $desktopLabels[$row.Key] = @{ KR=$row.KR; EN=$row.EN }
+        $desktopLabels[$row.Key] = $row | Select-Object -Property * -ExcludeProperty Key
     }
     $desktopScript = 'const desktopLabels = ' + ($desktopLabels | ConvertTo-Json -Depth 4 -Compress) + ";`n" + [IO.File]::ReadAllText((Join-Path $sourceRoot 'desktop-bridge.js'))
     [IO.File]::AppendAllText($appFile, $desktopScript, [Text.UTF8Encoding]::new($false))
@@ -78,9 +78,9 @@ try {
     [IO.File]::WriteAllText((Join-Path $stage 'desktop-settings.json'), "{`n  `"workspaceRelativePath`": `"../../..`"`n}`n", [Text.UTF8Encoding]::new($false))
     [IO.File]::WriteAllText((Join-Path $stage 'build-info.json'), (@{ version=$version; builtAt=[DateTime]::UtcNow.ToString('O'); target='win-x64'; mode='local-program'; runtimeIncluded=[bool]$IncludeRuntime } | ConvertTo-Json), [Text.UTF8Encoding]::new($false))
     $runtimeText = if ($IncludeRuntime) {
-        'This build includes .NET 10. Microsoft WebView2 Runtime must be installed.'
+        'This build includes .NET 10. Microsoft Edge WebView2 Runtime must be installed.'
     } else {
-        '.NET 10 Desktop Runtime (x64), ASP.NET Core Runtime 10 (x64), and Microsoft WebView2 Runtime must be installed. This build shares the installed runtimes to reduce application size.'
+        '.NET 10 Desktop Runtime (x64), ASP.NET Core Runtime 10 (x64), and Microsoft Edge WebView2 Runtime must be installed. This build shares the installed runtimes to reduce application size.'
     }
     [IO.File]::WriteAllText((Join-Path $stage 'runtime-requirements.txt'), $runtimeText + [Environment]::NewLine, [Text.UTF8Encoding]::new($false))
     $output = [IO.Path]::GetFullPath((Join-Path $studioRoot 'builds/win/program'))

@@ -1,6 +1,6 @@
 # SDL integration
 
-Installation guides: [한국어](../../engine-packages/sdl/INSTALL_KR.txt) · [English](../../engine-packages/sdl/INSTALL_EN.txt) · [日本語](../../engine-packages/sdl/INSTALL_JP.txt) · [简体中文](../../engine-packages/sdl/INSTALL_CN.txt) · [繁體中文](../../engine-packages/sdl/INSTALL_TW.txt).
+Installation guides: [한국어](../../engine-packages/sdl/INSTALL_KR.txt) · [English](../../engine-packages/sdl/INSTALL_EN.txt) · [日本語](../../engine-packages/sdl/INSTALL_JP.txt) · [简体中文](../../engine-packages/sdl/INSTALL_CN.txt) · [繁體中文](../../engine-packages/sdl/INSTALL_TW.txt) · [Русский](../../engine-packages/sdl/INSTALL_RU.txt).
 
 C++17 source library and room preview for SDL 3.4 or later. This is a library integration, so there is no engine plugin manager to install into.
 

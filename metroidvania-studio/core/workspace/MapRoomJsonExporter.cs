@@ -10,6 +10,11 @@ namespace MetroidvaniaStudio
     /// <summary>Exports independent room documents without changing the source map or its history.</summary>
     public static class MapRoomJsonExporter
     {
+        public sealed class TargetExistsException : IOException
+        {
+            internal TargetExistsException(string path) : base(MetroidvaniaStudioLocale.Format("roomJson.exists", path)) { }
+        }
+
         public const int MaximumFileNameLength = 120;
         // Planning keeps every room JSON string alive for the preview and atomic
         // export. Keep that aggregate no larger than one supported map file so
@@ -178,6 +183,7 @@ namespace MetroidvaniaStudio
                 if (cleanup != null)
                     throw new IOException(MetroidvaniaStudioLocale.Format("roomJson.failed_cleanup", error.Message, staging, cleanup.Message),
                         new AggregateException(error, cleanup));
+                if (error is TargetExistsException) throw;
                 throw new IOException(MetroidvaniaStudioLocale.Format("roomJson.failed", error.Message), error);
             }
             Exception finalCleanup = RemoveStaging(staging);
@@ -240,7 +246,7 @@ namespace MetroidvaniaStudio
                     throw new IOException(MetroidvaniaStudioLocale.Format("roomJson.protected_source", file.Destination));
                 if (Directory.Exists(file.Destination)) throw new IOException(MetroidvaniaStudioLocale.Format("roomJson.not_file", file.Destination));
                 if (File.Exists(file.Destination) && !overwrite)
-                    throw new IOException(MetroidvaniaStudioLocale.Format("roomJson.exists", file.Destination));
+                    throw new TargetExistsException(file.Destination);
             }
         }
 
@@ -268,7 +274,7 @@ namespace MetroidvaniaStudio
                     // exports: a destination created after CheckDestinations is
                     // rejected before any room is published.
                     if (!overwrite)
-                        throw new IOException(MetroidvaniaStudioLocale.Format("roomJson.exists", file.Destination));
+                        throw new TargetExistsException(file.Destination);
                     long length = stream.Length;
                     if (length > MaximumAggregateUtf8Bytes - aggregateBytes)
                         throw new IOException("Existing export destinations exceed the 32 MiB comparison limit.");

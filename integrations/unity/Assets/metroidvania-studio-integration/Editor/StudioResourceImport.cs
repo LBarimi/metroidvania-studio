@@ -55,7 +55,8 @@ namespace MetroidvaniaStudio.Integration.Editor
                     if (data.width != 16 || data.height != 16 || data.shape < 0 || data.shape > 4) throw new InvalidOperationException("Terrain sprites must be 16 by 16 pixels with a supported shape.");
                     var shape = (TileShape)data.shape;
                     var tile = ScriptableObject.CreateInstance<Tile>(); tile.name = material.id + ":" + data.shape + ":" + data.mask;
-                    tile.sprite = MakeSprite(data, tile.name, shape); tile.colliderType = shape == TileShape.Solid ? Tile.ColliderType.Grid : Tile.ColliderType.None;
+                    tile.sprite = MakeSprite(data, tile.name, shape);
+                    tile.colliderType = shape == TileShape.Solid && !StudioRoomBuilder.IsTraversal(material.id) ? Tile.ColliderType.Grid : Tile.ColliderType.None;
                     AssetDatabase.AddObjectToAsset(tile, library);
                     library.tiles.Add(new StudioResourceLibrary.TileEntry { material = material.id, mask = data.mask, shape = shape, tile = tile });
                 }

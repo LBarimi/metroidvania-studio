@@ -100,7 +100,7 @@ public sealed partial class ProjectFiles
     public string RecoveryPath => Resolve(mapsRelative, ".Recovery/Workspace.map.json");
     public ProjectFiles(string project, Action<string>? beforeMapPublish = null,
         Action<string>? beforeConditionalRollback = null, Action<string>? beforeConflictDestinationCheck = null,
-        Action<string>? beforeMapProbe = null, string? studioRoot = null)
+        Action<string>? beforeMapProbe = null, string? studioRoot = null, bool createMapsDirectory = true)
     {
         this.beforeMapPublish = beforeMapPublish;
         this.beforeConditionalRollback = beforeConditionalRollback;
@@ -115,7 +115,7 @@ public sealed partial class ProjectFiles
         MapsPath = Resolve("", mapsRelative);
         _ = Resolve("", catalogRelative);
         _ = Resolve("", texturesRelative);
-        Directory.CreateDirectory(MapsPath);
+        if (createMapsDirectory) Directory.CreateDirectory(MapsPath);
     }
 
     public string Map(string relative)

@@ -27,13 +27,8 @@ foreach (string candidate in new[] { sessionDirectory, sessionFile })
         if ((File.GetAttributes(candidate) & FileAttributes.ReparsePoint) != 0) throw new IOException("Workspace session files cannot be symbolic links.");
 Directory.CreateDirectory(sessionDirectory);
 using var workspaceLock = new FileStream(sessionFile, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-PortableWorkspace.SeedResources(project, studioRoot);
-var files = new ProjectFiles(project, studioRoot: studioRoot);
-TextureLibrary.Prepare(files, studioRoot);
-BuiltInPalettes.Prepare(files, studioRoot);
-BuiltInObjects.Prepare(files, studioRoot);
-BundledTilesets.Prepare(files, studioRoot);
-var workspace = new EditorWorkspace(files);
+var workspace = EditorRuntime.Open(project, studioRoot);
+var files = workspace.Files;
 using var nativeMaps = new NativeMapFiles(files);
 string webRoot = Path.GetFullPath(builder.Configuration["web-root"] ?? Path.Combine(studioRoot, "metroidvania-studio/dist"));
 var app = builder.Build();
@@ -70,10 +65,15 @@ app.Use(async (context, next) =>
             BadHttpRequestException badRequest => badRequest.StatusCode,
             _ => 400
         };
-        await context.Response.WriteAsJsonAsync(new { error = error.Message });
+        if (error is MetroidvaniaStudio.MapRoomJsonExporter.TargetExistsException or ExistingMapTargetConflict)
+            await context.Response.WriteAsJsonAsync(new { error = error.Message, code = "target_exists" });
+        else if (error.Data[ScriptLibrary.ErrorCodeKey] is string code)
+            await context.Response.WriteAsJsonAsync(new { error = error.Message, code });
+        else
+            await context.Response.WriteAsJsonAsync(new { error = error.Message });
     }
 });
-app.MapGet("/api/health", () => Results.Json(new { instanceId = workspace.InstanceId, projectPath = files.ProjectPath, workspacePath = files.ProjectPath, launchToken = builder.Configuration["launch-token"], processId = Environment.ProcessId, runtimePath = typeof(EditorWorkspace).Assembly.Location }));
+app.MapGet("/api/health", () => Results.Json(new { instanceId = workspace.InstanceId, projectPath = files.ProjectPath, workspacePath = files.ProjectPath, launchToken = builder.Configuration["launch-token"], processId = Environment.ProcessId, runtimePath = typeof(Program).Assembly.Location }));
 app.MapPost("/api/shutdown", async (HttpContext context) =>
 {
     if (context.Request.Headers["X-Metroidvania-Studio-Instance"].ToString() != workspace.InstanceId)
@@ -133,8 +133,7 @@ app.MapScriptLibrary(new ScriptLibrary(files.ProjectPath, studioRoot));
 app.MapDocumentation(webRoot);
 app.MapGet("/api/palette-template", (string mode, string color) =>
 {
-    if (color.Length != 7 || color[0] != '#' || !color[1..].All(char.IsAsciiHexDigit)) throw new ArgumentException("@paletteInvalidColor");
-    return Results.File(TilesetComposer.Template(mode, color), "image/png", "tileset-" + mode + ".png");
+    return Results.File(EditorRuntime.PaletteTemplate(mode, color), "image/png", "tileset-" + mode + ".png");
 });
 string CurrentExportDirectory()
 {

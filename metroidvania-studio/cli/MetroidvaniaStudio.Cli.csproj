@@ -7,7 +7,7 @@
     <NuGetAudit>false</NuGetAudit><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../automation/MetroidvaniaStudio.Automation.csproj" />
+    <ProjectReference Include="../editor-runtime/MetroidvaniaStudio.EditorRuntime.csproj" />
     <ProjectReference Include="../scripting/MetroidvaniaStudio.Scripting.csproj" />
     <PackageReference Include="ModelContextProtocol.Core" Version="[2.2.0]" />
   </ItemGroup>

@@ -22,8 +22,12 @@ try {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await page.goto(base); await page.locator('#palette .palette-item').first().waitFor();
   await page.locator('#language').selectOption('KR');
+  await page.locator('#palette-search').fill('no-matching-resource-2789');
+  await page.locator('#palette').getByText('검색 결과가 없습니다.', { exact: true }).waitFor();
+  await page.locator('#palette-search').fill('');
   await page.locator('#add-palette').click();
   assert.equal(await page.locator('.dialog-title').textContent(), '팔레트 추가×');
+  assert.equal(await page.locator('#palette-color-picker').getAttribute('aria-label'), '팔레트 색상');
   await page.locator('#palette-name').fill('새 지역');
   await page.locator('#palette-color-hex').fill('invalid');
   await page.locator('dialog .accent').click();

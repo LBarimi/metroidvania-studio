@@ -22,6 +22,21 @@ func _initialize() -> void:
     var saved: Node = load("res://smoke-room.tscn").instantiate()
     assert(saved.get_node("Foreground").surfaces[0].texture != null)
     saved.free()
+    var fixture := FileAccess.open("user://movement.json", FileAccess.WRITE)
+    fixture.store_string(JSON.stringify({"formatVersion":2, "tileSize":16, "rooms":[{"id":"movement", "width":4, "height":4,
+        "foreground":[{"x":1,"y":1,"material":"traversal-ladder"},{"x":2,"y":1,"material":"traversal-floor"}]}]}))
+    fixture.close()
+    var movement: Node2D = loader.load_room("user://movement.json", "res://samples/catalog.json", "res://samples")
+    assert(movement != null and movement.get_node("TerrainCollision").get_child_count() == 0)
+    var ladder_found := false
+    var floor_found := false
+    for child in movement.get_children():
+        if child.is_in_group("studio_ladder"):
+            ladder_found = child is Area2D
+        if child.is_in_group("studio_drop_through_floor"):
+            floor_found = child is StaticBody2D and child.get_child(0).one_way_collision
+    assert(ladder_found and floor_found)
+    movement.free()
     assert(loader.load_room("res://samples/maps/Sample.map.json", "res://samples/catalog.json", "res://samples", "absent") == null)
     var coverage: Node2D = loader.load_room("res://samples/maps/Coverage.json", "res://samples/catalog.json", "res://samples")
     assert(coverage != null)

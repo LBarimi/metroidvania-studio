@@ -102,6 +102,7 @@ public sealed partial class Catalog(ProjectFiles files)
                 if (item.ValueKind != JsonValueKind.Object) throw new InvalidDataException("Every catalog material must be an object.");
                 var set = new TerrainTileSet();
                 string id = RequiredString(item, "id", "material");
+                set.AssetId = id;
                 if (string.IsNullOrWhiteSpace(id) || materials.ContainsKey(id))
                     throw new InvalidDataException("Catalog material IDs must be nonempty and unique.");
                 RequiredString(item, "name", "material");

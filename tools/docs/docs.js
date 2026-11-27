@@ -7,7 +7,10 @@ search.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout
   const terms = query.split(/\s+/);
   const matches = (window.studioDocs || []).filter(p => terms.every(term => (p.title + ' ' + p.text).toLowerCase().includes(term)))
     .sort((a, b) => Number(b.title.toLowerCase().includes(query)) - Number(a.title.toLowerCase().includes(query))).slice(0, 20);
-  const count = document.createElement('p'); count.textContent = matches.length ? `${matches.length} matching pages` : 'No matching pages'; results.append(count);
+  const count = document.createElement('p');
+  count.textContent = matches.length ? (results.dataset.matches || '{0} matching pages').replace('{0}', String(matches.length))
+    : (results.dataset.empty || 'No matching pages');
+  results.append(count);
   for (const match of matches) {
     const anchor = document.createElement('a'); anchor.href = match.href; anchor.textContent = match.title;
     const preview = document.createElement('small'), at = Math.max(0, match.text.toLowerCase().indexOf(terms[0]) - 30);

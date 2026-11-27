@@ -36,6 +36,85 @@ async function fixture(t) {
   return directory;
 }
 
+test('local agents can discover each workspace command in the bundled editor guide', async () => {
+  const guide = await processCli(['editor-help']).done;
+  assert.equal(guide.code, 0, guide.out);
+  const server = await readFile(join(root, 'metroidvania-studio/server/EditorWorkspace.cs'), 'utf8');
+  for (const [,action] of server.matchAll(/case "([A-Za-z]+)":/g))
+    assert.ok(guide.json.markdown.includes('`' + action + '`'), 'Missing editor action ' + action);
+});
+
+test('offline generator uses the editor seed, protects existing maps and supports legacy workspace palettes', async t => {
+  const workspace = await fixture(t), map = 'Maps/World.map.json';
+  const args = ['generate', '--map', map, '--rooms', '12', '--seed', '42', '--tiles',
+    '--difficulty', 'hard', '--theme', 'biome-rock', '--chips', '16x32', '--colors', '#827661'];
+  const preview = await cli(workspace, [...args, '--read-only', '--dry-run']);
+  assert.equal(preview.code, 0, preview.out);
+  assert.ok(preview.json.foregroundCells > 0);
+  await assert.rejects(access(join(workspace, 'Maps')));
+  const first = await cli(workspace, args);
+  assert.equal(first.code, 0, first.out);
+  const data = JSON.parse(await readFile(join(workspace, map)));
+  assert.ok(data.rooms.every(room => room.width === 16 && room.height === 32));
+  assert.equal((await cli(workspace, args)).code, 3);
+  assert.equal((await cli(workspace, [...args, '--force', '--expected-revision', 'stale'])).code, 3);
+  assert.equal((await cli(workspace, [...args, '--force', '--expected-revision', first.json.revision])).json.revision, first.json.revision);
+  assert.equal((await cli(workspace, [...args, '--force', '--exclude-chips', '8x8'])).code, 2);
+  const legacy = JSON.parse(await readFile(join(root, 'samples/catalog.json')));
+  legacy.materials = legacy.materials.filter(m => !m.id.startsWith('traversal-'));
+  legacy.editorPaletteGroups = legacy.editorPaletteGroups.filter(g => g.id !== 'traversal');
+  const catalogFile = join(workspace, '.studio/catalog.json'), original = JSON.stringify(legacy);
+  await writeFile(catalogFile, original);
+  const old = await cli(workspace, [...args, '--dry-run', '--force']);
+  assert.equal(old.code, 0, old.out);
+  assert.equal(old.json.foregroundCells, first.json.foregroundCells);
+  assert.equal(await readFile(catalogFile, 'utf8'), original);
+
+  const commands = [
+    { action: 'generateMinimap', roomCount: 12, chipIds: ['16x32'], colors: ['#827661'], automaticThemes: false,
+      seed: 42, generateTiles: true, tileTheme: 'biome-rock', tileDifficulty: 'hard' },
+    { action: 'save', path: 'Editor.map.json' }
+  ];
+  await writeFile(join(workspace, 'edit.json'), JSON.stringify(commands));
+  const commandsRun = await headless(workspace, ['--commands', 'edit.json']);
+  assert.equal(commandsRun.code, 0, commandsRun.out);
+  assert.deepEqual(JSON.parse(await readFile(join(workspace, 'Maps/Editor.map.json'))), data);
+});
+
+async function headless(workspace, args, input = '') {
+  const child = spawn(dotnet, [dll, 'editor', '--workspace', workspace, ...args], { cwd: root, windowsHide: true });
+  let out = '', err = '';
+  child.stdout.on('data', b => out += b);
+  child.stderr.on('data', b => err += b);
+  const done = new Promise((resolvePromise, reject) => {
+    child.once('error', reject);
+    child.once('close', code => resolvePromise({ code, out, err, rows: out.trim().split(/\r?\n/).filter(Boolean).map(JSON.parse) }));
+  });
+  child.stdin.on('error', () => {});
+  child.stdin.end(input);
+  return done;
+}
+
+test('headless JSON lines share selection, history, assets, Lua, saves and project export', async t => {
+  const workspace = await fixture(t);
+  const commands = [
+    { action:'new', discard:true }, { action:'documentProperties', name:'Before' },
+    { action:'runLua', source:'studio.rename { name="After" }' }, { action:'undo' }, { action:'inspect' },
+    { action:'redo' }, { action:'paletteGroupAdd', name:'Custom group' }, { action:'catalog' },
+    { action:'paletteTemplate', mode:'four', color:'#548652', output:'template.png' },
+    { action:'save', path:'Edited.map.json' }, { action:'bundle', output:'game.zip' }
+  ];
+  const edited = await headless(workspace, [], commands.map(c => JSON.stringify(c)).join('\n'));
+  assert.equal(edited.code, 0, edited.out + edited.err);
+  assert.equal(edited.rows[4].result.name, 'Before');
+  assert.ok(edited.rows[7].result.paletteGroups.some(g => g.name === 'Custom group'));
+  assert.equal(JSON.parse(await readFile(join(workspace,'Maps/Edited.map.json'))).name,'After');
+  assert.equal((await readFile(join(workspace,'game.zip'))).readUInt16LE(), 0x4b50);
+  assert.equal((await readFile(join(workspace,'template.png'))).readUInt32BE(), 0x89504e47);
+  assert.equal((await headless(workspace, ['--commands','-'], '{"action":"bundle","output":"game.zip"}')).code, 3);
+  assert.equal((await headless(workspace, ['--read-only'], '{"action":"new"}')).code, 6);
+});
+
 function mcp(workspace, flags = []) {
   const child = spawn(dotnet, [dll, 'mcp', ...(workspace ? ['--workspace', workspace] : []), ...flags], { cwd: root, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
   const pending = new Map();

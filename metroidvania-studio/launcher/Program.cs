@@ -92,7 +92,7 @@ internal static partial class Program
                 if (ready == null) throw new InvalidOperationException("Startup timed out. The server was not force-stopped; inspect its log before retrying.");
                 SaveSession(options, new Session(process.Id, process.StartTime.ToUniversalTime(), options.Port, ready.InstanceId, options.Project, dll, token));
                 Console.WriteLine("Metroidvania Studio: " + options.Url);
-                Console.WriteLine("MiniMap: " + options.Url + "?view=minimap");
+                Console.WriteLine("Minimap: " + options.Url + "?view=minimap");
                 Console.WriteLine("Workspace: " + options.Project);
                 if (options.Foreground) foreground = process; else process.Dispose();
                 OpenBrowser(options);

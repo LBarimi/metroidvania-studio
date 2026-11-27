@@ -13,7 +13,7 @@ internal static class Program
         // A separate process runs the existing server; its work never blocks the window thread.
         if (args.FirstOrDefault() == "--server")
         {
-            var entry = typeof(MetroidvaniaStudio.Server.EditorWorkspace).Assembly.EntryPoint
+            var entry = typeof(MetroidvaniaStudio.Server.AutomationEndpoints).Assembly.EntryPoint
                 ?? throw new InvalidOperationException("The bundled server entry point is missing.");
             try
             {

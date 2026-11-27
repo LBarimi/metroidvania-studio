@@ -842,7 +842,7 @@ static void RoomExport() => InFiles(dir =>
         byte[] bytes = File.ReadAllBytes(path); Check(bytes[0] == (byte)'{', "UTF-8 without BOM");
         var loaded = MapDocumentStore.Load(path); Check(loaded.rooms.Count == 1 && loaded.properties.Single().value == "공유", "Independent room file preserves global metadata");
     }
-    string first = File.ReadAllText(paths[0]); Throws<IOException>(() => MapRoomJsonExporter.Export(d, Path.GetDirectoryName(paths[0])));
+    string first = File.ReadAllText(paths[0]); Throws<MapRoomJsonExporter.TargetExistsException>(() => MapRoomJsonExporter.Export(d, Path.GetDirectoryName(paths[0])));
     Check(File.ReadAllText(paths[0]) == first && Json(d) == before, "Collision preserves published/source data");
 });
 static void RoomExportAggregateLimit() => InFiles(dir =>
@@ -884,6 +884,18 @@ static void Stylegrounds()
 }
 static void Locale()
 {
+    CultureInfo previousCulture = CultureInfo.CurrentUICulture;
+    try
+    {
+        MetroidvaniaStudioLocale.Column = null;
+        foreach (var (tag, column) in new[] { ("ko-KR", "KR"), ("en-US", "EN"), ("ja-JP", "JA"), ("ru-RU", "RU"),
+            ("zh-CN", "ZH_CN"), ("zh-TW", "ZH_TW"), ("zh-HK", "ZH_TW"), ("zh-Hans-TW", "ZH_CN"), ("zh-Hant-CN", "ZH_TW"), ("fr-FR", "EN") })
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo(tag);
+            Check(MetroidvaniaStudioLocale.Column == column, "Exporter language for " + tag);
+        }
+    }
+    finally { CultureInfo.CurrentUICulture = previousCulture; }
     MetroidvaniaStudioLocale.Column = "EN"; string en = MetroidvaniaStudioLocale.Text("roomJson.empty_map");
     MetroidvaniaStudioLocale.Column = "KR"; string kr = MetroidvaniaStudioLocale.Text("roomJson.empty_map");
     Check(en != kr && !en.StartsWith('[') && !kr.StartsWith('['), "Shared CSV available in both languages");

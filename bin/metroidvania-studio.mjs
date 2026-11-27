@@ -22,8 +22,10 @@ export function findDotnet(env = process.env, platform = process.platform, probe
 
 export async function run(args = process.argv.slice(2)) {
   if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Node.js 24 or later is required.');
-  const dll = fileURLToPath(new URL('../app/MetroidvaniaStudio.Cli.dll', import.meta.url));
-  if (!existsSync(dll)) throw new Error('The packaged CLI is missing. Use a built package; source checkouts use the local pack script.');
+  const packaged = fileURLToPath(new URL('../app/MetroidvaniaStudio.Cli.dll', import.meta.url));
+  const source = fileURLToPath(new URL('../metroidvania-studio/cli/bin/Release/net10.0/MetroidvaniaStudio.Cli.dll', import.meta.url));
+  const dll = existsSync(packaged) ? packaged : source;
+  if (!existsSync(dll)) throw new Error('CLI build missing. In a source checkout, build metroidvania-studio/cli/MetroidvaniaStudio.Cli.csproj in Release configuration.');
   const env = { ...process.env, DOTNET_CLI_TELEMETRY_OPTOUT: '1', DOTNET_NOLOGO: '1', DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1' };
   const executable = findDotnet(env);
   env.DOTNET_HOST_PATH = executable;

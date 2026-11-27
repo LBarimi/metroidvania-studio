@@ -130,7 +130,7 @@ internal sealed class BoundedJsonLinesStream(Stream input, int maximumLineBytes)
         foreach (byte value in bytes)
         {
             if (value == 10) pending = 0;
-            else if (++pending > maximumLineBytes) throw new IOException("The MCP message exceeds the 4 MiB limit.");
+            else if (++pending > maximumLineBytes) throw new IOException($"Input line exceeds the {maximumLineBytes / (1024 * 1024)} MiB limit.");
         }
     }
     public override int Read(byte[] buffer, int offset, int count) { int n = input.Read(buffer, offset, count); Check(buffer.AsSpan(offset, n)); return n; }

@@ -9,7 +9,13 @@ export function scriptLibrary(host: Host) {
   function button(key: string, action: () => void) { const b = document.createElement('button'); b.type = 'button'; b.textContent = host.t(key); b.onclick = action; return b; }
   async function request<T>(url: string, body?: unknown): Promise<T> {
     const response = await fetch(url, { method: body ? 'POST' : 'GET', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(6000) });
-    const value = await response.json(); if (!response.ok) throw new Error(value.error || `Server ${response.status}`); return value;
+    const value = await response.json();
+    if (!response.ok) {
+      const key = value?.code;
+      const translated = typeof key === 'string' && key.startsWith('scripts.') ? host.t(key) : undefined;
+      throw new Error(translated && translated !== key ? translated : value?.error || `Server ${response.status}`);
+    }
+    return value;
   }
   function canReplace(): boolean { return host.source.value === cleanSource || confirm(host.t('scripts.discard')); }
   function imported(filename = 'map-script.lua'): void { current = null; select.value = ''; name.value = filename; cleanSource = host.source.value; }

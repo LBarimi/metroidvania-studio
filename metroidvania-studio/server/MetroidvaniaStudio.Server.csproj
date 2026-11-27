@@ -3,7 +3,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
-  <ItemGroup><ProjectReference Include="../core/MetroidvaniaStudio.Core.csproj" /><ProjectReference Include="../automation/MetroidvaniaStudio.Automation.csproj" /></ItemGroup>
-  <ItemGroup><Compile Include="../storage/PortableWorkspace.cs" Link="Storage/PortableWorkspace.cs" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../editor-runtime/MetroidvaniaStudio.EditorRuntime.csproj" />
+    <Compile Include="*Endpoints.cs;Program.cs;NativeMapFiles.cs;AutomationJobs.cs;AutomationWorkerHost.cs;AssemblyInfo.cs" />
+  </ItemGroup>
 </Project>

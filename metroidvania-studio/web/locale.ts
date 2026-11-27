@@ -6,10 +6,15 @@ export const LANGUAGES = [
 export type Language = typeof LANGUAGES[number][0];
 export function detectLanguage(languages: readonly string[]): Language {
   for (const locale of languages) {
-    const tag = locale.toLowerCase();
-    if (tag.startsWith('ko')) return 'KR'; if (tag.startsWith('ja')) return 'JA'; if (tag.startsWith('ru')) return 'RU';
-    if (tag.startsWith('zh')) return /hant|tw|hk|mo/.test(tag) ? 'ZH_TW' : 'ZH_CN';
-    if (tag.startsWith('en')) return 'EN';
+    let tag: Intl.Locale;
+    try { tag = new Intl.Locale(locale); } catch { continue; }
+    switch (tag.language) {
+      case 'ko': return 'KR';
+      case 'ja': return 'JA';
+      case 'ru': return 'RU';
+      case 'zh': return tag.maximize().script === 'Hant' ? 'ZH_TW' : 'ZH_CN';
+      case 'en': return 'EN';
+    }
   } return 'EN';
 }
 export class Locale extends EventTarget {
@@ -28,6 +33,11 @@ export class Locale extends EventTarget {
   t(key: string): string {
     const row = this.table.get(`external.${key}`) || this.table.get(key);
     return row?.[this.language] || row?.EN || key;
+  }
+  // Older local servers return only the exporter's localized message, ending with the destination path.
+  isLegacyExportTargetExists(message: string): boolean {
+    return Object.values(this.table.get('roomJson.exists') || {}).some(template =>
+      template.endsWith('{0}') && message.startsWith(template.slice(0, -3)));
   }
   enum(type: string, value: string, _index: number): string {
     const key = `enum.${type}.${value}`; return this.table.has(key) ? this.t(key) : value.replace(/([a-z])([A-Z])/g, '$1 $2');

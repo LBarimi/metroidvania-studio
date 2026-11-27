@@ -19,6 +19,7 @@ assets/generate-minimap-walkthrough.gif
 assets/metroidvania-studio--contracts--map-format-v2.schema.json
 building.html
 cli--commands.html
+cli--headless-editor.html
 cli--quick-start.html
 cli--release-downloads.html
 distribution--local-package.html
@@ -42,6 +43,12 @@ scripting--api-reference.html
 scripting--execution-limits.html
 scripting--quick-start.html
 search-index.js
+shortcuts--ja.html
+shortcuts--ko.html
+shortcuts--ru.html
+shortcuts--zh-hans.html
+shortcuts--zh-hant-tw.html
+shortcuts.html
 sitemap.xml
 studio-icon.svg
 textures.html

@@ -35,7 +35,7 @@ func _enter_tree() -> void:
     status = Label.new()
     status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     status.custom_minimum_size.x = 210
-    status.text = "Select a map, catalog and texture directory."
+    status.text = "Select the map JSON, catalog JSON and resource folder. Texture paths in the catalog are relative to that folder."
     panel.add_child(status)
     add_control_to_dock(DOCK_SLOT_RIGHT_UL, panel)
 

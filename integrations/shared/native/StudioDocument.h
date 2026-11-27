@@ -409,11 +409,36 @@ struct Primitive
     bool solid = false, trigger = false, invisible = false;
     std::string objectId, definition;
 };
+// Room-local coordinates in tiles, Y up. A character controller can suppress landing
+// while dropping through, and resume it after the character's feet clear that surface.
+struct TraversalGrid
+{
+    std::set<std::pair<int, int>> ladders, floors;
+    bool IsClimbable(Point position) const
+    {
+        if (!(position.x >= 0 && position.x < 1024 && position.y >= 0 && position.y < 1024)) return false;
+        return ladders.count({static_cast<int>(position.x), static_cast<int>(position.y)}) != 0;
+    }
+    bool FindLanding(Point before, Point after, bool dropThrough, double &height) const
+    {
+        if (dropThrough || !(after.y < before.y)) return false;
+        bool hit = false;
+        for (const auto &cell : floors)
+        {
+            double top = cell.second + 1;
+            if (before.y < top || after.y > top || (hit && top <= height)) continue;
+            double x = before.x + (after.x - before.x) * ((before.y - top) / (before.y - after.y));
+            if (x >= cell.first && x < cell.first + 1) { height = top; hit = true; }
+        }
+        return hit;
+    }
+};
 struct Room
 {
     std::string id, name;
     int x = 0, y = 0, width = 0, height = 0, ppu = 16, referenceWidth = 320, referenceHeight = 180;
     std::vector<Primitive> primitives;
+    TraversalGrid traversal;
     Json document, catalog, metadata;
 };
 inline int NormalizeMask(int m)
@@ -609,7 +634,12 @@ inline Room LoadRoom(const std::string &mapText, const std::string &catalogText,
             p.sprite = ReadSprite(*sprite);
             Require(p.sprite.width == 16 && p.sprite.height == 16, "Terrain sprites must be 16 by 16.");
             p.layer = layer == "foreground" ? 0 : -20;
-            p.solid = layer == "foreground";
+            if (layer == "foreground")
+            {
+                if (materialId == "traversal-ladder") result.traversal.ladders.emplace(x, y);
+                else if (materialId == "traversal-floor") result.traversal.floors.emplace(x, y);
+                else p.solid = true;
+            }
             for (const auto &point : Polygon(shape))
             {
                 p.points.push_back({(x + point.x) * 16, (y + point.y) * 16});

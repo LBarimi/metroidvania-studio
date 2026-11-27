@@ -11,6 +11,7 @@ import { openScriptDialog } from './script-dialog.js';
 import { EditorApi, EditorApiError, localJson } from './api.js';
 import { createCameraControls } from './camera-controls.js';
 import { Locale, LANGUAGES } from './locale.js';
+import { commandModifier, shortcutKey } from './shortcuts.js';
 import type { Language } from './locale.js';
 import { syncLabels } from './sync-status.js';
 import { MapCanvas } from './map-canvas.js';
@@ -19,7 +20,7 @@ import { chipGroups, type MinimapEditTools } from './minimap-drawing.js';
 import { generationSettings } from './minimap-generation.js';
 import { MINIMAP_SEED_PROPERTY } from './contracts.generated.js';
 import { defaultMinimapColor, minimapColorProperty, minimapRegionColorProperty } from './minimap-shape.js';
-import { activeRoom, colorCss, tileLayer, TOOLS, LAYERS, SHAPES, MAX_BRUSH_SIZE } from './types.js';
+import { activeRoom, colorCss, tileLayer, isTraversalMaterial, TOOLS, LAYERS, SHAPES, MAX_BRUSH_SIZE } from './types.js';
 import type { State, Room, Point, SpriteRect, Property, MapObject, CommandExpectation, CommandValues, Definition, Material } from './types.js';
 
 const api = new EditorApi(), locale = new Locale();
@@ -39,7 +40,7 @@ let pendingStatusPoint: Point | null = null;
 const app = document.getElementById('app')!;
 app.className = 'app' + (standalone ? ' standalone-app' : '');
 // This template contains only application-owned markup. Project text is always assigned with textContent/value.
-app.innerHTML = `<header class="topbar"><div class="brand"><img class="brand-mark" src="studio-icon.svg" alt=""><span class="brand-text">Metroidvania Studio</span></div><div class="top-actions" id="file-actions"></div><div class="spacer"></div><div class="project-name" id="project-name"></div><span class="connection" id="connection"></span><select class="language" id="language" aria-label="Language"><option value="KR">한국어</option><option value="EN">English</option></select></header><nav class="tabbar" id="tabs"></nav><main class="workspace" id="workspace"><aside class="sidebar"><section class="section"><div class="section-title"><span data-label="rooms"></span><span class="count" id="room-count"></span><button id="add-room" class="icon">+</button></div><input id="room-search" class="room-search"><div class="room-list" id="room-list"></div></section><section class="section"><div class="section-title" data-label="tools"></div><div class="tool-grid" id="tools"></div></section><section class="section"><div class="section-title" data-label="layers"></div><div id="layers"></div><select id="group-select"></select><div class="row" id="group-actions"></div></section><section class="section"><div class="section-title"><span data-label="palette"></span><button id="add-palette" class="icon">+</button></div><div id="brush-options"></div><input id="palette-search" class="room-search"><div class="palette-list" id="palette"></div></section></aside><section class="content"><div class="view-toolbar" id="view-toolbar"></div><div class="canvas-wrap"><canvas class="map-canvas" id="map-canvas"></canvas><canvas class="mini-canvas" id="mini-canvas" hidden></canvas><div class="canvas-help" id="canvas-help"></div></div></section><aside class="inspector" id="inspector"></aside></main><footer class="statusbar"><span class="status-state" id="status-state"></span><span class="sync-status" id="status-export" aria-live="polite"></span><span id="status-coordinates"></span><span id="status-layer"></span><span id="status-room-sizes"></span><div class="spacer"></div><span id="status-camera"></span><span id="status-revision"></span></footer><div class="error-banner" id="toast" hidden role="status"></div>`;
+app.innerHTML = `<header class="topbar"><div class="brand"><img class="brand-mark" src="studio-icon.svg" alt=""><span class="brand-text">Metroidvania Studio</span></div><div class="top-actions" id="file-actions"></div><div class="spacer"></div><div class="project-name" id="project-name"></div><span class="connection" id="connection"></span><select class="language" id="language" aria-label="Language"><option value="KR">한국어</option><option value="EN">English</option></select></header><nav class="tabbar" id="tabs"></nav><main class="workspace" id="workspace"><aside class="sidebar"><section class="section"><div class="section-title"><span data-label="rooms"></span><span class="count" id="room-count"></span><button id="add-room" class="icon">+</button></div><input id="room-search" class="room-search"><div class="room-list" id="room-list"></div></section><section class="section"><div class="section-title" data-label="tools"></div><div class="tool-grid" id="tools"></div></section><section class="section"><div class="section-title" data-label="layers"></div><div id="layers"></div><select id="group-select"></select><div class="row" id="group-actions"></div></section><section class="section"><div class="section-title"><span data-label="palette"></span><button id="add-palette" class="icon">+</button></div><div id="brush-options"></div><input id="palette-search" class="room-search"><div class="palette-list" id="palette"></div></section></aside><section class="content"><div class="view-toolbar" id="view-toolbar"></div><div class="canvas-wrap"><canvas class="map-canvas" id="map-canvas"></canvas><canvas class="mini-canvas" id="mini-canvas" hidden></canvas></div></section><aside class="inspector" id="inspector"></aside></main><footer class="statusbar"><span class="status-state" id="status-state"></span><span class="sync-status" id="status-export" aria-live="polite"></span><span id="status-coordinates"></span><span id="status-layer"></span><span id="status-room-sizes"></span><div class="spacer"></div><span id="status-camera"></span><span id="status-revision"></span></footer><div class="error-banner" id="toast" hidden role="status"></div>`;
 function el<T extends HTMLElement = HTMLElement>(id: string): T { return document.getElementById(id) as T; }
 function text(tag: string, value: string, className = ''): HTMLElement { const node = document.createElement(tag); node.textContent = value; node.className = className; return node; }
 function button(label: string, action: () => void | Promise<unknown>, className = ''): HTMLButtonElement { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.className = className; b.addEventListener('click', () => { Promise.resolve().then(action).catch(error => toast(error)); }); return b; }
@@ -64,6 +65,10 @@ function definitionName(value: Definition): string {
   const key = 'builtin.object.' + value.id, translated = locale.t(key);
   return translated === key ? value.name : translated;
 }
+const builtinFieldLabels: Record<string, string> = {
+  desc: 'Description', event: 'Event', once: 'Once', label: 'Label', name: 'Name',
+  player: 'Player', tint: 'Tint', speed: 'Speed', loop: 'Loop'
+};
 const defaultThemeNames: Record<string, [string, string]> = {
   terrain: ['Green', 'green'], 'terrain-blue': ['Blue', 'blue'], 'terrain-dark-gray': ['Dark Gray', 'darkGray'],
   'terrain-orange': ['Orange', 'orange'], 'terrain-yellow': ['Yellow', 'yellow'],
@@ -72,6 +77,8 @@ const defaultThemeNames: Record<string, [string, string]> = {
   'biome-ancient-ruins': ['Ancient ruins', 'ancientRuins']
 };
 function materialName(value: Material): string {
+  if (value.id === 'traversal-ladder' && value.name === 'Ladder') return locale.t('traversalLadder');
+  if (value.id === 'traversal-floor' && value.name === 'Drop-through floor') return locale.t('traversalFloor');
   const entry = defaultThemeNames[value.themeId || value.id];
   if (!entry || value.name !== entry[0]) return value.name;
   const key = 'stageThemes.' + entry[1], translated = locale.t(key);
@@ -84,16 +91,17 @@ const map = new MapCanvas(el('map-canvas'), api.command, point => drawStatus(poi
   if (brush) brush.value = String(size);
 }, (point, client) => roomContextMenu(point, client));
 const preview = new GamePreview(map, key => locale.t(key), () => el('map-canvas').focus());
-el('map-canvas').parentElement!.append(preview.element);
 const mini = new MiniMap(el('mini-canvas'),
   id => { void run('selectRoom', { id }).catch(() => undefined); },
   id => { void editMiniRoom(id).catch(error => toast(error)); });
 const drawingCanvas = document.createElement('canvas');
 drawingCanvas.id = 'minimap-drawing-canvas'; drawingCanvas.className = 'mini-canvas'; drawingCanvas.tabIndex = 0; drawingCanvas.hidden = true;
 el('mini-canvas').after(drawingCanvas);
-const generateButton = button('', prepareMinimapGeneration);
+const generateButton = button('', prepareGeneration);
 generateButton.id = 'minimap-generate'; generateButton.hidden = true;
-drawingCanvas.after(generateButton);
+const canvasOverlays = text('div', '', 'canvas-overlays');
+canvasOverlays.append(generateButton, preview.element);
+drawingCanvas.after(canvasOverlays);
 const drawingPanel = text('aside', '', 'inspector minimap-drawing-panel'); drawingPanel.hidden = true;
 el('inspector').after(drawingPanel);
 const chipPalette = text('aside', '', 'minimap-chip-palette');
@@ -132,6 +140,7 @@ function savedRegionPresets(): ColorPreset[] {
 function regionPresets(): Map<string, string> {
   const presets = new Map([[defaultMinimapColor, locale.t('defaultRegionColor')]]);
   for (const material of state?.catalog.materials || []) {
+    if (isTraversalMaterial(material.id)) continue;
     const color = material.color.slice(0, 7).toLowerCase();
     if (/^#[0-9a-f]{6}$/.test(color) && !presets.has(color)) presets.set(color, materialName(material));
   }
@@ -188,7 +197,6 @@ function regionPresetField(picker: HTMLInputElement): HTMLElement {
 
 function drawDrawingPanel(): void {
   drawingCanvas.setAttribute('aria-label', locale.t('minimapDraw'));
-  generateButton.textContent = locale.t('proceduralGeneration');
   const palette = section(locale.t('chipPalette')), list = text('div', '', 'minimap-chip-list');
   for (const { label, chips } of chipGroups) {
     const group = document.createElement('fieldset');
@@ -286,8 +294,9 @@ async function confirmRun(message: string, action: string, values: object = {}, 
   if (await confirmAction(message)) await run(action, values, expected);
 }
 function isExistingTargetConflict(error: unknown): error is EditorApiError {
-  return error instanceof EditorApiError && (error.status === 400 || error.status === 409)
-    && /already exists|exists at|confirm overwrite|이미\s*있|덮어쓰/iu.test(error.message);
+  if (!(error instanceof EditorApiError) || (error.status !== 400 && error.status !== 409)) return false;
+  if (error.code) return error.code === 'target_exists';
+  return error.message === 'This map already exists. Choose another name or confirm overwrite.' || locale.isLegacyExportTargetExists(error.message);
 }
 async function runFileAction(action: 'save' | 'exportRooms', values: Record<string, unknown>, expectation: CommandExpectation | undefined, target: string): Promise<State | false> {
   try { return await run(action, values, expectation); }
@@ -363,9 +372,9 @@ async function save(saveAs = false, requireSavedFile = false): Promise<CommandEx
   finally { fileBusy = false; }
 }
 
-async function prepareMinimapGeneration(): Promise<void> {
+async function prepareGeneration(): Promise<void> {
   await settleFileSnapshot();
-  if (!state || fileBusy || viewMode !== 'drawing' || document.querySelector('dialog[open]')) return;
+  if (!state || fileBusy || viewMode === 'minimap' || map.cameraPreview || document.querySelector('dialog[open]')) return;
   drawing.cancelInteraction();
   const original = expectedAt(state);
   const dialog = showModal(locale.t('proceduralGeneration'), body => body.append(text('p', locale.t('generationSavePrompt'))), async () => {
@@ -382,12 +391,15 @@ async function prepareMinimapGeneration(): Promise<void> {
   function configure(expected: CommandExpectation, discardChanges: boolean) {
     dialog.close();
     const previousSeed = state?.document.properties.find(p => p.key === MINIMAP_SEED_PROPERTY)?.value;
-    const settings = generationSettings(regionPresets(), key => locale.t(key), previousSeed);
+    const terrain = state?.catalog.materials.filter(m => m.themeId && !isTraversalMaterial(m.id)) ?? [];
+    const settings = generationSettings(regionPresets(), key => locale.t(key), previousSeed, terrain.map(m => [m.id, materialName(m)]));
     const config = showModal(locale.t('proceduralGeneration'), body => body.append(settings.form), async () => {
       const options = settings.read();
       await run('generateMinimap', { ...options, discard: discardChanges }, expected);
       attachedFile = undefined;
-      drawing.showGeneration(); mini.fit(); fitGeneratedMap = true;
+      drawing.showGeneration(); mini.fit();
+      fitGeneratedMap = viewMode !== 'map';
+      if (viewMode === 'map') map.showGeneration();
       toast(locale.t('generationSeed') + ' · ' + options.seed, true);
     }, 'generationCreate');
     settings.count.addEventListener('keydown', event => {
@@ -443,48 +455,6 @@ function importRooms(): void {
     } catch (error) { toast(error); } finally { picker.remove(); }
   })(); }, { once: true }); picker.click();
 }
-function shortcutsDialog(): void {
-  const mod = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl';
-  const bindings: [string, string][] = [
-    ['shortcutDraw', locale.t('keyLeftDrag')],
-    ['shortcutEraseRoom', locale.t('keyRight')],
-    ['shortcutPan', locale.t('keyMiddleDrag')],
-    ['shortcutPanEmpty', locale.t('keyRightDrag')],
-    ['shortcutRoomMenu', locale.t('keyRight')],
-    ['zoom', locale.t('keyWheel')],
-    ['shortcutBrushSize', `Ctrl + ${locale.t('keyWheel')}`],
-    ['frameRoom', 'F'],
-    ['shortcutMoveRoom', locale.t('keyRoomTitleDrag')],
-    ['shortcutResizeRoom', locale.t('keyRoomHandleDrag')],
-    ['shortcutSelectRoom', locale.t('keyOtherRoomClick')],
-    ['shortcutRoomMultiSelect', `Ctrl / Cmd + ${locale.t('keyLeftClick')}`],
-    ['shortcutRoomGroupMove', locale.t('keyLeftDrag')],
-    ['shortcutTileSelection', locale.t('keyLeftDrag')],
-    ['shortcutMoveSelection', locale.t('keySelectionDrag')],
-    ['shortcutNewSelection', `Shift + ${locale.t('keyLeftDrag')}`],
-    ['shortcutPlaceObject', locale.t('keyPaletteClick')],
-    ['shortcutSizeObject', locale.t('keyLeftDrag')],
-    ['shortcutObjectProperties', `${mod} + ${locale.t('keyRight')}`],
-    ['shortcutSelectNode', locale.t('keyNodeClick')],
-    ['save', `${mod} + S`], ['saveAs', `${mod} + Shift + S`],
-    ['undo', `${mod} + Z`], ['redo', `${mod} + Y / ${mod} + Shift + Z`],
-    ['copy', `${mod} + C`], ['cut', `${mod} + X`], ['paste', `${mod} + V`],
-    ['selectAll', `${mod} + A`], ['shortcutDeleteSelected', 'Delete / Backspace'],
-    ['cancel', 'Esc'],
-    ...TOOLS.map((name, index): [string, string] => [`enum.MetroidvaniaStudioTool.${name}`, toolKeys[index].toUpperCase()]),
-    ['file', 'Alt + F'], ['edit', 'Alt + E'], ['helpMenu', 'Alt + H']
-  ];
-  const dialog = showModal(locale.t('shortcut'), body => {
-    body.tabIndex = 0; body.setAttribute('aria-label', locale.t('shortcut')); body.setAttribute('role', 'region');
-    const list = document.createElement('dl'); list.className = 'shortcut-list';
-    for (const [action, binding] of bindings) {
-      const row = text('div', '', 'shortcut-row'), key = text('dd', '', 'shortcut-binding');
-      key.append(text('kbd', binding)); row.append(text('dt', locale.t(action)), key); list.append(row);
-    }
-    body.append(list);
-  });
-  dialog.classList.add('shortcuts-dialog'); dialog.id = 'shortcuts-dialog';
-}
 async function aboutDialog(): Promise<void> {
   let info: { version?: string; revision?: string; builtAt?: string } = {};
   try { info = await localJson('/build-info.json'); } catch { /* Source previews can omit build metadata. */ }
@@ -495,7 +465,7 @@ async function aboutDialog(): Promise<void> {
     if (info.revision) body.append(text('div', `${locale.t('revision')}: ${info.revision}`));
     if (info.builtAt) body.append(text('div', `${locale.t('buildDate')}: ${new Date(info.builtAt).toLocaleString(locale.htmlLanguage)}`));
     const credits = text('div', '', 'about-credits');
-    credits.append(text('div', 'Copyright ⓒ Barimi', 'about-copyright'), text('div', 'sdfsdgxc@naver.com', 'about-email'));
+    credits.append(text('div', '© 2026 Barimi', 'about-copyright'), text('div', 'sdfsdgxc@naver.com', 'about-email'));
     body.append(credits);
   });
 }
@@ -593,14 +563,16 @@ function drawChrome(): void {
   el<HTMLButtonElement>('add-palette').title = locale.t('paletteAdd'); el('add-palette').setAttribute('aria-label', locale.t('paletteAdd'));
   el<HTMLInputElement>('room-search').placeholder = locale.t('search'); el<HTMLInputElement>('palette-search').placeholder = locale.t('search'); el<HTMLButtonElement>('add-room').title = locale.t('addRoom');
   const actions = el('file-actions'); actions.replaceChildren();
-  const undo = button(locale.t('undo') + '   Ctrl+Z', () => run('undo')), redo = button(locale.t('redo') + '   Ctrl+Y', () => run('redo')); undo.title = locale.t('undo') + ' · Ctrl+Z'; redo.title = locale.t('redo') + ' · Ctrl+Y'; undo.id = 'undo'; redo.id = 'redo';
+  const undoKey = commandModifier + '+Z', redoKey = commandModifier + '+Y';
+  const undo = button(locale.t('undo') + '   ' + undoKey, () => run('undo')), redo = button(locale.t('redo') + '   ' + redoKey, () => run('redo'));
+  undo.title = locale.t('undo') + ' · ' + undoKey; redo.title = locale.t('redo') + ' · ' + redoKey; undo.id = 'undo'; redo.id = 'redo';
   const inspectorToggle = button('☷ ' + locale.t('inspector'), () => { inspectorHidden = !inspectorHidden; localStorage.setItem('mapstudio.inspectorHidden', String(inspectorHidden)); updateView(); }, 'ghost'); inspectorToggle.id = 'inspector-toggle';
   const scripts = button(locale.t('scripts.menu'), () => openScriptDialog({ t: key => locale.t(key),
     prepare: async () => { await settleFileSnapshot(); await api.refresh(false); if (!api.state) throw new Error(locale.t('loading')); return { instanceId: api.state.instanceId, documentRevision: api.state.documentRevision }; },
     refresh: () => api.refresh(false) })); scripts.id = 'scripts-action';
   actions.prepend(menu('file-menu', locale.t('file') + ' (F)', [
     button(locale.t('new'), () => fileDialog('new')), button(locale.t('open'), openMap), button(locale.t('import'), importDocument), null,
-    button(locale.t('save') + '   Ctrl+S', save), button(locale.t('saveAs'), () => save(true)), null,
+    button(locale.t('save') + '   ' + commandModifier + '+S', save), button(locale.t('saveAs'), () => save(true)), null,
     button(locale.t('addRoom'), roomAddDialog), button(locale.t('importRooms'), importRooms), null,
     button(locale.t('exportSelected'), () => fileDialog('exportRooms', 'selected')),
     button(locale.t('exportAll'), () => fileDialog('exportRooms', 'all')),
@@ -612,13 +584,20 @@ function drawChrome(): void {
     }, key => locale.t(key))), null, button(locale.t('storageFolders'), () => openWorkspaceFolders(locale)), scripts]));
   actions.append(menu('edit-menu', locale.t('edit') + ' (E)', [undo, redo, null,
     roomRestructureButton('merge', 'room-merge-action'), roomRestructureButton('split', 'room-split-action')]),
-    menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('sampleWorld'), openSampleWorld), null, button(locale.t('docs.title'), () => { window.open('/docs/index.html', '_blank', 'noopener'); }), button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }), null, button(locale.t('shortcut'), shortcutsDialog), button(locale.t('about'), aboutDialog)]));
+    menu('help-menu', locale.t('helpMenu') + ' (H)', [button(locale.t('sampleWorld'), openSampleWorld), null,
+      button(locale.t('docs.title'), () => { window.open('/docs/index.html', '_blank', 'noopener'); }),
+      button(locale.t('docs.api'), () => { window.open('/docs/api--index.html', '_blank', 'noopener'); }),
+      button(locale.t('shortcut'), () => {
+        const language = locale.htmlLanguage.toLowerCase();
+        window.open(language === 'en' ? '/docs/shortcuts.html' : '/docs/shortcuts--' + language + '.html', '_blank', 'noopener');
+      }), null, button(locale.t('about'), aboutDialog)]));
   const editorTab = button(locale.t('editor'), () => switchView('map')); editorTab.id = 'map-tab';
   const drawingTab = button(locale.t('minimapDraw'), () => switchView('drawing')); drawingTab.id = 'minimap-drawing-tab';
   const minimapTab = button(locale.t('minimap'), () => switchView('minimap')); minimapTab.id = 'minimap-tab';
   const tabs = el('tabs'); tabs.replaceChildren(editorTab, drawingTab, minimapTab,
     button('↗ ' + locale.t('popout'), () => { window.open(new URL('?view=minimap', location.href), '_blank', 'noopener'); }, 'ghost'), text('div', '', 'spacer'), inspectorToggle);
   drawDrawingPanel();
+  generateButton.textContent = locale.t('proceduralGeneration');
   updateView(); drawPanels(true); renderInspector(true);
 }
 async function switchView(next: ViewMode): Promise<void> {
@@ -643,7 +622,7 @@ function updateView(): void {
   el<HTMLButtonElement>('inspector-toggle').disabled = viewOnly;
   el<HTMLCanvasElement>('map-canvas').hidden = !mapMode; el<HTMLCanvasElement>('mini-canvas').hidden = !miniMode;
   drawingCanvas.hidden = !drawingMode; drawingPanel.hidden = !drawingMode; chipPalette.hidden = !drawingMode;
-  generateButton.hidden = !drawingMode;
+  generateButton.hidden = miniMode || cameraPreview;
   map.setActive(mapMode); mini.setActive(miniMode); drawing.setActive(drawingMode); preview.setVisible(mapMode); preview.updateLabels();
   for (const [id, selected] of [['map-tab', mapMode], ['minimap-tab', miniMode], ['minimap-drawing-tab', drawingMode]] as const) {
     const tab = el(id); tab.classList.toggle('active', selected); tab.setAttribute('aria-pressed', String(selected));
@@ -735,7 +714,7 @@ function drawPanels(force = false): void {
   }
   if (!rooms.childElementCount) rooms.append(text('div', locale.t('noRooms'), 'empty'));
   const tools = el('tools'); tools.replaceChildren(); const icons = ['▱', '+', '⬚', '▰', '□', '▨', '╱', '○', '⬭'];
-  TOOLS.forEach((name, index) => { if (!toolAvailable(index, s.layer)) return; const b = button('', () => option({ tool: index }), 'tool-button'); b.append(text('span', icons[index], 'symbol'), text('span', index === 2 ? locale.t(tileLayer(s.layer) ? 'tileSelection' : 'objectSelection') : locale.enum('MetroidvaniaStudioTool', name, index))); b.classList.toggle('active', !map.gameCameraTool && s.tool === index); b.dataset.tool = String(index); b.title = locale.t(index === 2 ? 'selectionHelp' : index === 1 ? 'placementHelp' : index === 0 ? 'roomHelp' : 'help'); tools.append(b); });
+  TOOLS.forEach((name, index) => { if (!toolAvailable(index, s.layer)) return; const b = button('', () => option({ tool: index }), 'tool-button'); b.append(text('span', icons[index], 'symbol'), text('span', index === 2 ? locale.t(tileLayer(s.layer) ? 'tileSelection' : 'objectSelection') : locale.enum('MetroidvaniaStudioTool', name, index))); b.classList.toggle('active', !map.gameCameraTool && s.tool === index); b.dataset.tool = String(index); b.title = locale.t(index === 2 ? 'selectionHelp' : index === 1 ? 'placementHelp' : index === 0 ? 'roomHelp' : 'help').replace('{0}', commandModifier); tools.append(b); });
   const cameraTool = button('', async () => {
     await map.settled(); map.setGameCameraTool(true); preview.reveal(); drawPanels(true); el('map-canvas').focus();
   }, 'tool-button');
@@ -759,21 +738,24 @@ function drawPalette(): void {
   const s = state.selection, options = el('brush-options'), palette = el('palette'); options.replaceChildren(); palette.replaceChildren();
   el<HTMLButtonElement>('add-palette').hidden = !tileLayer(s.layer);
   if (tileLayer(s.layer)) {
-    const shapes = text('div', '', 'shape-row'); ['■', '◣', '◢', '◤', '◥'].forEach((symbol, i) => { const b = button(symbol, () => option({ shape: i })); b.classList.toggle('active', s.shape === i); b.title = locale.enum('TileShape', SHAPES[i], i); shapes.append(b); }); options.append(shapes);
+    const shapes = text('div', '', 'shape-row'); ['■', '◣', '◢', '◤', '◥'].forEach((symbol, i) => { const b = button(symbol, () => option({ shape: i })); b.disabled = i !== 0 && isTraversalMaterial(s.material); b.classList.toggle('active', s.shape === i); b.title = locale.enum('TileShape', SHAPES[i], i); shapes.append(b); }); options.append(shapes);
     const [brushLabel, brush] = labelInput(locale.t('brush'), map.brushSize, 'number'); brush.min = '1'; brush.max = String(MAX_BRUSH_SIZE); brush.step = '1'; brush.title = locale.t('brushWheelHelp'); brush.addEventListener('change', () => { void option({ brushSize: Number(brush.value) }).catch(() => undefined); }); options.append(row(brushLabel, check(locale.t('filled'), s.filled, filled => { void option({ filled }).catch(() => undefined); })[0]));
     const addGroup = button('+ ' + locale.t('group'), addPaletteGroup); addGroup.id = 'add-palette-group'; addGroup.title = locale.t('paletteGroupAdd');
     options.append(addGroup);
     renderPaletteGroups(palette, state, locale, paletteSearch, run, {
       name: materialName,
-      thumbnail: material => thumbnail(material.sprites.find(p => p.shape === s.shape && (s.shape !== 0 || p.mask === 0)), colorCss(material.color)),
-      select: material => { void option({ material: material.id, tool: s.tool === 0 || s.tool === 2 ? 3 : s.tool }); },
+      thumbnail: material => {
+        const shape = isTraversalMaterial(material.id) ? 0 : s.shape;
+        return thumbnail(material.sprites.find(p => p.shape === shape && (shape !== 0 || p.mask === 0)), colorCss(material.color));
+      },
+      select: material => { void option({ material: material.id, shape: isTraversalMaterial(material.id) ? 0 : s.shape, tool: s.tool === 0 || s.tool === 2 ? 3 : s.tool }); },
       settings: material => openPaletteDialog(material, locale, run, state!.paletteGroups),
       groupSettings: editPaletteGroup, report: toast
     });
   } else {
-    for (const def of [...state.catalog.objects].sort((a, b) => { const order = ['Spawn', 'Portal', 'InvisibleWall', 'Path', 'Respawn']; return (order.includes(a.id) ? order.indexOf(a.id) : 99) - (order.includes(b.id) ? order.indexOf(b.id) : 99); }).filter(d => !(d.name === d.id && ['Marker', 'Object'].includes(d.id)) && (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
+    for (const def of [...state.catalog.objects].sort((a, b) => { const order = ['Spawn', 'Portal', 'InvisibleWall', 'Path', 'Respawn']; return (order.includes(a.id) ? order.indexOf(a.id) : 99) - (order.includes(b.id) ? order.indexOf(b.id) : 99); }).filter(d => !(d.name === d.id && ['Marker', 'Object'].includes(d.id)) && (d.layer === s.layer || [4, 5].includes(s.layer) && [4, 5].includes(d.layer)) && definitionName(d).toLowerCase().includes(paletteSearch.trim().toLowerCase()))) { const b = button('', () => option({ objectDefinition: def.id, tool: 1 }), 'palette-item'); b.classList.toggle('active', definitionKey(def.id) === definitionKey(s.objectDefinition)); b.append(thumbnail(def.sprite, colorCss(def.color)), text('span', definitionName(def))); palette.append(b); }
   }
-  if (!palette.childElementCount) palette.append(text('div', locale.t('noMaterials'), 'empty'));
+  if (!palette.childElementCount) palette.append(text('div', locale.t(paletteSearch.trim() ? 'paletteNoMatches' : 'noMaterials'), 'empty'));
 }
 function addPaletteDialog(): void {
   if (!state || !tileLayer(state.selection.layer)) return;
@@ -782,10 +764,10 @@ function addPaletteDialog(): void {
   const group = select(groups.map(g => [g.id, paletteGroupName(g, locale)] as [string, string]), groups.find(g => g.materials.includes(state!.selection.material))?.id || 'default'); group.id = 'palette-new-group';
   const groupLabel = text('label', locale.t('paletteGroup')); groupLabel.append(group);
   name.id = 'palette-name'; name.maxLength = 80;
-  const [colorLabel, color] = labelInput(locale.t('theme'), '#9655CF');
+  const [colorLabel, color] = labelInput(locale.t('paletteColor'), '#9655CF');
   color.id = 'palette-color-hex'; color.maxLength = 7; colorLabel.htmlFor = color.id; color.remove();
   const picker = document.createElement('input'); picker.type = 'color'; picker.id = 'palette-color-picker';
-  picker.value = color.value; picker.setAttribute('aria-label', locale.t('theme'));
+  picker.value = color.value; picker.setAttribute('aria-label', locale.t('paletteColor'));
   color.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(color.value.trim())) picker.value = color.value.trim(); });
   const pick = () => { color.value = picker.value.toUpperCase(); };
   picker.addEventListener('input', pick); picker.addEventListener('change', pick);
@@ -919,7 +901,7 @@ function renderInspector(force = false): void {
   const expectation = expectedAt(state); if (selected.length) objectInspector(inspector, selected, expectation); else roomInspector(inspector, expectation);
   // These buttons do not submit inspector field values. Use the click-time revision so
   // an unrelated compact tile edit cannot leave otherwise valid actions stale.
-  if (state.selection.area) { const area = state.selection.area; const summary = section(locale.t('selectionSummary')); summary.id = 'selection-summary'; summary.append(text('div', `${area.width} × ${area.height} · ${locale.enum('MapLayer', LAYERS[state.selection.layer], state.selection.layer)}`), text('p', locale.t('selectionHelp'))); inspector.append(summary); }
+  if (state.selection.area) { const area = state.selection.area; const summary = section(locale.t('selectionSummary')); summary.id = 'selection-summary'; summary.append(text('div', `${area.width} × ${area.height} · ${locale.enum('MapLayer', LAYERS[state.selection.layer], state.selection.layer)}`), text('p', locale.t('selectionHelp').replace('{0}', commandModifier))); inspector.append(summary); }
   const actions = section(locale.t(!state.selection.area && !selected.length ? 'roomActions' : 'selectionActions')); actions.dataset.scope = !state.selection.area && !selected.length ? 'room' : 'content';
   if (state.selection.roomIds.length > 1) actions.append(roomRestructureButton('merge', 'room-merge-selection'));
   if (state.selection.area && state.selection.tool === 2) actions.append(roomRestructureButton('split', 'room-split-selection'));
@@ -987,7 +969,7 @@ function roomInspector(inspector: HTMLElement, expectation: CommandExpectation):
   content.append(button(locale.t('deleteRoom'), () => confirmRun(locale.t('confirmClear'), 'roomDelete', { id: room.id }, expectation), 'danger')); inspector.append(content);
 }
 function objectInspector(inspector: HTMLElement, selected: MapObject[], expectation: CommandExpectation): void {
-  const object = selected[0], def = state!.catalog.objects.find(d => definitionKey(d.id) === definitionKey(object.definition)), content = section(locale.t('objectProperties')); content.append(text('div', selected.length > 1 ? `${selected.length} ${locale.t('selected')}` : (def ? definitionName(def) : object.definition), 'object-chip'));
+  const object = selected[0], def = state!.catalog.objects.find(d => definitionKey(d.id) === definitionKey(object.definition)), content = section(locale.t('objectProperties')); content.append(text('div', selected.length > 1 ? locale.t('selected').replace('{0}', String(selected.length)) : (def ? definitionName(def) : object.definition), 'object-chip'));
   const originalObjects = JSON.stringify(selected);
   const currentExpectation = (): CommandExpectation => {
     // Unrelated selections may advance the revision while the form stays unchanged.
@@ -1000,11 +982,14 @@ function objectInspector(inspector: HTMLElement, selected: MapObject[], expectat
   }
   const fieldInputs = new Map<string, HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>();
   const keys = new Set([...(def?.properties || []).map(p => p.key), ...object.properties.map(p => p.key), 'desc']);
+  const builtin = def && def.name === def.id && locale.t('builtin.object.' + def.id) !== 'builtin.object.' + def.id;
   for (const key of keys) {
     if (['event', 'once'].includes(key) && selected.some(item => definitionKey(item.definition) === 'portal')) continue;
     if (key !== 'desc' && !selected.every(o => definitionKey(o.definition) === definitionKey(object.definition) || o.properties.some(p => p.key === key))) continue;
     const field = def?.properties.find(p => p.key === key), label = document.createElement('label');
-    const localized = ['desc', 'event', 'once'].includes(key) || def?.name === def?.id && ['label', 'name', 'player', 'tint'].includes(key);
+    const standardField = ['desc', 'event', 'once'].includes(key);
+    const localized = (standardField || builtin) && Object.hasOwn(builtinFieldLabels, key)
+      && (field ? field.label === builtinFieldLabels[key] : standardField);
     label.append(text('span', localized ? locale.t('builtin.field.' + key) : field?.label || key));
     const fieldValue = (item: MapObject): string => {
       const stored = propObject(item.properties)[key];
@@ -1045,7 +1030,7 @@ function drawStatus(point = map.hover): void {
 function renderStatus(point: Point): void {
   const pending = api.pending > 0, status = el('status-state');
   statusText('status-state', locale.t(pending ? 'working' : state?.dirty ? 'sourceModified' : state ? 'sourceSaved' : 'loading'));
-  const sourceHint = locale.t('sourceSaveHint'); if (status.title !== sourceHint) status.title = sourceHint;
+  const sourceHint = locale.t('sourceSaveHint').replace('{0}', commandModifier); if (status.title !== sourceHint) status.title = sourceHint;
   if (status.classList.contains('working') !== pending) status.classList.toggle('working', pending);
   const sync = syncLabels(state, api.online, pending || map.hasPendingWork);
   for (const [id, label] of [['status-export', sync.json]] as const) {
@@ -1080,7 +1065,6 @@ function renderStatus(point: Point): void {
   if (state) { if (revision.dataset.instanceId !== state.instanceId) revision.dataset.instanceId = state.instanceId; }
   else if (revision.dataset.instanceId !== undefined) delete revision.dataset.instanceId;
   const zoom = el('view-toolbar').querySelector('.zoom-readout'); if (zoom && zoom.textContent !== `×${scale}`) zoom.textContent = `×${scale}`;
-  statusText('canvas-help', locale.t(viewMode === 'drawing' ? 'minimapDrawHelp' : viewMode === 'minimap' ? 'minimapHelp' : map.gameCameraTool ? (map.gameCamera.clipped ? 'gameCameraSmallRoom' : 'gameCameraHelp') : map.cameraPreview ? 'cameraHelp' : state?.selection.tool === 0 ? 'roomHelp' : tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'selectionHelp' : state?.selection.tool === 1 ? 'placementHelp' : !tileLayer(state?.selection.layer ?? 0) && state?.selection.tool === 2 ? 'objectHelp' : 'help'));
 }
 function stateChanged(): void {
   const previous = state;
@@ -1106,12 +1090,13 @@ function authoringShortcut(key: string, mod: boolean): boolean {
 }
 document.addEventListener('keydown', event => {
   if (event.defaultPrevented || document.querySelector('dialog[open]')) return;
-  if (event.key === 'Escape' && preview.maximized) { event.preventDefault(); preview.setMaximized(false); el('map-canvas').focus(); return; }
-  if (event.altKey && !event.ctrlKey && ['f', 'e', 'h'].includes(event.key.toLowerCase())) { event.preventDefault(); el<HTMLButtonElement>(event.key.toLowerCase() === 'f' ? 'file-menu-button' : event.key.toLowerCase() === 'e' ? 'edit-menu-button' : 'help-menu-button').click(); return; }
+  const key = shortcutKey(event), mod = event.ctrlKey || event.metaKey;
+  if (!key) return;
+  if (key === 'escape' && preview.maximized) { event.preventDefault(); preview.setMaximized(false); el('map-canvas').focus(); return; }
+  if (event.altKey && !mod && ['f', 'e', 'h'].includes(key)) { event.preventDefault(); el<HTMLButtonElement>(key === 'f' ? 'file-menu-button' : key === 'e' ? 'edit-menu-button' : 'help-menu-button').click(); return; }
   if (document.querySelector('.menu-popup:not([hidden])')) return;
   const typing = event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement || (event.target as HTMLElement)?.isContentEditable;
-  if (typing && !(event.key.toLowerCase() === 's' && (event.ctrlKey || event.metaKey))) return;
-  const key = event.key.toLowerCase(), mod = event.ctrlKey || event.metaKey;
+  if (typing && !(key === 's' && mod)) return;
   if (viewMode === 'drawing') {
     if (key === 'escape') { event.preventDefault(); drawing.cancelInteraction(); return; }
     if (mod && ['z', 'y'].includes(key)) {

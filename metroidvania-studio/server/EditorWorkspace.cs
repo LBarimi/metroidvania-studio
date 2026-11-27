@@ -843,9 +843,10 @@ public sealed partial class EditorWorkspace
                 {
                     if (!command.TryGetProperty("seed", out var seedValue) || seedValue.ValueKind != JsonValueKind.Number || !seedValue.TryGetInt32(out int seed))
                         throw new ArgumentException("@generationInvalidSeed");
-                    created.rooms = MapMinimapGenerator.Generate(I(command, "roomCount"), Read<string[]>(command.GetProperty("chipIds")),
-                        Read<string[]>(command.GetProperty("colors")), B(command, "automaticThemes"), seed);
-                    created.properties.Add(new MapProperty { key = MapMinimapGenerator.SeedProperty, value = seed.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+                    MapMinimapGenerator.Populate(created, I(command, "roomCount"), Read<string[]>(command.GetProperty("chipIds")),
+                        Read<string[]>(command.GetProperty("colors")), B(command, "automaticThemes"), seed, Catalog.Materials,
+                        B(command, "generateTiles"), S(command, "tileTheme", "auto"), S(command, "tileDifficulty", "normal"));
+                    MapDocumentStore.Serialize(created);
                 }
                 Session.New(created);
                 InvalidateDiskContentProbe();
@@ -1282,7 +1283,7 @@ public sealed partial class EditorWorkspace
             throw new WorkspaceConflict("The map changed on disk. Reopen it or save under a different name.");
         bool overwrite = B(command, "overwrite");
         if (!same && current.HasValue && !overwrite)
-            throw new WorkspaceConflict("This map already exists. Choose another name or confirm overwrite.");
+            throw new ExistingMapTargetConflict();
         // Oversized markers deliberately do not hash file contents. They are
         // safe for conflict rejection, but can never serve as an exact Save As
         // compare-and-swap baseline.
@@ -1335,4 +1336,5 @@ public sealed partial class EditorWorkspace
     private static Vector2 Point(JsonElement c) => new(F(c, "x"), F(c, "y"));
     private static Vector2Int Cell(JsonElement c) => new(MathEx.FloorToInt(F(c, "x")), MathEx.FloorToInt(F(c, "y")));
 }
-public sealed class WorkspaceConflict(string message) : Exception(message);
+public class WorkspaceConflict(string message) : Exception(message);
+internal sealed class ExistingMapTargetConflict() : WorkspaceConflict("This map already exists. Choose another name or confirm overwrite.");

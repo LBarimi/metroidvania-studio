@@ -9,6 +9,7 @@ class UCameraComponent;
 class UMetroidvaniaStudioRoomOutline;
 class UMaterialInterface;
 class UMetroidvaniaStudioTriggerManager;
+namespace MetroidvaniaStudio { struct TraversalGrid; }
 
 USTRUCT()
 struct FMetroidvaniaStudioImage
@@ -43,6 +44,9 @@ public:
     UFUNCTION(CallInEditor, BlueprintCallable, Category="Metroidvania Studio") bool ImportRoom();
     UFUNCTION(CallInEditor, BlueprintCallable, Category="Metroidvania Studio") bool RebuildRoom();
     UFUNCTION(CallInEditor, BlueprintCallable, Category="Metroidvania Studio") void ClearRoom();
+    // All positions and returned heights use room-local tile coordinates, Y up.
+    UFUNCTION(BlueprintPure, Category="Metroidvania Studio|Movement") bool IsClimbable(FVector2D TilePosition) const;
+    UFUNCTION(BlueprintPure, Category="Metroidvania Studio|Movement") bool FindFloorLanding(FVector2D PreviousFeet, FVector2D NextFeet, bool DropThrough, float& LandingHeight) const;
     virtual void OnConstruction(const FTransform& Transform) override;
 protected:
     virtual void BeginPlay() override;
@@ -52,5 +56,6 @@ private:
 #endif
     UPROPERTY(Transient) TArray<UProceduralMeshComponent*> GeneratedMeshes;
     bool bBuilt = false;
+    TSharedPtr<MetroidvaniaStudio::TraversalGrid> Traversal;
     void DestroyGenerated();
 };
