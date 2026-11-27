@@ -22,7 +22,7 @@ const cells = (width, height, material) => Array.from({ length: width * height }
 const document = { ...initial.document, name: 'Preview', properties: [], stylegrounds: [], layerGroups: [], rooms: [
   { ...template, id: 'preview-a', name: 'Room A', x: 0, y: 0, width: 24, height: 14, visible: true, locked: false, objects: [], background: [], properties: [],
     foreground: cells(24, 14, 'biome-rock').filter(t => t.y < 2 || t.y === 13 || t.x === 0 || t.x === 23 || t.y === 7 && t.x >= 9 && t.x <= 16) },
-  { ...template, id: 'preview-b', name: 'Room B', x: 24, y: 0, width: 8, height: 14, visible: true, locked: false, objects: [], background: [], properties: [], foreground: cells(8, 14, 'terrain-blue') }
+  { ...template, id: 'preview-b', name: 'Room B', x: -8, y: 0, width: 8, height: 14, visible: true, locked: false, objects: [], background: [], properties: [], foreground: cells(8, 14, 'terrain-blue') }
 ] };
 const browser = await chromium.launch({ channel: process.platform === 'win32' ? 'msedge' : undefined, headless: true });
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, locale: 'en-US' });
@@ -89,9 +89,10 @@ try {
   assert.equal(await page.locator('#game-preview .preview-room').textContent(), 'Room B');
   await page.locator('#preview-collapse').click(); await page.waitForTimeout(80);
   assert.notEqual(await png(), before);
-  // Room A is adjacent and textured, but remains absent in Room B's camera viewport.
+  // The camera starts at B's left edge. Tile 8 is the textured left wall of adjacent room A.
   const outside = await canvas.evaluate(c => {
-    const scale = Number(c.dataset.cameraScale), x = Math.round(c.width / 2 - 7 * 16 * scale), y = Math.round(c.height / 2);
+    const scale = Number(c.dataset.cameraScale), frameLeft = (c.width - 320 * scale) / 2;
+    const x = Math.round(frameLeft + 8.5 * 16 * scale), y = Math.round(c.height / 2);
     return [...c.getContext('2d').getImageData(x, y, 1, 1).data];
   });
   assert.deepEqual(outside, [25, 25, 25, 255]);
@@ -115,6 +116,7 @@ try {
   const bounds = await page.locator('#game-preview').boundingBox(), area = await page.locator('.canvas-wrap').boundingBox();
   assert.ok(Math.abs(bounds.width - area.width) < 2 && Math.abs(bounds.height - area.height) < 2);
   assert.deepEqual(await page.evaluate(() => ({ center: { ...window.__previewMap.center }, scale: window.__previewMap.pixelScale, width: window.__previewMap.width })), stableView);
+  await page.locator('#preview-center').click(); await page.waitForTimeout(80);
   const priorPan = await png(), r = await canvas.boundingBox();
   await page.mouse.move(r.x + r.width / 2, r.y + r.height / 2); await page.mouse.down();
   await page.mouse.move(r.x + r.width / 2 + 64, r.y + r.height / 2); await page.mouse.up(); await page.waitForTimeout(80);
