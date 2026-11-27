@@ -37,3 +37,11 @@ The build also generates engine adapter DTOs, camera-setting logic and tile-mask
 ## Trigger event properties
 
 Triggers use the existing object `id` and `properties` fields. `event` holds `None` or `Trigger001` through `Trigger200`; `once` holds a boolean string; `desc` holds the description. Runtime enum values are 0 through 200 across every engine package. Portals and invisible walls use their object ID, definition, bounds and `desc` property. They are independent of numbered events, and runtime event managers ignore their legacy `event` and `once` properties. These settings do not change map format 2. Legacy free-text events remain intact and are unassigned at runtime until mapped to a numbered event.
+
+## Traversal tiles
+
+Foreground cells with material ID `traversal-ladder` mark climbable space. Cells with `traversal-floor` support a descending character at the top of the cell. Both use shape 0 and the usual 16-pixel sprite. Background placement displays the artwork only.
+
+- **Godot** imports ladders as areas in group `studio_ladder` and platforms as one-way bodies in `studio_drop_through_floor`. A player can call `add_collision_exception_with` on its supporting floor bodies during a down-jump and remove the exceptions once its feet clear them.
+- **Unity** imports a ladder as a trigger named `Ladder` and a floor as a box with a `PlatformEffector2D`. On a down-jump, the player can use `Physics2D.IgnoreCollision` with its supporting floor colliders until it clears their top.
+- **SDL** exposes `room.data.traversal.IsClimbable` and `FindLanding`. **Unreal** exposes the Blueprint functions `IsClimbable` and `FindFloorLanding` on the room actor. Pass previous and next foot positions in room-local tile units, with Y increasing upward. A successful landing returns the top height. Pass the drop-through flag while crossing that surface.

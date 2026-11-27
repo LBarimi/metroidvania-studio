@@ -4678,6 +4678,38 @@
           "shape": 4
         }
       ]
+    },
+    {
+      "id": "traversal-ladder",
+      "name": "Ladder",
+      "color": "#D8B777",
+      "sprites": [
+        {
+          "asset": "Textures/traversal/ladder.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        }
+      ]
+    },
+    {
+      "id": "traversal-floor",
+      "name": "Drop-through floor",
+      "color": "#D8B777",
+      "sprites": [
+        {
+          "asset": "Textures/traversal/floor.png",
+          "x": 0,
+          "y": 0,
+          "width": 16,
+          "height": 16,
+          "mask": 0,
+          "shape": 0
+        }
+      ]
     }
   ],
   "objects": [
@@ -5256,6 +5288,14 @@
         "biome-ice-cavern",
         "biome-volcanic",
         "biome-ancient-ruins"
+      ]
+    },
+    {
+      "id": "traversal",
+      "name": "Traversal",
+      "materials": [
+        "traversal-ladder",
+        "traversal-floor"
       ]
     }
   ]

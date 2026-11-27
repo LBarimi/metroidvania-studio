@@ -11,6 +11,8 @@ npm run pack:local
 npm install --global ./builds/npm/metroidvania-studio-1.3.4.tgz
 ```
 
+Run `help` to see the commands in your installed version. Builds advertising `generate` and `editor` can create seeded tilemaps and edit full projects over stdin. [Headless editing for local agents](../../docs/cli/headless-editor.md)
+
 After either installation, check the installed version and create an empty map.
 
 ```sh

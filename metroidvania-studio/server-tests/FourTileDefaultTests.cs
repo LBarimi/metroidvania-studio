@@ -1,4 +1,5 @@
 using System.Text.Json;
+using MetroidvaniaStudio;
 using MetroidvaniaStudio.Server;
 
 internal static class FourTileDefaultTests
@@ -17,6 +18,11 @@ internal static class FourTileDefaultTests
             var groups = JsonSerializer.Serialize(catalog.PaletteGroups);
             foreach (var material in catalog.Data.GetProperty("materials").EnumerateArray())
             {
+                if (material.GetProperty("id").GetString() is MapTilemapGenerator.Ladder or MapTilemapGenerator.Floor)
+                {
+                    Check(material.GetProperty("sprites").GetArrayLength() == 1 && !material.TryGetProperty("editorTileset", out _), "Traversal chips retain their single sprite.");
+                    continue;
+                }
                 var settings = JsonSerializer.Deserialize<PaletteTileset>(material.GetProperty("editorTileset"), Catalog.Json)!;
                 Check(settings.mode == "four" && settings.source == BundledTilesets.Source(material.GetProperty("id").GetString()!, "four"), "Initial palettes reference their matching four-source PNG.");
                 Check(settings.slots.Length == 8 && settings.slots.All(s => s != null), "Edges, corners, fill and four slopes are assigned.");

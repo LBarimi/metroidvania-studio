@@ -32,7 +32,7 @@ export function sourceState(root) {
   }
   for (const relative of [...sourceRoots, ...rootFiles, ...inputs]) visit(relative);
   // Packages are regenerated, but their installation guides are authored inputs.
-  for (const engine of ['unity', 'godot', 'ue4', 'ue5', 'sdl']) for (const language of ['KR', 'EN', 'JP', 'CN', 'TW'])
+  for (const engine of ['unity', 'godot', 'ue4', 'ue5', 'sdl']) for (const language of ['KR', 'EN', 'JP', 'CN', 'TW', 'RU'])
     visit('engine-packages/' + engine + '/INSTALL_' + language + '.txt');
   const hash = createHash('sha256').update('studio-source-v1\0');
   for (const relative of [...files].sort()) {

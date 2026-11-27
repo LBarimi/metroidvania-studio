@@ -31,6 +31,7 @@ try {
   assert.equal(await page.locator('#script-source').inputValue(), 'while true do end', 'Tab must not alter a running script');
   await page.locator('#script-cancel').click();
   await page.waitForFunction(() => !document.querySelector('#script-run').disabled);
+  assert.match(await page.locator('#script-output').innerText(), /Script cancelled/);
   assert.equal((await document()).document.name, 'Automated web');
   await page.keyboard.press('Escape'); await page.locator('#script-dialog').waitFor({ state: 'detached' });
   await page.keyboard.press('Control+z');

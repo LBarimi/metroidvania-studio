@@ -39,6 +39,12 @@
       "metroidvaniastudio.core": {
         "type": "Project"
       },
+      "metroidvaniastudio.editorruntime": {
+        "type": "Project",
+        "dependencies": {
+          "MetroidvaniaStudio.Automation": "[1.0.0, )"
+        }
+      },
       "metroidvaniastudio.scripting": {
         "type": "Project",
         "dependencies": {

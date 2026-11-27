@@ -1,10 +1,13 @@
 
 // This module extension is applied only to the Windows desktop build.
+function syncWindowLanguage() { window.chrome?.webview?.postMessage('studio-language:' + locale.language); }
+syncWindowLanguage();
+locale.addEventListener('change', syncWindowLanguage);
 window.metroidvaniaDesktop = {
   async prepareClose() {
     document.body.inert = true;
     await settleFileSnapshot();
-    if (!api.online || api.pending || map.hasPendingWork) throw new Error('Editing has not finished. Please retry closing after the current action completes.');
+    if (!api.online || api.pending || map.hasPendingWork) throw new Error(locale.t('desktopClosePending'));
     return { ok: true, revision: state?.documentRevision };
   },
   resume() { document.body.inert = false; }

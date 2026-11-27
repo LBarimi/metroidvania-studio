@@ -13,13 +13,15 @@ Each chip in **Edit minimap** places one room. You can lay out an entire world h
 
 ## Generate a minimap
 
-In **Edit minimap**, click **Procedural generation** in the upper-right corner of the grid. Choose **Save and continue** to keep the current map, or **Continue without saving** to go straight to the settings. You can cancel the settings and keep editing the current layout.
+In **Map editor**, click **Procedural generation** above Game Preview. In **Edit minimap**, the same button is in the upper-right corner of the grid. Choose **Save and continue** to keep the current map, or **Continue without saving** to go straight to the settings. You can cancel the settings and keep editing the current layout.
 
-Enter a **Room count** from 1 to 1,024 and click **Generate minimap**. By default, the generator uses the full chip palette and assigns region colors automatically. To make a world of narrow shafts, choose **Use only selected chips** and pick vertical sizes. To keep everything except a few shapes, choose **Exclude selected chips**. Under **Region color**, choose **Choose from presets** to set the colors yourself. Each chosen color forms a connected region.
+Enter a **Room count** from 1 to 1,024 and click **Generate**. Both editors frame the whole layout and reveal the rooms in placement order over one second. **Map editor** shows each room with its terrain and portals as it appears. **Edit minimap** shows the room chips and their connections.
+
+By default, the generator uses the full chip palette and assigns region colors automatically. To make a world of narrow shafts, choose **Use only selected chips** and pick vertical sizes. To keep everything except a few shapes, choose **Exclude selected chips**. Under **Region color**, choose **Choose from presets** to set the colors yourself. Each chosen color forms a connected region.
 
 **Random seed** is checked by default. Clear it to enter a numeric **Seed**. The same seed, room count, chips and color settings reproduce the same layout and regions. The map stores its seed, so clearing **Random seed** the next time you open the dialog recalls it.
 
-In **Edit minimap**, watch the rooms appear in placement order over one second. Routes branch with open space between them. Where a chip can bridge two rooms that are at least five passages apart, the generator can reconnect them with a two-passage shortcut, including across region colors. Switch to **Map editor** to see the whole layout as empty room outlines, or double-click a room to work on it.
+Routes branch with open space between them. Where a chip can bridge two rooms that are at least five passages apart, the generator can reconnect them with a two-passage shortcut, including across region colors. Double-click a room in the minimap to edit it in **Map editor**.
 
 ![Open Procedural generation, set the room count to 128 and the seed to 42, and watch the minimap grow](assets/generate-minimap-walkthrough.gif)
 
@@ -27,6 +29,16 @@ In **Edit minimap**, watch the rooms appear in placement order over one second. 
 ![Generating a 128-room minimap](assets/generate-minimap-128.gif)
 ![Generating a 512-room minimap](assets/generate-minimap-512.gif)
 ![Generating a 1,024-room minimap](assets/generate-minimap-1024.gif)
+
+### Generate room terrain
+
+Use the same generator from a shell with `generate --rooms 48 --seed 42 --tiles`. [Headless generation options](cli/headless-editor.md#generate-a-playable-layout)
+
+**Generate tilemap** is checked by default in the editor. Clear it to generate empty rooms. With it checked, horizontal rooms can have a walkable ridge, a hollow, or a bridge over a ravine with a lower return route. Tall shafts use staggered landings and short climbs. A dead end can open into a sheltered alcove. Each passage, including shortcuts, gets a matching [Portal object](objects-and-triggers.md#portals-and-invisible-walls) on each side. In **Map editor**, use the Objects layer to select, resize or delete a portal. Side openings are three tiles high and shaft openings are two tiles wide.
+
+**Match region color** picks the closest bundled biome, or you can select one terrain palette for the whole map. Ice has thin shelves, volcanic ground has raised outcrops, and ruins use stepped banks. **Easy** provides continuous bridges and ladder climbs. **Normal** and **Hard** leave wider bridge gaps and replace some climbs with short jumps. **Progressive** sets the difficulty by passage distance from the starting room, counting shortcuts. The same seed, palette and settings reproduce the tiles.
+
+In **Map editor**, open **Foreground tiles → Traversal** to paint the same 16×16 ladder and drop-through floor chips by hand. Ladders repeat vertically. Floor chips join horizontally and support a landing from above. The game controller handles climbing and the down-jump input. [Tile movement in engine imports](../metroidvania-studio/contracts/FORMAT.md#traversal-tiles)
 
 ## Adjust a room
 

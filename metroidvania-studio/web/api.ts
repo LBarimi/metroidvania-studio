@@ -28,10 +28,12 @@ export function localJson<T>(resource: string, init: RequestInit = {}, timeoutMs
 
 export class EditorApiError extends Error {
   readonly status: number;
-  constructor(message: string, status: number) {
+  readonly code?: string;
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.name = 'EditorApiError';
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -117,7 +119,7 @@ export class EditorApi extends EventTarget {
       if (!response.ok) {
         if (responseBody.state) this.accept(responseBody.state);
         else await this.refresh();
-        throw new EditorApiError(typeof responseBody?.error === 'string' ? responseBody.error : `Command failed (${response.status})`, response.status);
+        throw new EditorApiError(typeof responseBody?.error === 'string' ? responseBody.error : `Command failed (${response.status})`, response.status, responseBody?.code);
       }
       this.accept(responseBody.state || responseBody);
       return this.state!;

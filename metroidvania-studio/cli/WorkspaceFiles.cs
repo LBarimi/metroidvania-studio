@@ -8,6 +8,7 @@ internal sealed record FileSnapshot(string RelativePath, string Text, string Rev
 internal sealed class WorkspaceFiles : IDisposable
 {
     private readonly string root;
+    public string Root => root;
     private readonly bool readOnly;
     private readonly SemaphoreSlim gate = new(1, 1);
     internal const int MaximumFileBytes = 64 * 1024 * 1024;
@@ -64,6 +65,22 @@ internal sealed class WorkspaceFiles : IDisposable
         return new(relative, new UTF8Encoding(false, true).GetString(bytes).TrimStart('\uFEFF'), Hash(bytes));
     }
     public bool Exists(string relative) => File.Exists(Resolve(relative));
+    public void CreateOutput(string relative, Action<Stream> write)
+    {
+        if (readOnly) throw new CliException("read_only", "This session is read-only.");
+        string target = Resolve(relative);
+        if (File.Exists(target)) throw new CliException("conflict", "The output already exists.");
+        string directory = Path.GetDirectoryName(target)!;
+        Directory.CreateDirectory(directory);
+        string temporary = Path.Combine(directory, ".studio-write-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None)) write(stream);
+            CheckAncestors(target);
+            File.Move(temporary, target);
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+    }
     public async Task<IDisposable> BeginEditAsync(bool dryRun, CancellationToken cancellation)
     {
         if (readOnly && !dryRun) throw new CliException("read_only", "This session is read-only. Use dryRun for a preview.");

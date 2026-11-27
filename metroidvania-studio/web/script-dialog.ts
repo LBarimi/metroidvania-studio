@@ -62,8 +62,9 @@ export function openScriptDialog(host: ScriptHost): void {
     seed.disabled = dry.disabled = load.disabled = save.disabled = !!busy;
   }
   function display(value: Job): void {
-    const title = value.error || host.t('scripts.' + value.phase);
-    output.textContent = [title, value.phase === 'completed' ? `${host.t('scripts.operations')}: ${value.operationCount}` : '', ...value.logs].filter(Boolean).join('\n');
+    const title = host.t('scripts.' + value.phase);
+    const detail = value.phase === 'cancelled' ? '' : value.error;
+    output.textContent = [title, detail, value.phase === 'completed' ? `${host.t('scripts.operations')}: ${value.operationCount}` : '', ...value.logs].filter(Boolean).join('\n');
     controls();
   }
   function schedule(action: () => Promise<void>, delay: number): void {
@@ -171,11 +172,14 @@ export function openScriptDialog(host: ScriptHost): void {
       const file = picker.files?.[0]; if (!file) return;
       if (file.size > 65536) throw new Error(host.t('scripts.sourceLimit'));
       if (closed || libraryBusy || starting || pending || job?.phase === 'running') return;
-      const importedSource = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+      const bytes = await file.arrayBuffer();
+      let importedSource: string;
+      try { importedSource = new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
+      catch { throw new Error(host.t('scripts.invalidUtf8')); }
       if (closed || libraryBusy || starting || pending || job?.phase === 'running') return;
       source.value = importedSource;
       library?.imported(file.name); source.dispatchEvent(new Event('input'));
-    } catch (error) { output.textContent = String(error); } })(); }; picker.click();
+    } catch (error) { output.textContent = error instanceof Error ? error.message : String(error); } })(); }; picker.click();
   });
   const save = button('scripts.save', () => {
     const url = URL.createObjectURL(new Blob([source.value], { type: 'text/plain;charset=utf-8' }));

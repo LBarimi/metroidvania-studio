@@ -1,0 +1,54 @@
+Запуск примера SDL3
+1. Полностью распакуйте metroidvania-studio.zip.
+2. Установите CMake 3.24 или новее и компилятор C++17. В Windows подойдут рабочая нагрузка Visual Studio «Разработка классических приложений на C++» и инструменты CMake. Если SDL 3.4 или новее не найдена, скрипт загрузит SDL при первой сборке.
+3. В Windows запустите run.bat из распакованной папки. При первом запуске пример соберётся автоматически. В Linux или macOS выполните sh build.sh, затем sh run.sh.
+4. Стрелки перемещают камеру, R перечитывает комнату, Esc закрывает окно.
+
+Исходный код примера
+В папке src-sample находятся файлы запущенного примера:
+  sample-room.cpp : загрузка карты, положение камеры и отрисовка кадра
+  sample-room.h   : пути к входным файлам и объявление класса примера
+  main.cpp        : окно SDL, ввод, цикл отрисовки и освобождение ресурсов
+В sample-room.cpp метод Reload() вызывает room_.Load(...), а Draw() вызывает room_.Draw(...). После изменения кода выполните build.bat и run.bat в Windows или sh build.sh и sh run.sh в Linux и macOS. Для сборки нужны также include, src, CMakeLists.txt и samples из полного архива.
+
+Запуск Metroidvania Studio
+Распакуйте архив редактора целиком. Запустите файл в корне архива:
+  Windows (архив win) : metroidvania-studio.exe
+  Windows (архив web) : metroidvania-studio.bat
+  macOS               : metroidvania-studio.command
+  Linux               : bash ./metroidvania-studio.sh
+Если вы скачали исходный код из Git, используйте скрипт для своей ОС:
+  Windows : platform/win/web/run.bat
+  Linux   : bash platform/linux/run.sh
+  macOS   : platform/mac/run.command
+
+Загрузка своей карты
+По умолчанию пути отсчитываются от распакованной папки:
+  Карта   : samples/maps/Sample.map.json
+  Каталог : samples/catalog.json
+  Ресурсы : samples
+Чтобы передать свои файлы, замените параметры в угловых скобках:
+  Windows     : run.bat "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+  Linux/macOS : sh run.sh "<map.json>" "<catalog.json>" "<resource-root>" "<room-id>"
+Пути могут быть абсолютными или относительными. Последний аргумент можно опустить для загрузки первой комнаты. Используйте поле id комнаты из JSON. Отображаемое имя может отличаться.
+Карте нужны соответствующий каталог и текстуры. Если путь asset имеет вид textures/Terrain.png, корнем ресурсов будет папка, содержащая textures. Сохраняйте регистр букв. Нажмите R, чтобы перечитать изменённые файлы.
+
+Подключение к своему проекту SDL
+1. Поместите весь пакет в third-party/metroidvania-studio своего проекта.
+2. Скопируйте sample-room.h и sample-room.cpp из src-sample в свою папку src. main.cpp служит примером для интеграции с вашим циклом игры.
+3. После add_executable добавьте в CMakeLists.txt эти строки, заменив my_app именем своей цели:
+
+   add_subdirectory(third-party/metroidvania-studio)
+   target_sources(my_app PRIVATE src/sample-room.cpp)
+   target_link_libraries(my_app PRIVATE metroidvania-studio-sdl)
+
+4. Подключите sample-room.h. Создайте SampleRoom после SDL_Renderer и вызывайте Draw(width,height) в цикле отрисовки. Уничтожайте объект комнаты перед SDL_Renderer.
+5. Для прямой работы с загрузчиком используйте SdlRoom из include/StudioSdlRoom.h. Геометрия столкновений доступна в SampleRoom.Data().primitives или в SdlRoom.data.primitives при прямом доступе к загрузчику. Физику и игровую логику подключайте в своём проекте.
+
+Где найти файлы редактора
+В меню «Файл» выберите «Папки хранения», чтобы увидеть пути к Maps и Textures.
+По умолчанию они находятся рядом с программой запуска или в корне проекта с исходным кодом:
+  JSON комнаты    : Maps/AutoExport/<папка карты>/<имя комнаты>.json
+  Каталог         : .studio/catalog.json
+  Каталог ресурсов: папка, содержащая Maps и Textures
+При переносе на другой компьютер скопируйте JSON, каталог и текстуры.

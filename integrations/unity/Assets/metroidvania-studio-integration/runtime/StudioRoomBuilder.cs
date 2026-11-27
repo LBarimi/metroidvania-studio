@@ -8,6 +8,7 @@ namespace MetroidvaniaStudio.Integration
     /// <summary>Engine adapter: JSON tile coordinates are scaled to physical world units at import.</summary>
     public static class StudioRoomBuilder
     {
+        public static bool IsTraversal(string material) => material == "traversal-ladder" || material == "traversal-floor";
         public static MapDocument Parse(string json)
         {
             if (string.IsNullOrWhiteSpace(json) || json.Length > 32 * 1024 * 1024) throw new InvalidOperationException("Map JSON is empty or too large.");
@@ -126,6 +127,24 @@ namespace MetroidvaniaStudio.Integration
                 var slopes = new List<Vector2[]>(); float unit = 16f / library.ppu;
                 foreach (var cell in cells.Values)
                 {
+                    if (IsTraversal(cell.material))
+                    {
+                        bool ladder = cell.material == "traversal-ladder";
+                        var chip = new GameObject(ladder ? "Ladder" : "DropThroughFloor");
+                        chip.transform.SetParent(obj.transform, false);
+                        var box = chip.AddComponent<BoxCollider2D>();
+                        box.isTrigger = ladder;
+                        box.size = new Vector2(unit, ladder ? unit : unit * .25f);
+                        box.offset = new Vector2((cell.x + .5f) * unit, (cell.y + 1) * unit - box.size.y / 2);
+                        if (!ladder)
+                        {
+                            box.usedByEffector = true;
+                            var effector = chip.AddComponent<PlatformEffector2D>();
+                            effector.useOneWay = true;
+                            effector.surfaceArc = 160;
+                        }
+                        continue;
+                    }
                     if (cell.shape == TileShape.Solid) continue;
                     var polygon = TileMask.GetPolygon(cell.shape); var points = new Vector2[polygon.Length];
                     for (int i = 0; i < polygon.Length; i++) points[i] = new Vector2((cell.x + .5f + polygon[i].x) * unit, (cell.y + .5f + polygon[i].y) * unit);

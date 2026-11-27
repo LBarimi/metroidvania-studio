@@ -16,7 +16,7 @@ internal static class BuiltInPaletteTests
             var files = new ProjectFiles(root, studioRoot: studio);
             var sample = JsonNode.Parse(File.ReadAllText(files.CatalogPath))!;
             var legacy = sample.DeepClone(); var materials = legacy["materials"]!.AsArray();
-            foreach (var material in materials.Where(m => m!["id"]!.GetValue<string>().StartsWith("biome-")).ToArray()) materials.Remove(material);
+            foreach (var material in materials.Where(m => m!["id"]!.GetValue<string>().StartsWith("biome-") || m["id"]!.GetValue<string>().StartsWith("traversal-")).ToArray()) materials.Remove(material);
             materials[0]!["name"] = "My grass"; materials[0]!["color"] = "#123456";
             legacy["customMetadata"] = new JsonObject { ["keep"] = true };
             legacy["editorPaletteGroups"] = JsonSerializer.SerializeToNode(new[] {
@@ -30,6 +30,7 @@ internal static class BuiltInPaletteTests
             Check(JsonNode.Parse(catalog.Data.GetRawText())!["materials"]!.AsArray().Take(5).Select(n => n!.ToJsonString()).SequenceEqual(materials.Select(n => n!.ToJsonString())), "Existing names, sprites and colors survive.");
             Check(catalog.PaletteGroups.Take(2).Select(g => g.id).SequenceEqual(new[] { "custom", "default" }), "Existing group order survives.");
             Check(catalog.PaletteGroups.Single(g => g.id == "default-themes").materials.Length == 5, "Five initial themes are added in a distinct group.");
+            Check(catalog.PaletteGroups.Single(g => g.id == "traversal").materials.SequenceEqual(new[] { "traversal-ladder", "traversal-floor" }), "Existing workspaces receive both traversal chips.");
             catalog.MovePalette("biome-rock", "custom", null);
             string moved = File.ReadAllText(files.CatalogWritePath);
             BuiltInPalettes.Prepare(files, studio);

@@ -1,9 +1,10 @@
 import { GameCamera } from './game-camera.js';
+import { generationProgress } from './minimap-generation.js';
 import { LiveRoomSizes, TileByteCounter } from './live-room-sizes.js';
 import { defaultTile } from './tileset-preview.js';
 import { AssetImages } from './asset-images.js';
 import { resolveRoomGroupMove } from './room-layout.js';
-import { activeRoom, colorCss, tileLayer, MAX_BRUSH_SIZE, roomOpacity } from './types.js';
+import { activeRoom, colorCss, tileLayer, isTraversalMaterial, MAX_BRUSH_SIZE, roomOpacity } from './types.js';
 import type { State, Room, Cell, MapObject, Point, Rect, SpriteRect, Command, CommandExpectation, CameraProfile, Definition, Color } from './types.js';
 
 type TileCellKey = number | string;
@@ -195,6 +196,7 @@ export class MapCanvas {
   private renderOrigin: Point | null = null;
   private selectedObjects = new Set<string>();
   private active = true;
+  private generationStart: number | null = null;
   private raf = 0;
   private resize: ResizeObserver;
   private abort = new AbortController();
@@ -283,7 +285,7 @@ export class MapCanvas {
   setActive(active: boolean): void {
     if (this.active === active) return;
     this.active = active;
-    if (!active) { this.cancel(); this.resetWheel(); cancelAnimationFrame(this.raf); this.raf = 0; }
+    if (!active) { this.generationStart = null; this.cancel(); this.resetWheel(); cancelAnimationFrame(this.raf); this.raf = 0; }
     else { if (this.state) this.syncIndexes(this.state); this.requestDraw(); }
   }
   async settled(): Promise<void> { await this.tileIdle; await this.gestureTail; if (this.brushSizeTask) await this.brushSizeTask; }
@@ -297,6 +299,7 @@ export class MapCanvas {
   }
   setState(state: State): void {
     const previousInstance = this.state?.instanceId;
+    if (previousInstance !== state.instanceId || this.state?.documentRevision !== state.documentRevision) this.generationStart = null;
     const previousRoom = this.state?.selection.roomId;
     if (previousInstance !== state.instanceId || previousRoom !== state.selection.roomId
       || this.state?.selection.tool !== state.selection.tool || this.state?.selection.layer !== state.selection.layer) this.roomSelectionId = null;
@@ -438,8 +441,15 @@ export class MapCanvas {
     const bounds = this.canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
     this.pixelScale = Math.max(.000001, Math.min(32, Math.min((bounds.width - 50) * dpr / ((right - left) * 16), (bounds.height - 50) * dpr / ((top - bottom) * 16)))); this.requestDraw(); this.onHover(this.hover);
   }
+  showGeneration(): void {
+    if (!this.active || !this.state?.document.rooms.length) return;
+    this.cancel();
+    this.fit();
+    this.generationStart = performance.now();
+  }
   gameView(enabled = !this.cameraPreview): void {
     const camera = this.cameraProfile; if (!camera || enabled === this.cameraPreview) return;
+    this.generationStart = null;
     if (!enabled) { this.leaveCameraPreview(true); this.requestDraw(); this.onHover(this.hover); return; }
     this.editView = { center: { ...this.center }, pixelScale: this.pixelScale, overview: this.overview };
     this.cameraPreview = true; this.cameraScaleAuto = true; this.overview = false;
@@ -460,7 +470,7 @@ export class MapCanvas {
   }
   private wheel(event: WheelEvent): void {
     event.preventDefault();
-    if (!this.active || this.gesture || !Number.isFinite(event.deltaY) || !event.deltaY
+    if (!this.active || this.generationStart !== null || this.gesture || !Number.isFinite(event.deltaY) || !event.deltaY
       || event.ctrlKey && (this.cameraPreview || this.gameCameraTool || !this.state || !tileLayer(this.state.selection.layer))) { this.resetWheel(); return; }
     if (event.ctrlKey !== this.wheelBrush) { this.resetWheel(); this.wheelBrush = event.ctrlKey; }
     const pixels = event.deltaY * (event.deltaMode === WheelEvent.DOM_DELTA_LINE ? 16 : event.deltaMode === WheelEvent.DOM_DELTA_PAGE ? Math.max(1, this.height) : 1);
@@ -553,7 +563,7 @@ export class MapCanvas {
     }).finally(() => { this.gestureCommandsPending--; });
   }
   private down(e: PointerEvent): void {
-    if (!this.state || this.gesture || ![0, 1, 2].includes(e.button)) return;
+    if (!this.state || this.generationStart !== null || this.gesture || ![0, 1, 2].includes(e.button)) return;
     const screen = this.point(e), world = this.toWorld(screen), hit = this.roomAt(world);
     const previewPan = e.button === 1 || e.button === 0 && e.altKey || this.gameCameraTool && e.button === 2 && !!hit;
     if (this.cameraPreview && !previewPan) { e.preventDefault(); this.canvas.focus(); return; }
@@ -1249,6 +1259,15 @@ export class MapCanvas {
     if (viewportChanged) this.onHover(this.hover);
     const w = Math.round(rect.width * this.dpr), h = Math.round(rect.height * this.dpr);
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
+    if (this.generationStart !== null && this.state) {
+      const progress = generationProgress(this.generationStart);
+      if (progress < 1) {
+        this.drawScene(undefined, progress * this.state.document.rooms.length);
+        this.requestDraw();
+        return;
+      }
+      this.generationStart = null;
+    }
     this.drawScene(damage);
   }
   /** Render synchronously into another viewport using the same indexes, images and live stroke.
@@ -1288,13 +1307,15 @@ export class MapCanvas {
       return { tileScale: this.scale, pixelScale: this.pixelScale };
     } finally { Object.assign(this, saved); }
   }
-  private drawScene(damage?: Rect): void {
+  private drawScene(damage?: Rect, generationPosition?: number): void {
     // LOD is a viewport decision, not a dirty-rectangle decision. Crossing its
     // density threshold invalidates the entire frame so exact sprites and LOD
     // colours can never be mixed into differently rendered patches.
     const camera = this.cameraProfile, view = this.visibleWorldBounds(camera), nextLodModes = new Map<string, boolean>();
     const selectedRoom = activeRoom(this.state);
-    const rooms = this.cameraPreview ? (selectedRoom ? [selectedRoom] : []) : this.state?.document.rooms || [];
+    let rooms = this.cameraPreview ? (selectedRoom ? [selectedRoom] : []) : this.state?.document.rooms || [];
+    const arriving = generationPosition === undefined ? undefined : rooms[Math.floor(generationPosition)];
+    if (generationPosition !== undefined) rooms = rooms.slice(0, Math.ceil(generationPosition));
     if (this.state) for (const room of rooms) {
       if (!room.visible || this.cameraPreview && room.id !== this.state.selection.roomId || !overlaps(room, view)) continue;
       for (const layer of [0, 1]) {
@@ -1338,6 +1359,7 @@ export class MapCanvas {
       if (!room.visible || this.cameraPreview && room.id !== s.roomId || !overlaps(room, view)) continue;
       const rect = this.screenRect(room);
       ctx.save(); ctx.globalAlpha = roomOpacity(room.id, s.roomId);
+      if (generationPosition !== undefined && room === arriving) ctx.globalAlpha *= generationPosition % 1;
       ctx.fillStyle = '#242424'; ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
       for (const layer of [1, 5, 0, 3, 2, 4]) {
         if (s.hiddenLayers.includes(layer)) continue;
@@ -1355,47 +1377,50 @@ export class MapCanvas {
       }
       ctx.restore();
     }
-    if (!this.cameraPreview && !this.gameCameraTool && this.selectedObjects.size) this.drawSelectedObjectPaths(view, hiddenObjects, s.hiddenLayers);
-    if (!this.cameraPreview && !this.gameCameraTool && this.objectOverlay && !this.objectOverlay.erase) this.drawObjectPlacementPreview(this.objectOverlay);
-    const room = activeRoom(this.state);
-    if (!this.cameraPreview && room && this.showGrid && this.scale >= 12) {
+    if (!this.cameraPreview && generationPosition === undefined) this.drawEditorOverlays(view, selectedRoom, this.state, hiddenObjects);
+    if (cameraRect) ctx.restore();
+    if (damage) ctx.restore();
+    this.renderOrigin = null; this.selectedObjects.clear();
+  }
+  private drawEditorOverlays(view: Rect, room: Room | undefined, state: State, hiddenObjects?: Set<string>): void {
+    const ctx = this.ctx, s = state.selection;
+    if (!this.gameCameraTool && this.selectedObjects.size) this.drawSelectedObjectPaths(view, hiddenObjects, s.hiddenLayers);
+    if (!this.gameCameraTool && this.objectOverlay && !this.objectOverlay.erase) this.drawObjectPlacementPreview(this.objectOverlay);
+    if (room && this.showGrid && this.scale >= 12) {
       const r = this.screenRect(room); ctx.save(); ctx.beginPath(); ctx.rect(r.x, r.y, r.width, r.height); ctx.clip();
       ctx.beginPath();
       for (let x = Math.max(room.x, Math.ceil(view.x)); x <= Math.min(room.x + room.width, view.x + view.width); x++) { const p = this.toScreen({ x, y: 0 }); ctx.moveTo(p.x, Math.max(0, r.y)); ctx.lineTo(p.x, Math.min(this.height, r.y + r.height)); }
       for (let y = Math.max(room.y, Math.ceil(view.y)); y <= Math.min(room.y + room.height, view.y + view.height); y++) { const p = this.toScreen({ x: 0, y }); ctx.moveTo(Math.max(0, r.x), p.y); ctx.lineTo(Math.min(this.width, r.x + r.width), p.y); }
       ctx.strokeStyle = '#ffffff12'; ctx.lineWidth = 1 / this.dpr; ctx.stroke(); ctx.restore();
     }
-    if (!this.cameraPreview && !this.gameCameraTool && room && s.area && this.gesture?.kind !== 'selection') this.outline({ x: room.x + s.area.x, y: room.y + s.area.y, width: s.area.width, height: s.area.height }, '#72bde5', true);
-    if (!this.cameraPreview && room && this.canResizeRoom(room)) {
+    if (!this.gameCameraTool && room && s.area && this.gesture?.kind !== 'selection') this.outline({ x: room.x + s.area.x, y: room.y + s.area.y, width: s.area.width, height: s.area.height }, '#72bde5', true);
+    if (room && this.canResizeRoom(room)) {
       const r = this.roomMoveRect(room); ctx.fillStyle = '#334b5d'; ctx.fillRect(r.x, r.y, r.width, r.height);
       ctx.fillStyle = '#e4f3fc'; ctx.font = '11px system-ui'; ctx.fillText('⠿ ' + room.name, r.x + 5, r.y + 12, r.width - 10);
     }
-    if (!this.cameraPreview && room && this.canResizeRoom(room)) for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1]) if (x || y) {
+    if (room && this.canResizeRoom(room)) for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1]) if (x || y) {
       const p = this.roomHandlePoint(room, x, y); ctx.fillStyle = '#6bb5dc'; ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
     }
     const g = this.gesture;
-    if (!this.cameraPreview && !this.gameCameraTool && g?.kind === 'selection') {
+    if (!this.gameCameraTool && g?.kind === 'selection') {
       const area = this.selectionRect(g); this.outline({ ...area, x: area.x + g.room.x, y: area.y + g.room.y }, '#72bde5', true);
     }
-    if (!this.cameraPreview && !this.gameCameraTool && g?.kind === 'room-create') this.outline(box(g.start, g.last), '#72bde5', true);
-    if (!this.cameraPreview && g?.kind === 'room-resize') this.outline(this.resizedRoom(g), '#ffffff', true);
-    if (!this.cameraPreview && this.selectedRooms.size > 1) {
-      for (const selected of this.state.document.rooms) if (selected.visible && this.selectedRooms.has(selected.id)) this.outline(selected, '#72bde5', false);
+    if (!this.gameCameraTool && g?.kind === 'room-create') this.outline(box(g.start, g.last), '#72bde5', true);
+    if (g?.kind === 'room-resize') this.outline(this.resizedRoom(g), '#ffffff', true);
+    if (this.selectedRooms.size > 1) {
+      for (const selected of state.document.rooms) if (selected.visible && this.selectedRooms.has(selected.id)) this.outline(selected, '#72bde5', false);
     }
-    if (!this.cameraPreview && g?.kind === 'room-move') {
+    if (g?.kind === 'room-move') {
       const rooms = g.rooms || [g.room];
-      const delta = resolveRoomGroupMove(rooms, { x: Math.round(g.last.x - g.start.x), y: Math.round(g.last.y - g.start.y) }, this.state.document.rooms);
+      const delta = resolveRoomGroupMove(rooms, { x: Math.round(g.last.x - g.start.x), y: Math.round(g.last.y - g.start.y) }, state.document.rooms);
       for (const moved of rooms) if (moved.visible) this.outline({ ...moved, x: moved.x + delta.x, y: moved.y + delta.y }, '#ffffff', true);
     }
-    if (!this.cameraPreview && !this.gameCameraTool && this.selectedRooms.size <= 1 && room && tileLayer(s.layer) && s.tool !== 0 && s.tool !== 2) {
+    if (!this.gameCameraTool && this.selectedRooms.size <= 1 && room && tileLayer(s.layer) && s.tool !== 0 && s.tool !== 2) {
       const size = this.brushSize;
       const preview = g?.kind === 'paint' && [4, 6, 7, 8].includes(s.tool) ? box(g.start, this.hover) : { x: Math.floor(this.hover.x) - Math.floor((size - 1) / 2), y: Math.floor(this.hover.y) - Math.floor((size - 1) / 2), width: size, height: size };
       this.outline(preview, '#72bde5', false);
     }
-    if (!this.cameraPreview && this.gameCameraVisible) this.drawGameCamera();
-    if (cameraRect) ctx.restore();
-    if (damage) ctx.restore();
-    this.renderOrigin = null; this.selectedObjects.clear();
+    if (this.gameCameraVisible) this.drawGameCamera();
   }
   private drawGameCamera(): void {
     const frame = this.gameCamera.visibleFrame; if (!frame) return;
@@ -1558,7 +1583,7 @@ export class MapCanvas {
     const info = this.materials.get(tile.material);
     const sprite = tile.shape === 0 ? info?.solidMasks.get(normalizeMask(mask)) || info?.fallbackShapes.get(0) : info?.strictShapes.get(tile.shape) || info?.fallbackShapes.get(tile.shape);
     const rect = target || this.screenRect({ x: room.x + tile.x, y: room.y + tile.y, width: 1, height: 1 });
-    if (this.showDefaultTiles) { ctx.drawImage(defaultTile(normalizeMask(mask), tile.shape, info?.color || '#cb5574'), rect.x, rect.y, rect.width, rect.height); return; }
+    if (this.showDefaultTiles && !isTraversalMaterial(tile.material)) { ctx.drawImage(defaultTile(normalizeMask(mask), tile.shape, info?.color || '#cb5574'), rect.x, rect.y, rect.width, rect.height); return; }
     if (sprite && this.sprite(sprite, rect, ctx)) return;
     ctx.fillStyle = info?.color || '#cb5574';
     const points = SHAPE_POINTS[tile.shape];

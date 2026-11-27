@@ -8,6 +8,8 @@ Metroidvania Studio is a free, open-source 2D level editor for metroidvania game
 
 **Automate your workflow:** [Lua scripts](docs/scripting/quick-start.md), a [headless CLI](docs/cli/quick-start.md), and a [local MCP server for AI agents](docs/mcp/setup.md).
 
+Local LLMs with shell access can use the source CLI to generate seeded tilemaps and drive the editor over stdin. [Headless editing for local agents](docs/cli/headless-editor.md)
+
 ## Add Rooms & Paint Tiles
 
 ![Add a second room, paint rock tiles, then pan back and connect the first room](media/readme/create-and-paint.gif)
@@ -102,7 +104,7 @@ Paint a room, **Ctrl-click** two rooms to move them together, or extend the uppe
 - **Save and exchange maps:** use **File** for saving and JSON import/export. Use **Edit** for Undo/Redo. Set PPU and resolution in the top toolbar (defaults: **16** and **320×180**).
 - **Preview:** choose **Game camera** and drag its white frame. **Game Preview** follows immediately; expand, maximize, or collapse it as needed.
 
-See **Help → Shortcuts** for the full control list. The interface follows your browser language and can be changed from the language picker.
+Open **Help → Shortcuts** for the [keyboard and mouse reference](docs/shortcuts.md) in the editor's current language.
 
 Open **Help → Documentation** for searchable guides and the API reference, including offline access.
 

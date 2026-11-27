@@ -1,6 +1,7 @@
 import { activeRoom } from './types.js';
 import type { Point, Rect } from './types.js';
 import type { MapCanvas } from './map-canvas.js';
+import { shortcutKey } from './shortcuts.js';
 
 /** A view of the shared renderer; owns no map data, tile indexes or editing commands. */
 export class GamePreview {
@@ -13,6 +14,7 @@ export class GamePreview {
   private maximizeButton = document.createElement('button');
   private centerButton = document.createElement('button');
   private pixelPerfect = document.createElement('input');
+  private pixelPerfectText = document.createTextNode('');
   private pixelPerfectLabel = document.createElement('label');
   private body = document.createElement('div');
   private source: MapCanvas;
@@ -48,7 +50,7 @@ export class GamePreview {
     this.pixelPerfect.type = 'checkbox'; this.pixelPerfect.id = 'preview-pixel-perfect';
     this.pixelPerfect.checked = localStorage.getItem('metroidvaniaStudio.previewPixelPerfect') !== 'false';
     this.pixelPerfectLabel.className = 'preview-pixel-perfect';
-    this.pixelPerfectLabel.append(this.pixelPerfect, 'Pixel Perfect');
+    this.pixelPerfectLabel.append(this.pixelPerfect, this.pixelPerfectText);
     source.setGameCameraPixelPerfect(this.pixelPerfect.checked);
     this.pixelPerfect.addEventListener('change', () => {
       this.cancelPan();
@@ -79,9 +81,10 @@ export class GamePreview {
     window.addEventListener('blur', () => this.cancelPan(), options);
     this.element.addEventListener('keydown', event => {
       // Preview cannot dispatch editor shortcuts such as Delete, paste or brush selection.
-      if (event.ctrlKey || event.metaKey) { if (event.key.toLowerCase() === 's') return; }
-      if (event.key === 'Escape') { event.preventDefault(); this.cancelPan(); if (this.maximized) this.setMaximized(false); this.returnFocus(); }
-      else if (event.key.toLowerCase() === 'f') { event.preventDefault(); this.frameRoom(); }
+      const key = shortcutKey(event);
+      if (!key || (key === 's' && (event.ctrlKey || event.metaKey))) return;
+      if (key === 'escape') { event.preventDefault(); this.cancelPan(); if (this.maximized) this.setMaximized(false); this.returnFocus(); }
+      else if (key === 'f') { event.preventDefault(); this.frameRoom(); }
       else if (event.key !== 'Tab' && !((event.target instanceof HTMLButtonElement || event.target === this.pixelPerfect) && ['Enter', ' '].includes(event.key))) event.preventDefault();
       event.stopPropagation();
     }, options);
@@ -89,6 +92,7 @@ export class GamePreview {
     this.updateLabels(); this.applyLayout();
   }
   updateLabels(): void {
+    this.pixelPerfectText.data = this.t('previewPixelPerfect');
     this.canvas.setAttribute('aria-label', this.t('previewHelp'));
     this.canvas.title = this.t('previewHelp');
     this.pixelPerfectLabel.title = this.t('previewPixelPerfectHelp');

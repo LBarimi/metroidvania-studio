@@ -53,10 +53,12 @@ export function auditPackage(directory) {
   const entries = files(directory).map(file => ({ name: file.name, bytes: readFileSync(file.full) }));
   validateDocumentLinks(entries);
   const prohibited = /(?:^|\/)(?:media|platform|engine-packages|integrations|src|node_modules|\.local|\.git)(?:\/|$)|\.(?:pdb|exe|cs|csproj|map\.json)$/i;
-  if (entries.some(file => prohibited.test(file.name))) throw new Error('Package contains source, build symbols, engine assets, or private data.');
+  const starter = 'samples/maps/starter-world.map.json';
+  if (entries.some(file => prohibited.test(file.name) && !(file.name === starter && file.bytes.equals(readFileSync(path.join(root, starter)))))) throw new Error('Package contains source, build symbols, engine assets, or private data.');
   const issues = [...inspectFiles(entries, loadMatcher()), ...inspectBoundaries(entries)];
   if (issues.length) throw new Error('Package audit failed: ' + issues.map(issue => issue.path + ' (' + issue.rule + ')').join(', '));
   for (const name of ['app/MetroidvaniaStudio.Cli.dll', 'app/MetroidvaniaStudio.Cli.deps.json', 'app/MetroidvaniaStudio.Cli.runtimeconfig.json',
+    'app/MetroidvaniaStudio.EditorRuntime.dll', 'samples/catalog.json', starter, 'samples/textures/traversal/ladder.png',
     'app/MoonSharp.Interpreter.dll', 'app/ModelContextProtocol.Core.dll', 'app/licenses/moonsharp-license.txt',
     'app/licenses/mcp-sdk-license.txt', 'app/licenses/mcp-sdk-third-party-notices.txt', 'app/licenses/microsoft-extensions-ai-license.txt',
     'app/licenses/microsoft-extensions-ai-third-party-notices.txt', 'app/licenses/microsoft-extensions-license.txt',
@@ -64,7 +66,7 @@ export function auditPackage(directory) {
     if (!entries.some(file => file.name === name)) throw new Error('Missing package component: ' + name);
   return entries;
 }
-export function pack() {
+export function pack(destination = path.join(root, 'builds/npm')) {
   if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Node.js 24 or later is required.');
   const manifest = json(path.join(root, 'package.json')), metadata = json(path.join(root, 'tools/mcp/server.json'));
   if (manifest.private !== true) throw new Error('The source manifest must stay private.');
@@ -72,7 +74,8 @@ export function pack() {
   validateMetadata(manifest, metadata);
   const npm = findNpm(), dotnet = findDotnet();
   execute(process.execPath, [path.join(root, 'tools/scripting/build-runtime.mjs')]);
-  const destination = path.join(root, 'builds/npm'); mkdirSync(destination, { recursive: true });
+  destination = path.resolve(destination);
+  mkdirSync(destination, { recursive: true });
   const stage = mkdtempSync(path.join(destination, 'stage-')), app = path.join(stage, 'app');
   const project = path.join(root, 'metroidvania-studio/cli/MetroidvaniaStudio.Cli.csproj');
   const flags = ['--configuration', 'Release', '--nologo', '-p:UseSharedCompilation=false', '-p:DebugType=None', '-p:DebugSymbols=false',
@@ -92,11 +95,16 @@ export function pack() {
   const readme = readFileSync(path.join(root, 'tools/npm/README.md'), 'utf8');
   writeFileSync(path.join(stage, 'README.md'), readme.replaceAll('](../../docs/', '](docs/'));
   copyDocSources(path.join(stage, 'docs'));
+  for (const file of files(path.join(root, 'samples'))) {
+    if (file.name === 'catalog.json' || file.name === 'maps/starter-world.map.json' ||
+      (/^(?:legacy-textures|textures)\/.*\.png$/i.test(file.name) && !file.name.endsWith('/preview.png')))
+      copy(file.full, path.join(stage, 'samples', file.name));
+  }
   for (const name of ['FORMAT.md', 'map-format-v2.schema.json']) copy(path.join(root, 'metroidvania-studio/contracts', name), path.join(stage, 'metroidvania-studio/contracts', name));
   buildDocs(path.join(stage, 'docs/site'));
   const published = { name: manifest.name, version: manifest.version, description: manifest.description, keywords: manifest.keywords, license: manifest.license,
     type: 'module', private: false, engines: manifest.engines, mcpName: manifest.mcpName, repository: manifest.repository,
-    bin: { 'metroidvania-studio': 'bin/metroidvania-studio.mjs' }, files: ['bin/', 'app/', 'docs/', 'metroidvania-studio/contracts/', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'server.json'] };
+    bin: { 'metroidvania-studio': 'bin/metroidvania-studio.mjs' }, files: ['bin/', 'app/', 'docs/', 'samples/', 'metroidvania-studio/contracts/', 'LICENSE', 'THIRD-PARTY-NOTICES.md', 'server.json'] };
   writeFileSync(path.join(stage, 'package.json'), JSON.stringify(published, null, 2) + '\n');
   const auditRoot = mkdtempSync(path.join(destination, 'audit-'));
   for (const file of files(stage).filter(file => !file.name.startsWith('publish/'))) copy(file.full, path.join(auditRoot, file.name));

@@ -39,7 +39,7 @@ export function packageEntries(engine) {
   const tree=(source,destination=source)=>{for(const name of files(source))add(destination+name.slice(source.length),name);};
   add('README.md',`integrations/${engine}/README.md`);
   entries.set('README.md',Buffer.from(entries.get('README.md').toString('utf8').replaceAll(`../../engine-packages/${engine}/`,'')));
-  for(const language of ['KR','EN','JP','CN','TW'])add(`INSTALL_${language}.txt`,`engine-packages/${engine}/INSTALL_${language}.txt`);
+  for(const language of ['KR','EN','JP','CN','TW','RU'])add(`INSTALL_${language}.txt`,`engine-packages/${engine}/INSTALL_${language}.txt`);
   if(engine==='godot')tree('integrations/godot/addons','addons');
   if(engine==='ue4'||engine==='ue5') {
     const base='plugin/MetroidvaniaStudio';
@@ -86,7 +86,7 @@ export function buildPackages(output=path.join(root,'engine-packages'),check=fal
     const entries=packageEntries(engine),bytes=zip(entries),filename=path.join(output,engine,'metroidvania-studio.zip');
     if(check) {if(!existsSync(filename)||!readFileSync(filename).equals(bytes))throw new Error('Stale engine package: '+engine);}
     else {mkdirSync(path.dirname(filename),{recursive:true});writeFileSync(filename,bytes);}
-    for(const language of ['KR','EN','JP','CN','TW']) {
+    for(const language of ['KR','EN','JP','CN','TW','RU']) {
       const name=`INSTALL_${language}.txt`,guide=path.join(output,engine,name),content=entries.get(name);
       if(check) {if(!existsSync(guide)||!readFileSync(guide).equals(content))throw new Error('Stale install guide: '+engine+'/'+name);}
       else writeFileSync(guide,content);

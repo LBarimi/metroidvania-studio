@@ -21,21 +21,27 @@ public sealed class ScriptLibrary
     }
     public record Entry(string Id, string Name, bool ReadOnly);
     public record Script(string Id, string Name, string Source, string Revision, bool ReadOnly);
+    internal const string ErrorCodeKey = "ScriptLibrary.ErrorCode";
+    private static T WithCode<T>(T error, string code) where T : Exception
+    {
+        error.Data[ErrorCodeKey] = code;
+        return error;
+    }
     private static string Name(string name)
     {
         if (name.Length is < 5 or > 100 || !name.EndsWith(".lua", StringComparison.Ordinal)
             || !char.IsLetterOrDigit(name[0]) || name.Contains("..")
             || name.Any(c => !(char.IsLetterOrDigit(c) || c is '-' or '_' or '.' or ' ')))
-            throw new ArgumentException("Use a Lua filename containing letters, numbers, spaces, hyphens or underscores.");
+            throw WithCode(new ArgumentException("Use a Lua filename containing letters, numbers, spaces, hyphens or underscores."), "scripts.filenameInvalid");
         string stem = name.Split('.')[0].ToUpperInvariant();
         if (stem is "CON" or "PRN" or "AUX" or "NUL" || (stem.Length == 4 && (stem.StartsWith("COM") || stem.StartsWith("LPT")) && char.IsDigit(stem[3])))
-            throw new ArgumentException("This script filename is reserved by the operating system.");
+            throw WithCode(new ArgumentException("This script filename is reserved by the operating system."), "scripts.filenameReserved");
         return name;
     }
     private static void NoLink(string path)
     {
         // Attributes also inspect a dangling file link instead of following it.
-        try { if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0) throw new ArgumentException("Linked scripts are not supported."); }
+        try { if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0) throw WithCode(new ArgumentException("Linked scripts are not supported."), "scripts.linkUnsupported"); }
         catch (FileNotFoundException) { }
         catch (DirectoryNotFoundException) { }
     }
@@ -43,19 +49,21 @@ public sealed class ScriptLibrary
     private string Resolve(string id, out bool readOnly)
     {
         string[] parts = id.Split('/');
-        if (parts.Length != 2) throw new ArgumentException("Choose a script from the library.");
+        if (parts.Length != 2) throw WithCode(new ArgumentException("Choose a script from the library."), "scripts.chooseScript");
         string name = Name(parts[1]); readOnly = parts[0] == "examples";
-        if (parts[0] != "workspace" && (!readOnly || !Examples.Contains(name))) throw new ArgumentException("Unknown script library.");
+        if (parts[0] != "workspace" && (!readOnly || !Examples.Contains(name))) throw WithCode(new ArgumentException("Unknown script library."), "scripts.chooseScript");
         if (readOnly) { NoLink(Path.GetDirectoryName(examples)!); NoLink(examples); } else CheckRoot();
         string file = Path.Combine(readOnly ? examples : scripts, name); NoLink(file); return file;
     }
     private static Script ReadFile(string file, string id, bool readOnly)
     {
-        if (!File.Exists(file)) throw new KeyNotFoundException("Script not found.");
+        if (!File.Exists(file)) throw WithCode(new KeyNotFoundException("Script not found."), "scripts.notFound");
         using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (stream.Length > MaximumBytes) throw new ArgumentException("Lua scripts cannot exceed 64 KiB.");
+        if (stream.Length > MaximumBytes) throw WithCode(new ArgumentException("Lua scripts cannot exceed 64 KiB."), "scripts.sourceLimit");
         byte[] bytes = new byte[checked((int)stream.Length)]; stream.ReadExactly(bytes);
-        string source = Utf8.GetString(bytes).TrimStart('\uFEFF');
+        string source;
+        try { source = Utf8.GetString(bytes).TrimStart('\uFEFF'); }
+        catch (DecoderFallbackException error) { error.Data[ErrorCodeKey] = "scripts.invalidUtf8"; throw; }
         return new(id, Path.GetFileName(file), source, Convert.ToHexString(SHA256.HashData(bytes)), readOnly);
     }
     public Entry[] List()
@@ -67,7 +75,7 @@ public sealed class ScriptLibrary
             {
                 foreach (string file in Directory.EnumerateFiles(scripts, "*.lua").Take(MaximumFiles + 1))
                 {
-                    if (result.Count >= MaximumFiles) throw new ArgumentException("The script library supports up to 256 scripts.");
+                    if (result.Count >= MaximumFiles) throw WithCode(new ArgumentException("The script library supports up to 256 scripts."), "scripts.libraryFull");
                     string name = Name(Path.GetFileName(file)); NoLink(file); result.Add(new("workspace/" + name, name, false));
                 }
             }
@@ -83,14 +91,14 @@ public sealed class ScriptLibrary
     {
         name = Name(name);
         byte[] bytes = Utf8.GetBytes(source);
-        if (bytes.Length is < 1 or > MaximumBytes) throw new ArgumentException("Script source must contain 1–65536 UTF-8 bytes.");
+        if (bytes.Length is < 1 or > MaximumBytes) throw WithCode(new ArgumentException("Script source must contain 1–65536 UTF-8 bytes."), "scripts.sourceLimit");
         lock (gate)
         {
             string id = "workspace/" + name, file = Resolve(id, out _);
             string? revision = File.Exists(file) ? ReadFile(file, id, false).Revision : null;
-            if (revision != expectedRevision) throw new WorkspaceConflict("The script changed or already exists. Open it again before saving.");
+            if (revision != expectedRevision) throw WithCode(new WorkspaceConflict("The script changed or already exists. Open it again before saving."), "scripts.saveConflict");
             if (revision == null && Directory.Exists(scripts) && Directory.EnumerateFiles(scripts, "*.lua").Take(MaximumFiles).Count() >= MaximumFiles)
-                throw new ArgumentException("The script library supports up to 256 scripts.");
+                throw WithCode(new ArgumentException("The script library supports up to 256 scripts."), "scripts.libraryFull");
             Directory.CreateDirectory(scripts); CheckRoot();
             string temporary = Path.Combine(scripts, ".script-" + Guid.NewGuid().ToString("N") + ".tmp");
             try
@@ -98,32 +106,11 @@ public sealed class ScriptLibrary
                 using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None)) { stream.Write(bytes); stream.Flush(true); }
                 CheckRoot(); NoLink(file);
                 if ((File.Exists(file) ? ReadFile(file, id, false).Revision : null) != revision)
-                    throw new WorkspaceConflict("The script changed while saving. Open it again before saving.");
+                    throw WithCode(new WorkspaceConflict("The script changed while saving. Open it again before saving."), "scripts.saveConflict");
                 File.Move(temporary, file, revision != null);
                 return ReadFile(file, id, false);
             }
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }
-    }
-}
-
-public static class ScriptLibraryEndpoints
-{
-    public static void MapScriptLibrary(this WebApplication app, ScriptLibrary library)
-    {
-        app.MapGet("/api/v1/scripts", () => Results.Json(library.List()));
-        app.MapGet("/api/v1/scripts/source", (string id) => Results.Json(library.Read(id)));
-        app.MapPost("/api/v1/scripts", async (HttpRequest request) =>
-        {
-            using var body = await JsonDocument.ParseAsync(request.Body, cancellationToken: request.HttpContext.RequestAborted);
-            var value = body.RootElement;
-            if (value.ValueKind != JsonValueKind.Object) throw new ArgumentException("A script object is required.");
-            var seen = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var field in value.EnumerateObject())
-                if (field.Name is not ("name" or "source" or "expectedRevision") || !seen.Add(field.Name)) throw new ArgumentException("Unknown or duplicate script field.");
-            if (seen.Count != 3 || value.GetProperty("name").ValueKind != JsonValueKind.String || value.GetProperty("source").ValueKind != JsonValueKind.String
-                || value.GetProperty("expectedRevision").ValueKind is not (JsonValueKind.String or JsonValueKind.Null)) throw new ArgumentException("Provide name, source, and expectedRevision.");
-            return Results.Json(library.Save(value.GetProperty("name").GetString()!, value.GetProperty("source").GetString()!, value.GetProperty("expectedRevision").GetString()));
-        });
     }
 }

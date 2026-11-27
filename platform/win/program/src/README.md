@@ -11,8 +11,8 @@ This directory contains the C# WebView2 application, desktop UI extensions, and 
 ## Run
 
 - Keep the generated `app/` directory beside the executable.
-- The default small build requires .NET 10 Desktop Runtime (x64), ASP.NET Core Runtime 10 (x64), and Microsoft WebView2 Runtime.
-- The runtime-included build carries .NET with it; Microsoft WebView2 Runtime remains required.
+- The default small build requires .NET 10 Desktop Runtime (x64), ASP.NET Core Runtime 10 (x64), and Microsoft Edge WebView2 Runtime.
+- The runtime-included build carries .NET with it and requires Microsoft Edge WebView2 Runtime.
 - Running either build does not require a repository checkout or Node.js.
 - Use `metroidvania-studio.exe --project <folder>` to select a workspace.
 - A local build shares `Maps`, `Textures`, `.studio` and the `Scripts` library at the project root. A distributed application stores them beside the executable. Palette settings are managed in `.studio/catalog.json`. Legacy default storage is copied once, preserving its original files.

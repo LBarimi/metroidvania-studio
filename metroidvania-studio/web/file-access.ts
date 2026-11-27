@@ -11,7 +11,7 @@ type PickerWindow = Window & {
   showSaveFilePicker?: (options: object) => Promise<MapFileHandle>;
 };
 const picker = window as PickerWindow;
-const types = [{ description: 'JSON map', accept: { 'application/json': ['.json'] } }];
+const types = [{ description: 'JSON', accept: { 'application/json': ['.json'] } }];
 export const canceledFileDialog = (error: unknown): boolean => error instanceof DOMException && error.name === 'AbortError';
 export async function fileHash(file: Blob): Promise<string> {
   if (file.size > 32 * 1024 * 1024) throw new Error('@importTooLarge');

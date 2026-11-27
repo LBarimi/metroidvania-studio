@@ -9,8 +9,16 @@ namespace MetroidvaniaStudio
     {
         public const string SeedProperty = "mapMaker.minimapGenerationSeed";
 
+        public static void Populate(MapDocument freshDocument, int count, string[] chips, string[] colors, bool automaticThemes,
+            int seed, IReadOnlyDictionary<string, TerrainTileSet> materials, bool generateTiles, string tileTheme, string difficulty)
+        {
+            freshDocument.rooms = Generate(count, chips, colors, automaticThemes, seed);
+            freshDocument.properties.Add(new MapProperty { key = SeedProperty, value = seed.ToString(System.Globalization.CultureInfo.InvariantCulture) });
+            if (generateTiles) MapTilemapGenerator.Fill(freshDocument, materials, tileTheme, difficulty, seed);
+        }
+
         // SplitMix64 gives saved seeds the same sequence on every .NET runtime.
-        private sealed class LayoutRandom(int seed)
+        internal sealed class LayoutRandom(int seed)
         {
             private ulong state = unchecked((uint)seed);
 

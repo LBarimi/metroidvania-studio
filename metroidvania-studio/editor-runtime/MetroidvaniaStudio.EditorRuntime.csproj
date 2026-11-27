@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../automation/MetroidvaniaStudio.Automation.csproj" />
+    <Compile Include="../server/*.cs" Exclude="../server/*Endpoints.cs;../server/Program.cs;../server/NativeMapFiles.cs;../server/AutomationJobs.cs;../server/AutomationWorkerHost.cs" />
+    <Compile Include="../storage/PortableWorkspace.cs" />
+    <InternalsVisibleTo Include="MetroidvaniaStudio.Server" />
+  </ItemGroup>
+</Project>

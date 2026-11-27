@@ -91,7 +91,7 @@ public sealed class NativeMapFiles(ProjectFiles files, Func<string, string, stri
             $owner.Activate()
             $dialog.InitialDirectory = $env:STUDIO_DIALOG_DIRECTORY
             $dialog.RestoreDirectory = $true
-            $dialog.Filter = 'JSON map (*.json)|*.json'
+            $dialog.Filter = 'JSON (*.json)|*.json'
             $dialog.DefaultExt = 'json'
             $dialog.AddExtension = $true
             $dialog.FileName = $env:STUDIO_DIALOG_NAME

@@ -33,7 +33,7 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   const mode = element('select'); mode.id = 'tileset-mode';
   for (const [value, key] of [['four','tilesetFour'], ['blob47','tileset47'], ['template','tilesetTemplate']]) { const o = element('option', '', t(key)); o.value = value; mode.append(o); }
   mode.value = settings.mode;
-  const fields = element('div', 'tileset-fields'); fields.append(label(t('name'), name), label(t('theme'), color), label(t('tilesetMethod'), mode));
+  const fields = element('div', 'tileset-fields'); fields.append(label(t('name'), name), label(t('paletteColor'), color), label(t('tilesetMethod'), mode));
   const hint = element('p', 'hint'), columns = element('div', 'tileset-columns'), sourcePane = element('section', 'tileset-source'), slotsPane = element('section', 'tileset-target');
   const tools = element('div', 'tileset-actions'), file = element('input'); file.type = 'file'; file.multiple = true; file.accept = 'image/png,.png'; file.hidden = true; file.id = 'tileset-file';
   const importButton = button(t('tilesetImport'), () => {

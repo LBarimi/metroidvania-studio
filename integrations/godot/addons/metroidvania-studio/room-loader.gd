@@ -215,8 +215,23 @@ func load_room(map_path: String, catalog_path: String, resource_root: String, ro
             view.surfaces.append(data)
             if layer == "foreground":
                 var collision := CollisionPolygon2D.new()
+                var holder: CollisionObject2D = body
+                if material == "traversal-ladder":
+                    holder = Area2D.new()
+                    root.add_child(holder)
+                    holder.owner = root
+                    holder.add_to_group("studio_ladder", true)
+                elif material == "traversal-floor":
+                    holder = StaticBody2D.new()
+                    root.add_child(holder)
+                    holder.owner = root
+                    holder.add_to_group("studio_drop_through_floor", true)
+                    collision.one_way_collision = true
+                    collision.one_way_collision_margin = unit * 0.05
+                    var top := Vector2(pos.x, -pos.y - 1) * unit
+                    points = PackedVector2Array([top, top + Vector2(unit, 0), top + Vector2(unit, unit * 0.25), top + Vector2(0, unit * 0.25)])
                 collision.polygon = points
-                body.add_child(collision)
+                holder.add_child(collision)
                 collision.owner = root
     var object_ids := {}
     for object in room.get("objects", []):

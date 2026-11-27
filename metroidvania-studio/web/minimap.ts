@@ -3,10 +3,10 @@ import { roomOpacity } from './types.js';
 import { defaultMinimapColor, minimapColorProperty, minimapRegionColorProperty, minimapWorldEdge, readMinimapShape } from './minimap-shape.js';
 import { chipUnit, previewConnections, roomGrid, type MinimapEditTools } from './minimap-drawing.js';
 import type { MinimapShape } from './minimap-shape.js';
+import { generationProgress } from './minimap-generation.js';
 
 // Style values are measured at five screen pixels per tile, then zoom with the map.
 const STYLE_SCALE = 5, MIN_SCALE = .00000001, MAX_SCALE = 80;
-const GENERATION_DURATION_MS = 1000;
 const MAX_PASSAGE_GAP = 4; // Map tiles; long shared boundaries retain a compact central opening.
 const regionColorKeys = [minimapRegionColorProperty, minimapColorProperty, 'color'];
 
@@ -256,7 +256,7 @@ export class MiniMap {
     let visible = this.state.document.rooms, connections = this.state.connections;
     let arriving: Room | undefined;
     if (this.generationStart !== null) {
-      const progress = (performance.now() - this.generationStart) / GENERATION_DURATION_MS;
+      const progress = generationProgress(this.generationStart);
       if (progress >= 1) this.generationStart = null;
       else {
         const position = progress * visible.length, index = Math.floor(position), size = position - index;

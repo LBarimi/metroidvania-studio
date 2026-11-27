@@ -1,6 +1,6 @@
 # Godot integration
 
-Installation guides: [한국어](../../engine-packages/godot/INSTALL_KR.txt) · [English](../../engine-packages/godot/INSTALL_EN.txt) · [日本語](../../engine-packages/godot/INSTALL_JP.txt) · [简体中文](../../engine-packages/godot/INSTALL_CN.txt) · [繁體中文](../../engine-packages/godot/INSTALL_TW.txt).
+Installation guides: [한국어](../../engine-packages/godot/INSTALL_KR.txt) · [English](../../engine-packages/godot/INSTALL_EN.txt) · [日本語](../../engine-packages/godot/INSTALL_JP.txt) · [简体中文](../../engine-packages/godot/INSTALL_CN.txt) · [繁體中文](../../engine-packages/godot/INSTALL_TW.txt) · [Русский](../../engine-packages/godot/INSTALL_RU.txt).
 
 Godot 4 addon. Tested with Godot 4.7.2 on Windows using headless import and scene round-trip validation.
 

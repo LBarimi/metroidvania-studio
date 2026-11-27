@@ -1,6 +1,6 @@
 # Unreal Engine integration
 
-Installation guides: [한국어](../../engine-packages/ue5/INSTALL_KR.txt) · [English](../../engine-packages/ue5/INSTALL_EN.txt) · [日本語](../../engine-packages/ue5/INSTALL_JP.txt) · [简体中文](../../engine-packages/ue5/INSTALL_CN.txt) · [繁體中文](../../engine-packages/ue5/INSTALL_TW.txt).
+Installation guides: [한국어](../../engine-packages/ue5/INSTALL_KR.txt) · [English](../../engine-packages/ue5/INSTALL_EN.txt) · [日本語](../../engine-packages/ue5/INSTALL_JP.txt) · [简体中文](../../engine-packages/ue5/INSTALL_CN.txt) · [繁體中文](../../engine-packages/ue5/INSTALL_TW.txt) · [Русский](../../engine-packages/ue5/INSTALL_RU.txt).
 
 Initial target: Unreal Engine 5. Windows validation uses the installed 5.8.2 toolchain. Use the separate UE4 package for Unreal Engine 4.27. Other UE5 minor versions require their own compile and import verification.
 

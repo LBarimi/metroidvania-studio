@@ -1,8 +1,8 @@
 # Unity integration
 
-Installation guides: [한국어](../../engine-packages/unity/INSTALL_KR.txt) · [English](../../engine-packages/unity/INSTALL_EN.txt) · [日本語](../../engine-packages/unity/INSTALL_JP.txt) · [简体中文](../../engine-packages/unity/INSTALL_CN.txt) · [繁體中文](../../engine-packages/unity/INSTALL_TW.txt).
+Installation guides: [한국어](../../engine-packages/unity/INSTALL_KR.txt) · [English](../../engine-packages/unity/INSTALL_EN.txt) · [日本語](../../engine-packages/unity/INSTALL_JP.txt) · [简体中文](../../engine-packages/unity/INSTALL_CN.txt) · [繁體中文](../../engine-packages/unity/INSTALL_TW.txt) · [Русский](../../engine-packages/unity/INSTALL_RU.txt).
 
-The five UTF-8 guides are included in the `.unitypackage` and install under `Assets/MetroidvaniaStudioIntegration`.
+The six UTF-8 guides are included in the `.unitypackage` and install under `Assets/MetroidvaniaStudioIntegration`.
 
 Developed for **Unity 6**. The web studio and its server remain independent of this adapter.
 

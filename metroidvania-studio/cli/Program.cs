@@ -45,13 +45,14 @@ public static class Program
                 Write(result);
                 return 0;
             }
-            if (options.Command is "help" or "version" or "capabilities")
+            if (options.Command is "help" or "version" or "capabilities" or "editor-help")
             {
                 Write(options.Command switch
                 {
                     "version" => new { version = Version, apiVersion = 1, formatVersion = MapDocument.CurrentFormatVersion },
                     "capabilities" => (object)AutomationEngine.Describe(),
-                    _ => new { name = "Metroidvania Studio", version = Version, commands = new[] { "init", "inspect", "query-tiles", "validate", "apply", "run", "export-room", "preview", "mcp", "capabilities", "version" }, usage = "--workspace DIRECTORY COMMAND --map RELATIVE_FILE [--batch FILE | --script FILE] [--dry-run]", docs = "docs/cli/quick-start.md" }
+                    "editor-help" => new { markdown = File.ReadAllText(Path.Combine(HeadlessGeneration.InstallationRoot(), "docs", "cli", "headless-editor.md")) },
+                    _ => new { name = "Metroidvania Studio", version = Version, commands = new[] { "init", "generate", "editor", "editor-help", "inspect", "query-tiles", "validate", "apply", "run", "export-room", "preview", "mcp", "capabilities", "version" }, usage = "--workspace DIRECTORY COMMAND [OPTIONS]", docs = "docs/cli/quick-start.md", editorGuide = "docs/cli/headless-editor.md" }
                 });
                 return 0;
             }
@@ -59,6 +60,11 @@ public static class Program
             using var workspace = options.Value("workspace") is string directory ? new WorkspaceFiles(directory, options.Flag("read-only")) : live == null ? throw new CliException("invalid_input", "Provide --workspace or --url.") : null;
             WorkspaceFiles RequireFiles() => workspace ?? throw new CliException("invalid_input", "Provide --workspace to read the batch or script file.");
             var service = new StudioService(workspace, live);
+            if (options.Command == "editor")
+            {
+                await HeadlessEditor.RunAsync(options, RequireFiles(), cancellation.Token);
+                return 0;
+            }
             if (options.Command is "mcp" or "serve")
             {
                 await StudioMcp.RunAsync(service, cancellation.Token);
@@ -66,6 +72,7 @@ public static class Program
             }
             object response = options.Command switch
             {
+                "generate" => HeadlessGeneration.Generate(options, RequireFiles(), cancellation.Token),
                 "init" or "create" => service.Create(options.Required("map"), options.Value("name") ?? "Untitled", options.Flag("dry-run")),
                 "inspect" => service.Inspect(options.Required("map")),
                 "query-tiles" => service.QueryTiles(options.Required("map"), options.Required("room"), options.Required("layer"), options.Int("x", 0), options.Int("y", 0), options.Int("width", 1), options.Int("height", 1)),
@@ -100,8 +107,13 @@ internal sealed class Options
 {
     public string Command { get; private set; } = "help";
     private readonly Dictionary<string, string> values = new(StringComparer.Ordinal);
-    private static readonly HashSet<string> Flags = new(StringComparer.Ordinal) { "dry-run", "read-only", "force" };
-    private static readonly HashSet<string> Values = new(StringComparer.Ordinal) { "workspace", "url", "layer", "x", "y", "width", "height", "map", "name", "batch", "script", "room", "output", "seed", "expected-revision" };
+    private static readonly HashSet<string> Flags = new(StringComparer.Ordinal) { "dry-run", "read-only", "force", "tiles" };
+    private static readonly HashSet<string> Values = new(StringComparer.Ordinal) { "workspace", "url", "layer", "x", "y", "width", "height", "map", "name", "batch", "script", "room", "output", "seed", "expected-revision", "rooms", "chips", "exclude-chips", "colors", "theme", "difficulty", "commands" };
+    public void Only(params string[] allowed)
+    {
+        foreach (string key in values.Keys)
+            if (!allowed.Contains(key, StringComparer.Ordinal)) throw new CliException("invalid_input", $"--{key} is not supported by {Command}.");
+    }
     public string? Value(string name) => values.GetValueOrDefault(name);
     public bool Flag(string name) => values.ContainsKey(name);
     public string Required(string name) => Value(name) ?? throw new CliException("invalid_input", "Missing --" + name + ".");
@@ -146,6 +158,7 @@ internal sealed class CliException(string code, string message) : Exception(mess
     public static CliException From(Exception error) => error switch
     {
         CliException known => known,
+        MetroidvaniaStudio.Server.WorkspaceConflict => new("conflict", error.Message),
         OperationCanceledException => new("cancelled", "The operation was cancelled; no pending edit was saved."),
         LuaScriptException => new("invalid_input", error.Message),
         InvalidDataException => new("invalid_input", error.Message),

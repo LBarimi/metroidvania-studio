@@ -84,12 +84,23 @@ try {
     for (const [key, row] of locale.table) for (const [column] of LANGUAGES) {
       if (!row[column] || placeholders(row[column]) !== placeholders(row.EN)) failures.push(key + ':' + column);
     }
-    return { failures, keys: locale.table.size, detected: ['ja-JP','zh-CN','zh-TW','zh-Hant','ru-RU','ko-KR','fr-FR'].map(tag => detectLanguage([tag])) };
+    for (const [column] of LANGUAGES) {
+      const fileMessage = key => locale.table.get('roomJson.' + key)[column].replace('{0}', 'already exists.json');
+      if (!locale.isLegacyExportTargetExists(fileMessage('exists')) || locale.isLegacyExportTargetExists(fileMessage('protected_source')))
+        failures.push('legacy export target:' + column);
+    }
+    return { failures, keys: locale.table.size, detected: ['ja-JP','zh-CN','zh-TW','zh-Hant','ru-RU','ko-KR','fr-FR','zh-Hans-TW','zh-Hant-CN'].map(tag => detectLanguage([tag])) };
   });
   assert.deepEqual(languages.failures, []); assert.ok(languages.keys >= 210);
-  assert.deepEqual(languages.detected, ['JA','ZH_CN','ZH_TW','ZH_TW','RU','KR','EN']);
-  for (const [language, caption] of [['JA','ファイル'],['ZH_CN','文件'],['ZH_TW','檔案'],['RU','Файл'],['KR','파일'],['EN','File']]) {
+  assert.deepEqual(languages.detected, ['JA','ZH_CN','ZH_TW','ZH_TW','RU','KR','EN','ZH_CN','ZH_TW']);
+  for (const [language, caption, pixelSnap] of [
+    ['JA','ファイル','ピクセル単位で移動'], ['ZH_CN','文件','按像素移动'], ['ZH_TW','檔案','以像素為單位移動'],
+    ['RU','Файл','Привязка к пикселям'], ['KR','파일','픽셀 단위 이동'], ['EN','File','Pixel Perfect']]) {
     await page.locator('#language').selectOption(language); assert.match(await page.locator('#file-menu-button').innerText(), new RegExp(caption));
+    assert.equal(await page.getByRole('checkbox', { name: pixelSnap, exact: true }).count(), 1);
+    const slopeSymbols = await page.locator('.shape-row button').evaluateAll(buttons =>
+      buttons.slice(1).map(button => [button.textContent.trim(), button.title.slice(-1)]));
+    assert.deepEqual(slopeSymbols, ['◣', '◢', '◤', '◥'].map(symbol => [symbol, symbol]));
     assert.ok((await page.locator('#language').boundingBox()).width >= 140);
     await page.screenshot({ path: path.join(repository, '.local/logs/Studio-' + language + '.png') });
   }
@@ -141,7 +152,8 @@ try {
   assert.notEqual(during, before, 'Selection must draw while the pointer is held.');
   assert.equal(requests.length, 0, 'Selection preview must not wait on network commands.');
   await page.mouse.up(); await until(s => s.selection.area?.width === 4 && s.selection.area?.height === 2);
-  await page.locator('#selection-summary').waitFor(); assert.match(await page.locator('#canvas-help').innerText(), /select tile area/);
+  await page.locator('#selection-summary').waitFor();
+  assert.equal(await page.locator('#canvas-help').count(), 0);
   await page.screenshot({ path: path.join(repository, '.local/logs/Studio-Selection.png') });
   await page.locator('#map-canvas').focus(); await page.keyboard.press('Control+c'); await clientAt((await state()).revision);
   await page.mouse.move((await point(5.5, 2.5)).x, (await point(5.5, 2.5)).y); await page.keyboard.press('Control+v');
@@ -150,7 +162,7 @@ try {
   assert.equal(await page.locator('#tools [data-tool="1"]').count(), 0, 'Placement is redundant on tile layers.');
   await page.locator('#layers').getByRole('button', { name: 'Triggers', exact: true }).click(); await until(s => s.selection.layer === 3);
   assert.equal(await page.locator('#tools [data-tool="1"]').count(), 1); assert.equal(await page.locator('#tools [data-tool="4"]').count(), 0);
-  await page.locator('#map-canvas').focus(); await page.keyboard.press('l'); await paint(); assert.equal((await state()).selection.tool, 2, 'Hidden drawing tools cannot activate on object layers through shortcuts.');
+  await page.locator('#map-canvas').focus(); await page.keyboard.press('l'); await paint(); assert.equal((await state()).selection.tool, 1, 'The line shortcut leaves the trigger placement tool active.');
   checks.push('tile selection is visible before release, sends one command, copies real tiles and shows useful contextual tools');
   const selectionPerformance = await page.evaluate(async () => {
     const { MapCanvas } = await import('/map-canvas.js'); const source = await (await fetch('/api/state')).json();

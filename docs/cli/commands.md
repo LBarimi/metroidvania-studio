@@ -8,6 +8,9 @@ Offline filesystem commands require `--workspace DIRECTORY`. The directory must 
 | `version` | None | None | Tool, API, and map format versions |
 | `capabilities` | None | None | Complete operation schemas and limits |
 | `init` (`create`) | `--map` | `--name`, `--dry-run` | New empty map |
+| `generate` | `--map` | `--rooms`, `--seed`, `--tiles`, `--theme`, `--difficulty`, `--chips` or `--exclude-chips`, `--colors`, `--name`, `--dry-run`, `--force`, `--expected-revision` | Seeded minimap with optional editable terrain |
+| `editor` | `--workspace` | `--commands FILE` or `--commands -` | Full workspace editor session, JSON lines by default |
+| `editor-help` | None | None | Bundled Markdown guide for local agents |
 | `inspect` | `--map` | None | Revision, camera, rooms, objects, region properties, shared room boundaries |
 | `query-tiles` | `--map`, `--room`, `--layer` | `--x`, `--y`, `--width`, `--height` | Occupied cells in a bounded rectangle |
 | `validate` | `--map` | None | Map contract validation |
@@ -19,7 +22,7 @@ Offline filesystem commands require `--workspace DIRECTORY`. The directory must 
 
 `--url http://127.0.0.1:PORT` connects `inspect`, `query-tiles`, `validate`, `apply`, `run`, `preview`, and `mcp` to a running web editor. These commands use `--map @active`. CLI batch/script files still require an explicit `--workspace`; MCP accepts source/batches inline and needs no file root in connected mode. Live previews return SVG in JSON. `init` and `export-room` use offline mode. Localhost aliases are resolved to the loopback address directly; proxies, redirects, credentials, and nonlocal endpoints are rejected.
 
-`--read-only` is accepted for every filesystem command. Existing map edits through `apply` and `run` are explicit in-place updates; `--force` is only for replacing an export or preview output. Outputs cannot replace their source map. A dry run returns proposed metadata without changing files. Export dry runs validate paths and conflicts without creating their output.
+`--read-only` rejects writes and opening a stateful editor session. Existing map edits through `apply` and `run` update the map in place. `--force` allows `generate`, `export-room` and `preview` to replace an existing output. Exports and previews require a destination distinct from the source map. Dry runs return proposed metadata and leave files untouched. See [headless editor sessions and generation options](headless-editor.md).
 
 A batch JSON file contains an API envelope:
 

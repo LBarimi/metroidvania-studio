@@ -11,11 +11,32 @@ namespace MetroidvaniaStudio
     public static class MetroidvaniaStudioLocale
     {
         private static readonly Lazy<Dictionary<string, string[]>> Entries = new Lazy<Dictionary<string, string[]>>(Read);
-        public static string Column { get; set; } = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ko" ? "KR" : "EN";
-        public static string Text(string key)
+        private static string overrideColumn;
+        public static string Column
+        {
+            get => overrideColumn ?? CultureColumn(CultureInfo.CurrentUICulture);
+            set => overrideColumn = value;
+        }
+        private static string CultureColumn(CultureInfo culture)
+        {
+            switch (culture.TwoLetterISOLanguageName)
+            {
+                case "ko": return "KR";
+                case "ja": return "JA";
+                case "ru": return "RU";
+                case "zh":
+                    var parts = culture.Name.ToLowerInvariant().Split('-');
+                    if (Array.IndexOf(parts, "hans") >= 0) return "ZH_CN";
+                    if (Array.IndexOf(parts, "hant") >= 0 || Array.Exists(parts, p => p == "tw" || p == "hk" || p == "mo")) return "ZH_TW";
+                    return "ZH_CN";
+                default: return "EN";
+            }
+        }
+        public static string Text(string key) => Text(key, Column);
+        public static string Text(string key, string column)
         {
             if (key == null || !Entries.Value.TryGetValue(key, out string[] row)) return "[" + key + "]";
-            int index = Array.IndexOf(new[] { "Key", "KR", "EN", "JA", "ZH_CN", "ZH_TW", "RU" }, Column);
+            int index = Array.IndexOf(new[] { "Key", "KR", "EN", "JA", "ZH_CN", "ZH_TW", "RU" }, column);
             return index > 0 && index < row.Length && !string.IsNullOrWhiteSpace(row[index]) ? row[index] : row[2];
         }
         public static string Format(string key, params object[] args) => string.Format(CultureInfo.CurrentCulture, Text(key), args);

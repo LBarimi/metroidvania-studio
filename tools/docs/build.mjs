@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { homepages, homeMedia, renderHomepage } from './homepage.mjs';
+import { docsLabel } from './locale.mjs';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const escape = text => String(text).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -114,25 +115,30 @@ export function buildDocs(output = path.join(root, 'builds/docs'), { siteUrl } =
     const paragraph = source.replaceAll('\r\n', '\n').split(/\n\s*\n/).find(block => !/^[#|`>\s]|^(?:- |\d+\. )/.test(block)) || title;
     const plain = paragraph.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/[*`]/g, '').replace(/\s+/g, ' ').trim();
     const description = plain.length > 180 ? plain.slice(0, 177).replace(/\s+\S*$/, '') + '…' : plain;
-    return { name, title, description, lang: 'en', source, href: names.get(name), ...(siteUrl ? homepages[name] : {}), ...markdown(source, name) };
+    const lang = name.startsWith('docs/shortcuts/') ? path.basename(name, '.md') : 'en';
+    return { name, title, description, lang, source, href: names.get(name), ...(siteUrl ? homepages[name] : {}), ...markdown(source, name) };
   });
-  const groups = [['Start here', ['docs/index.md', 'docs/guides.md', 'docs/sample-world.md']], ['Map editing', ['docs/room-layout.md', 'docs/tilesets.md', 'docs/objects-and-triggers.md', 'docs/room-restructuring.md', 'docs/minimap.md', 'docs/game-preview.md', 'docs/textures.md', 'docs/project-bundles.md']], ['Automation', ['docs/cli/release-downloads.md', 'docs/cli/quick-start.md', 'docs/mcp/setup.md']], ['Lua scripts', ['docs/scripting/quick-start.md', 'docs/scripting/api-reference.md', 'docs/scripting/execution-limits.md']], ['API reference', ['docs/api/index.md', 'docs/api/operations.md', 'docs/api/queries.md', 'docs/api/live-api.md']], ['Reference & distribution', ['docs/cli/commands.md', 'docs/mcp/tools.md', 'metroidvania-studio/contracts/FORMAT.md', 'docs/distribution/local-package.md', 'docs/distribution/publication.md', 'docs/validation.md']]];
+  const groups = [['Start here', ['docs/index.md', 'docs/guides.md', 'docs/sample-world.md', 'docs/shortcuts.md']], ['Map editing', ['docs/room-layout.md', 'docs/tilesets.md', 'docs/objects-and-triggers.md', 'docs/room-restructuring.md', 'docs/minimap.md', 'docs/game-preview.md', 'docs/textures.md', 'docs/project-bundles.md']], ['Automation', ['docs/cli/release-downloads.md', 'docs/cli/quick-start.md', 'docs/cli/headless-editor.md', 'docs/mcp/setup.md']], ['Lua scripts', ['docs/scripting/quick-start.md', 'docs/scripting/api-reference.md', 'docs/scripting/execution-limits.md']], ['API reference', ['docs/api/index.md', 'docs/api/operations.md', 'docs/api/queries.md', 'docs/api/live-api.md']], ['Reference & distribution', ['docs/cli/commands.md', 'docs/mcp/tools.md', 'metroidvania-studio/contracts/FORMAT.md', 'docs/distribution/local-package.md', 'docs/distribution/publication.md', 'docs/validation.md']]];
   const assigned = new Set(groups.flatMap(([, files]) => files));
-  const other = pages.filter(p => !assigned.has(p.name) && !homepages[p.name]).map(p => p.name); if (other.length) groups.push(['More guides', other]);
+  const other = pages.filter(p => !assigned.has(p.name) && !homepages[p.name] && !p.name.startsWith('docs/shortcuts/')).map(p => p.name); if (other.length) groups.push(['More guides', other]);
   const version = JSON.parse(readFileSync(path.join(root, 'version.json'))).version;
   for (const page of pages) {
     const prefix = path.posix.relative(path.posix.dirname(page.href), '.') + (page.href.includes('/') ? '/' : '');
     const isHome = !!siteUrl && !!homepages[page.name];
-    const nav = groups.map(([label, files]) => '<section><h2>' + label + '</h2>' + files.map(name => {
-      const entry = pages.find(p => p.name === name); if (!entry) return '';
-      const label = name === 'docs/index.md' ? (siteUrl ? 'Overview' : 'Documentation') : entry.title;
+    const t = english => escape(docsLabel(page.lang, english));
+    const searchMessages = page.lang === 'en' ? '' : ` data-matches="${t('{0} matching pages')}" data-empty="${t('No matching pages')}"`;
+    const nav = groups.map(([label, files]) => '<section><h2>' + t(label) + '</h2>' + files.map(name => {
+      const entry = name === 'docs/shortcuts.md' && page.name.startsWith('docs/shortcuts/')
+        ? page : pages.find(p => p.name === name);
+      if (!entry) return '';
+      const label = name === 'docs/index.md' ? docsLabel(page.lang, siteUrl ? 'Overview' : 'Documentation') : entry.title;
       return `<a href="${escape(relativeLink(entry.href, page.name))}"${entry === page ? ' aria-current="page"' : ''}>${escape(label)}</a>`;
     }).join('') + '</section>').join('');
     const canonical = siteUrl ? canonicalUrl(page) : '';
     const metadata = canonical ? `<link rel="canonical" href="${escape(canonical)}"><meta property="og:type" content="website"><meta property="og:title" content="${escape(page.title)}"><meta property="og:description" content="${escape(page.description)}"><meta property="og:url" content="${escape(canonical)}"><meta property="og:site_name" content="Metroidvania Studio">` : '';
     const title = isHome ? page.title : `${page.title} · Metroidvania Studio`;
     const head = `<!doctype html><html lang="${page.lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="${escape(page.description)}">${metadata}<title>${escape(title)}</title><link rel="icon" href="${prefix}studio-icon.svg"><link rel="stylesheet" href="${prefix}docs.css">${isHome ? `<link rel="stylesheet" href="${prefix}homepage.css">` : `<script src="${prefix}search-index.js" defer></script><script src="${prefix}docs.js" defer></script>`}</head>`;
-    const body = isHome ? renderHomepage(page, { prefix, version, escape }) : `<body><a class="skip" href="#content">Skip to content</a><header><a class="brand" href="${prefix}index.html"><img src="${prefix}studio-icon.svg" width="28" height="28" alt="">Metroidvania Studio <span>Docs</span></a><span class="version">${escape(version)}</span><a href="https://github.com/LBarimi/metroidvania-studio">GitHub</a></header><div class="layout"><aside class="sidebar"><label for="search">Search documentation</label><input id="search" type="search" placeholder="Rooms, autotiling, Lua…" autocomplete="off"><div id="results" hidden aria-live="polite"></div><nav aria-label="Documentation">${nav}</nav></aside><main id="content">${page.html}<footer>Metroidvania Studio ${escape(version)} · ${siteUrl ? 'Offline guides are available through Help → Documentation in the studio.' : 'Documentation works offline.'}</footer></main><aside class="toc"><span>On this page</span>${page.toc.map(h => `<a href="#${h.id}">${escape(h.text)}</a>`).join('')}</aside></div></body>`;
+const body = isHome ? renderHomepage(page, { prefix, version, escape }) : `<body><a class="skip" href="#content">${t('Skip to content')}</a><header><a class="brand" href="${prefix}index.html"><img src="${prefix}studio-icon.svg" width="28" height="28" alt="">Metroidvania Studio <span>${t('Docs')}</span></a><span class="version">${escape(version)}</span><a href="https://github.com/LBarimi/metroidvania-studio">GitHub</a></header><div class="layout"><aside class="sidebar"><label for="search">${t('Search documentation')}</label><input id="search" type="search" placeholder="${t('Rooms, autotiling, Lua…')}" autocomplete="off"><div id="results"${searchMessages} hidden aria-live="polite"></div><nav aria-label="${t('Documentation')}">${nav}</nav></aside><main id="content">${page.html}<footer>Metroidvania Studio ${escape(version)} · ${t(siteUrl ? 'Offline guides are available through Help → Documentation in the studio.' : 'Documentation works offline.')}</footer></main><aside class="toc"><span>${t('On this page')}</span>${page.toc.map(h => `<a href="#${h.id}">${escape(h.text)}</a>`).join('')}</aside></div></body>`;
     mkdirSync(path.dirname(path.join(output, page.href)), { recursive: true });
     writeFileSync(path.join(output, page.href), head + body + '</html>');
   }

@@ -18,7 +18,9 @@ try {
   let response = await post({ name: 'library-한글.lua', source: 'print("hello")', expectedRevision: null }); assert.equal(response.status, 200);
   const original = await response.json();
   assert.equal((await get('/api/v1/scripts/source?id=workspace%2Flibrary-%ED%95%9C%EA%B8%80.lua')).source, 'print("hello")');
-  assert.equal((await post({ name: original.name, source: 'overwrite', expectedRevision: null })).status, 409);
+  const duplicate = await post({ name: original.name, source: 'overwrite', expectedRevision: null });
+  assert.equal(duplicate.status, 409);
+  assert.equal((await duplicate.json()).code, 'scripts.saveConflict');
   response = await post({ name: original.name, source: 'print("updated")', expectedRevision: original.revision }); assert.equal(response.status, 200);
   assert.equal((await post({ name: original.name, source: 'stale', expectedRevision: original.revision })).status, 409);
   for (const name of ['../escape.lua', '/escape.lua', 'CON.lua', 'a\\escape.lua']) assert.equal((await post({ name, source: 'print(1)', expectedRevision: null })).status, 400);
