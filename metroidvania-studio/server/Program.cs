@@ -4,6 +4,7 @@ using MetroidvaniaStudio.Storage;
 using System.Text.Json;
 using MetroidvaniaStudio.Server;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 const int MaximumRequestBodySize = 32 * 1024 * 1024;
@@ -32,6 +33,11 @@ var files = workspace.Files;
 using var nativeMaps = new NativeMapFiles(files);
 string webRoot = Path.GetFullPath(builder.Configuration["web-root"] ?? Path.Combine(studioRoot, "metroidvania-studio/dist"));
 var app = builder.Build();
+var editorLanguages = new RequestLocalizationOptions()
+    .AddSupportedUICultures("ko", "en", "ja", "zh-Hans", "zh-Hant", "ru");
+editorLanguages.RequestCultureProviders = [new AcceptLanguageHeaderRequestCultureProvider()];
+app.UseWhen(context => context.Request.Path == "/api/command" || context.Request.Path.StartsWithSegments("/api/native-map"),
+    branch => branch.UseRequestLocalization(editorLanguages));
 app.Use(async (context, next) =>
 {
     // Reject DNS rebinding and cross-site writes. No CORS or external resource origin is enabled.
@@ -67,6 +73,8 @@ app.Use(async (context, next) =>
         };
         if (error is MetroidvaniaStudio.MapRoomJsonExporter.TargetExistsException or ExistingMapTargetConflict)
             await context.Response.WriteAsJsonAsync(new { error = error.Message, code = "target_exists" });
+        else if (error is LocalizedWorkspaceConflict conflict)
+            await context.Response.WriteAsJsonAsync(new { error = error.Message, messageKey = conflict.MessageKey });
         else if (error.Data[ScriptLibrary.ErrorCodeKey] is string code)
             await context.Response.WriteAsJsonAsync(new { error = error.Message, code });
         else

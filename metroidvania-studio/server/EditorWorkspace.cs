@@ -105,7 +105,7 @@ public sealed partial class EditorWorkspace
         try { Catalog.Refresh(); }
         catch (Exception error) when (error is InvalidDataException or IOException or UnauthorizedAccessException
             or JsonException or KeyNotFoundException or FormatException or OverflowException)
-        { initialCatalogNotice = "Using the built-in catalog because EditorCatalog.json is invalid: " + error.Message; }
+        { initialCatalogNotice = "Using the built-in catalog because the resource catalog is invalid: " + error.Message; }
         Catalog.RefreshTextures();
         recoveryPath = files.RecoveryPath;
         Session = LoadInitialSession(files, recoveryPath, out string? initialNotice, out diskFingerprint);
@@ -474,7 +474,7 @@ public sealed partial class EditorWorkspace
         }
         catch (Exception error) when (error is InvalidDataException or IOException or UnauthorizedAccessException
             or JsonException or KeyNotFoundException or FormatException or OverflowException)
-        { SetCatalogHealthNotice("EditorCatalog.json could not be reloaded: " + error.Message); }
+        { SetCatalogHealthNotice("The resource catalog could not be reloaded: " + error.Message); }
         if (Catalog.RefreshTextures())
         {
             // Pixel changes affect rendering and engine resources, not the map or
@@ -663,12 +663,12 @@ public sealed partial class EditorWorkspace
         string owner = RequiredClientId(command);
         if (!command.TryGetProperty("expectedInstanceId", out var expectedInstance)
             || expectedInstance.ValueKind != JsonValueKind.String || expectedInstance.GetString() != InstanceId)
-            throw new WorkspaceConflict("The editor server restarted. Reload its current document before editing.");
+            throw new LocalizedWorkspaceConflict("editor.serverRestarted");
         if (!command.TryGetProperty("expectedRevision", out var expected) || expected.ValueKind != JsonValueKind.Number
             || !expected.TryGetInt64(out long expectedRevision))
             throw new ArgumentException("Every editor command needs an integer expectedRevision.");
         RequireMutationRevision(expectedRevision);
-        if (gestureOwner != null && gestureOwner != owner) throw new WorkspaceConflict("Another editor view is finishing a gesture.");
+        if (gestureOwner != null && gestureOwner != owner) throw new LocalizedWorkspaceConflict("editor.gestureBusy");
         if (gestureOwner != null && action is not ("drag" or "end" or "cancel" or "tileGesture" or "objectGesture")) Cancel();
         notice = null;
         if (action is "roomCopy" or "roomCut" or "roomFlip" or "roomRotate" or "roomDeleteSelected" or "roomDuplicate"
@@ -867,8 +867,7 @@ public sealed partial class EditorWorkspace
                 string? exportWarning = null;
                 var exported = MapRoomJsonExporter.ExportPlanned(exportPlan, target, B(command, "overwrite"), Session.FilePath,
                     warning => exportWarning = warning);
-                notice = $"@exportedRooms:{exported.Length}";
-                if (exportWarning != null) notice += " Cleanup needs attention: " + exportWarning;
+                notice = exportWarning ?? $"@exportedRooms:{exported.Length}";
                 break;
             default: throw new ArgumentException("Unknown editor command: " + action);
         }
@@ -916,7 +915,7 @@ public sealed partial class EditorWorkspace
         if (command.TryGetProperty("hiddenLayers", out var hidden)) { Canvas.HiddenLayers.Clear(); foreach (var value in hidden.EnumerateArray()) Canvas.HiddenLayers.Add(EnumValue<MapLayer>(value)); }
         if (command.TryGetProperty("lockedLayers", out var locked)) { Canvas.LockedLayers.Clear(); foreach (var value in locked.EnumerateArray()) Canvas.LockedLayers.Add(EnumValue<MapLayer>(value)); }
     }
-    private void RequireGesture(string owner) { if (gestureOwner != owner) throw new WorkspaceConflict("The editing gesture expired or was cancelled."); }
+    private void RequireGesture(string owner) { if (gestureOwner != owner) throw new LocalizedWorkspaceConflict("editor.gestureExpired"); }
     private bool shuttingDown;
 
     /// <summary>Call under Gate, then flush workers outside Gate before validating.</summary>
@@ -1092,7 +1091,7 @@ public sealed partial class EditorWorkspace
     private void RequireMutationRevision(long expectedRevision)
     {
         if (expectedRevision < conflictRevision || expectedRevision > Revision)
-            throw new WorkspaceConflict("The document changed in another view. Reloaded state is required before editing.");
+            throw new LocalizedWorkspaceConflict("editor.documentChanged");
     }
     private static string RequiredClientId(JsonElement command)
     {
@@ -1337,4 +1336,8 @@ public sealed partial class EditorWorkspace
     private static Vector2Int Cell(JsonElement c) => new(MathEx.FloorToInt(F(c, "x")), MathEx.FloorToInt(F(c, "y")));
 }
 public class WorkspaceConflict(string message) : Exception(message);
+internal sealed class LocalizedWorkspaceConflict(string key) : WorkspaceConflict(MetroidvaniaStudioLocale.Text(key, "EN"))
+{
+    public string MessageKey { get; } = key;
+}
 internal sealed class ExistingMapTargetConflict() : WorkspaceConflict("This map already exists. Choose another name or confirm overwrite.");

@@ -39,6 +39,15 @@ try {
     const s = await changed('paletteGroupAdd', () => page.locator('#palette-group-dialog .accent').click());
     await page.locator('#palette-group-dialog').waitFor({ state: 'detached' }); return s.paletteGroups.find(g => g.name === name).id;
   }
+  await group('traversal').locator('.palette-group-settings').click();
+  assert.equal(await page.locator('#palette-group-name').inputValue(), '이동 칩');
+  await page.locator('#palette-group-up').click();
+  const reordered = await changed('paletteGroupMove', () => page.locator('#palette-group-dialog .accent').click());
+  assert.equal(reordered.paletteGroups.find(g => g.id === 'traversal').name, 'Traversal');
+  await page.locator('#palette-group-dialog').waitFor({ state: 'detached' });
+  await page.locator('#language').selectOption('EN');
+  assert.equal(await group('traversal').locator('.palette-group-name').innerText(), 'Traversal');
+  await page.locator('#language').selectOption('KR');
   const caves = await add('Caves'), tower = await add('Tower');
   await page.locator('#add-palette-group').click(); await page.locator('#palette-group-name').fill('caves');
   await page.locator('#palette-group-dialog .accent').click(); await page.waitForFunction(() => document.querySelector('#palette-group-dialog .modal-error')?.textContent);
@@ -84,6 +93,12 @@ try {
   for (const g of saved.paletteGroups) assert.deepEqual(await group(g.id).locator('.palette-entry').evaluateAll(es => es.map(e => e.dataset.materialId)), g.materials);
   assert.deepEqual(saved.document, initial.document); assert.equal(saved.documentRevision, initial.documentRevision);
   assert.deepEqual(saved.catalog.materials, initial.catalog.materials); assert.deepEqual(await bytes(), originalBytes);
+  await open('traversal-ladder');
+  assert.equal(await page.locator('#tileset-name').inputValue(), '사다리');
+  await page.locator('#tileset-color').fill('#ab3412');
+  await changed('paletteConfigure', () => page.locator('#tileset-apply').click());
+  await page.locator('#tileset-dialog').waitFor({ state: 'detached' });
+  assert.equal((await state()).catalog.materials.find(m => m.id === 'traversal-ladder').name, 'Ladder');
   if (process.env.METROIDVANIA_STUDIO_TEST_SCREENSHOT) await page.screenshot({ path: process.env.METROIDVANIA_STUDIO_TEST_SCREENSHOT });
   await group(caves).locator('.palette-group-toggle').click();
   await page.locator('#add-palette').click(); await page.locator('#palette-name').fill('Grouped palette'); await page.locator('#palette-new-group').selectOption(caves);

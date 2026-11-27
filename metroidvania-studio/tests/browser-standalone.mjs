@@ -29,15 +29,15 @@ const browser = await chromium.launch({ channel: 'msedge', headless: true });
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, locale: 'en-US' });
 const errors = [], checks = [];
 page.on('pageerror', error => errors.push(error.message));
-async function choose(name, contents) {
+async function choose(name, contents, menu = 'Import map JSON') {
   await page.locator('#file-menu-button').click();
-  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('menuitem', { name: 'Import map JSON', exact: true }).click()]);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('menuitem', { name: menu, exact: true }).click()]);
   await chooser.setFiles({ name, mimeType: 'application/json', buffer: Buffer.from(contents, 'utf8') });
 }
 try {
   await page.goto(base); await page.locator('#room-list button').first().waitFor();
   await page.locator('#language').selectOption('EN');
-  await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'Local studio connected');
+  await page.waitForFunction(() => document.querySelector('#connection')?.textContent === 'Local editor connected');
   checks.push('independent workspace reports a local connection');
   await page.locator('#language').selectOption('KR');
   await page.locator('#palette').getByRole('button', { name: '초록 테마', exact: true }).waitFor();
@@ -49,10 +49,30 @@ try {
   await page.locator('#palette').getByRole('button', { name: 'Green theme', exact: true }).waitFor();
   checks.push('default layers, objects and themes follow KR/EN language selection');
 
-  await choose('invalid.json', '{');
-  await page.locator('#toast').waitFor({ state: 'visible' });
+  await choose('invalid-$&.json', '{');
+  await page.locator('#toast').filter({ hasText: '“invalid-$&.json” does not contain a valid JSON object.' }).waitFor();
+  await page.locator('#language').selectOption('KR');
+  await choose('room.json', Buffer.from([0xff]), '방 JSON 가져오기…');
+  await page.locator('#toast').filter({ hasText: '‘room.json’ 파일을 UTF-8로 저장한 뒤 다시 여세요.' }).waitFor();
   assert.deepEqual((await state()).document, initial.document);
-  checks.push('malformed file import preserves the open map');
+  checks.push('map and room imports report syntax and encoding errors in the selected language and preserve the open map');
+  for (const language of ['KR', 'JA', 'ZH_CN', 'ZH_TW', 'RU', 'EN']) {
+    await page.locator('#language').selectOption(language);
+    const labels = await page.evaluate(async () => {
+      const { Locale } = await import('/locale.js');
+      const locale = new Locale(); await locale.load();
+      return { menu: locale.t('exportAll'), cancel: locale.t('cancel'), error: locale.t('roomJson.not_directory') };
+    });
+    await page.locator('#file-menu-button').click();
+    await page.getByRole('menuitem', { name: labels.menu, exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: labels.menu, exact: true });
+    await dialog.locator('input').fill(initial.file);
+    await dialog.locator('.accent').click();
+    const target = path.join(health.workspacePath, initial.workspace.mapsPath, initial.file);
+    await dialog.locator('.modal-error').filter({ hasText: labels.error.replace('{0}', () => target) }).waitFor();
+    await dialog.getByRole('button', { name: labels.cancel, exact: true }).click();
+  }
+  checks.push('export errors follow all six editor languages on the same server');
   const imported = structuredClone(initial.document); imported.name = 'Imported room document';
   await choose('import.json', JSON.stringify(imported));
   await page.waitForFunction(() => document.querySelector('#project-name')?.textContent.includes('Imported room document'));

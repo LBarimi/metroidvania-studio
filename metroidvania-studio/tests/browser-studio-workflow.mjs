@@ -70,12 +70,13 @@ async function selectA() {
 try {
   await page.goto(base); await page.locator('#room-list button').first().waitFor(); await clientAt((await state()).revision);
   await page.locator('#language').selectOption('EN'); await selectA();
+  assert.match(await page.locator('#tools [data-tool="2"]').getAttribute('title'), /select tile area/);
   async function fileMenu(name) { await page.locator('#file-menu-button').click(); await page.getByRole('menuitem', { name, exact: true }).click(); }
   await page.keyboard.press('Alt+h'); await page.getByRole('menuitem', { name: 'About', exact: true }).click();
   await page.locator('.build-version').filter({ hasText: version }).waitFor();
   assert.equal(await page.locator('dialog img').evaluate(img => img.complete && img.naturalWidth > 0), true);
   await page.screenshot({ path: path.join(repository, '.local/logs/Studio-About.png') });
-  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await page.getByRole('dialog', { name: 'About', exact: true }).locator('.dialog-title').getByRole('button', { name: 'Close', exact: true }).click();
   checks.push('File/Help menus work with Alt shortcuts; About loads the original icon and actual build version');
 
   const languages = await page.evaluate(async () => {
@@ -93,11 +94,21 @@ try {
   });
   assert.deepEqual(languages.failures, []); assert.ok(languages.keys >= 210);
   assert.deepEqual(languages.detected, ['JA','ZH_CN','ZH_TW','ZH_TW','RU','KR','EN','ZH_CN','ZH_TW']);
-  for (const [language, caption, pixelSnap] of [
-    ['JA','ファイル','ピクセル単位で移動'], ['ZH_CN','文件','按像素移动'], ['ZH_TW','檔案','以像素為單位移動'],
-    ['RU','Файл','Привязка к пикселям'], ['KR','파일','픽셀 단위 이동'], ['EN','File','Pixel Perfect']]) {
+  const nextRoom = (await state()).document.rooms.length + 1;
+  for (const [language, caption, pixelSnap, centerCamera, roomName] of [
+    ['JA','ファイル','ピクセル単位で移動','カメラを部屋の中央に移動','部屋'],
+    ['ZH_CN','文件','按像素移动','将相机移到房间中心','房间'],
+    ['ZH_TW','檔案','以像素為單位移動','將攝影機移到房間中央','房間'],
+    ['RU','Файл','Привязка к пикселям','Переместить камеру в центр комнаты','Комната'],
+    ['KR','파일','픽셀 단위 이동','카메라를 방 중앙으로 이동','방'],
+    ['EN','File','Pixel Perfect','Center camera on room','Room']]) {
     await page.locator('#language').selectOption(language); assert.match(await page.locator('#file-menu-button').innerText(), new RegExp(caption));
     assert.equal(await page.getByRole('checkbox', { name: pixelSnap, exact: true }).count(), 1);
+    assert.equal(await page.locator('#preview-center').getAttribute('aria-label'), centerCamera);
+    assert.equal(await page.locator('#preview-center').getAttribute('title'), centerCamera);
+    await page.locator('#add-room').click();
+    assert.equal(await page.locator('#room-add-name').inputValue(), roomName + ' ' + nextRoom);
+    await page.keyboard.press('Escape');
     const slopeSymbols = await page.locator('.shape-row button').evaluateAll(buttons =>
       buttons.slice(1).map(button => [button.textContent.trim(), button.title.slice(-1)]));
     assert.deepEqual(slopeSymbols, ['◣', '◢', '◤', '◥'].map(symbol => [symbol, symbol]));
@@ -105,6 +116,15 @@ try {
     await page.screenshot({ path: path.join(repository, '.local/logs/Studio-' + language + '.png') });
   }
   await page.reload(); await clientAt((await state()).revision); assert.equal(await page.locator('#language').inputValue(), 'EN');
+  const roomSearch = page.locator('#room-search');
+  const emptyResults = page.locator('#room-list .empty');
+  await roomSearch.fill('no-room-with-this-name');
+  assert.equal(await emptyResults.innerText(), 'No matching rooms.');
+  await page.locator('#language').selectOption('KR');
+  assert.equal(await emptyResults.innerText(), '검색어와 일치하는 방이 없습니다.');
+  await roomSearch.fill('');
+  await page.locator('#room-list button').first().waitFor();
+  await page.locator('#language').selectOption('EN');
   checks.push('all locale rows and placeholders cover six languages; locale detection, persistence and dropdown width pass');
 
   await selectA(); const original = JSON.stringify((await state()).document);

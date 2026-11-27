@@ -42,7 +42,12 @@ page.on('pageerror', error => errors.push(error.message));
 const json = key => page.waitForFunction(key => document.getElementById('status-export')?.dataset.state === key,
   key, { timeout: 10000 });
 try {
-  await page.goto(base); await page.locator('#room-list button').first().waitFor();
+  await page.route('**/api/state*', route => route.fulfill({ status: 204 }));
+  await page.goto(base);
+  await json('loading');
+  await page.locator('#status-export[title="프로젝트를 불러오면 방 JSON의 저장 상태가 표시됩니다."]').waitFor();
+  await page.unroute('**/api/state*');
+  await page.locator('#room-list button').first().waitFor();
   await exported(); await json('syncExportSaved');
   checks.push('room JSON export completion is visible in an independent studio');
   await command('documentProperties', { name: 'Sync edited' });

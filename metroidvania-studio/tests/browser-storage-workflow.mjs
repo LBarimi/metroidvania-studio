@@ -83,5 +83,27 @@ try {
   cancel=true;
   assert.equal(await page.evaluate(async()=>{try{await(await import('./file-access.js')).pickMapSave('cancel.json');return false;}catch(e){return e.name==='AbortError';}}),true);
   assert.equal(writes,1,'Cancel must not trigger a download or save.');assert.deepEqual(errors,[]);
+  await page.unroute('**/api/native-map/*');
+  await page.locator('#language').selectOption('JA');
+  const pendingSave = Promise.withResolvers();
+  await page.route('**/api/native-map/pick', pendingSave.resolve, {times:1});
+  await page.locator('#file-menu-button').click();
+  await page.getByRole('menuitem', {name:'マップを別名で保存', exact:true}).click();
+  const saveRoute = await pendingSave.promise;
+  assert.equal(saveRoute.request().postDataJSON().mode, 'save');
+  assert.equal(await page.locator('#file-dialog-wait [role="status"]').innerText(), 'マップの保存先を選んでください。');
+  await saveRoute.fulfill({contentType:'application/json', body:'null'});
+  await page.locator('#file-dialog-wait').waitFor({state:'detached'});
+
+  for (const [language, open, expected] of [
+    ['KR','맵 열기','맵 파일을 다시 선택하세요.'], ['EN','Open map','Select the map file again.'],
+    ['JA','マップを開く','マップファイルを選び直してください。'], ['ZH_CN','打开地图','请重新选择地图文件。'],
+    ['ZH_TW','開啟地圖','請重新選擇地圖檔案。'], ['RU','Открыть карту','Выберите файл карты ещё раз.']]) {
+    await page.locator('#language').selectOption(language);
+    await page.route('**/api/native-map/pick', route => route.fulfill({json:{token:'expired-grant', name:'map.json'}}), {times:1});
+    await page.locator('#file-menu-button').click();
+    await page.getByRole('menuitem', {name:open, exact:true}).click();
+    await page.locator('#toast').filter({hasText:expected}).waitFor();
+  }
   console.log('PASS: visible storage paths, folder scope rejection, remembered map/PNG dialogs, compact import panel, non-destructive slot selection, color input '+inputTiming.elapsed.toFixed(2)+'ms / 200 events.');
 } finally { await browser.close(); }

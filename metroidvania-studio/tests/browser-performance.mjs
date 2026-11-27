@@ -805,7 +805,7 @@ try {
   let activeFrames = await page.evaluate(() => structuredClone(window.__renderBench.fullFrames));
   assert.equal(activeFrames.mini, 0, 'The hidden MiniMap canvas must not redraw on state updates.');
 
-  await page.locator('#tabs').getByRole('button', { name: '미니맵', exact: true }).click();
+  await page.locator('#tabs').getByRole('button', { name: '미니맵 보기', exact: true }).click();
   await page.locator('#mini-canvas').waitFor({ state: 'visible' });
   await page.waitForTimeout(100);
   await page.evaluate(() => { window.__renderBench.fullFrames.map = 0; window.__renderBench.fullFrames.mini = 0; });

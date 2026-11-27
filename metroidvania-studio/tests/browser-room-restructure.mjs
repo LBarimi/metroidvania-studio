@@ -21,7 +21,7 @@ async function command(action, values = {}) {
 }
 const initial = await state(), template = initial.document.rooms[0];
 const document = { ...initial.document, name: 'Room editing', properties: [], stylegrounds: [], layerGroups: [],
-  rooms: ['A', 'B'].map((id, i) => ({ ...template, id, name: id, x: i * 8, y: 0, width: 8, height: 8, visible: true, locked: false, properties: [],
+  rooms: ['A', 'B'].map((id, i) => ({ ...template, id, name: id + ' $& {0}', x: i * 8, y: 0, width: 8, height: 8, visible: true, locked: false, properties: [],
     foreground: [{ x: 1, y: 1, shape: 0, material: 'terrain', groupId: '' }],
     background: [{ x: 5, y: 4, shape: 1, material: 'terrain', groupId: '' }],
     objects: [{ id: String(100 + i), definition: 'Portal', layer: 2, groupId: '', x: 2, y: 2, width: 1, height: 2,
@@ -50,11 +50,30 @@ try {
   await page.locator('#room-list button').filter({ hasText: /^A/ }).click();
   await page.waitForFunction(() => !!window.__roomTestMap);
   const before = JSON.stringify((await state()).document);
+  const confirm = page.getByRole('dialog', { name: '확인', exact: true });
+  const deletePrompt = '‘A $& {0}’ 방과 그 안의 내용을 모두 삭제할까요? 실행 취소할 수 있습니다.';
+  for (const [button, message] of [
+    ['방 삭제', deletePrompt],
+    ['현재 레이어 비우기', '현재 방에서 이 레이어에 속한 모든 그룹의 편집 가능한 내용을 지울까요? 실행 취소할 수 있습니다.'],
+    ['방의 오브젝트 모두 지우기', '현재 방의 모든 오브젝트 레이어에서 편집 가능한 오브젝트를 지울까요? 실행 취소할 수 있습니다.']
+  ]) {
+    await page.locator('#inspector').getByRole('button', { name: button, exact: true }).click();
+    assert.equal(await confirm.locator('p').innerText(), message);
+    await confirm.getByRole('button', { name: '취소' }).click();
+  }
+  await page.locator('#tabs').getByRole('button', { name: '미니맵 편집', exact: true }).click();
+  await page.locator('#minimap-selected-room').getByRole('button', { name: '방 삭제', exact: true }).click();
+  assert.equal(await confirm.locator('p').innerText(), deletePrompt);
+  await confirm.getByRole('button', { name: '취소' }).click();
+  await page.locator('#tabs').getByRole('button', { name: '맵 편집', exact: true }).click();
+  assert.equal(JSON.stringify((await state()).document), before);
   assert.ok(await page.locator('#room-merge-action').isDisabled());
   await page.keyboard.down('Control'); await page.locator('#room-list button').filter({ hasText: /^B/ }).click(); await page.keyboard.up('Control');
   await until(s => s.selection.roomIds.length === 2);
   await page.locator('#room-merge-selection').waitFor();
   await page.locator('#room-merge-selection').click(); await page.locator('#room-restructure-dialog').waitFor();
+  const primaryName = (await state()).selection.roomId + ' $& {0}';
+  assert.equal(await page.locator('#room-restructure-dialog p').last().innerText(), `합친 방의 이름과 지역색은 활성 방 '${primaryName}' 기준입니다.`);
   await page.locator('#room-restructure-dialog .dialog-footer button').first().click();
   assert.equal(JSON.stringify((await state()).document), before, 'Cancelling merge changes nothing');
   await page.locator('#edit-menu-button').click(); await page.locator('#room-merge-action').click(); await applyDialog();

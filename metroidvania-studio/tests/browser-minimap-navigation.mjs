@@ -61,6 +61,7 @@ export async function verifyMiniMapNavigation(page) {
     const url = new URL(page.url()); url.searchParams.set('view', 'minimap');
     await popout.goto(url.href); await popout.locator('#mini-canvas').waitFor({ state: 'visible' });
     await popout.waitForFunction(() => document.querySelector('#room-list button'));
+    assert.equal(await popout.title(), 'Metroidvania Studio · View minimap');
     await popout.waitForTimeout(100);
     const other = rooms.find(room => room.id !== target.id), at = await miniPoint(popout, other);
     await popout.mouse.dblclick(at.x, at.y, { delay: 65 }); await verifyFocus(popout, other);
@@ -68,6 +69,7 @@ export async function verifyMiniMapNavigation(page) {
     assert.ok(await popout.locator('#tabs').isVisible());
     assert.equal(await popout.locator('#app').evaluate(node => node.classList.contains('standalone-app')), false);
     assert.equal(new URL(popout.url()).searchParams.get('view'), null);
+    assert.equal(await popout.title(), 'Metroidvania Studio');
     assert.equal(JSON.stringify((await state()).document), snapshot);
   } finally { await popout.close(); }
   return 'Minimap single click selects; double-click focuses the room in the editor without painting, including popout and delayed responses.';

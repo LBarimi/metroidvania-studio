@@ -174,7 +174,7 @@ public sealed partial class Catalog(ProjectFiles files)
                 throw;
             if (error is JsonException or InvalidOperationException or ArgumentException
                 or KeyNotFoundException or FormatException or OverflowException)
-                throw new InvalidDataException("EditorCatalog.json has an invalid shape: " + error.Message, error);
+                throw new InvalidDataException("The resource catalog has an invalid shape: " + error.Message, error);
             throw;
         }
     }
@@ -193,7 +193,7 @@ public sealed partial class Catalog(ProjectFiles files)
     private static void ValidateComplexity(JsonElement catalog)
     {
         if (catalog.ValueKind != JsonValueKind.Object)
-            throw new InvalidDataException("EditorCatalog.json must contain an object.");
+            throw new InvalidDataException("The resource catalog must contain an object.");
         JsonElement materials = RequiredArray(catalog, "materials", "Catalog");
         JsonElement objects = RequiredArray(catalog, "objects", "Catalog");
         RequireCount(materials, MaximumMaterialDefinitions, "Catalog materials");
@@ -247,7 +247,7 @@ public sealed partial class Catalog(ProjectFiles files)
     private static void AddWork(ref int work, int amount)
     {
         if ((long)work + amount > MaximumCatalogWork)
-            throw new InvalidDataException("EditorCatalog.json exceeds the " + MaximumCatalogWork + " entry processing budget.");
+            throw new InvalidDataException("The resource catalog exceeds the " + MaximumCatalogWork + " entry processing budget.");
         work += amount;
     }
     private static JsonElement ParseClone(string json)
@@ -266,11 +266,11 @@ public sealed partial class Catalog(ProjectFiles files)
                 string first = Convert.ToHexString(SHA256.HashData(bytes));
                 string second = ReadFingerprintOnce(path, expectedModified, expectedLength);
                 if (string.Equals(first, second, StringComparison.Ordinal)) return new StableContent(bytes, first);
-                instability = new IOException("EditorCatalog.json changed during its stable read.");
+                instability = new IOException("The resource catalog changed during its stable read.");
             }
             catch (IOException error) { instability = error; }
         }
-        throw instability ?? new IOException("EditorCatalog.json could not be read consistently.");
+        throw instability ?? new IOException("The resource catalog could not be read consistently.");
     }
 
     private static string DecodeUtf8(byte[] bytes)
@@ -280,27 +280,27 @@ public sealed partial class Catalog(ProjectFiles files)
             string text = Utf8.GetString(bytes);
             return text.Length > 0 && text[0] == '\uFEFF' ? text.Substring(1) : text;
         }
-        catch (DecoderFallbackException error) { throw new InvalidDataException("EditorCatalog.json is not valid UTF-8.", error); }
+        catch (DecoderFallbackException error) { throw new InvalidDataException("The resource catalog is not valid UTF-8.", error); }
     }
 
     private static byte[] ReadBytesOnce(string path, DateTime expectedModified, long expectedLength)
     {
         ValidateFileState(path, expectedModified, expectedLength);
         if (expectedLength > MaximumCatalogBytes)
-            throw new InvalidDataException("EditorCatalog.json exceeds the 32 MiB limit.");
+            throw new InvalidDataException("The resource catalog exceeds the 32 MiB limit.");
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
             FileShare.ReadWrite | FileShare.Delete, 65536, FileOptions.SequentialScan);
         if (stream.Length != expectedLength)
-            throw new IOException("EditorCatalog.json changed while it was being read.");
+            throw new IOException("The resource catalog changed while it was being read.");
         int length = checked((int)expectedLength), offset = 0;
         var bytes = new byte[length];
         while (offset < bytes.Length)
         {
             int read = stream.Read(bytes, offset, bytes.Length - offset);
-            if (read == 0) throw new IOException("EditorCatalog.json changed while it was being read.");
+            if (read == 0) throw new IOException("The resource catalog changed while it was being read.");
             offset += read;
         }
-        if (stream.ReadByte() != -1) throw new IOException("EditorCatalog.json changed while it was being read.");
+        if (stream.ReadByte() != -1) throw new IOException("The resource catalog changed while it was being read.");
         stream.Dispose();
         ValidateFileState(path, expectedModified, expectedLength);
         return bytes;
@@ -310,11 +310,11 @@ public sealed partial class Catalog(ProjectFiles files)
     {
         ValidateFileState(path, expectedModified, expectedLength);
         if (expectedLength > MaximumCatalogBytes)
-            throw new InvalidDataException("EditorCatalog.json exceeds the 32 MiB limit.");
+            throw new InvalidDataException("The resource catalog exceeds the 32 MiB limit.");
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
             FileShare.ReadWrite | FileShare.Delete, 65536, FileOptions.SequentialScan);
         if (stream.Length != expectedLength)
-            throw new IOException("EditorCatalog.json changed during its background content check.");
+            throw new IOException("The resource catalog changed during its background content check.");
         using var hash = SHA256.Create();
         string fingerprint = Convert.ToHexString(hash.ComputeHash(stream));
         stream.Dispose();
@@ -334,7 +334,7 @@ public sealed partial class Catalog(ProjectFiles files)
                 // atomic replace/delete remains unblocked by the shared handles.
                 string confirmation = ReadFingerprintOnce(path, expectedModified, expectedLength);
                 if (!string.Equals(fingerprint, confirmation, StringComparison.Ordinal))
-                    throw new IOException("EditorCatalog.json changed during its background content check.");
+                    throw new IOException("The resource catalog changed during its background content check.");
             }
             return new ContentProbe(expectedModified, expectedLength, fingerprint, null);
         }
@@ -349,7 +349,7 @@ public sealed partial class Catalog(ProjectFiles files)
         var info = new FileInfo(path);
         info.Refresh();
         if (!info.Exists || info.LastWriteTimeUtc != expectedModified || info.Length != expectedLength)
-            throw new IOException("EditorCatalog.json changed while it was being read.");
+            throw new IOException("The resource catalog changed while it was being read.");
     }
     private static void PositiveInteger(JsonElement value, string key, int maximum)
     {

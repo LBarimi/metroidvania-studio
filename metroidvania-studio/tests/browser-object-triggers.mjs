@@ -38,6 +38,8 @@ try {
   await page.locator('#room-list button').first().click(); await settle();
   const names=await page.locator('.palette-item').allTextContents();
   assert.deepEqual(names.map(n=>n.trim()),['Spawn','Portal','Invisible wall','Path','Respawn point']);
+  const objectTool = page.locator('#tools [data-tool="2"]');
+  assert.match(await objectTool.getAttribute('title'), /Click an object or node/);
   let p=await at(3.2,3.7); await page.mouse.click(p.x,p.y);
   let s=await until(s=>s.document.rooms[0].objects.length===1);
   const portal=s.document.rooms[0].objects[0]; assert.equal(portal.definition,'Portal'); assert.ok(portal.id);
@@ -101,6 +103,20 @@ try {
   const legacy=structuredClone(s.document); legacy.rooms[0].objects.find(o=>o.id===trigger.id).properties.find(p=>p.key==='event').value='existing-event';
   await command('import',{document:legacy,discard:true}); await command('objectClick',{x:trigger.x+.5,y:trigger.y+.5}); await settle();
   assert.equal(await page.locator('[data-property="event"]').inputValue(),'existing-event');
+  assert.equal(await page.locator('[data-property="event"] option:checked').innerText(), 'Existing event: existing-event');
+  const customState = await state();
+  const savedMode = 'Old: $& {0}';
+  customState.catalog.objects.find(o => o.id === 'Area').properties.push({key:'mode', label:'Mode', kind:0, choices:['current']});
+  customState.document.rooms[0].objects.find(o => o.id === trigger.id).properties.push({key:'mode', value:savedMode});
+  const customPage = await browser.newPage({locale:'ja-JP'});
+  try {
+    await customPage.route('**/api/state*', route => route.fulfill({json:customState}));
+    await customPage.goto(base);
+    const mode = customPage.locator('[data-property="mode"]');
+    await customPage.getByText('既存の値：' + savedMode, {exact:true}).waitFor({state:'attached'});
+    assert.equal(await mode.inputValue(), savedMode);
+    assert.equal(await customPage.locator('[data-property="event"] option:checked').innerText(), '既存のイベント：existing-event');
+  } finally { await customPage.close(); }
   await page.locator('[data-property="desc"]').fill('Updated legacy description');
   await page.getByRole('button',{name:'Apply properties',exact:true}).click();
   s=await until(s=>s.document.rooms[0].objects.find(o=>o.id===trigger.id).properties.some(p=>p.key==='desc'&&p.value==='Updated legacy description'));
@@ -109,12 +125,18 @@ try {
   unassigned.rooms[0].objects.find(o=>o.id===trigger.id).properties = unassigned.rooms[0].objects.find(o=>o.id===trigger.id).properties.filter(p=>!['event','once'].includes(p.key));
   await command('import',{document:unassigned,discard:true}); await command('objectClick',{x:trigger.x+.5,y:trigger.y+.5}); await settle();
   assert.equal(await page.locator('[data-property="event"]').inputValue(),'None','An old missing event must not appear assigned to Trigger001.');
+  await page.locator('#language').selectOption('KR');
+  assert.match(await objectTool.getAttribute('title'), /오브젝트나 노드를 클릭해 선택/);
+  assert.equal(await page.locator('[data-property="event"] option:checked').innerText(), '미지정');
+  assert.equal(await page.locator('[data-property="event"]').inputValue(), 'None');
+  assert.equal(await page.locator('[data-property="event"] option[value="Trigger200"]').innerText(), 'Trigger200');
   assert.ok(!await page.locator('[data-property="once"]').isChecked(),'An old trigger without Once retains repeatable behavior.');
   // A real concurrent edit must not be overwritten by an already open form.
   await page.locator('[data-property="desc"]').fill('Unsaved form');
   await command('objectProperties',{values:{desc:'Concurrent value'}}); await settle();
-  await page.getByRole('button',{name:'Apply properties',exact:true}).click();
-  await page.waitForFunction(()=>document.querySelector('#toast')?.textContent.includes('changed in another view'));
+  await page.getByRole('button',{name:'속성 적용',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('#toast')?.textContent.includes('다른 창에서 맵이 변경되었습니다'));
+  await page.locator('#language').selectOption('EN');
   assert.equal((await state()).document.rooms[0].objects.find(o=>o.id===trigger.id).properties.find(p=>p.key==='desc').value,'Concurrent value');
 
   const oldPortalMap = structuredClone(s.document);

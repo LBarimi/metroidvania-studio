@@ -1,4 +1,8 @@
 Key,KR,EN,JA,ZH_CN,ZH_TW,RU
+editor.documentChanged,다른 창에서 맵이 변경되었습니다. 최신 상태를 확인한 뒤 다시 편집하세요.,The document changed in another view. Reloaded state is required before editing.,別の画面でマップが変更されました。最新の状態を確認してから編集してください。,地图已在其他窗口中更改。请确认最新状态后再编辑。,地圖已在其他視窗中變更。請確認最新狀態後再編輯。,Карта изменена в другом окне. Перед редактированием проверьте её текущее состояние.
+editor.serverRestarted,편집 서버가 다시 시작되었습니다. 현재 맵을 다시 불러온 뒤 편집하세요.,The editor server restarted. Reload its current document before editing.,編集サーバーが再起動しました。現在のマップを読み込み直してから編集してください。,编辑服务器已重启。请重新加载当前地图后再编辑。,編輯伺服器已重新啟動。請重新載入目前的地圖後再編輯。,Сервер редактора перезапущен. Перед редактированием заново загрузите текущую карту.
+editor.gestureBusy,다른 편집 창에서 조작을 마치는 중입니다. 잠시 후 다시 시도하세요.,Another editor view is finishing a gesture.,別の編集画面で操作中です。少し待ってからやり直してください。,另一个编辑窗口正在完成操作。请稍后重试。,另一個編輯視窗正在完成操作。請稍後再試。,В другом окне редактора завершается действие. Попробуйте ещё раз чуть позже.
+editor.gestureExpired,편집 조작이 만료되었거나 취소되었습니다.,The editing gesture expired or was cancelled.,編集操作がタイムアウトしたか、キャンセルされました。,编辑操作已超时或已取消。,編輯操作已逾時或已取消。,Время на действие истекло или действие было отменено.
 desktopClosePending,편집 작업이 끝난 뒤 창을 다시 닫아 주세요.,Wait for the current edit to finish and try closing again.,編集処理が終わってから、もう一度ウィンドウを閉じてください。,请等待当前编辑操作完成后再关闭窗口。,請等目前的編輯作業完成後再關閉視窗。,Дождитесь завершения редактирования и снова попробуйте закрыть окно.
 desktopDisplayStopped,편집기 화면이 응답하지 않습니다. 프로그램을 닫고 다시 열어 주세요.,The editor display stopped. Close and reopen the program.,エディターの画面が応答しません。アプリを閉じて開き直してください。,编辑器界面已停止响应。请关闭并重新打开程序。,編輯器畫面已停止回應。請關閉程式後重新開啟。,Окно редактора перестало отвечать. Закройте программу и запустите её снова.
 desktopLoadFailed,편집기 화면을 불러올 수 없습니다.,Could not load the editor page.,エディター画面を読み込めません。,无法加载编辑器页面。,無法載入編輯器頁面。,Не удалось загрузить страницу редактора.
@@ -35,6 +39,7 @@ builtin.category.Gameplay,게임플레이,Gameplay,ゲームプレイ,玩法,玩
 builtin.category.Triggers,트리거,Triggers,トリガー,触发器,觸發器,Триггеры
 builtin.category.decalFolder,장식/{0},Decals/{0},装飾/{0},装饰/{0},裝飾/{0},Декорации/{0}
 builtin.field.label,표시 이름,Label,表示名,显示名称,顯示名稱,Подпись
+builtin.event.None,미지정,None,未設定,未指定,未指定,Не назначено
 builtin.field.name,이름,Name,名前,名称,名稱,Название
 builtin.field.player,플레이어,Player,プレイヤー,玩家,玩家,Игрок
 builtin.field.speed,속도,Speed,速度,速度,速度,Скорость
@@ -132,7 +137,7 @@ external.generationDifficulty.normal,보통,Normal,普通,普通,普通,Обыч
 external.generationDifficulty.hard,어려움,Hard,難しい,困难,困難,Сложная
 external.generationInvalidDifficulty,난이도를 선택하세요.,Select a difficulty.,難易度を選んでください。,请选择难度。,請選擇難度。,Выберите сложность.
 external.generationMissingTheme,사용 가능한 지형 테마를 선택하세요.,Select an available terrain theme.,利用可能な地形テーマを選んでください。,请选择可用的地形主题。,請選擇可用的地形主題。,Выберите доступную тему местности.
-external.generationMissingChips,타일맵 생성에는 사다리와 발판 팔레트가 필요합니다.,Tilemap generation needs the ladder and floor palettes.,はしごと足場のパレットが必要です。,生成需要梯子和平台的调色板。,生成需要梯子和平台的調色盤。,Для генерации нужны палитры лестницы и настила.
+external.generationMissingChips,타일맵 생성에는 ‘사다리’와 ‘아래로 통과하는 발판’ 팔레트가 필요합니다.,Tilemap generation requires the Ladder and Drop-through floor palettes.,タイルマップの生成には「はしご」と「すり抜け床」のパレットが必要です。,生成图块地图需要“梯子”和“可下穿平台”调色板。,生成圖塊地圖需要「梯子」和「可向下穿越的平台」調色盤。,Для генерации тайловой карты нужны палитры «Лестница» и «Проницаемый настил».
 external.traversalGroup,이동 칩,Traversal,移動チップ,移动图块,移動圖塊,Перемещение
 external.traversalLadder,사다리,Ladder,はしご,梯子,梯子,Лестница
 external.traversalFloor,아래로 통과하는 발판,Drop-through floor,すり抜け床,可下穿平台,可向下穿越的平台,Проницаемый настил
@@ -166,6 +171,7 @@ external.minimapDrawHelp,클릭: 배치 · 드래그: 이동 · 우클릭: 삭�
 external.popout,별도 창,Open separate view,別ウィンドウで開く,在独立窗口打开,在獨立視窗開啟,Открыть в отдельном окне
 external.inspector,속성,Inspector,プロパティ,属性,屬性,Свойства
 external.rooms,방,Rooms,部屋,房间,房間,Комнаты
+roomDefaultName,방 {0},Room {0},部屋 {0},房间 {0},房間 {0},Комната {0}
 external.tools,도구,Tools,ツール,工具,工具,Инструменты
 external.palette,팔레트,Palette,パレット,调色板,調色盤,Палитра
 external.layers,레이어,Layers,レイヤー,图层,圖層,Слои
@@ -207,7 +213,9 @@ external.connected,연결됨,connected,接続済み,已连接,已連線,Подк
 external.disconnected,연결 대기,offline,未接続,离线,離線,Нет подключения
 external.serverOffline,편집 서버와 연결되지 않았습니다. 다시 연결 중…,Editor server is offline. Reconnecting…,編集サーバーに再接続中…,编辑服务器离线。正在重新连接…,編輯伺服器離線。正在重新連線…,Сервер редактора недоступен. Переподключение…
 external.loading,프로젝트를 불러오는 중…,Loading project…,プロジェクトを読み込み中…,正在加载项目…,正在載入專案…,Загрузка проекта…
+external.loadingHint,프로젝트를 불러오면 방 JSON의 저장 상태가 표시됩니다.,Room JSON export status appears once the project loads.,プロジェクトを読み込むと、部屋JSONの書き出し状況が表示されます。,项目加载后会显示房间 JSON 的导出状态。,專案載入後會顯示房間 JSON 的匯出狀態。,После загрузки проекта здесь появится состояние экспорта комнат в JSON.
 external.noRooms,방을 추가해서 시작하세요,Add a room to begin,部屋を追加して開始,添加房间以开始,新增房間以開始,Добавьте комнату для начала
+external.noMatchingRooms,검색어와 일치하는 방이 없습니다.,No matching rooms.,検索に一致する部屋がありません。,没有找到匹配的房间。,找不到符合搜尋條件的房間。,По вашему запросу комнаты не найдены.
 external.noSelection,방 또는 오브젝트를 선택하세요,Select a room or object,部屋かオブジェクトを選択,请选择房间或对象,請選取房間或物件,Выберите комнату или объект
 external.noMaterials,등록된 리소스가 없습니다,No resources available,リソースがありません,没有可用资源,沒有可用資源,Нет доступных ресурсов
 external.modified,저장되지 않음,Unsaved changes,未保存の変更,有未保存的更改,有未儲存的變更,Есть несохранённые изменения
@@ -219,6 +227,9 @@ external.exportDirectory,내보내기 폴더,Export directory,書き出し先フ
 external.confirmDiscard,저장되지 않은 변경 사항을 버리고 계속할까요?,Discard unsaved changes and continue?,未保存の変更を破棄して続けますか？,放弃未保存的更改并继续？,捨棄未儲存的變更並繼續？,Отбросить несохранённые изменения и продолжить?
 external.confirmOverwrite,선택한 위치에 같은 이름의 파일이 이미 있습니다. 덮어쓸까요?,The selected destination already contains files with the same name. Replace them?,同名のファイルがあります。上書きしますか？,目标位置已有同名文件。是否覆盖？,目標位置已有同名檔案。是否覆寫？,В выбранной папке уже есть файлы с такими именами. Заменить их?
 external.confirmClear,이 작업으로 선택한 내용이 삭제됩니다. 계속할까요? 실행 취소할 수 있습니다.,Delete this content? You can undo this operation.,削除しますか？この操作は元に戻せます。,删除这些内容？此操作可以撤销。,刪除這些內容？此操作可以復原。,Удалить эти данные? Операцию можно отменить.
+external.confirmDeleteRoom,‘{0}’ 방과 그 안의 내용을 모두 삭제할까요? 실행 취소할 수 있습니다.,Delete the room “{0}” and everything in it? You can undo this.,部屋「{0}」とその中身をすべて削除しますか？この操作は元に戻せます。,删除房间“{0}”及其全部内容吗？此操作可以撤销。,要刪除房間「{0}」及其所有內容嗎？此操作可以復原。,Удалить комнату «{0}» и всё её содержимое? Это действие можно отменить.
+external.confirmClearLayer,현재 방에서 이 레이어에 속한 모든 그룹의 편집 가능한 내용을 지울까요? 실행 취소할 수 있습니다.,Clear the editable contents of this layer across all groups in the current room? You can undo this.,現在の部屋のこのレイヤーにあるすべてのグループから、編集可能な内容を消去しますか？この操作は元に戻せます。,清除当前房间中此图层各组的所有可编辑内容吗？此操作可以撤销。,要清除目前房間中此圖層各群組的所有可編輯內容嗎？此操作可以復原。,Очистить редактируемое содержимое всех групп этого слоя в текущей комнате? Это действие можно отменить.
+external.confirmClearObjects,현재 방의 모든 오브젝트 레이어에서 편집 가능한 오브젝트를 지울까요? 실행 취소할 수 있습니다.,Delete editable objects from all object layers in the current room? You can undo this.,現在の部屋のすべてのオブジェクトレイヤーから、編集可能なオブジェクトを削除しますか？この操作は元に戻せます。,删除当前房间所有对象图层中的可编辑对象吗？此操作可以撤销。,要刪除目前房間所有物件圖層中的可編輯物件嗎？此操作可以復原。,Удалить редактируемые объекты со всех объектных слоёв текущей комнаты? Это действие можно отменить.
 external.help,좌클릭 드래그: 그리기 · 휠클릭 드래그: 화면 이동 · 방 안 우클릭: 지우기 · 빈 공간 우클릭: 방 생성 메뉴 / 드래그: 화면 이동 · 휠: 줌 · Ctrl+휠: 브러시 크기,Left drag: draw · Middle drag: pan · Right inside a room: erase · Right on empty space: room menu / drag to pan · Wheel: zoom · Ctrl+wheel: brush size,左ドラッグ: 描画 · 中ドラッグ: 移動 · 部屋内の右クリック: 消去 · 空白で右クリック: 部屋メニュー / ドラッグ: 移動 · ホイール: ズーム · Ctrl+ホイール: ブラシサイズ,左键拖动：绘制 · 中键拖动：平移 · 房间内右键：擦除 · 空白处右键：房间菜单 / 拖动：平移 · 滚轮：缩放 · Ctrl+滚轮：笔刷大小,左鍵拖曳：繪製 · 中鍵拖曳：平移 · 房間內右鍵：擦除 · 空白處右鍵：房間選單 / 拖曳：平移 · 滾輪：縮放 · Ctrl+滾輪：筆刷大小,Левая: рисование · Средняя: панорама · Правая внутри комнаты: ластик · Правая на пустом месте: меню / перетаскивание: панорама · Колесо: масштаб · Ctrl+колесо: кисть
 external.roomHelp,방 이름 막대 드래그: 방 이동 · 외부 핸들: 크기 조절 · 다른 방 클릭: 선택 · Del: 방 삭제,Drag room title strip: move room · Outer handles: resize · Click another room: select · Del: delete room,部屋名の帯をドラッグ: 部屋移動 · 外側ハンドル: サイズ変更 · 別の部屋をクリック: 選択 · Del: 削除,拖动房间名称条：移动房间 · 外侧控制点：调整大小 · 点击其他房间：选中 · Del：删除,拖曳房間名稱列：移動房間 · 外側控制點：調整大小 · 點擊其他房間：選取 · Del：刪除,Полоса названия: перемещение комнаты · Внешние маркеры: размер · Щелчок по другой комнате: выбор · Del: удалить
 external.objectHelp,클릭: 선택 · 드래그: 이동 · Ctrl+오른쪽: 속성 · 노드 클릭: 선택,Click: select · Drag: move · Ctrl+right: properties · Click a node to select,クリック: 選択 · ドラッグ: 移動 · Ctrl+右クリック: プロパティ · ノードをクリック: 選択,点击：选择 · 拖动：移动 · Ctrl+右键：属性 · 点击节点：选择节点,點擊：選取 · 拖曳：移動 · Ctrl+右鍵：屬性 · 點擊節點：選取節點,Щелчок: выбор · Перетаскивание: перемещение · Ctrl+правая: свойства · Щелчок по узлу: выбор узла
@@ -306,9 +317,11 @@ external.syncExportError,JSON 저장 오류,JSON export error,JSON保存エラ�
 external.syncExportErrorHint,방 JSON을 저장하지 못했습니다. 원인을 해결하면 자동으로 다시 시도합니다.,Room JSON export failed. It will retry automatically after the cause is resolved.,部屋JSONの保存に失敗しました。原因が解消されると自動で再試行します。,房间 JSON 保存失败。问题解决后将自动重试。,房間 JSON 儲存失敗。問題解決後將自動重試。,Не удалось сохранить JSON комнат. После устранения причины попытка повторится автоматически.
 external.syncServerOffline,서버 연결 끊김,Server disconnected,サーバー未接続,服务器连接已断开,伺服器連線已中斷,Сервер отключён
 external.syncServerOfflineHint,로컬 Metroidvania Studio 서버에 연결할 수 없습니다. 저장 및 반영 상태를 확인할 수 없습니다.,Cannot reach the local Metroidvania Studio server. Export and application status cannot be confirmed.,Metroidvania Studio のローカルサーバーに接続できません。保存・反映状態を確認できません。,无法连接Metroidvania Studio 本地服务器，无法确认保存和应用状态。,無法連線至Metroidvania Studio 本機伺服器，無法確認儲存與套用狀態。,Нет связи с локальным сервером Metroidvania Studio. Нельзя подтвердить сохранение и применение изменений.
-external.studioConnected,로컬 스튜디오 연결됨,Local studio connected,ローカル接続済み,已连接本地工作室,已連線至本機工作室,Локальный сервер подключён
+external.studioConnected,로컬 편집기 연결됨,Local editor connected,ローカルエディターに接続済み,已连接到本地编辑器,已連線至本機編輯器,Локальный редактор подключён
 external.import,맵 JSON 가져오기,Import map JSON,マップJSONを取り込む,导入地图 JSON,匯入地圖 JSON,Импорт карты JSON
 external.importTooLarge,가져올 JSON 전체 크기는 32MiB 이하여야 합니다.,The combined JSON size must not exceed 32 MiB.,JSONの合計サイズは32 MiB以下にしてください。,JSON 总大小不能超过 32 MiB。,JSON 總大小不能超過 32 MiB。,Общий размер JSON не должен превышать 32 МиБ.
+external.importInvalidJson,‘{0}’ 파일에 올바른 JSON 객체가 없습니다.,“{0}” does not contain a valid JSON object.,「{0}」に有効な JSON オブジェクトがありません。,文件“{0}”中没有有效的 JSON 对象。,檔案「{0}」中沒有有效的 JSON 物件。,Файл «{0}» не содержит корректного объекта JSON.
+external.importInvalidUtf8,‘{0}’ 파일을 UTF-8로 저장한 뒤 다시 여세요.,Save “{0}” as UTF-8 and try again.,「{0}」を UTF-8 で保存してから再度開いてください。,请将“{0}”保存为 UTF-8 后重试。,請將「{0}」儲存為 UTF-8 後再試一次。,Сохраните «{0}» в кодировке UTF-8 и повторите попытку.
 external.cameraHelp,현재 방을 설정된 기준 해상도와 픽셀 배율로 미리 봅니다.,Preview the current room at the configured reference resolution and pixel scale.,現在の部屋を設定した解像度とピクセル倍率で表示します。,按设定分辨率和像素倍率预览当前房间。,依設定的解析度與像素倍率預覽目前房間。,Предпросмотр текущей комнаты с заданным разрешением и масштабом пикселей.
 enum.MetroidvaniaStudioTool.Brush,브러시,Brush,ブラシ,笔刷,筆刷,Кисть
 enum.MetroidvaniaStudioTool.Bucket,채우기,Bucket,塗りつぶし,填充,填滿,Заливка
@@ -355,6 +368,7 @@ external.exportChanged,변경된 방 JSON 저장…,Save changed rooms as JSON�
 external.confirmRoomReplace,같은 ID의 방이 이미 있습니다. 가져오는 JSON으로 해당 방을 교체할까요? 실행 취소할 수 있습니다.,Some room IDs already exist. Replace those rooms with the imported JSON? This can be undone.,同じIDの部屋があります。取り込むJSONで置き換えますか？元に戻せます。,部分房间 ID 已存在。用导入的 JSON 替换这些房间？此操作可以撤销。,部分房間 ID 已存在。以匯入的 JSON 取代這些房間？此操作可以復原。,Некоторые ID комнат уже существуют. Заменить эти комнаты импортированными данными? Действие можно отменить.
 external.tileSelection,타일 영역 선택,Select tile area,タイル領域選択,图块区域选择,圖塊區域選取,Выделение тайлов
 external.objectSelection,오브젝트 선택,Select objects,オブジェクト選択,选择对象,選取物件,Выделение объектов
+external.objectSelectionHelp,오브젝트나 노드를 클릭해 선택 · Shift+클릭으로 여러 항목 선택 · 드래그로 이동,Click an object or node to select it · Shift+click to select multiple items · Drag to move,オブジェクトやノードをクリックして選択 · Shift+クリックで複数選択 · ドラッグで移動,点击对象或节点以选中 · 按住 Shift 点击可多选 · 拖动以移动,點選物件或節點以選取 · 按住 Shift 點選可複選 · 拖曳以移動,Щелчок по объекту или узлу — выбор · Shift+щелчок — выбор нескольких элементов · Перетаскивание — перемещение
 external.selectionHelp,드래그: 타일 영역 선택 · 선택 안쪽 드래그: 이동 · Shift+드래그: 새 영역 · {0}+C/V: 복사/붙여넣기 · Del: 선택 삭제,Drag: select tile area · Drag inside: move selection · Shift+drag: new selection · {0}+C/V: copy/paste · Del: delete selection,ドラッグ: タイル領域選択 · 内側ドラッグ: 移動 · Shift+ドラッグ: 新しい選択 · {0}+C/V: コピー/貼り付け · Del: 選択削除,拖动：选择图块区域 · 区域内拖动：移动 · Shift+拖动：重新选择 · {0}+C/V：复制/粘贴 · Del：删除所选内容,拖曳：選取圖塊區域 · 區域內拖曳：移動 · Shift+拖曳：重新選取 · {0}+C/V：複製/貼上 · Del：刪除所選內容,Перетаскивание: выделить тайлы · Внутри: переместить · Shift+перетаскивание: новое выделение · {0}+C/V: копировать/вставить · Del: удалить
 external.placementHelp,팔레트에서 오브젝트 선택 후 클릭해 배치 · 영역 오브젝트는 드래그로 크기 지정 · 우클릭: 지우기,"Choose an object in the palette, then click to place · Drag to size area objects · Right click: erase",パレットで選んでクリック: 配置 · 領域オブジェクトはドラッグでサイズ指定 · 右クリック: 消去,从调色板选择对象后点击放置 · 拖动设置区域对象大小 · 右键擦除,從調色盤選取物件後點擊放置 · 拖曳設定區域物件大小 · 右鍵擦除,Выберите объект в палитре и щёлкните для размещения · Перетаскивание: размер области · Правая кнопка: удалить
 external.selectionSummary,선택 영역,Selected area,選択領域,所选区域,所選區域,Выделенная область
@@ -442,6 +456,7 @@ docs.api,API 레퍼런스,API reference,API リファレンス,API 参考,API �
 "tilesetSlotOutside","타일 영역이 이미지 밖에 있습니다.","A tile region is outside its image.","タイル領域が画像の外にあります。","图块区域超出图像范围。","圖塊區域超出圖片範圍。","Область тайла выходит за границы изображения."
 "tilesetImageLimit","팔레트당 원본 PNG의 합계는 8 MiB, 4,194,304픽셀 이하여야 합니다. 각 이미지는 최소 16×16픽셀이어야 합니다.","Source PNGs may total up to 8 MiB and 4,194,304 pixels per palette. Each image must be at least 16×16 pixels.","パレットごとの元のPNGは合計8 MiB、4,194,304ピクセルまでです。各画像は16×16ピクセル以上にしてください。","每个调色板的源 PNG 文件合计不得超过 8 MiB 和 4,194,304 像素。每张图像至少为 16×16 像素。","每個調色盤的來源 PNG 檔案合計不得超過 8 MiB 和 4,194,304 像素。每張圖片至少為 16×16 像素。","На одну палитру допускается до 8 МиБ и 4 194 304 пикселей суммарно для всех исходных PNG. Минимальный размер каждого изображения — 16×16 пикселей."
 "tilesetInvalidPng","완전한 PNG 파일인지 확인하세요.","Check that the file is a complete PNG.","完全なPNGファイルか確認してください。","请确认文件是完整的 PNG。","請確認檔案是完整的 PNG。","Проверьте целостность PNG-файла."
+tilesetTooManyFiles,PNG 파일은 한 번에 최대 {0}개까지 가져올 수 있습니다.,You can import up to {0} PNG files at a time.,一度に読み込めるPNGファイルは{0}個までです。,一次最多可导入 {0} 个 PNG 文件。,一次最多可匯入 {0} 個 PNG 檔案。,За один раз можно импортировать не более {0} файлов PNG.
 "tilesetCatalogFull","카탈로그 크기 제한을 초과했습니다.","The catalog size limit was exceeded.","カタログのサイズ制限を超えました。","超出目录大小限制。","超出目錄大小限制。","Превышен размер каталога."
 "tilesetDefaultView","기본 타일로 보기","Default tile view","標準タイルで表示","显示默认图块","顯示預設圖塊","Показать стандартные тайлы"
 
@@ -478,9 +493,18 @@ storageUnavailable,저장 폴더 정보를 불러올 수 없습니다.,Could not
 "stageThemes.volcanic","화산지대","Volcanic","火山地帯","火山区","火山地帶","Вулкан"
 "stageThemes.ancientRuins","고대 유적","Ancient ruins","古代遺跡","古代遗迹","古代遺跡","Древние руины"
 "fileDialogWaiting","파일 창에서 맵을 선택하세요.","Choose a map in the file dialog.","ファイル画面でマップを選択してください。","请在文件窗口中选择地图。","請在檔案視窗中選擇地圖。","Выберите карту в файловом окне."
+fileDialogSaveWaiting,맵을 저장할 위치를 선택하세요.,Choose where to save the map.,マップの保存先を選んでください。,请选择地图的保存位置。,請選擇地圖的儲存位置。,Выберите место для сохранения карты.
+fileDialogUnavailable,파일 선택 창을 열 수 없습니다.,Could not open the file dialog.,ファイル選択ダイアログを開けません。,无法打开文件对话框。,無法開啟檔案對話方塊。,Не удалось открыть диалог выбора файла.
+fileDialogBusy,이미 열려 있는 파일 선택 창을 먼저 닫아 주세요.,Close the current file dialog before opening another.,開いているファイル選択ダイアログを先に閉じてください。,请先关闭已打开的文件对话框。,請先關閉已開啟的檔案對話方塊。,Сначала закройте открытый диалог выбора файла.
+fileMapMissing,선택한 맵 파일을 찾을 수 없습니다.,The selected map file could not be found.,選択したマップファイルが見つかりません。,找不到所选的地图文件。,找不到所選的地圖檔案。,Не удалось найти выбранный файл карты.
+fileSelectionLimit,파일을 더 선택하려면 Metroidvania Studio를 다시 시작하세요.,Restart Metroidvania Studio to select more files.,他のファイルを選ぶには Metroidvania Studio を再起動してください。,请重新启动 Metroidvania Studio 以继续选择文件。,請重新啟動 Metroidvania Studio 以繼續選擇檔案。,Перезапустите Metroidvania Studio для выбора других файлов.
+fileSelectAgain,맵 파일을 다시 선택하세요.,Select the map file again.,マップファイルを選び直してください。,请重新选择地图文件。,請重新選擇地圖檔案。,Выберите файл карты ещё раз.
+fileChooseJson,일반 JSON 맵 파일(.json)을 선택하세요.,Choose a regular JSON map file (.json).,通常のJSONマップファイル（.json）を選択してください。,请选择常规的 JSON 地图文件（.json）。,請選擇一般的 JSON 地圖檔案（.json）。,Выберите обычный файл карты в формате JSON (.json).
+fileChooseUnlinked,연결된 파일이나 폴더를 거치지 않고 맵 파일을 직접 선택하세요.,Select the map file directly without following a file or folder link.,ファイルやフォルダーへのリンクを経由せずにマップファイルを直接選択してください。,请直接选择地图文件，避开文件或文件夹链接。,請直接選取地圖檔案，避開檔案或資料夾連結。,Выберите файл карты напрямую без перехода по ссылкам на файлы или папки.
 objectId,고유 ID,Unique ID,固有ID,唯一 ID,唯一 ID,Уникальный ID
 objectIdHelp,배치 시 생성되며 복사해도 중복되지 않는 읽기 전용 ID입니다.,Read-only ID generated on placement. Copies receive new IDs.,配置時に生成される読み取り専用IDです。コピーには新しいIDが付きます。,放置时生成的只读 ID。副本会获得新 ID。,放置時產生的唯讀 ID。副本會獲得新 ID。,ID создаётся при размещении. Копии получают новые ID.
-legacyEvent,기존 이벤트,Existing event,既存のイベント,现有事件,現有事件,Прежнее событие
+legacyEvent,기존 이벤트: {0},Existing event: {0},既存のイベント：{0},现有事件：{0},現有事件：{0},Прежнее событие: {0}
+legacyValue,기존 값: {0},Existing value: {0},既存の値：{0},现有值：{0},現有值：{0},Прежнее значение: {0}
 builtin.field.desc,설명,Description,説明,描述,描述,Описание
 builtin.field.once,한 번만,Once,一度だけ,仅一次,僅一次,Однократно
 builtin.field.event,이벤트,Event,イベント,事件,事件,Событие
@@ -508,13 +532,14 @@ previewCollapse,Game Preview 접기,Collapse Game Preview,Game Preview を折り
 previewMaximize,Game Preview 최대화,Maximize Game Preview,Game Preview を最大化,最大化 Game Preview,最大化 Game Preview,Увеличить Game Preview
 previewRestore,Game Preview 원래 크기로,Restore Game Preview,Game Preview を元のサイズに戻す,还原 Game Preview,還原 Game Preview,Восстановить Game Preview
 previewNoRoom,선택한 방 없음,No room selected,部屋が未選択,未选择房间,未選擇房間,Комната не выбрана
+previewCenterCamera,카메라를 방 중앙으로 이동,Center camera on room,カメラを部屋の中央に移動,将相机移到房间中心,將攝影機移到房間中央,Переместить камеру в центр комнаты
 previewHelp,선택한 방의 게임 시야 · 드래그로 시야 이동 · F로 방 중앙 보기,Selected room game view · Drag to pan · F to center on the room,選択した部屋のゲーム視野 · ドラッグで移動 · F で部屋の中央へ,所选房间的游戏视野 · 拖动平移 · F 回到房间中央,所選房間的遊戲視野 · 拖曳平移 · F 回到房間中央,Игровой вид выбранной комнаты · Перетаскивайте для перемещения · F — центр комнаты
 gameCameraTool,게임 카메라,Game camera,ゲームカメラ,游戏相机,遊戲攝影機,Игровая камера
 gameCameraHelp,흰색 박스 드래그: 게임 시야 이동 · 휠: 편집 화면 줌 · Esc: 카메라 도구 종료,Drag the white box to move the game view · Wheel: editor zoom · Esc: leave camera tool,白い枠をドラッグ: ゲーム視野を移動 · ホイール: 編集画面ズーム · Esc: 終了,拖动白框移动游戏视野 · 滚轮缩放编辑画面 · Esc 退出相机工具,拖曳白框移動遊戲視野 · 滾輪縮放編輯畫面 · Esc 結束攝影機工具,Тяните белую рамку для перемещения камеры · Колесо: масштаб редактора · Esc: выход
 gameCameraSmallRoom,방이 시야보다 좁은 방향으로는 카메라가 이동하지 않습니다. 흰 테두리는 방 안쪽에만 표시되며 Game Preview의 해상도는 유지됩니다.,Movement is locked on axes smaller than the camera · Box clipped to room · Game Preview keeps its resolution,視野より小さい軸は移動固定 · 枠は部屋内のみ表示 · Game Preview の解像度は維持,房间较小的轴固定移动 · 白框裁剪到房间内 · Game Preview 保持原分辨率,房間較小的軸固定移動 · 白框裁切至房間內 · Game Preview 保持原解析度,Малая ось комнаты фиксирована · Рамка ограничена комнатой · Разрешение Game Preview сохраняется
 roomFitResolution,해상도에 맞추기,Fit to resolution,解像度に合わせる,适应分辨率,配合解析度,Подогнать под разрешение
-roomFitResolutionSize,{0} × {1}타일로 맞춥니다. 남는 픽셀은 타일 단위로 올림합니다.,Resize to {0} × {1} tiles. Extra pixels round up to whole tiles.,{0} × {1}タイルに変更します。端数はタイル単位で切り上げます。,调整为 {0} × {1} 个瓦片。多余像素向上取整为完整瓦片。,調整為 {0} × {1} 個圖塊。剩餘像素向上取整為完整圖塊。,Размер: {0} × {1} тайлов. Неполные тайлы округляются вверх.
-roomFitResolutionWarning,방 경계를 벗어나는 타일 {0}개와 오브젝트 {1}개가 삭제됩니다. 일부만 벗어난 오브젝트도 전체 삭제됩니다. 계속할까요?,This deletes {0} tiles and {1} objects outside the new room bounds. Partly outside objects are deleted entirely. Continue?,新しい部屋の外に出るタイル{0}個とオブジェクト{1}個を削除します。一部がはみ出すオブジェクトも全体を削除します。続けますか？,将删除超出新房间边界的 {0} 个瓦片和 {1} 个对象。部分越界的对象也会整个删除。继续吗？,將刪除超出新房間邊界的 {0} 個圖塊和 {1} 個物件。部分超出邊界的物件也會整個刪除。要繼續嗎？,Будут удалены тайлы ({0}) и объекты ({1}) за новой границей комнаты. Частично выступающие объекты удаляются целиком. Продолжить?
+roomFitResolutionSize,{0} × {1}타일로 맞춥니다. 남는 픽셀은 타일 단위로 올림합니다.,Resize to {0} × {1} tiles. Extra pixels round up to whole tiles.,{0} × {1}タイルに変更します。端数はタイル単位で切り上げます。,调整为 {0} × {1} 个图块。不足一个图块的像素按一个图块计算。,調整為 {0} × {1} 個圖塊。剩餘像素向上取整為完整圖塊。,Размер: {0} × {1} тайлов. Неполные тайлы округляются вверх.
+roomFitResolutionWarning,방 경계를 벗어나는 타일 {0}개와 오브젝트 {1}개가 삭제됩니다. 일부만 벗어난 오브젝트도 전체 삭제됩니다. 계속할까요?,This deletes {0} tiles and {1} objects outside the new room bounds. Partly outside objects are deleted entirely. Continue?,新しい部屋の外に出るタイル{0}個とオブジェクト{1}個を削除します。一部がはみ出すオブジェクトも全体を削除します。続けますか？,将删除超出新房间边界的 {0} 个图块和 {1} 个对象。部分越界的对象也会整个删除。继续吗？,將刪除超出新房間邊界的 {0} 個圖塊和 {1} 個物件。部分超出邊界的物件也會整個刪除。要繼續嗎？,Будут удалены тайлы ({0}) и объекты ({1}) за новой границей комнаты. Частично выступающие объекты удаляются целиком. Продолжить?
 roomFitResolutionNeedsConfirm,경계 밖의 내용이 삭제됩니다. 경고창에서 확인한 뒤 다시 시도해 주세요.,Content outside the room would be deleted. Confirm the warning before continuing.,部屋の外の内容が削除されます。警告を確認してから続けてください。,房间外的内容将被删除。请先确认警告。,房間外的內容將被刪除。請先確認警告。,Содержимое за границей комнаты будет удалено. Сначала подтвердите предупреждение.
 bundleExport,프로젝트 묶음 내보내기…,Export project bundle…,プロジェクト一式を書き出す…,导出项目包…,匯出專案套件…,Экспорт проекта в ZIP…
 bundleHelp,현재 맵의 모든 방과 팔레트·오브젝트 정의 및 참조된 텍스처를 ZIP 하나로 다운로드합니다. 타일셋 원본 PNG도 포함됩니다.,"Download the current map with all rooms, palette and object definitions, and referenced textures as one ZIP. Original tileset PNGs are included.",現在の全ての部屋、パレット、オブジェクト定義、参照画像をZIPで保存します。元のタイルセットPNGも含まれます。,将当前地图的所有房间、调色板、对象定义和引用纹理下载为 ZIP，也包含原始图块 PNG。,將目前地圖的所有房間、調色盤、物件定義及引用貼圖下載為 ZIP，也包含原始圖塊 PNG。,"ZIP содержит текущую карту со всеми комнатами, палитры, определения объектов и используемые изображения, включая исходные PNG тайлсетов."

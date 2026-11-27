@@ -34,6 +34,9 @@ export class Locale extends EventTarget {
     const row = this.table.get(`external.${key}`) || this.table.get(key);
     return row?.[this.language] || row?.EN || key;
   }
+  format(key: string, ...values: string[]): string {
+    return this.t(key).replace(/\{(\d+)\}/g, (placeholder, index) => values[Number(index)] ?? placeholder);
+  }
   // Older local servers return only the exporter's localized message, ending with the destination path.
   isLegacyExportTargetExists(message: string): boolean {
     return Object.values(this.table.get('roomJson.exists') || {}).some(template =>

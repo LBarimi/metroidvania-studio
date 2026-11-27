@@ -37,7 +37,7 @@ Imported data and camera
   Saved scenes work with the studio closed. Disconnecting does not remove the data.
 - The adapter imports terrain, objects, triggers and metadata. Implement game behavior separately.
 - Defaults are PPU 16 and reference resolution 320x180, following the web camera settings.
-- Loading centers the main camera on the room, creating one if needed.
+- Loading aligns the lower-left corner of the main camera view with the room’s lower-left corner. If there is no main camera, one is created.
   StudioPixelCamera manages camera size and an integer-scaled viewport.
 - Imported scenes still need the adapter's Runtime code and imported resources at runtime.
 

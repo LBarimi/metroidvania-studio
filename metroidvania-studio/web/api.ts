@@ -49,6 +49,9 @@ export class EditorApi extends EventTarget {
   private requests = new Set<AbortController>();
   private clientId = crypto.randomUUID();
 
+  private readonly translate?: (key: string) => string;
+  constructor(translate?: (key: string) => string) { super(); this.translate = translate; }
+
   async start(): Promise<void> { try { await this.refresh(); } finally { this.schedule(); } }
   /** Wait for the ordered writer that was queued when this method was called. */
   async settled(): Promise<void> { await this.tail; if (this.refreshTask) await this.refreshTask; }
@@ -94,7 +97,7 @@ export class EditorApi extends EventTarget {
       const requestBody = JSON.stringify({ ...payload, action, clientId: this.clientId, commandId,
         expectedInstanceId: expected.instanceId, expectedRevision: expected.revision });
       const request = () => this.requestJson('/api/command', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept-Language': document.documentElement.lang },
         body: requestBody,
         // Keep ordinary edit commands deliverable when the user accepts the
         // browser's unsaved-work warning. Browsers reject keepalive bodies near
@@ -119,7 +122,10 @@ export class EditorApi extends EventTarget {
       if (!response.ok) {
         if (responseBody.state) this.accept(responseBody.state);
         else await this.refresh();
-        throw new EditorApiError(typeof responseBody?.error === 'string' ? responseBody.error : `Command failed (${response.status})`, response.status, responseBody?.code);
+        const key = responseBody?.messageKey;
+        const translated = typeof key === 'string' ? this.translate?.(key) : undefined;
+        const fallback = typeof responseBody?.error === 'string' ? responseBody.error : `Command failed (${response.status})`;
+        throw new EditorApiError(translated && translated !== key ? translated : fallback, response.status, responseBody?.code);
       }
       this.accept(responseBody.state || responseBody);
       return this.state!;

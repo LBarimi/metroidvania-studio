@@ -59,16 +59,20 @@ export function downloadMap(text: string, name: string): void {
 }
 
 async function nativeRequest(action: string, data: object, signal?: AbortSignal): Promise<Response> {
-  const response = await fetch('/api/native-map/' + action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), signal });
+  const response = await fetch('/api/native-map/' + action, { method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept-Language': document.documentElement.lang }, body: JSON.stringify(data), signal });
   if (!response.ok) throw new Error((await response.json()).error);
   return response;
 }
-async function pickNativeMap(mode: 'open' | 'save', name: string, t: (key: string) => string = key => key === 'cancel' ? 'Cancel' : 'Choose a map in the file dialog.'): Promise<MapFileHandle | null> {
+async function pickNativeMap(mode: 'open' | 'save', name: string, t?: (key: string) => string): Promise<MapFileHandle | null> {
   const controller = new AbortController(), dialog = document.createElement('dialog');
   dialog.id = 'file-dialog-wait';
-  const body = document.createElement('div'); body.className = 'dialog-body'; body.textContent = t('fileDialogWaiting'); body.setAttribute('role', 'status');
+  const body = document.createElement('div'); body.className = 'dialog-body'; body.setAttribute('role', 'status');
+  body.textContent = mode === 'save'
+    ? t?.('fileDialogSaveWaiting') ?? 'Choose where to save the map.'
+    : t?.('fileDialogWaiting') ?? 'Choose a map in the file dialog.';
   const footer = document.createElement('div'); footer.className = 'dialog-footer';
-  const cancel = document.createElement('button'); cancel.type = 'button'; cancel.textContent = t('cancel');
+  const cancel = document.createElement('button'); cancel.type = 'button'; cancel.textContent = t?.('cancel') ?? 'Cancel';
   const abort = () => controller.abort(); cancel.onclick = abort;
   dialog.addEventListener('cancel', e => { e.preventDefault(); abort(); });
   window.addEventListener('pagehide', abort, { once: true });

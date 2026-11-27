@@ -618,10 +618,10 @@ try {
   await page.mouse.click(center.x + 20, center.y + 20, { button: 'right' });
   current = await eventually(s => s.document.rooms[0].objects.length === 0, 'Right click did not erase the trigger.'); await clientAt(current.revision); checks.push('trigger placement and right erase');
   await page.keyboard.press('Control+z'); current = await eventually(s => s.document.rooms[0].objects.length === 1, 'Trigger erasure undo failed.'); await clientAt(current.revision);
-  await page.getByRole('button', { name: '방의 객체 모두 지우기', exact: true }).click();
+  await page.getByRole('button', { name: '방의 오브젝트 모두 지우기', exact: true }).click();
   await page.locator('dialog .accent').click(); current = await eventually(s => s.document.rooms[0].objects.length === 0, 'Clear room objects did not work.'); await clientAt(current.revision); checks.push('room object clear');
   const beforeMiniView = await state(); commandActions.length = 0; commandRequests.length = 0;
-  await page.locator('#tabs').getByRole('button', { name: '미니맵', exact: true }).click();
+  await page.locator('#tabs').getByRole('button', { name: '미니맵 보기', exact: true }).click();
   await page.locator('#mini-canvas').waitFor({ state: 'visible' }); await page.waitForTimeout(150);
   assert.equal(await page.locator('#undo').isDisabled(), true, 'MiniMap must disable Undo.');
   assert.equal(await page.locator('#redo').isDisabled(), true, 'MiniMap must disable Redo.');

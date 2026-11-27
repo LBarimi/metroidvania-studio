@@ -57,8 +57,8 @@ Editor 目標，再啟用外掛。
 以1倍大小裁切顯示。遊戲HUD可以放在此影像上方。此攝影機用於軸向對齊的2D視圖。
 白色房間邊界只用於關卡編輯器，在Game View中隱藏。
 
-工作室檔案位置
-在檔案 > 儲存資料夾中尋找Maps和Textures。
+Metroidvania Studio 檔案位置
+在「檔案 > 儲存資料夾」中查看 Maps 和 Textures 的位置。
 預設儲存在啟動檔案旁或原始碼專案根目錄。
   房間JSON : Maps/AutoExport/<地圖資料夾>/<房間名稱>.json
   目錄檔案 : .studio/catalog.json

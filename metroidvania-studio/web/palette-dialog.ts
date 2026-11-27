@@ -6,7 +6,9 @@ import { folderStartIn, openTextureFolder, workspaceFolder } from './workspace-f
 import { composeTileset, defaultTile, drawTilesetExample, TILESET_MASKS } from './tileset-preview.js';
 import type { TilesetMode, TilesetSettings } from './tileset-preview.js';
 
-export function openPaletteDialog(material: Material, locale: Locale, command: Command, groups?: EditorPaletteGroup[]): void {
+const maxFilesPerImport = 51;
+
+export function openPaletteDialog(material: Material, displayName: string, locale: Locale, command: Command, groups?: EditorPaletteGroup[]): void {
   const t = (key: string) => locale.t(key);
   const element = <K extends keyof HTMLElementTagNameMap>(tag: K, className = '', label = '') => {
     const node = document.createElement(tag); node.className = className; node.textContent = label; return node;
@@ -25,9 +27,12 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   const placement = groups?.length ? palettePlacementControls(material.id, groups, locale) : undefined;
   let configurationBaseline: string | undefined;
   const heading = element('div', 'dialog-title', t('tilesetTitle'));
-  heading.append(button('×', () => { if (!locked) dialog.close(); }, 'icon ghost'));
+  dialog.setAttribute('aria-label', t('tilesetTitle'));
+  const close = button('×', () => { if (!locked) dialog.close(); }, 'icon ghost');
+  close.title = t('close'); close.setAttribute('aria-label', close.title);
+  heading.append(close);
   const body = element('div', 'dialog-body'), footer = element('div', 'dialog-footer');
-  const name = element('input'); name.id = 'tileset-name'; name.value = material.name; name.maxLength = 80;
+  const name = element('input'); name.id = 'tileset-name'; name.value = displayName; name.maxLength = 80;
   const color = element('input'); color.id = 'tileset-color'; color.type = 'color'; color.value = /^#[a-f0-9]{6}$/i.test(material.color) ? material.color : '#9655cf';
   const originalColor = color.value;
   const mode = element('select'); mode.id = 'tileset-mode';
@@ -119,7 +124,8 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
       if (blob.size > 8 * 1024 * 1024) throw new Error('@tilesetImageLimit');
       const signature = new Uint8Array(await blob.slice(0, 8).arrayBuffer());
       if (signature.join(',') !== '137,80,78,71,13,10,26,10') throw new Error('@tilesetInvalidPng');
-      url = URL.createObjectURL(blob); const next = new Image(); next.src = url; await next.decode();
+      url = URL.createObjectURL(blob); const next = new Image(); next.src = url;
+      try { await next.decode(); } catch { throw new Error('@tilesetInvalidPng'); }
       if (next.naturalWidth < 16 || next.naturalHeight < 16 || next.naturalWidth * next.naturalHeight > 2048 * 2048) throw new Error('@tilesetImageLimit');
       const data = uploaded ? await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]); reader.onerror = reject; reader.readAsDataURL(blob); }) : '';
       return { image: next, blob, name, png: data || undefined };
@@ -128,7 +134,8 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
   async function importFiles(blobs: Blob[], token = ++generation): Promise<void> {
     error.textContent = ''; loading = true; apply.disabled = true;
     try {
-      if (blobs.length > 51 || blobs.reduce((n,b) => n + b.size, 0) > 8 * 1024 * 1024) throw new Error('@tilesetImageLimit');
+      if (blobs.length > maxFilesPerImport) throw new Error(locale.format('tilesetTooManyFiles', String(maxFilesPerImport)));
+      if (blobs.reduce((n,b) => n + b.size, 0) > 8 * 1024 * 1024) throw new Error('@tilesetImageLimit');
       const loaded = new Map<string, Source>(); let pixels = 0;
       for (const blob of blobs) {
         const source = await decode(blob, true, blob instanceof File ? blob.name : 'tileset-' + settings.mode + '.png');
@@ -232,9 +239,10 @@ export function openPaletteDialog(material: Material, locale: Locale, command: C
       const uploads = Object.fromEntries(used.filter(key => sources.get(key)?.png).map(key => [key, sources.get(key)!.png]));
       locked = true; body.inert = true; footer.inert = true;
       const position = placement?.value();
-      if (configurationBaseline === JSON.stringify([name.value, color.value, settings])) {
+      const storedName = name.value === displayName ? material.name : name.value;
+      if (configurationBaseline === JSON.stringify([storedName, color.value, settings])) {
         if (position) await command('paletteMove', { id: material.id, groupId: position.groupId, beforeId: position.beforeId, expectedGroups: position.expectedGroups });
-      } else await command('paletteConfigure', { id: material.id, name: name.value, color: color.value, settings, uploads, expectedMaterial: material, ...(position ? { placement: position } : {}) });
+      } else await command('paletteConfigure', { id: material.id, name: storedName, color: color.value, settings, uploads, expectedMaterial: material, ...(position ? { placement: position } : {}) });
       dialog.close();
     } catch (e) { error.textContent = errorText(e); }
     finally { locked = false; body.inert = false; footer.inert = false; }

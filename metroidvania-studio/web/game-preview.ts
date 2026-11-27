@@ -97,7 +97,7 @@ export class GamePreview {
     this.canvas.title = this.t('previewHelp');
     this.pixelPerfectLabel.title = this.t('previewPixelPerfectHelp');
     for (const [button, key] of [[this.collapseButton, this.collapsed ? 'previewExpand' : 'previewCollapse'],
-      [this.maximizeButton, this.maximized ? 'previewRestore' : 'previewMaximize'], [this.centerButton, 'frameRoom']] as const) {
+      [this.maximizeButton, this.maximized ? 'previewRestore' : 'previewMaximize'], [this.centerButton, 'previewCenterCamera']] as const) {
       button.title = this.t(key); button.setAttribute('aria-label', this.t(key));
     }
     this.requestDraw(true);

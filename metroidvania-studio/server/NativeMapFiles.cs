@@ -15,21 +15,21 @@ public sealed class NativeMapFiles(ProjectFiles files, Func<string, string, stri
 
     public async Task<Selection?> Pick(string mode, string name, CancellationToken cancellation)
     {
-        if (!Available || mode is not ("open" or "save")) throw new ArgumentException("Choose an available map dialog.");
+        if (!Available || mode is not ("open" or "save")) throw new ArgumentException(MetroidvaniaStudioLocale.Text("fileDialogUnavailable"));
         name = Path.GetFileName(name);
         if (name.Length > 200 || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) name = "world.map.json";
-        if (!await dialogGate.WaitAsync(0, cancellation)) throw new ArgumentException("A file dialog is already open.");
+        if (!await dialogGate.WaitAsync(0, cancellation)) throw new ArgumentException(MetroidvaniaStudioLocale.Text("fileDialogBusy"));
         try
         {
             Directory.CreateDirectory(files.MapsPath);
             string? path = await (picker ?? WindowsPicker)(mode, files.MapsPath, name, cancellation);
             if (string.IsNullOrWhiteSpace(path)) return null;
             path = ValidatePath(path);
-            if (mode == "open" && !File.Exists(path)) throw new IOException("The selected map no longer exists.");
+            if (mode == "open" && !File.Exists(path)) throw new IOException(MetroidvaniaStudioLocale.Text("fileMapMissing"));
             lock (grants)
             {
                 foreach (var entry in grants.Where(p => p.Value.Expires < DateTime.UtcNow).ToArray()) grants.Remove(entry.Key);
-                if (grants.Count >= 128) throw new IOException("Reopen the studio to select more files.");
+                if (grants.Count >= 128) throw new IOException(MetroidvaniaStudioLocale.Text("fileSelectionLimit"));
                 string token = Guid.NewGuid().ToString("N"); grants.Add(token, new(path, DateTime.UtcNow.AddDays(1)));
                 return new(token, Path.GetFileName(path));
             }
@@ -62,17 +62,17 @@ public sealed class NativeMapFiles(ProjectFiles files, Func<string, string, stri
     }
     private string Granted(string token)
     {
-        if (!grants.TryGetValue(token, out var grant) || grant.Expires < DateTime.UtcNow) throw new UnauthorizedAccessException("Choose the map file again.");
+        if (!grants.TryGetValue(token, out var grant) || grant.Expires < DateTime.UtcNow) throw new UnauthorizedAccessException(MetroidvaniaStudioLocale.Text("fileSelectAgain"));
         return ValidatePath(grant.Path);
     }
     private static string ValidatePath(string path)
     {
-        if (!Path.IsPathFullyQualified(path) || !path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Choose a JSON map file.");
+        if (!Path.IsPathFullyQualified(path) || !path.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException(MetroidvaniaStudioLocale.Text("fileChooseJson"));
         path = Path.GetFullPath(path);
-        if (OperatingSystem.IsWindows() && path[2..].Contains(':')) throw new ArgumentException("Choose a regular JSON file.");
+        if (OperatingSystem.IsWindows() && path[2..].Contains(':')) throw new ArgumentException(MetroidvaniaStudioLocale.Text("fileChooseJson"));
         for (string? item = path; item != null; item = Path.GetDirectoryName(item))
             if ((File.Exists(item) || Directory.Exists(item)) && (File.GetAttributes(item) & FileAttributes.ReparsePoint) != 0)
-                throw new IOException("Choose a map outside linked folders.");
+                throw new IOException(MetroidvaniaStudioLocale.Text("fileChooseUnlinked"));
         return path;
     }
     internal const string DialogScript = """
@@ -109,11 +109,13 @@ public sealed class NativeMapFiles(ProjectFiles files, Func<string, string, stri
         };
         foreach (string arg in new[] { "-NoProfile", "-NonInteractive", "-STA", "-EncodedCommand", Convert.ToBase64String(Encoding.Unicode.GetBytes(DialogScript)) }) start.ArgumentList.Add(arg);
         start.Environment["STUDIO_DIALOG_MODE"] = mode; start.Environment["STUDIO_DIALOG_DIRECTORY"] = directory; start.Environment["STUDIO_DIALOG_NAME"] = name;
-        using var process = Process.Start(start) ?? throw new IOException("Could not open the file dialog.");
+        using var process = new Process { StartInfo = start };
+        try { if (!process.Start()) throw new IOException(MetroidvaniaStudioLocale.Text("fileDialogUnavailable")); }
+        catch (System.ComponentModel.Win32Exception error) { throw new IOException(MetroidvaniaStudioLocale.Text("fileDialogUnavailable"), error); }
         var output = process.StandardOutput.ReadToEndAsync(cancellation); var errors = process.StandardError.ReadToEndAsync(cancellation);
         try { await process.WaitForExitAsync(cancellation); }
         catch { if (!process.HasExited) process.Kill(true); throw; }
-        if (process.ExitCode != 0) { _ = await errors; throw new IOException("Could not open the Windows file dialog."); }
+        if (process.ExitCode != 0) { _ = await errors; throw new IOException(MetroidvaniaStudioLocale.Text("fileDialogUnavailable")); }
         return await output;
     }
     public void Dispose() => dialogGate.Dispose();

@@ -1618,7 +1618,7 @@ static void CameraValidation(EditorWorkspace w)
     Check(w.Catalog.Refresh() && w.Catalog.Materials.ContainsKey("temporary"), "The deletion fixture catalog must load.");
     File.Delete(w.Files.CatalogPath);
     Check(w.Catalog.Refresh() && w.Catalog.Materials.Count == 0 && w.Catalog.Objects.Count == 0,
-        "Deleting EditorCatalog.json must replace stale definitions with the built-in catalog.");
+        "Deleting the workspace catalog must replace stale definitions with the built-in catalog.");
 
 
 }
