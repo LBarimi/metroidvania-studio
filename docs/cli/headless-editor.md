@@ -1,10 +1,10 @@
 # Headless editing for local agents
 
-A local model with a shell can generate a map, edit it and deliver a project ZIP using the CLI and the .NET 10 runtime. A session runs entirely in the CLI process with stdin and stdout. It uses the same editing code, catalogs, undo history and saves as the web editor. These commands are available in the source build. Run `help` to check an installed version and `editor-help` to read this guide from the installation.
+A local model with a shell can generate a map, edit it and deliver a project ZIP using the CLI and the .NET 10 runtime. A session runs entirely in the CLI process with stdin and stdout. It uses the same editing code, catalogs, undo history and saves as the web editor. These commands are included in the [1.3.5 release downloads](release-downloads.md). Run `help` to check an installed version and `editor-help` to read this guide from the installation.
 
 ## Generate a playable layout
 
-Create a workspace directory once. From its parent directory, run the following commands with the [CLI built from this checkout](quick-start.md).
+Create a workspace directory once. From its parent directory, run the following commands with the CLI. For a release download, use the [launcher for your platform](release-downloads.md).
 
 From the repository root, replace `metroidvania-studio` in the examples with `node ./bin/metroidvania-studio.mjs` after the Release build. A locally installed package exposes the short command directly.
 

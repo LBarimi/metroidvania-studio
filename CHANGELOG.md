@@ -1,5 +1,12 @@
 # Changes
 
+## 1.3.5
+
+- Generate a seeded world from **Map editor** or **Edit minimap** and watch the rooms appear. Automatic tilemaps are enabled by default. Choose a terrain theme and difficulty, or turn tilemaps off to generate empty rooms.
+- Generated rooms include editable terrain, ladders and drop-through platforms. Each passage has a Portal object on both sides.
+- Generate and edit maps from the command line with `generate` and `editor`. Local agents can use an editor session for undo, redo, saving and project export. [Headless editing guide](https://lbarimi.github.io/metroidvania-studio/cli--headless-editor.html).
+- Open the keyboard and mouse shortcuts from Help in all six editor languages. Engine installation guides now also include Russian.
+
 ## 1.3.4
 
 - Generate a connected layout of 1 to 1,024 rooms in **Edit minimap**. Choose which room chips to include or exclude, pick region colors, and use a random or fixed numeric seed. The same settings and seed reproduce the layout.

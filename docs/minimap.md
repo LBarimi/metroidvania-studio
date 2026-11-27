@@ -60,7 +60,7 @@ dotnet $cli apply --workspace $workspace --map world.map.json --batch minimap-wo
 dotnet $cli preview --workspace $workspace --map world.map.json --output world.svg
 ```
 
-To place chips in the open editor, start the editor and [MCP server](mcp/setup.md) from the 1.3.4 release ZIP or source build and connect using the editor URL. Check that `studio_capabilities` lists `minimap.place`. Call `studio_inspect` with `map: "@active"`, then pass its `revision` as `expectedRevision` to `studio_apply`. Set `batch` to the contents of the example or to a batch of your own. Each `minimap.place` creates one room. **Ctrl+Z** in the editor undoes the whole batch. [MCP call example](mcp/tools.md)
+To place chips in the open editor, start the editor and [MCP server](mcp/setup.md) from the 1.3.5 release ZIP or source build and connect using the editor URL. Check that `studio_capabilities` lists `minimap.place`. Call `studio_inspect` with `map: "@active"`, then pass its `revision` as `expectedRevision` to `studio_apply`. Set `batch` to the contents of the example or to a batch of your own. Each `minimap.place` creates one room. **Ctrl+Z** in the editor undoes the whole batch. [MCP call example](mcp/tools.md)
 
 ## Room colors
 

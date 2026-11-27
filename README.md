@@ -4,11 +4,11 @@ Metroidvania Studio is a free, open-source 2D level editor for metroidvania game
 
 [Get started](#get-started) · [Website](https://lbarimi.github.io/metroidvania-studio/) · [Documentation](https://lbarimi.github.io/metroidvania-studio/guides.html) · [Release notes](CHANGELOG.md)
 
-**Metroidvania Studio 1.3.4** adds seeded minimap generation for up to 1,024 rooms, with branching routes and shortcuts between regions. [Download the editor](https://github.com/LBarimi/metroidvania-studio/releases/tag/v1.3.4), [install the CLI and MCP server from npm](https://www.npmjs.com/package/metroidvania-studio/v/1.3.3), or [build from source](#build-from-source).
+**Metroidvania Studio 1.3.5** generates connected rooms with editable terrain, ladders, drop-through platforms and portals. Choose a seed, region colors and difficulty in either map editor. [Download the editor](https://github.com/LBarimi/metroidvania-studio/releases/tag/v1.3.5), [install the CLI and MCP server from npm](https://www.npmjs.com/package/metroidvania-studio), or [build from source](#build-from-source).
 
 **Automate your workflow:** [Lua scripts](docs/scripting/quick-start.md), a [headless CLI](docs/cli/quick-start.md), and a [local MCP server for AI agents](docs/mcp/setup.md).
 
-Local LLMs with shell access can use the source CLI to generate seeded tilemaps and drive the editor over stdin. [Headless editing for local agents](docs/cli/headless-editor.md)
+Local LLMs with shell access can use the CLI to generate seeded tilemaps and drive the editor over stdin. [Headless editing for local agents](docs/cli/headless-editor.md)
 
 ## Add Rooms & Paint Tiles
 
@@ -128,11 +128,11 @@ Recreate the layout with the headless CLI or MCP by applying the [102-room minim
 
 The npm CLI and MCP server require **Node.js 24+** and the **.NET 10 runtime**. To install the published version, run `npm install --global metroidvania-studio`.
 
-The **1.3.4** release ZIPs include a [CLI launcher](docs/cli/release-downloads.md) with `minimap.place`. To install the same CLI through npm from this source checkout, run these commands from the repository root with npm and the [.NET 10 SDK](#build-from-source).
+The **1.3.5** release ZIPs include a [CLI launcher](docs/cli/release-downloads.md) with `generate` and `editor`. To install the same CLI through npm from this source checkout, run these commands from the repository root with npm and the [.NET 10 SDK](#build-from-source).
 
 ```sh
 npm run pack:local
-npm install --global ./builds/npm/metroidvania-studio-1.3.4.tgz
+npm install --global ./builds/npm/metroidvania-studio-1.3.5.tgz
 metroidvania-studio version
 metroidvania-studio capabilities
 ```

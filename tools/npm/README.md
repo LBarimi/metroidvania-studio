@@ -4,11 +4,11 @@ Create connected 2D worlds with Lua scripting, a headless CLI, and a local MCP s
 
 The CLI and MCP server require **Node.js 24+** and the **.NET 10 runtime**. To install the published package from the npm registry, run `npm install --global metroidvania-studio`.
 
-To build and install **1.3.4** from this source checkout, use npm and the **.NET 10 SDK**. From the repository root, run the following commands.
+To build and install **1.3.5** from this source checkout, use npm and the **.NET 10 SDK**. From the repository root, run the following commands.
 
 ```sh
 npm run pack:local
-npm install --global ./builds/npm/metroidvania-studio-1.3.4.tgz
+npm install --global ./builds/npm/metroidvania-studio-1.3.5.tgz
 ```
 
 Run `help` to see the commands in your installed version. Builds advertising `generate` and `editor` can create seeded tilemaps and edit full projects over stdin. [Headless editing for local agents](../../docs/cli/headless-editor.md)
@@ -33,7 +33,7 @@ metroidvania-studio --workspace ./maps run --map world.map.json --script layout.
 metroidvania-studio --workspace ./maps run --map world.map.json --script layout.lua
 ```
 
-To try the minimap editor's room chips in **1.3.4**, check that `metroidvania-studio capabilities` lists `minimap.place`. Save the [102-room example](../../docs/examples/minimap-world.json) as `maps/minimap-world.json`, then apply it to a fresh map. The six regions contain empty rooms ready for tile editing.
+To try the minimap editor's room chips in **1.3.5**, check that `metroidvania-studio capabilities` lists `minimap.place`. Save the [102-room example](../../docs/examples/minimap-world.json) as `maps/minimap-world.json`, then apply it to a fresh map. The six regions contain empty rooms ready for tile editing.
 
 ```sh
 metroidvania-studio --workspace ./maps init --map minimap.map.json
